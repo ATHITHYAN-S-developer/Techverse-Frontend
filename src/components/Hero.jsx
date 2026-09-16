@@ -10,13 +10,18 @@ export default function Hero() {
       <section
         id="home"
         style={{ clipPath: "inset(0)" }}
-        className="relative min-h-[82vh] lg:min-h-[86vh] flex items-center justify-center py-24 sm:py-32 px-6 sm:px-8 overflow-hidden select-none"
+        className="hero-section relative min-h-[82vh] lg:min-h-[86vh] flex items-center justify-center py-24 sm:py-32 px-6 sm:px-8 overflow-hidden select-none"
       >
         {/* Layer 1 & 2: Continuous Campus Background Slideshow + Contrast Overlay */}
         <CollegeBackground />
 
+        {/* Layer 2.5: VCET Watermark - Large subtle animated text (behind content, above background) */}
+        <div className="vcet-watermark" aria-hidden="true">
+          VCET
+        </div>
+
         {/* Layer 3: Hero Content (Modern, high-end typography hierarchy) */}
-        <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
+        <div className="hero-content relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
           {/* Modern Contemporary Headline: Mixed-Weight & Gradient Effect */}
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
