@@ -20,7 +20,8 @@ import {
   Download,
   Award,
 } from "lucide-react";
-import { DEPARTMENTS } from "../data/departments";
+import { departmentService } from "../services/departmentService";
+import { resourceService } from "../services/resourceService";
 import TextReveal from "../components/TextReveal";
 
 export default function DepartmentResourcesPage() {
@@ -31,39 +32,56 @@ export default function DepartmentResourcesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedSubjectId, setExpandedSubjectId] = useState(null);
 
+  const [departments, setDepartments] = useState([]);
+  const [dbResources, setDbResources] = useState([]);
+
+  React.useEffect(() => {
+    async function loadData() {
+      try {
+        const [depts, resList] = await Promise.all([
+          departmentService.getDepartments(),
+          resourceService.getAllResources(),
+        ]);
+        setDepartments(depts || []);
+        setDbResources(resList || []);
+      } catch (err) {
+        console.error("Failed to load department resources from backend MongoDB:", err);
+      }
+    }
+    loadData();
+  }, []);
+
   // Flatten all subjects across all departments
   const allSubjects = useMemo(() => {
     const list = [];
-    DEPARTMENTS.forEach((dept) => {
-      if (dept.subjects) {
-        dept.subjects.forEach((subj) => {
-          list.push({
-            ...subj,
-            deptId: dept.id,
-            deptCode: dept.code,
-            deptName: dept.name,
-          });
-        });
-      }
-    });
-    return list;
-  }, []);
-
-  // Flatten all resources across all departments
-  const allResources = useMemo(() => {
-    const list = [];
-    DEPARTMENTS.forEach((dept) => {
-      dept.resources.forEach((res) => {
+    departments.forEach((dept) => {
+      const deptSubjects = dept.subjects || dept.curriculum?.flatMap(c => c.subjects) || [];
+      deptSubjects.forEach((subj) => {
         list.push({
-          ...res,
-          deptId: dept.id,
+          ...subj,
+          id: subj.id || subj._id || subj.code,
+          deptId: dept.id || dept._id || dept.code,
           deptCode: dept.code,
           deptName: dept.name,
+          units: subj.units || ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
+          tags: subj.tags || [subj.code, dept.code],
         });
       });
     });
     return list;
-  }, []);
+  }, [departments]);
+
+  // Flatten all resources across all departments
+  const allResources = useMemo(() => {
+    return dbResources.map((res) => ({
+      ...res,
+      id: res._id || res.id,
+      deptId: res.departmentId?._id || res.departmentId || res.department || "all",
+      deptCode: res.departmentCode || res.department || "CSE",
+      deptName: res.departmentName || "Department Resource",
+      tags: res.tags || [],
+    }));
+  }, [dbResources]);
 
   // Filter subjects for the Notes category
   const filteredSubjects = useMemo(() => {

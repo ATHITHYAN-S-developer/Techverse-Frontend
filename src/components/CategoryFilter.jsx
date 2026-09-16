@@ -5,12 +5,27 @@
  */
 
 import React from "react";
-import { CATEGORIES } from "../data/resources";
 
-export default function CategoryFilter({ selectedCategory, onSelectCategory }) {
+const DEFAULT_CATEGORIES = [
+  "All",
+  "AI",
+  "Programming",
+  "Cybersecurity",
+  "Cloud",
+  "Career",
+  "Aptitude",
+  "Technology News",
+  "Research",
+];
+
+export default function CategoryFilter({
+  selectedCategory,
+  onSelectCategory,
+  categories = DEFAULT_CATEGORIES,
+}) {
   return (
     <div className="w-full overflow-x-auto pb-2 scrollbar-none flex items-center gap-2 select-none">
-      {CATEGORIES.map((category) => {
+      {categories.map((category) => {
         const isSelected = selectedCategory === category;
         return (
           <button

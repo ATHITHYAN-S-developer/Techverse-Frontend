@@ -2,41 +2,45 @@ import React, { useState, useEffect, useRef } from "react";
 import { Search, X, BookOpen, GraduationCap, Bell, FileText, ArrowRight, CornerDownLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { COURSES } from "../data/courses";
-import { RESOURCES } from "../data/resources";
-import { ANNOUNCEMENTS } from "../data/announcements";
-import { DEPARTMENTS_DATA } from "../data/departments";
 import { api } from "../services/api";
 
 export default function GlobalSearchModal({ isOpen, onClose }) {
   const [query, setQuery] = useState("");
-  const [liveCourses, setLiveCourses] = useState(COURSES);
-  const [liveResources, setLiveResources] = useState(RESOURCES);
-  const [liveAnnouncements, setLiveAnnouncements] = useState(ANNOUNCEMENTS);
+  const [liveCourses, setLiveCourses] = useState([]);
+  const [liveResources, setLiveResources] = useState([]);
+  const [liveAnnouncements, setLiveAnnouncements] = useState([]);
+  const [liveDepartments, setLiveDepartments] = useState([]);
   const inputRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 50);
-      // Fetch live data
+      // Fetch live data directly from MongoDB backend
       const fetchLiveData = async () => {
         try {
-          const [coursesRes, resourcesRes, annRes] = await Promise.allSettled([
+          const [coursesRes, resourcesRes, annRes, deptRes] = await Promise.allSettled([
             api.get("/courses"),
             api.get("/resources"),
             api.get("/announcements"),
+            api.get("/departments"),
           ]);
-          if (coursesRes.status === "fulfilled" && coursesRes.value?.courses?.length > 0) {
+          if (coursesRes.status === "fulfilled" && coursesRes.value?.courses) {
             setLiveCourses(coursesRes.value.courses);
           }
-          if (resourcesRes.status === "fulfilled" && Array.isArray(resourcesRes.value) && resourcesRes.value.length > 0) {
-            setLiveResources(resourcesRes.value);
+          if (resourcesRes.status === "fulfilled") {
+            const list = Array.isArray(resourcesRes.value) ? resourcesRes.value : resourcesRes.value?.resources || [];
+            setLiveResources(list);
           }
-          if (annRes.status === "fulfilled" && annRes.value?.announcements?.length > 0) {
+          if (annRes.status === "fulfilled" && annRes.value?.announcements) {
             setLiveAnnouncements(annRes.value.announcements);
           }
-        } catch (e) {}
+          if (deptRes.status === "fulfilled" && deptRes.value?.departments) {
+            setLiveDepartments(deptRes.value.departments);
+          }
+        } catch (e) {
+          console.error("Search fetch error:", e);
+        }
       };
       fetchLiveData();
     } else {

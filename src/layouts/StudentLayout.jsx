@@ -178,13 +178,13 @@ export default function StudentLayout() {
                   key={item.name}
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     active
-                      ? "bg-[#0B4A8F] text-white shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-[#0B4A8F]"
+                      ? "bg-sky-100/80 text-[#0B4A8F] border border-sky-300/70 shadow-xs"
+                      : "text-slate-600 hover:bg-sky-50/70 hover:text-[#0B4A8F]"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${active ? "text-white" : "text-slate-400"}`} />
+                  <Icon className={`w-4 h-4 ${active ? "text-[#0B4A8F]" : "text-slate-400"}`} />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -211,7 +211,7 @@ export default function StudentLayout() {
         </aside>
 
         {/* Main Content Pane */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6">
           <Outlet />
         </main>
       </div>
