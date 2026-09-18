@@ -3,19 +3,16 @@
  * Communicates with /api/departments and falls back to local data.
  */
 
-import { apiRequest } from "./api";
+import api, { apiRequest } from "./api";
 import { DEPARTMENTS_DATA } from "../data/departments";
 
 export const departmentService = {
-  async getDepartments() {
-    try {
-      const res = await apiRequest("/departments");
-      if (res.success && Array.isArray(res.departments) && res.departments.length > 0) {
-        return res.departments;
-      }
-    } catch (err) {
-      // Graceful fallback to static data
+  async getDepartments({ all = false } = {}) {
+    const res = await apiRequest(`/departments${all ? "?all=true" : ""}`);
+    if (res.success && Array.isArray(res.departments) && res.departments.length > 0) {
+      return res.departments;
     }
+    if (all) return [];
     return Object.values(DEPARTMENTS_DATA);
   },
 
@@ -36,6 +33,21 @@ export const departmentService = {
     );
     if (!key) return null;
     return DEPARTMENTS_DATA[key];
+  },
+
+  async createDepartment(payload) {
+    const res = await api.post("/departments", payload);
+    return res?.department || res?.data || res;
+  },
+
+  async updateDepartment(deptId, payload) {
+    const res = await api.put(`/departments/${deptId}`, payload);
+    return res?.department || res?.data || res;
+  },
+
+  async deleteDepartment(deptId) {
+    const res = await api.delete(`/departments/${deptId}`);
+    return res;
   },
 
   async getSubjectsForSemester(deptId, semesterNumber) {
