@@ -1,13 +1,44 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Target, ArrowLeft, CheckCircle2, Clock, HelpCircle, Briefcase, Award, ArrowRight } from "lucide-react";
-import { COMPANIES_DATA } from "../data/companiesData";
+import { Target, ArrowLeft, Clock, Briefcase, ArrowRight } from "lucide-react";
+import { trainingService } from "../services/trainingService";
 
 export default function CompanyDetailPage() {
   const { company } = useParams();
   const navigate = useNavigate();
+  const [companyData, setCompanyData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const found = COMPANIES_DATA.find((c) => c.slug === company || c.id === company) || COMPANIES_DATA[0];
+  useEffect(() => {
+    async function loadCompany() {
+      try {
+        const companies = await trainingService.getCompanies();
+        const found = companies.find((c) => c.slug === company || c.id === company || c._id === company) || companies[0];
+        setCompanyData(found);
+      } catch (err) {
+        console.error("Failed to load company details:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadCompany();
+  }, [company]);
+
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto py-16 text-center text-xs font-bold text-slate-500">
+        Loading Company Blueprint from MongoDB...
+      </div>
+    );
+  }
+
+  if (!companyData) {
+    return (
+      <div className="max-w-5xl mx-auto py-16 text-center text-xs font-bold text-slate-500">
+        Company blueprint not found.
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 space-y-6">
@@ -21,31 +52,31 @@ export default function CompanyDetailPage() {
       {/* Header Banner */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <img src={found.logo} alt={found.name} className="w-16 h-16 object-contain p-2 bg-slate-50 rounded-2xl border border-slate-100" />
+          <img src={companyData.logo} alt={companyData.name} className="w-16 h-16 object-contain p-2 bg-slate-50 rounded-2xl border border-slate-100" />
           <div>
-            <span className="text-xs font-bold text-[#0062A8] uppercase tracking-wider">{found.tagline}</span>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">{found.name}</h1>
-            <p className="text-xs text-slate-500 mt-1">{found.eligibility}</p>
+            <span className="text-xs font-bold text-[#0062A8] uppercase tracking-wider">{companyData.tagline}</span>
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">{companyData.name}</h1>
+            <p className="text-xs text-slate-500 mt-1">{companyData.eligibility}</p>
           </div>
         </div>
 
         <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 font-bold text-center shrink-0">
           <span className="text-[10px] uppercase tracking-wider block text-amber-700">Package Range</span>
-          <div className="text-lg font-black">{found.packageRange}</div>
+          <div className="text-lg font-black">{companyData.packageRange || companyData.salary}</div>
         </div>
       </div>
 
       {/* Overview */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-3">
         <h2 className="text-base font-bold text-slate-900">Recruitment Blueprint & Strategy</h2>
-        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{found.description}</p>
+        <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">{companyData.description}</p>
       </div>
 
       {/* Rounds Breakdown */}
       <div className="space-y-4">
         <h2 className="text-base font-bold text-slate-900">Recruitment Rounds</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {found.rounds?.map((r, idx) => (
+          {companyData.rounds?.map((r, idx) => (
             <div key={idx} className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-[#0062A8] border border-blue-200">
@@ -69,7 +100,7 @@ export default function CompanyDetailPage() {
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-4">
         <h2 className="text-base font-bold text-slate-900">Sample Technical & Coding Questions</h2>
         <div className="space-y-2">
-          {found.sampleQuestions?.map((q, i) => (
+          {companyData.sampleQuestions?.map((q, i) => (
             <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs font-medium text-slate-800 flex items-start gap-2.5">
               <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 font-bold flex items-center justify-center text-[10px] shrink-0">
                 {i + 1}

@@ -45,18 +45,21 @@ export async function renderCertificateCanvas(certData) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
+  const isModuleAppreciation = certData.type === "module_appreciation" || Boolean(certData.moduleTitle);
+  const certHeader = isModuleAppreciation ? "CERTIFICATE OF APPRECIATION" : "CERTIFICATE OF COMPLETION";
+
   ctx.fillStyle = "#0B4A8F";
   ctx.font = "bold 44px 'Plus Jakarta Sans', 'Inter', sans-serif";
-  ctx.fillText("CERTIFICATE OF COMPLETION", contentCenterX, H * 0.38);
+  ctx.fillText(certHeader, contentCenterX, H * 0.38);
 
   ctx.fillStyle = "#64748B";
   ctx.font = "italic 24px 'Plus Jakarta Sans', 'Inter', sans-serif";
-  ctx.fillText("This is proudly presented to", contentCenterX, H * 0.44);
+  ctx.fillText("This certificate is proudly presented to", contentCenterX, H * 0.44);
 
   // 3. Recipient Student Name (Large Bold Navy)
   ctx.fillStyle = "#0F172A";
   ctx.font = "bold 58px 'Plus Jakarta Sans', 'Inter', sans-serif";
-  const studentName = certData.studentName || "ATHITHYA V";
+  const studentName = certData.studentName || "VCET Engineering Scholar";
   ctx.fillText(studentName.toUpperCase(), contentCenterX, H * 0.52);
 
   // Thin underline accent
@@ -77,24 +80,35 @@ export async function renderCertificateCanvas(certData) {
   // 4. Achievement Description
   ctx.fillStyle = "#334155";
   ctx.font = "normal 22px 'Plus Jakarta Sans', 'Inter', sans-serif";
-  ctx.fillText(
-    "for successfully completing all technical curriculum modules, assessments, and projects in",
-    contentCenterX,
-    H * 0.65
-  );
+  const score = certData.score ? `${certData.score}%` : "100%";
+  const moduleName = certData.moduleTitle || certData.title || "";
+  const courseName = certData.courseName || "Educational Technology";
 
-  // 5. Course Title (Bold Highlight)
-  ctx.fillStyle = "#0B4A8F";
-  ctx.font = "bold 38px 'Plus Jakarta Sans', 'Inter', sans-serif";
-  const courseTitle = certData.courseName || certData.title || "Full-Stack Software Engineering";
-  ctx.fillText(courseTitle, contentCenterX, H * 0.72);
+  if (isModuleAppreciation && moduleName) {
+    ctx.fillText(
+      `in recognition of successfully completing ${moduleName} with a score of ${score}`,
+      contentCenterX,
+      H * 0.65
+    );
+    ctx.fillStyle = "#0B4A8F";
+    ctx.font = "bold 34px 'Plus Jakarta Sans', 'Inter', sans-serif";
+    ctx.fillText(courseName, contentCenterX, H * 0.72);
+  } else {
+    ctx.fillText(
+      "for successfully completing all curriculum modules, assessments, and projects in",
+      contentCenterX,
+      H * 0.65
+    );
+    ctx.fillStyle = "#0B4A8F";
+    ctx.font = "bold 38px 'Plus Jakarta Sans', 'Inter', sans-serif";
+    ctx.fillText(courseName, contentCenterX, H * 0.72);
+  }
 
   // 6. Score & Grade Badge
-  const score = certData.score ? `${certData.score}%` : "92%";
-  const grade = certData.grade || "Distinction";
+  const grade = certData.grade || (Number(certData.score) >= 85 ? "Distinction" : "Pass");
   ctx.fillStyle = "#047857"; // Emerald Green
   ctx.font = "bold 20px 'Plus Jakarta Sans', 'Inter', sans-serif";
-  ctx.fillText(`Final Assessment Score: ${score} (${grade})`, contentCenterX, H * 0.77);
+  ctx.fillText(`Assessment Score: ${score} (${grade})`, contentCenterX, H * 0.77);
 
   // 7. Footer Metadata (Left: ID & Hash, Right: Authorized Signatures)
   const leftX = W * 0.36;
@@ -105,11 +119,13 @@ export async function renderCertificateCanvas(certData) {
   ctx.textAlign = "left";
   ctx.fillStyle = "#64748B";
   ctx.font = "500 16px 'Courier New', monospace";
-  ctx.fillText(`Certificate ID: ${certData.certificateId || certData.id || "VCET-CERT-2026-001"}`, leftX, footerY);
+  const displayCertId = certData.certificateNumber || certData.certificateId || certData.id || "VCET-CERT-2026-001";
+  ctx.fillText(`Certificate ID: ${displayCertId}`, leftX, footerY);
   ctx.fillText(`Verification Hash: ${certData.verificationCode || "0x89FA9B432E"}`, leftX, footerY + 24);
 
   ctx.font = "500 16px 'Plus Jakarta Sans', sans-serif";
-  const issueDate = certData.issuedDate || certData.issuedAt || new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const rawDate = certData.issuedDate || certData.issuedAt;
+  const issueDate = rawDate ? new Date(rawDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   ctx.fillText(`Issued: ${issueDate}`, leftX, footerY + 48);
 
   // Right: Signatures

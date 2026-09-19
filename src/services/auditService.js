@@ -1,55 +1,34 @@
 /**
  * Audit Service
- * Manages security audit logs for administrative monitoring.
+ * Communicates exclusively with backend MongoDB endpoints (/api/audit).
  */
 
-import { AUDIT_LOGS } from "../data/auditLogsData";
-
-const AUDIT_KEY = "techverse_audit_logs";
-
-function getStoredLogs() {
-  try {
-    const raw = localStorage.getItem(AUDIT_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.error(e);
-  }
-  return AUDIT_LOGS;
-}
+import { apiRequest } from "./api";
 
 export const auditService = {
   async getLogs(filter = {}) {
-    let logs = getStoredLogs();
-    if (filter.action && filter.action !== "ALL") {
-      logs = logs.filter((l) => l.action === filter.action);
+    try {
+      const queryString = new URLSearchParams(filter).toString();
+      const res = await apiRequest(`/audit${queryString ? `?${queryString}` : ""}`);
+      if (res.success && Array.isArray(res.logs)) {
+        return res.logs;
+      }
+    } catch (err) {
+      console.error("Failed to fetch audit logs from MongoDB backend:", err);
     }
-    if (filter.role && filter.role !== "ALL") {
-      logs = logs.filter((l) => l.userRole === filter.role);
-    }
-    if (filter.search) {
-      const q = filter.search.toLowerCase();
-      logs = logs.filter(
-        (l) =>
-          l.userName.toLowerCase().includes(q) ||
-          l.userIdentifier.toLowerCase().includes(q) ||
-          l.details.toLowerCase().includes(q) ||
-          l.resourceId.toLowerCase().includes(q)
-      );
-    }
-    return logs;
+    return [];
   },
 
   async logAction(actionData) {
-    const logs = getStoredLogs();
-    const newLog = {
-      id: `log-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-      status: "SUCCESS",
-      ipAddress: "192.168.1.100",
-      ...actionData
-    };
-    logs.unshift(newLog);
-    localStorage.setItem(AUDIT_KEY, JSON.stringify(logs));
-    return newLog;
-  }
+    try {
+      const res = await apiRequest("/audit", {
+        method: "POST",
+        body: JSON.stringify(actionData),
+      });
+      return res.log || actionData;
+    } catch (err) {
+      console.warn("Failed to write audit log to backend:", err);
+      return actionData;
+    }
+  },
 };

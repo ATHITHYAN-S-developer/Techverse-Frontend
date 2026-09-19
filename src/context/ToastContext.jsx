@@ -39,26 +39,26 @@ export function ToastProvider({ children }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
               transition={{ duration: 0.18 }}
-              className={`pointer-events-auto flex items-start gap-3 p-3.5 rounded-xl shadow-xl border backdrop-blur-md text-sm ${
+              className={`pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-md border text-xs font-bold transition-all ${
                 toast.type === "success"
-                  ? "bg-emerald-900/95 text-emerald-100 border-emerald-700/60"
+                  ? "bg-white text-sky-950 border-sky-200"
                   : toast.type === "error"
-                  ? "bg-rose-900/95 text-rose-100 border-rose-700/60"
-                  : "bg-[#0B4A8F]/95 text-white border-[#0062A8]/60"
+                  ? "bg-white text-slate-800 border-slate-300"
+                  : "bg-sky-50 text-[#0B4A8F] border-sky-200"
               }`}
             >
-              {toast.type === "success" && <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />}
-              {toast.type === "error" && <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />}
-              {toast.type === "info" && <Info className="w-5 h-5 text-sky-300 shrink-0 mt-0.5" />}
+              {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-[#0B4A8F] shrink-0" />}
+              {toast.type === "error" && <AlertCircle className="w-4 h-4 text-slate-600 shrink-0" />}
+              {toast.type === "info" && <Info className="w-4 h-4 text-[#0B4A8F] shrink-0" />}
               
-              <div className="flex-1 font-medium leading-snug">{toast.message}</div>
+              <div className="flex-1 leading-snug">{toast.message}</div>
               
               <button
                 onClick={() => removeToast(toast.id)}
-                className="text-white/60 hover:text-white p-0.5 transition-colors rounded"
+                className="text-slate-400 hover:text-slate-600 p-0.5 transition-colors rounded"
                 aria-label="Close Notification"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </motion.div>
           ))}

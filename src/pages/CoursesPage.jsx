@@ -88,7 +88,7 @@ export default function CoursesPage() {
           ? true
           : progressTab === "in-progress"
           ? c.progress > 0 && c.progress < 100
-          : c.progress === 100;
+          : c.progress >= 100;
 
       return matchesSearch && matchesCategory && matchesProgress;
     });
@@ -103,31 +103,25 @@ export default function CoursesPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-[#0B4A8F] selection:text-white scroll-smooth select-none">
       {/* =========================================================================
-          1. HERO SECTION (Exact Match with Departments & Placement Pages)
+          1. HERO SECTION (Bright Ice-Blue Theme)
           ========================================================================= */}
-      <section className="relative bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-25">
-          <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full border border-white/20" />
-          <div className="absolute right-[-40px] top-1/4 h-80 w-80 rounded-full border border-white/20" />
-          <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-blue-400/10 blur-2xl" />
-        </div>
-
-        <div className="max-w-6xl mx-auto relative z-10">
+      <section className="relative bg-gradient-to-r from-sky-100 via-blue-50 to-indigo-100/70 text-slate-900 py-10 sm:py-14 px-4 sm:px-6 lg:px-8 overflow-hidden border-b border-sky-200/60 shadow-2xs">
+        <div className="w-full max-w-[1500px] mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="max-w-2xl">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-widest text-blue-100 mb-3 backdrop-blur-sm"
+                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/90 border border-sky-300 text-xs font-bold uppercase tracking-widest text-[#0062A8] mb-3 shadow-2xs"
               >
-                <Sparkles size={13} className="text-blue-200" />
+                <Sparkles size={13} className="text-[#0062A8]" />
                 <span>VCET SELF-PACED TECHNICAL ACADEMY</span>
               </motion.div>
 
               <TextReveal
                 text="Self-Paced Courses & Certifications"
-                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white"
+                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-slate-900"
                 delay={0.12}
               />
 
@@ -135,7 +129,7 @@ export default function CoursesPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
-                className="mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal max-w-xl"
+                className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed font-medium max-w-xl"
               >
                 Gain industry-ready competencies in Full-Stack Development, AI & ML, Cloud Architecture, and DevOps with verified VCET credentials.
               </motion.p>
@@ -149,12 +143,12 @@ export default function CoursesPage() {
             >
               <Link
                 to="/prepzone"
-                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
+                className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-150 cursor-pointer"
               >
                 <span>PREPZONE TRAINING</span>
                 <ArrowRight
                   size={15}
-                  className="transition-transform duration-150 group-hover:translate-x-1 text-[#0B4A8F]"
+                  className="transition-transform duration-150 group-hover:translate-x-1 text-white"
                 />
               </Link>
             </motion.div>
@@ -165,7 +159,7 @@ export default function CoursesPage() {
       {/* =========================================================================
           2. MAIN CONTENT AREA
           ========================================================================= */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-7 space-y-6">
+      <main className="w-full max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-8 mt-6 space-y-6">
         {/* Domain Category Selector Pills */}
         <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
           {categories.map((cat) => {
@@ -181,10 +175,10 @@ export default function CoursesPage() {
                 key={cat}
                 type="button"
                 onClick={() => setCategoryFilter(cat)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-150 cursor-pointer select-none shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-150 cursor-pointer select-none shrink-0 ${
                   isSelected
-                    ? "bg-[#0B4A8F] text-white shadow-sm"
-                    : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80"
+                    ? "bg-sky-100 text-[#0062A8] border-2 border-[#0062A8] font-black shadow-2xs"
+                    : "bg-white text-slate-700 hover:bg-sky-50/70 border border-slate-200/90 font-semibold"
                 }`}
               >
                 <IconComponent size={16} />
@@ -192,7 +186,7 @@ export default function CoursesPage() {
                 <span
                   className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
                     isSelected
-                      ? "bg-white/20 text-white"
+                      ? "bg-[#0062A8] text-white"
                       : "bg-slate-100 text-slate-600"
                   }`}
                 >
@@ -217,13 +211,13 @@ export default function CoursesPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search courses by title, topic, or instructor..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/20 focus:border-[#0B4A8F] bg-slate-50/50 hover:bg-white transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0062A8]/20 focus:border-[#0062A8] bg-slate-50/50 hover:bg-white transition-all"
               />
             </div>
 
             {/* Progress Tabs & Status Selector */}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center p-1 bg-slate-100 rounded-xl">
+              <div className="flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/70">
                 {[
                   { id: "all", label: "All Status" },
                   { id: "in-progress", label: "In Progress" },
@@ -232,10 +226,10 @@ export default function CoursesPage() {
                   <button
                     key={t.id}
                     onClick={() => setProgressTab(t.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                       progressTab === t.id
-                        ? "bg-white text-[#0B4A8F] shadow-xs"
-                        : "text-slate-600 hover:text-slate-900"
+                        ? "bg-sky-100 text-[#0062A8] border border-sky-300 font-extrabold shadow-2xs"
+                        : "text-slate-600 hover:text-slate-900 font-semibold"
                     }`}
                   >
                     {t.label}
@@ -323,7 +317,7 @@ export default function CoursesPage() {
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
             {filteredCourses.map((course) => (
               <CourseCard
                 key={course._id || course.id || course.slug}

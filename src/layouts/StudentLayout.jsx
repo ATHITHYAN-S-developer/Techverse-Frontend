@@ -68,10 +68,10 @@ export default function StudentLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-[#0062A8] selection:text-white font-sans">
+    <div className="min-h-screen bg-[#f0f9ff] flex flex-col selection:bg-[#0062A8] selection:text-white font-sans">
       <ScrollToTop />
       {/* 1. Global Student Topbar */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-sky-100 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-2xs">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -154,12 +154,12 @@ export default function StudentLayout() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Navigation */}
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto flex flex-col justify-between ${
+          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-sky-100 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto flex flex-col justify-between ${
             sidebarOpen ? "translate-x-0 pt-14 lg:pt-0" : "-translate-x-full"
           }`}
         >
           {/* Mobile Sidebar Close Button */}
-          <div className="lg:hidden flex justify-end p-3 border-b border-slate-100">
+          <div className="lg:hidden flex justify-end p-3 border-b border-sky-100">
             <button onClick={() => setSidebarOpen(false)} className="p-1 text-slate-500">
               <X className="w-5 h-5" />
             </button>
@@ -178,13 +178,13 @@ export default function StudentLayout() {
                   key={item.name}
                   to={item.href}
                   onClick={() => setSidebarOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all ${
                     active
-                      ? "bg-[#0B4A8F] text-white shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-[#0B4A8F]"
+                      ? "bg-sky-100/80 text-[#0B4A8F] border border-sky-300/70 shadow-xs"
+                      : "text-slate-600 hover:bg-sky-50/70 hover:text-[#0B4A8F]"
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${active ? "text-white" : "text-slate-400"}`} />
+                  <Icon className={`w-4 h-4 ${active ? "text-[#0B4A8F]" : "text-slate-400"}`} />
                   <span>{item.name}</span>
                 </Link>
               );
@@ -192,7 +192,7 @@ export default function StudentLayout() {
           </div>
 
           {/* Sidebar Footer: Quick Back to Main Website */}
-          <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2">
+          <div className="p-3 border-t border-sky-100 bg-[#f0f9ff]/50 space-y-2">
             <Link
               to="/"
               className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:text-[#0062A8] rounded-lg hover:bg-white"
@@ -211,7 +211,7 @@ export default function StudentLayout() {
         </aside>
 
         {/* Main Content Pane */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto p-2 sm:p-4 lg:p-6 bg-[#f0f9ff]">
           <Outlet />
         </main>
       </div>

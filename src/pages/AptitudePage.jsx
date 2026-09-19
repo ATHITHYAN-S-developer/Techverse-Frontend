@@ -1,20 +1,48 @@
-import React, { useState } from "react";
-import { Award, BookOpen, Clock, CheckCircle2, ChevronDown, ChevronUp, Sparkles, ArrowRight, Star } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Award, BookOpen, ChevronDown, ChevronUp, Sparkles } from "lucide-react";
 import { Link } from "react-router-dom";
-import { APTITUDE_CATEGORIES } from "../data/aptitudeData";
-import { RESOURCES } from "../data/resources";
+import { trainingService } from "../services/trainingService";
+import { resourceService } from "../services/resourceService";
 import ResourceListView from "../components/ResourceListView";
 
 export default function AptitudePage() {
   const [activeTab, setActiveTab] = useState("formulas"); // "formulas" | "apps"
-  const [expandedCategory, setExpandedCategory] = useState(APTITUDE_CATEGORIES[0]?.id);
+  const [categories, setCategories] = useState([]);
+  const [expandedCategory, setExpandedCategory] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
+  const [aptitudeResources, setAptitudeResources] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const aptitudeResources = RESOURCES.filter((item) => item.type === "aptitude");
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [cats, allRes] = await Promise.all([
+          trainingService.getAptitudeCategories(),
+          resourceService.getAllResources(),
+        ]);
+        setCategories(cats);
+        if (cats.length > 0) setExpandedCategory(cats[0].categoryId || cats[0]._id);
+        setAptitudeResources(allRes.filter((item) => item.type === "aptitude"));
+      } catch (e) {
+        console.error("Failed to load aptitude data:", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
 
   const handleSelectAnswer = (qId, optionIdx) => {
     setUserAnswers((prev) => ({ ...prev, [qId]: optionIdx }));
   };
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto py-16 text-center text-xs font-bold text-slate-500">
+        Loading Aptitude Modules from MongoDB...
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
@@ -43,23 +71,23 @@ export default function AptitudePage() {
       </div>
 
       {/* 2. Switcher Tabs */}
-      <div className="flex items-center p-1 bg-slate-100 rounded-2xl w-full sm:w-auto self-start">
+      <div className="flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 w-full sm:w-auto self-start">
         <button
           onClick={() => setActiveTab("formulas")}
-          className={`flex-1 sm:flex-none px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
             activeTab === "formulas"
-              ? "bg-white text-[#0062A8] shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-sky-100 text-[#0062A8] border border-sky-300 font-extrabold shadow-2xs"
+              : "text-slate-600 hover:text-slate-900 font-semibold"
           }`}
         >
           Formula Sheets & Practice Sets
         </button>
         <button
           onClick={() => setActiveTab("apps")}
-          className={`flex-1 sm:flex-none px-5 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 sm:flex-none px-5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
             activeTab === "apps"
-              ? "bg-white text-[#0062A8] shadow-sm"
-              : "text-slate-600 hover:text-slate-900"
+              ? "bg-sky-100 text-[#0062A8] border border-sky-300 font-extrabold shadow-2xs"
+              : "text-slate-600 hover:text-slate-900 font-semibold"
           }`}
         >
           Curated Practice Portals & Apps
@@ -69,16 +97,17 @@ export default function AptitudePage() {
       {/* 3. Content */}
       {activeTab === "formulas" ? (
         <div className="space-y-4">
-          {APTITUDE_CATEGORIES.map((cat) => {
-            const isExpanded = expandedCategory === cat.id;
+          {categories.map((cat) => {
+            const catKey = cat.categoryId || cat._id;
+            const isExpanded = expandedCategory === catKey;
             return (
               <div
-                key={cat.id}
+                key={catKey}
                 className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm transition-all"
               >
                 {/* Accordion Header */}
                 <button
-                  onClick={() => setExpandedCategory(isExpanded ? null : cat.id)}
+                  onClick={() => setExpandedCategory(isExpanded ? null : catKey)}
                   className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 hover:bg-slate-50/60 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -112,7 +141,7 @@ export default function AptitudePage() {
                         Key Concepts:
                       </h4>
                       <ul className="list-disc pl-5 space-y-1 text-slate-600">
-                        {cat.concepts.map((c, i) => (
+                        {cat.concepts?.map((c, i) => (
                           <li key={i}>{c}</li>
                         ))}
                       </ul>
@@ -124,7 +153,7 @@ export default function AptitudePage() {
                         Essential Formulas & Shortcuts:
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {cat.formulas.map((f, i) => (
+                        {cat.formulas?.map((f, i) => (
                           <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100">
                             <div className="font-semibold text-slate-800">{f.name}</div>
                             <div className="font-mono text-[11px] text-[#0062A8] mt-1 font-bold">{f.expr}</div>
@@ -138,7 +167,7 @@ export default function AptitudePage() {
                       <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wider text-[#0062A8]">
                         Solved Blueprint Example:
                       </h4>
-                      {cat.examples.map((ex, i) => (
+                      {cat.examples?.map((ex, i) => (
                         <div key={i} className="p-3.5 bg-blue-50/50 rounded-xl border border-blue-100/80 space-y-1">
                           <div className="font-semibold text-slate-800">Q: {ex.q}</div>
                           <div className="text-slate-600"><span className="font-bold text-[#0062A8]">Solution:</span> {ex.solution}</div>
@@ -151,13 +180,13 @@ export default function AptitudePage() {
                       <h4 className="font-bold text-slate-900 uppercase text-[11px] tracking-wider text-[#0062A8]">
                         Practice Questions:
                       </h4>
-                      {cat.practiceQuestions.map((pq) => {
+                      {cat.practiceQuestions?.map((pq) => {
                         const selected = userAnswers[pq.id];
                         return (
                           <div key={pq.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3">
                             <div className="font-semibold text-slate-900">{pq.q}</div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {pq.options.map((opt, oIdx) => (
+                              {pq.options?.map((opt, oIdx) => (
                                 <button
                                   key={oIdx}
                                   onClick={() => handleSelectAnswer(pq.id, oIdx)}

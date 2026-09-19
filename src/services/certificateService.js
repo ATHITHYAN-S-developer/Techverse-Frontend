@@ -59,7 +59,7 @@ export const certificateService = {
       const courseId = course._id || course.id || course.slug;
       const res = await apiRequest("/certificates/claim", {
         method: "POST",
-        body: JSON.stringify({ courseId }),
+        body: JSON.stringify({ courseId, score }),
       });
       if (res?.data?.certificate || res?.certificate) {
         return res?.data?.certificate || res?.certificate;
