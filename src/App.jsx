@@ -41,6 +41,7 @@ import ProfilePage from "./pages/ProfilePage";
 import DashboardPage from "./pages/DashboardPage";
 import FacultyDashboard from "./pages/faculty/FacultyDashboard";
 import FacultyResourcesPage from "./pages/faculty/FacultyResourcesPage";
+import FacultySubjectsPage from "./pages/faculty/FacultySubjectsPage";
 import FacultyAnnouncementsPage from "./pages/faculty/FacultyAnnouncementsPage";
 import FacultyStudentsPage from "./pages/faculty/FacultyStudentsPage";
 
@@ -142,6 +143,7 @@ export default function App() {
               <Route index element={<Navigate to="/faculty/dashboard" replace />} />
               <Route path="dashboard" element={<FacultyDashboard />} />
               <Route path="resources" element={<FacultyResourcesPage />} />
+              <Route path="subjects" element={<FacultySubjectsPage />} />
               <Route path="announcements" element={<FacultyAnnouncementsPage />} />
               <Route path="students" element={<FacultyStudentsPage />} />
             </Route>

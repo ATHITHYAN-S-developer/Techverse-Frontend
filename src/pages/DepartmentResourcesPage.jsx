@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import {
   Search,
   ExternalLink,
@@ -15,19 +15,24 @@ import {
   Globe2,
   FileText,
   HelpCircle,
-  ChevronDown,
-  ChevronUp,
   Download,
-  Award,
+  BookMarked,
 } from "lucide-react";
 import { departmentService } from "../services/departmentService";
 import { resourceService } from "../services/resourceService";
+import { subjectService } from "../services/subjectService";
+import { resourceService, RESOURCE_TYPES, resolveResourceUrl } from "../services/resourceService";
+import { apiRequest } from "../services/api";
+import { DEPARTMENTS_DATA } from "../data/departments";
 import TextReveal from "../components/TextReveal";
 
+const TYPE_LABEL = Object.fromEntries(RESOURCE_TYPES.map((t) => [t.value, t.label]));
+
 export default function DepartmentResourcesPage() {
-  // Main Category Mode: "notes" | "softwares" | "all"
+  const { departmentId: routeDeptId } = useParams();
+
   const [mainCategory, setMainCategory] = useState("notes");
-  const [selectedDeptId, setSelectedDeptId] = useState("all");
+  const [selectedDeptId, setSelectedDeptId] = useState(routeDeptId || "all");
   const [selectedSemester, setSelectedSemester] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedSubjectId, setExpandedSubjectId] = useState(null);
@@ -82,69 +87,183 @@ export default function DepartmentResourcesPage() {
       tags: res.tags || [],
     }));
   }, [dbResources]);
+  const [resources, setResources] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [liveReady, setLiveReady] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Filter subjects for the Notes category
-  const filteredSubjects = useMemo(() => {
-    return allSubjects.filter((subj) => {
-      const matchDept =
-        selectedDeptId === "all" || subj.deptId === selectedDeptId;
+  useEffect(() => {
+    let cancelled = false;
 
-      const matchSem =
-        selectedSemester === "all" ||
-        subj.semester.toLowerCase() === selectedSemester.toLowerCase();
+    async function load() {
+      // Static dept list for the dropdown, immediately available
+      setDepartments(
+        Object.values(DEPARTMENTS_DATA).map((d) => ({ id: d.code.toLowerCase(), code: d.code, name: d.name }))
+      );
 
-      const q = searchQuery.toLowerCase().trim();
-      const matchSearch =
-        q === "" ||
-        subj.name.toLowerCase().includes(q) ||
-        subj.code.toLowerCase().includes(q) ||
-        subj.deptCode.toLowerCase().includes(q) ||
-        subj.deptName.toLowerCase().includes(q) ||
-        subj.units.some((u) => u.toLowerCase().includes(q)) ||
-        subj.tags.some((t) => t.toLowerCase().includes(q));
+      try {
+        const [deptList, resList, subjList] = await Promise.allSettled([
+          departmentService.getDepartments(),
+          resourceService.getAllResources(),
+          apiRequest("/subjects"),
+        ]);
 
-      return matchDept && matchSem && matchSearch;
-    });
-  }, [allSubjects, selectedDeptId, selectedSemester, searchQuery]);
+        if (cancelled) return;
 
-  // Filter software & general resources
-  const filteredResources = useMemo(() => {
-    return allResources.filter((res) => {
-      const isSoftware =
-        res.category === "Free Software" ||
-        res.type.toLowerCase().includes("software") ||
-        res.type.toLowerCase().includes("simulator") ||
-        res.type.toLowerCase().includes("license") ||
-        res.tags.includes("Free Software");
+        if (deptList.status === "fulfilled" && Array.isArray(deptList.value) && deptList.value.length > 0) {
+          setDepartments(
+            deptList.value.map((d) => ({ id: d._id || d.id, code: d.code, name: d.name }))
+          );
+        }
 
-      if (mainCategory === "softwares" && !isSoftware) {
-        return false;
+        if (resList.status === "fulfilled") {
+          const list = Array.isArray(resList.value) ? resList.value : [];
+          const deptIndex = {};
+          setLiveReady(true);
+          // Map departmentId to code when not populated
+          list.forEach((r) => {
+            if (!r.departmentId) {
+              const match = Object.values(DEPARTMENTS_DATA).find(
+                (d) => d.code.toLowerCase() === (r.departmentCode || r.department || "").toLowerCase()
+              );
+              if (match) deptIndex[r.departmentId] = match.code;
+            }
+          });
+          setResources(list);
+        }
+
+        if (subjList.status === "fulfilled") {
+          const list =
+            subjList.value?.subjects || subjList.value?.data || (Array.isArray(subjList.value) ? subjList.value : []);
+          setSubjects(Array.isArray(list) ? list : []);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    }
 
-      const matchDept =
-        selectedDeptId === "all" || res.deptId === selectedDeptId;
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-      const q = searchQuery.toLowerCase().trim();
-      const matchSearch =
-        q === "" ||
-        res.name.toLowerCase().includes(q) ||
-        res.desc.toLowerCase().includes(q) ||
-        res.deptCode.toLowerCase().includes(q) ||
-        res.deptName.toLowerCase().includes(q) ||
-        res.type.toLowerCase().includes(q) ||
-        res.tags.some((t) => t.toLowerCase().includes(q));
-
-      return matchDept && matchSearch;
+  const deptCodeById = useMemo(() => {
+    const map = {};
+    Object.values(DEPARTMENTS_DATA).forEach((d) => {
+      map[d.code.toLowerCase()] = d.code;
+      map[d.id] = d.code;
     });
-  }, [allResources, mainCategory, selectedDeptId, searchQuery]);
+    departments.forEach((d) => {
+      map[d.id] = d.code;
+    });
+    return map;
+  }, [departments]);
+
+  const effectiveDeptId = useMemo(() => {
+    if (selectedDeptId !== "all") return selectedDeptId;
+    if (routeDeptId) return routeDeptId.toLowerCase();
+    return "all";
+  }, [selectedDeptId, routeDeptId]);
+
+  const resourceDeptId = (r) => {
+    if (typeof r.departmentId === "object" && r.departmentId) return r.departmentId._id;
+    return r.departmentId || r.departmentCode || r.department || "";
+  };
+
+  const resourceDeptCode = (r) => {
+    if (typeof r.departmentId === "object" && r.departmentId) return r.departmentId.code || r.departmentId.name;
+    return deptCodeById[resourceDeptId(r)] || r.departmentCode || r.department || "";
+  };
+
+  const isSoftware = (r) => {
+    const t = (r.type || "").toLowerCase();
+    return t.includes("software") || t.includes("simulator") || t.includes("license") || t.includes("video") || t.includes("website");
+  };
+
+  // ---- Soil filters ----
+  const q = (searchQuery || "").toLowerCase().trim();
+
+  // Resources view (softwares / all)
+  const filteredResources = useMemo(() => {
+    return resources.filter((r) => {
+      if (mainCategory === "softwares" && !isSoftware(r)) return false;
+      const matchDept =
+        effectiveDeptId === "all" || resourceDeptId(r) === effectiveDeptId ||
+        resourceDeptCode(r).toLowerCase() === effectiveDeptId.toLowerCase();
+      if (!matchDept) return false;
+      const txt = `${r.title || ""} ${r.description || ""} ${Array.isArray(r.tags) ? r.tags.join(" ") : ""}`.toLowerCase();
+      return q === "" || txt.includes(q);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resources, mainCategory, effectiveDeptId, q]);
+
+  // Notes view: subject cards derived from live resources (grouped by subject)
+  const subjectGroups = useMemo(() => {
+    const groups = new Map();
+    resources.forEach((r) => {
+      const sid = r.subjectId?._id || r.subjectId;
+      if (!sid) return;
+      if (!groups.has(sid)) {
+        const subject = typeof r.subjectId === "object" && r.subjectId ? r.subjectId : null;
+        groups.set(sid, {
+          id: sid,
+          name: subject?.name || r.subjectName || "Academic Subject",
+          code: subject?.code || r.subjectCode || "SUBJ",
+          resources: [],
+        });
+      }
+      groups.get(sid).resources.push(r);
+    });
+
+    const enriched = [];
+    subjects.forEach((s) => {
+      const existing = groups.get(s._id);
+      const group = existing || { id: s._id, name: s.name, code: s.code, resources: [] };
+      group.departmentId = s.departmentId;
+      group.semester = s.semester;
+      group.credits = s.credits;
+      group.units = s.units || [];
+      enriched.push(group);
+      groups.delete(s._id);
+    });
+    groups.forEach((g) => enriched.push(g));
+
+    return enriched
+      .map((g) => {
+        const deptId = g.departmentId || g.resources[0]?.departmentId?._id || g.resources[0]?.departmentId;
+        const deptCode = g.departmentId
+          ? deptCodeById[g.departmentId] || g.resources[0]?.departmentId?.code || ""
+          : resourceDeptCode(g.resources[0]) || "";
+        return {
+          ...g,
+          deptId,
+          deptCode,
+          filteredResources: g.resources.filter((r) => {
+            const matchDept =
+              effectiveDeptId === "all" ||
+              resourceDeptId(r) === effectiveDeptId ||
+              deptCode.toLowerCase() === effectiveDeptId.toLowerCase();
+            const semMatch =
+              selectedSemester === "all" ||
+              String(g.semester || "") === selectedSemester.replace("Semester ", "");
+            const txt = `${r.title || ""} ${r.description || ""} ${Array.isArray(r.tags) ? r.tags.join(" ") : ""}`.toLowerCase();
+            return matchDept && semMatch && (q === "" || txt.includes(q));
+          }),
+        };
+      })
+      .filter((g) => g.filteredResources.length > 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resources, subjects, effectiveDeptId, selectedSemester, q]);
+
+  const firstType = (group, type) => group.filteredResources.find((r) => (r.type || "") === type);
 
   const hasActiveFilters =
-    selectedDeptId !== "all" ||
-    selectedSemester !== "all" ||
-    searchQuery.trim() !== "";
+    effectiveDeptId !== "all" || selectedSemester !== "all" || searchQuery.trim() !== "";
 
   const handleResetFilters = () => {
-    setSelectedDeptId("all");
+    setSelectedDeptId(routeDeptId || "all");
     setSelectedSemester("all");
     setSearchQuery("");
   };
@@ -152,6 +271,21 @@ export default function DepartmentResourcesPage() {
   const toggleSubjectExpand = (id) => {
     setExpandedSubjectId((prev) => (prev === id ? null : id));
   };
+
+  const openResource = (r) => {
+    const url = resolveResourceUrl(r.fileUrl || r.externalUrl || r.downloadUrl);
+    if (url) window.open(url, "_blank", "noopener,noreferrer");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
+        <p className="text-sm font-semibold text-slate-400">Loading department e-resources...</p>
+      </div>
+    );
+  }
+
+  const countOf = (fn) => filteredResources.filter(fn).length;
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-[#0B4A8F] selection:text-white scroll-smooth">
@@ -190,7 +324,9 @@ export default function DepartmentResourcesPage() {
                 transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
                 className="mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal max-w-xl"
               >
-                Access verified university subject notes, syllabus, unit modules, and free engineering software licenses categorized by department.
+                Access verified university subject notes, lab manuals, question banks, and free
+                engineering tools categorized by department. New material uploaded by your faculty
+                appears here instantly.
               </motion.p>
             </div>
 
@@ -200,23 +336,27 @@ export default function DepartmentResourcesPage() {
               transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
               className="flex items-center gap-3 shrink-0"
             >
-              <Link
-                to="/announcements"
-                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
-              >
-                <span>LATEST NOTICES</span>
-                <ArrowRight
-                  size={15}
-                  className="transition-transform duration-150 group-hover:translate-x-1 text-[#0B4A8F]"
-                />
-              </Link>
+              {liveReady ? (
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-400/15 border border-emerald-300/30 text-emerald-200 text-xs font-bold">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  LIVE · {resources.length} resources online
+                </span>
+              ) : (
+                <Link
+                  to="/announcements"
+                  className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
+                >
+                  <span>LATEST NOTICES</span>
+                  <ArrowRight size={15} className="transition-transform duration-150 group-hover:translate-x-1 text-[#0B4A8F]" />
+                </Link>
+              )}
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* =========================================================================
-          2. MAIN CATEGORY SELECTOR (Notes vs Free Softwares vs All)
+          2. MAIN CATEGORY SELECTOR
           ========================================================================= */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-7 space-y-6">
         <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
@@ -236,12 +376,10 @@ export default function DepartmentResourcesPage() {
             <span>Academic Notes & Subjects</span>
             <span
               className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                mainCategory === "notes"
-                  ? "bg-white/20 text-white"
-                  : "bg-slate-100 text-slate-600"
+                mainCategory === "notes" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
               }`}
             >
-              {allSubjects.length}
+              {subjectGroups.length}
             </span>
           </button>
 
@@ -261,18 +399,10 @@ export default function DepartmentResourcesPage() {
             <span>Free Softwares & Tools</span>
             <span
               className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                mainCategory === "softwares"
-                  ? "bg-white/20 text-white"
-                  : "bg-slate-100 text-slate-600"
+                mainCategory === "softwares" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
               }`}
             >
-              {
-                allResources.filter(
-                  (r) =>
-                    r.category === "Free Software" ||
-                    r.tags.includes("Free Software")
-                ).length
-              }
+              {countOf((r) => isSoftware(r))}
             </span>
           </button>
 
@@ -290,27 +420,30 @@ export default function DepartmentResourcesPage() {
           >
             <Globe2 size={16} />
             <span>All E-Resources</span>
+            <span
+              className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                mainCategory === "all" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
+              }`}
+            >
+              {resources.length}
+            </span>
           </button>
         </div>
 
         {/* =========================================================================
-            3. FILTER CONTROLS BAR (Department + Semester + Search)
+            3. FILTER CONTROLS BAR
             ========================================================================= */}
         <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            {/* Search Input */}
             <div className="relative flex-1 min-w-[240px]">
-              <Search
-                size={16}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-              />
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={
                   mainCategory === "notes"
-                    ? "Search subjects by name, code (e.g. 22CST31), or unit..."
+                    ? "Search subjects or study materials by name, code, or topic..."
                     : "Search tools, simulation softwares, or topics..."
                 }
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] bg-slate-50/70 hover:bg-white transition-colors duration-150"
@@ -325,7 +458,6 @@ export default function DepartmentResourcesPage() {
               )}
             </div>
 
-            {/* Department Dropdown Filter */}
             <div className="flex flex-wrap sm:flex-nowrap items-center gap-3">
               <div className="relative min-w-[200px] w-full sm:w-auto">
                 <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
@@ -336,8 +468,8 @@ export default function DepartmentResourcesPage() {
                   onChange={(e) => setSelectedDeptId(e.target.value)}
                   className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] appearance-none cursor-pointer transition-colors duration-150"
                 >
-                  <option value="all">All Departments (7 Branches)</option>
-                  {DEPARTMENTS.map((dept) => (
+                  <option value="all">All Departments ({departments.length} Branches)</option>
+                  {departments.map((dept) => (
                     <option key={dept.id} value={dept.id}>
                       {dept.code} — {dept.name}
                     </option>
@@ -348,7 +480,6 @@ export default function DepartmentResourcesPage() {
                 </div>
               </div>
 
-              {/* Semester Filter (Active on Notes Mode) */}
               {mainCategory === "notes" && (
                 <div className="relative min-w-[150px] w-full sm:w-auto">
                   <select
@@ -370,14 +501,18 @@ export default function DepartmentResourcesPage() {
             </div>
           </div>
 
-          {/* Filter Status & Active Badges */}
           <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-bold text-slate-500 flex items-center gap-1.5">
                 <Layers size={14} className="text-[#0B4A8F]" />
                 {mainCategory === "notes" ? (
                   <span>
-                    Showing <strong className="text-slate-800">{filteredSubjects.length}</strong> academic subjects
+                    Showing{" "}
+                    <strong className="text-slate-800">
+                      {subjectGroups.reduce((n, g) => n + g.filteredResources.length, 0)}
+                    </strong>{" "}
+                    study materials across{" "}
+                    <strong className="text-slate-800">{subjectGroups.length}</strong> subjects
                   </span>
                 ) : (
                   <span>
@@ -386,9 +521,9 @@ export default function DepartmentResourcesPage() {
                 )}
               </span>
 
-              {selectedDeptId !== "all" && (
+              {effectiveDeptId !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-[#0B4A8F] font-bold border border-blue-200">
-                  Dept: {DEPARTMENTS.find((d) => d.id === selectedDeptId)?.code}
+                  Dept: {departments.find((d) => d.id === effectiveDeptId)?.code || deptCodeById[effectiveDeptId]}
                   <button
                     onClick={() => setSelectedDeptId("all")}
                     className="ml-1 hover:text-red-500 cursor-pointer"
@@ -427,10 +562,10 @@ export default function DepartmentResourcesPage() {
             ========================================================================= */}
         {mainCategory === "notes" && (
           <div>
-            {filteredSubjects.length === 0 ? (
+            {subjectGroups.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-xs">
                 <h3 className="text-sm font-bold text-slate-800">
-                  No subjects found matching your filters
+                  No study materials found matching your filters
                 </h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Try clearing your search query or selecting "All Departments".
@@ -444,117 +579,141 @@ export default function DepartmentResourcesPage() {
               </div>
             ) : (
               <div className="grid gap-5 md:grid-cols-2">
-                {filteredSubjects.map((subj, index) => {
+                {subjectGroups.map((subj, index) => {
                   const isExpanded = expandedSubjectId === subj.id;
+                  const notesRes = firstType(subj, "notes");
+                  const qbRes = firstType(subj, "question_bank");
                   return (
                     <motion.article
                       key={subj.id}
                       initial={{ opacity: 0, y: 8 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
-                      transition={{
-                        duration: 0.25,
-                        delay: (index % 4) * 0.05,
-                        ease: "easeOut",
-                      }}
+                      transition={{ duration: 0.25, delay: (index % 4) * 0.05, ease: "easeOut" }}
                       className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/40 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between"
                     >
                       <div>
-                        {/* Subject Header Badges */}
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                           <div className="flex items-center gap-2">
                             <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#0B4A8F] text-white">
-                              {subj.deptCode}
+                              {subj.deptCode || "Dept"}
                             </span>
                             <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0B4A8F] border border-blue-100">
                               {subj.code}
                             </span>
                           </div>
 
-                          <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                              {subj.semester}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                              {subj.credits}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Subject Title */}
-                        <h3 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug mb-3">
-                          {subj.name}
-                        </h3>
-
-                        {/* Unit Syllabus Accordion */}
-                        <div className="mb-4 bg-slate-50 rounded-xl border border-slate-200/70 p-3">
-                          <button
-                            type="button"
-                            onClick={() => toggleSubjectExpand(subj.id)}
-                            className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none"
-                          >
-                            <span className="flex items-center gap-1.5">
-                              <FileText size={13} className="text-[#0B4A8F]" />
-                              <span>5 Course Units & Syllabus Outline</span>
-                            </span>
-                            {isExpanded ? (
-                              <ChevronUp size={14} />
-                            ) : (
-                              <ChevronDown size={14} />
-                            )}
-                          </button>
-
-                          {isExpanded && (
-                            <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5 text-xs text-slate-600">
-                              {subj.units.map((unit, uIdx) => (
-                                <div
-                                  key={uIdx}
-                                  className="flex items-start gap-2 py-0.5"
-                                >
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#0B4A8F] mt-1.5 shrink-0" />
-                                  <span className="leading-tight font-medium">
-                                    {unit}
-                                  </span>
-                                </div>
-                              ))}
+                          {(subj.semester || subj.credits) && (
+                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
+                              {subj.semester && (
+                                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                                  Semester {subj.semester}
+                                </span>
+                              )}
+                              {subj.credits && (
+                                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                                  {subj.credits} Credits
+                                </span>
+                              )}
                             </div>
                           )}
                         </div>
 
-                        {/* Tag Chips */}
+                        <h3 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug mb-3">
+                          {subj.name}
+                        </h3>
+
+                        {subj.units.length > 0 ? (
+                          <div className="mb-4 bg-slate-50 rounded-xl border border-slate-200/70 p-3">
+                            <button
+                              type="button"
+                              onClick={() => toggleSubjectExpand(subj.id)}
+                              className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <FileText size={13} className="text-[#0B4A8F]" />
+                                <span>{subj.units.length} Course Units & Syllabus Outline</span>
+                              </span>
+                              <span className="text-slate-400">{isExpanded ? "−" : "+"}</span>
+                            </button>
+                            {isExpanded && (
+                              <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5 text-xs text-slate-600">
+                                {subj.units.map((unit, uIdx) => (
+                                  <div key={uIdx} className="flex items-start gap-2 py-0.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0B4A8F] mt-1.5 shrink-0" />
+                                    <span className="leading-tight font-medium">
+                                      Unit {unit.unitNumber}: {unit.title}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mb-4 bg-slate-50 rounded-xl border border-slate-200/70 p-3">
+                            <button
+                              type="button"
+                              onClick={() => toggleSubjectExpand(subj.id)}
+                              className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none"
+                            >
+                              <span className="flex items-center gap-1.5">
+                                <BookMarked size={13} className="text-[#0B4A8F]" />
+                                <span>{subj.filteredResources.length} Uploaded Study Material(s)</span>
+                              </span>
+                              <span className="text-slate-400">{isExpanded ? "−" : "+"}</span>
+                            </button>
+                            {isExpanded && (
+                              <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5 text-xs text-slate-600">
+                                {subj.filteredResources.map((r) => (
+                                  <button
+                                    key={r._id || r.id}
+                                    onClick={() => openResource(r)}
+                                    className="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-white transition-colors cursor-pointer text-left"
+                                  >
+                                    <span className="leading-tight font-medium text-slate-700 line-clamp-1">
+                                      {r.title}
+                                    </span>
+                                    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-[#0B4A8F]">
+                                      <Download size={11} /> {r.downloadsCount || 0}
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                         <div className="flex flex-wrap gap-1.5 mb-4">
-                          {subj.tags.map((tag) => (
+                          {subj.filteredResources.slice(0, 6).map((r) => (
                             <span
-                              key={tag}
+                              key={r._id || r.id}
                               className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600"
                             >
-                              #{tag}
+                              {TYPE_LABEL[r.type] || r.type || "Notes"}
                             </span>
                           ))}
                         </div>
                       </div>
 
-                      {/* Action Buttons: Notes & Question Bank */}
-                      <div className="pt-3.5 border-t border-slate-100 grid grid-cols-2 gap-2">
-                        <a
-                          href={subj.notesUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors duration-150"
+                      <div className="pt-3.5 border-t border-slate-100 grid grid-cols-1 gap-2">
+                        <button
+                          onClick={() => openResource(notesRes || subj.filteredResources[0])}
+                          disabled={!notesRes && subj.filteredResources.length === 0}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors duration-150 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                         >
                           <Download size={13} />
                           <span>LECTURE NOTES</span>
-                        </a>
+                        </button>
 
-                        <a
-                          href={subj.questionBankUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0B4A8F] border border-blue-200 text-xs font-bold uppercase tracking-wider transition-colors duration-150"
-                        >
-                          <HelpCircle size={13} />
-                          <span>QUESTION BANK</span>
-                        </a>
+                        {qbRes && (
+                          <button
+                            onClick={() => openResource(qbRes)}
+                            className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0B4A8F] border border-blue-200 text-xs font-bold uppercase tracking-wider transition-colors duration-150"
+                          >
+                            <HelpCircle size={13} />
+                            <span>QUESTION BANK</span>
+                          </button>
+                        )}
                       </div>
                     </motion.article>
                   );
@@ -571,9 +730,7 @@ export default function DepartmentResourcesPage() {
           <div>
             {filteredResources.length === 0 ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-xs">
-                <h3 className="text-sm font-bold text-slate-800">
-                  No resources matched your search
-                </h3>
+                <h3 className="text-sm font-bold text-slate-800">No resources matched your search</h3>
                 <p className="text-xs text-slate-500 mt-1">
                   Try adjusting your query or resetting filters.
                 </p>
@@ -588,67 +745,64 @@ export default function DepartmentResourcesPage() {
               <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                 {filteredResources.map((resource, index) => (
                   <motion.article
-                    key={`${resource.deptId}-${resource.name}`}
+                    key={resource._id || resource.id}
                     initial={{ opacity: 0, y: 8 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{
-                      duration: 0.25,
-                      delay: (index % 6) * 0.05,
-                      ease: "easeOut",
-                    }}
+                    transition={{ duration: 0.25, delay: (index % 6) * 0.05, ease: "easeOut" }}
                     className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/30 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 group"
                   >
                     <div>
-                      {/* Department Tag & Status Badge */}
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0B4A8F] border border-blue-100">
-                          {resource.deptCode} • {resource.type}
+                          {resourceDeptCode(resource)} • {TYPE_LABEL[resource.type] || resource.type || "Notes"}
                         </span>
-
-                        {resource.badge && (
+                        {resource.unit && (
                           <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            {resource.badge}
+                            Unit {resource.unit}
                           </span>
                         )}
                       </div>
 
-                      {/* Title */}
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0B4A8F] transition-colors duration-150 leading-snug mb-1.5">
-                        {resource.name}
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0B4A8F] transition-colors duration-150 leading-snug mb-1.5 line-clamp-2">
+                        {resource.title}
                       </h3>
 
-                      {/* Description */}
                       <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal mb-4 line-clamp-3">
-                        {resource.desc}
+                        {resource.description || "Department study material."}
                       </p>
                     </div>
 
-                    {/* Hashtags & Launch Button */}
                     <div className="pt-3.5 border-t border-slate-100 space-y-3.5">
                       <div className="flex flex-wrap gap-1.5">
-                        {resource.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
+                        {Array.isArray(resource.tags) &&
+                          resource.tags.slice(0, 5).map((tag) => (
+                            <span
+                              key={tag}
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
                       </div>
 
-                      <a
-                        href={resource.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group/btn w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors duration-150"
+                      <button
+                        onClick={() => openResource(resource)}
+                        disabled={!resource.fileUrl && !resource.externalUrl}
+                        className="group/btn w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors duration-150 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
                       >
-                        <span>LAUNCH E-RESOURCE</span>
+                        <span>
+                          {resource.fileUrl || resource.externalUrl ? "OPEN / DOWNLOAD E-RESOURCE" : "NO FILE ATTACHED"}
+                        </span>
                         <ExternalLink
                           size={13}
                           className="transition-transform duration-150 group-hover/btn:translate-x-0.5"
                         />
-                      </a>
+                      </button>
+                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
+                        <span>⬇ {resource.downloadsCount || 0} downloads</span>
+                        {resource.fileSize && <span>{(resource.fileSize || "").toUpperCase()}</span>}
+                      </div>
                     </div>
                   </motion.article>
                 ))}
