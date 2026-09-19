@@ -19,7 +19,6 @@ import {
   BookMarked,
 } from "lucide-react";
 import { departmentService } from "../services/departmentService";
-import { resourceService } from "../services/resourceService";
 import { subjectService } from "../services/subjectService";
 import { resourceService, RESOURCE_TYPES, resolveResourceUrl } from "../services/resourceService";
 import { apiRequest } from "../services/api";

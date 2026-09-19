@@ -1,9 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Building2, Plus, Edit, CheckCircle, Ban, Users, BookOpen, Layers } from "lucide-react";
+import { Building2, Plus, Edit, CheckCircle, Ban, Users, BookOpen, Layers, X, Loader2 } from "lucide-react";
 import { departmentService } from "../../services/departmentService";
-import { Building2, Plus, Edit, CheckCircle, Ban, Users, Layers, BookOpen, X, Loader2 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
-import { departmentService } from "../../services/departmentService";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 const EMPTY_FORM = { code: "", name: "", description: "", hodName: "", icon: "Layers" };
