@@ -1,8 +1,21 @@
 /**
  * Department Service
- * Communicates with /api/departments and falls back to local data.
+ * Communicates exclusively with backend MongoDB endpoints (/api/departments, /api/subjects).
  */
 
+import { apiRequest } from "./api";
+
+export const departmentService = {
+  async getDepartments() {
+    try {
+      const res = await apiRequest("/departments");
+      if (res.success && Array.isArray(res.departments)) {
+        return res.departments;
+      }
+    } catch (err) {
+      console.error("Failed to fetch departments from MongoDB backend:", err);
+    }
+    return [];
 import api, { apiRequest } from "./api";
 import { DEPARTMENTS_DATA } from "../data/departments";
 
@@ -23,16 +36,9 @@ export const departmentService = {
         return res.department;
       }
     } catch (err) {
-      // Graceful fallback
+      console.error(`Failed to fetch department '${deptId}' from MongoDB backend:`, err);
     }
-
-    const key = Object.keys(DEPARTMENTS_DATA).find(
-      (k) =>
-        k.toLowerCase() === deptId.toLowerCase() ||
-        DEPARTMENTS_DATA[k].code.toLowerCase() === deptId.toLowerCase()
-    );
-    if (!key) return null;
-    return DEPARTMENTS_DATA[key];
+    return null;
   },
 
   async createDepartment(payload) {
@@ -53,16 +59,12 @@ export const departmentService = {
   async getSubjectsForSemester(deptId, semesterNumber) {
     try {
       const res = await apiRequest(`/subjects?departmentId=${deptId}&semester=${semesterNumber}`);
-      if (res.success && Array.isArray(res.subjects) && res.subjects.length > 0) {
+      if (res.success && Array.isArray(res.subjects)) {
         return res.subjects;
       }
     } catch (err) {
-      // Graceful fallback
+      console.error("Failed to fetch subjects from MongoDB backend:", err);
     }
-
-    const dept = await this.getDepartmentById(deptId);
-    if (!dept || !dept.curriculum) return [];
-    const sem = dept.curriculum.find((s) => s.semester === Number(semesterNumber));
-    return sem ? sem.subjects : [];
+    return [];
   },
 };

@@ -1,26 +1,9 @@
 /**
  * Announcement Service
- * Manages institutional circulars with priority tags, image banners, and audience targeting.
+ * Communicates exclusively with backend MongoDB endpoints (/api/announcements).
  */
 
 import { apiRequest, API_BASE_URL } from "./api";
-import { ANNOUNCEMENTS } from "../data/announcements";
-
-const ANN_KEY = "techverse_announcements";
-
-function getStoredAnnouncements() {
-  try {
-    const raw = localStorage.getItem(ANN_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.error(e);
-  }
-  return ANNOUNCEMENTS;
-}
-
-function saveAnnouncements(ann) {
-  localStorage.setItem(ANN_KEY, JSON.stringify(ann));
-}
 
 export const announcementService = {
   async getAll(params = {}) {
@@ -31,9 +14,9 @@ export const announcementService = {
         return res.announcements;
       }
     } catch (err) {
-      // Graceful fallback to local data
+      console.error("Failed to fetch announcements from MongoDB backend:", err);
     }
-    return getStoredAnnouncements();
+    return [];
   },
 
   async create(announcementData) {

@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Target,
   Code2,
@@ -16,20 +16,11 @@ import {
   CheckCircle2,
   Sparkles,
   ArrowRight,
-  BookOpen,
-  FileText,
-  Briefcase,
   ChevronDown,
   ChevronUp,
   X,
-  Filter,
 } from "lucide-react";
-import {
-  TRAINING_TRACKS,
-  UPCOMING_BOOTCAMPS,
-  COMPANY_MOCK_TESTS,
-  DOWNLOADABLE_TOOLKITS,
-} from "../data/training";
+import { trainingService } from "../services/trainingService";
 import TextReveal from "../components/TextReveal";
 
 const TRACK_ICONS = {
@@ -47,9 +38,32 @@ export default function TrainingPage() {
   const [registeredBootcampId, setRegisteredBootcampId] = useState(null);
   const [expandedTrackId, setExpandedTrackId] = useState(null);
 
+  const [trainingTracks, setTrainingTracks] = useState([]);
+  const [upcomingBootcamps, setUpcomingBootcamps] = useState([]);
+  const [companyMockTests, setCompanyMockTests] = useState([]);
+  const [downloadableToolkits, setDownloadableToolkits] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const overview = await trainingService.getOverview();
+        setTrainingTracks(overview.tracks || []);
+        setUpcomingBootcamps(overview.bootcamps || []);
+        setCompanyMockTests(overview.companies || []);
+        setDownloadableToolkits(overview.toolkits || []);
+      } catch (err) {
+        console.error("Failed to load training data:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
   // Filtered Training Tracks
   const filteredTracks = useMemo(() => {
-    return TRAINING_TRACKS.filter((track) => {
+    return trainingTracks.filter((track) => {
       const matchCat =
         selectedCategory === "all" ||
         track.category.toLowerCase() === selectedCategory.toLowerCase();
@@ -63,20 +77,20 @@ export default function TrainingPage() {
 
       return matchCat && matchSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [trainingTracks, selectedCategory, searchQuery]);
 
   // Filtered Company Tests
   const filteredCompanies = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    if (q === "") return COMPANY_MOCK_TESTS;
-    return COMPANY_MOCK_TESTS.filter(
+    if (q === "") return companyMockTests;
+    return companyMockTests.filter(
       (c) =>
-        c.company.toLowerCase().includes(q) ||
-        c.role.toLowerCase().includes(q) ||
-        c.pattern.toLowerCase().includes(q) ||
-        c.sampleQuestions.some((sq) => sq.toLowerCase().includes(q))
+        (c.company || c.name || "").toLowerCase().includes(q) ||
+        (c.role || "").toLowerCase().includes(q) ||
+        (c.pattern || "").toLowerCase().includes(q) ||
+        (c.sampleQuestions || []).some((sq) => sq.toLowerCase().includes(q))
     );
-  }, [searchQuery]);
+  }, [companyMockTests, searchQuery]);
 
   const handleRegisterBootcamp = (id) => {
     setRegisteredBootcampId(id);
@@ -89,25 +103,25 @@ export default function TrainingPage() {
     setExpandedTrackId((prev) => (prev === id ? null : id));
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#F8FAFC] py-24 flex items-center justify-center text-xs font-bold text-slate-500">
+        Loading Placement PrepZone & Bootcamps from MongoDB...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-[#0B4A8F] selection:text-white scroll-smooth">
-      {/* =========================================================================
-          1. HERO SECTION
-          ========================================================================= */}
+      {/* 1. HERO SECTION */}
       <section className="relative bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-25">
-          <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full border border-white/20" />
-          <div className="absolute right-[-40px] top-1/4 h-80 w-80 rounded-full border border-white/20" />
-          <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-blue-400/10 blur-2xl" />
-        </div>
-
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="max-w-2xl">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.3 }}
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-widest text-blue-100 mb-3 backdrop-blur-sm"
               >
                 <Sparkles size={13} className="text-blue-200" />
@@ -123,23 +137,22 @@ export default function TrainingPage() {
               <motion.p
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
+                transition={{ duration: 0.35, delay: 0.1 }}
                 className="mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal max-w-xl"
               >
                 Structured PrepZone bootcamps, company-specific recruitment tracks (Zoho, TCS, Infosys, Cognizant), quantitative aptitude drills, and technical interview toolkits.
               </motion.p>
             </div>
 
-            {/* Action CTA Link */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
+              transition={{ delay: 0.2, duration: 0.3 }}
               className="flex items-center gap-3 shrink-0"
             >
               <Link
                 to="/courses"
-                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
+                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors"
               >
                 <span>EXPLORE COURSES</span>
                 <ArrowRight
@@ -152,13 +165,9 @@ export default function TrainingPage() {
         </div>
       </section>
 
-      {/* =========================================================================
-          2. MAIN CONTENT AREA
-          ========================================================================= */}
+      {/* 2. MAIN CONTENT AREA */}
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-12">
-        {/* =========================================================================
-            SEARCH BAR & FILTER ROW
-            ========================================================================= */}
+        {/* SEARCH BAR & FILTER */}
         <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-xs">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative flex-1 w-full">
@@ -171,7 +180,7 @@ export default function TrainingPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tracks, company patterns (Zoho, TCS, Infosys), or skills..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] bg-slate-50/70 hover:bg-white transition-colors duration-150"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] bg-slate-50/70 hover:bg-white transition-colors"
               />
               {searchQuery && (
                 <button
@@ -201,9 +210,7 @@ export default function TrainingPage() {
           </div>
         </div>
 
-        {/* =========================================================================
-            SECTION 1: TRAINING TRACKS
-            ========================================================================= */}
+        {/* SECTION 1: TRAINING TRACKS */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -227,23 +234,18 @@ export default function TrainingPage() {
           <div className="grid gap-5 md:grid-cols-2">
             {filteredTracks.map((track, index) => {
               const Icon = TRACK_ICONS[track.icon] || Target;
-              const isExpanded = expandedTrackId === track.id;
+              const isExpanded = expandedTrackId === (track.trackId || track._id);
 
               return (
                 <motion.article
-                  key={track.id}
+                  key={track.trackId || track._id || index}
                   initial={{ opacity: 0, y: 8 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{
-                    duration: 0.25,
-                    delay: (index % 4) * 0.05,
-                    ease: "easeOut",
-                  }}
-                  className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/40 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between"
+                  transition={{ duration: 0.25, delay: (index % 4) * 0.05 }}
+                  className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/40 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
                 >
                   <div>
-                    {/* Header Badges */}
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <div className="flex items-center gap-2">
                         <div className="p-2.5 rounded-xl bg-blue-50 text-[#0B4A8F] border border-blue-100">
@@ -266,7 +268,6 @@ export default function TrainingPage() {
                       )}
                     </div>
 
-                    {/* Title & Description */}
                     <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug mb-2">
                       {track.title}
                     </h3>
@@ -274,35 +275,25 @@ export default function TrainingPage() {
                       {track.description}
                     </p>
 
-                    {/* Curriculum Accordion */}
                     <div className="mb-4 bg-slate-50 rounded-xl border border-slate-200/70 p-3">
                       <button
                         type="button"
-                        onClick={() => toggleTrackExpand(track.id)}
+                        onClick={() => toggleTrackExpand(track.trackId || track._id)}
                         className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none"
                       >
                         <span className="flex items-center gap-1.5">
                           <CheckCircle2 size={14} className="text-[#0B4A8F]" />
-                          <span>Core Syllabus Modules ({track.topics.length})</span>
+                          <span>Core Syllabus Modules ({track.topics?.length || 0})</span>
                         </span>
-                        {isExpanded ? (
-                          <ChevronUp size={14} />
-                        ) : (
-                          <ChevronDown size={14} />
-                        )}
+                        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                       </button>
 
                       {isExpanded && (
                         <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5 text-xs text-slate-600">
-                          {track.topics.map((topic, tIdx) => (
-                            <div
-                              key={tIdx}
-                              className="flex items-start gap-2 py-0.5"
-                            >
+                          {track.topics?.map((topic, tIdx) => (
+                            <div key={tIdx} className="flex items-start gap-2 py-0.5">
                               <span className="w-1.5 h-1.5 rounded-full bg-[#0B4A8F] mt-1.5 shrink-0" />
-                              <span className="leading-tight font-medium">
-                                {topic}
-                              </span>
+                              <span className="leading-tight font-medium">{topic}</span>
                             </div>
                           ))}
                         </div>
@@ -310,15 +301,14 @@ export default function TrainingPage() {
                     </div>
                   </div>
 
-                  {/* Practice Links */}
                   <div className="pt-3.5 border-t border-slate-100 space-y-2">
                     <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
                       Recommended Practice Portals:
                     </span>
                     <div className="flex flex-wrap gap-2">
-                      {track.resources.map((res) => (
+                      {track.resources?.map((res, rIdx) => (
                         <a
-                          key={res.name}
+                          key={rIdx}
                           href={res.url}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -336,9 +326,7 @@ export default function TrainingPage() {
           </div>
         </section>
 
-        {/* =========================================================================
-            SECTION 2: COMPANY CRACKERS
-            ========================================================================= */}
+        {/* SECTION 2: COMPANY CRACKERS */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -362,24 +350,20 @@ export default function TrainingPage() {
           <div className="grid gap-5 md:grid-cols-2">
             {filteredCompanies.map((comp, index) => (
               <motion.article
-                key={comp.company}
+                key={comp._id || comp.slug || index}
                 initial={{ opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{
-                  duration: 0.25,
-                  delay: (index % 4) * 0.05,
-                  ease: "easeOut",
-                }}
+                transition={{ duration: 0.25, delay: (index % 4) * 0.05 }}
                 className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/40 p-5 sm:p-6 shadow-xs flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
                     <span className="text-sm font-black uppercase tracking-wider text-[#0B4A8F]">
-                      {comp.company}
+                      {comp.company || comp.name}
                     </span>
                     <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      CTC: {comp.salary}
+                      CTC: {comp.salary || comp.packageRange}
                     </span>
                   </div>
 
@@ -387,7 +371,7 @@ export default function TrainingPage() {
                     {comp.role}
                   </h3>
                   <p className="text-xs font-semibold text-slate-500 mb-3">
-                    {comp.rounds}
+                    {comp.rounds?.length ? `${comp.rounds.length} Rounds` : comp.rounds}
                   </p>
 
                   <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl mb-4 text-xs text-slate-700">
@@ -401,7 +385,7 @@ export default function TrainingPage() {
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
                       High-Frequency Coding Questions:
                     </span>
-                    {comp.sampleQuestions.map((sq, sIdx) => (
+                    {comp.sampleQuestions?.map((sq, sIdx) => (
                       <div
                         key={sIdx}
                         className="text-xs text-slate-600 bg-slate-50 p-2 rounded-lg border border-slate-200/60 font-mono"
@@ -414,12 +398,12 @@ export default function TrainingPage() {
 
                 <div className="pt-3 border-t border-slate-100">
                   <a
-                    href={comp.testLink}
+                    href={comp.testLink || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors"
                   >
-                    <span>PRACTICE {comp.company.toUpperCase()} TEST SERIES</span>
+                    <span>PRACTICE {(comp.company || comp.name || "").toUpperCase()} TEST SERIES</span>
                     <ExternalLink size={13} />
                   </a>
                 </div>
@@ -428,9 +412,7 @@ export default function TrainingPage() {
           </div>
         </section>
 
-        {/* =========================================================================
-            SECTION 3: UPCOMING BOOTCAMPS
-            ========================================================================= */}
+        {/* SECTION 3: UPCOMING BOOTCAMPS */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -455,7 +437,7 @@ export default function TrainingPage() {
             <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center justify-between shadow-xs">
               <span className="flex items-center gap-2">
                 <CheckCircle2 size={16} className="text-emerald-600" />
-                Your bootcamp registration has been logged with your student portal credentials! Check your college email.
+                Your bootcamp registration has been logged! Check your college email.
               </span>
               <button
                 onClick={() => setRegisteredBootcampId(null)}
@@ -467,9 +449,9 @@ export default function TrainingPage() {
           )}
 
           <div className="grid gap-5 md:grid-cols-3">
-            {UPCOMING_BOOTCAMPS.map((bootcamp) => (
+            {upcomingBootcamps.map((bootcamp) => (
               <div
-                key={bootcamp.id}
+                key={bootcamp.bootcampId || bootcamp._id}
                 className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between"
               >
                 <div>
@@ -497,7 +479,7 @@ export default function TrainingPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-1.5 mb-4">
-                    {bootcamp.tags.map((t) => (
+                    {bootcamp.tags?.map((t) => (
                       <span
                         key={t}
                         className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600"
@@ -510,7 +492,7 @@ export default function TrainingPage() {
 
                 <button
                   type="button"
-                  onClick={() => handleRegisterBootcamp(bootcamp.id)}
+                  onClick={() => handleRegisterBootcamp(bootcamp.bootcampId || bootcamp._id)}
                   className="w-full py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors cursor-pointer"
                 >
                   REGISTER NOW (FREE)
@@ -520,9 +502,7 @@ export default function TrainingPage() {
           </div>
         </section>
 
-        {/* =========================================================================
-            SECTION 4: DOWNLOADABLE TOOLKITS
-            ========================================================================= */}
+        {/* SECTION 4: DOWNLOADABLE TOOLKITS */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
@@ -539,14 +519,14 @@ export default function TrainingPage() {
               </div>
             </div>
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
-              {DOWNLOADABLE_TOOLKITS.length} Files
+              {downloadableToolkits.length} Files
             </span>
           </div>
 
           <div className="grid gap-5 md:grid-cols-3">
-            {DOWNLOADABLE_TOOLKITS.map((item) => (
+            {downloadableToolkits.map((item, idx) => (
               <div
-                key={item.title}
+                key={item._id || idx}
                 className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between"
               >
                 <div>
@@ -571,7 +551,7 @@ export default function TrainingPage() {
                 </div>
 
                 <a
-                  href={item.url}
+                  href={item.url || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors"

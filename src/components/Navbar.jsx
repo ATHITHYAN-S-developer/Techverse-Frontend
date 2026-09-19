@@ -74,7 +74,7 @@ export default function Navbar() {
           scrolled ? "py-2 shadow-sm" : "py-3 sm:py-3.5 shadow-none"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-3">
+        <div className="w-full max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-8 flex items-center justify-between gap-3">
           {/* 1. Left: Compact VCET Brand Wordmark */}
           <Link
             to="/"

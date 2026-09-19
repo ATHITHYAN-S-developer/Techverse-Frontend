@@ -4,12 +4,35 @@
  * Alternating full-width scrollytelling vertical list view.
  */
 
-import React from "react";
-import { RESOURCES } from "../data/resources";
+import React, { useState, useEffect } from "react";
+import { resourceService } from "../services/resourceService";
 import ResourceListView from "../components/ResourceListView";
 
 export default function TechnologyPage() {
-  const techResources = RESOURCES.filter((item) => item.type === "technology");
+  const [techResources, setTechResources] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadResources() {
+      try {
+        const all = await resourceService.getAllResources();
+        setTechResources(all.filter((item) => item.type === "technology"));
+      } catch (err) {
+        console.error("Failed to load Tech Explorer resources:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadResources();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center text-slate-500 font-bold text-sm">
+        Loading Tech Explorer Platforms from MongoDB...
+      </div>
+    );
+  }
 
   return (
     <ResourceListView

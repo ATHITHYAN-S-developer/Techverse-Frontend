@@ -1,12 +1,9 @@
 /**
  * Course Service
- * Fetches courses, handles progress tracking, thumbnail covers, and module completion.
+ * Communicates exclusively with backend MongoDB endpoints (/api/courses).
  */
 
 import { apiRequest, API_BASE_URL } from "./api";
-import { COURSES } from "../data/courses";
-
-const STORAGE_KEY = "techverse_courses_state";
 
 export function getCourseImageUrl(thumbnailUrl, thumbnail) {
   const url = thumbnailUrl || thumbnail;
@@ -16,30 +13,68 @@ export function getCourseImageUrl(thumbnailUrl, thumbnail) {
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
     return url;
   }
+  const backendBase = typeof window !== "undefined" && window.location?.hostname
+    ? `http://${window.location.hostname}:5000`
+    : "http://localhost:5000";
+
   if (url.startsWith("/uploads/")) {
-    return `http://localhost:5000${url}`;
+    return `${backendBase}${url}`;
   }
   if (url.startsWith("uploads/")) {
-    return `http://localhost:5000/${url}`;
+    return `${backendBase}/${url}`;
   }
-  return `http://localhost:5000/uploads/courses/${url}`;
+  return `${backendBase}/uploads/courses/${url}`;
 }
 
-function getStoredCourses() {
+export function getLocalCompletedModules(courseId, courseSlug, courseMongoId) {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch (e) {
-    console.error(e);
+    const keys = [
+      `techverse_completed_modules_${courseId}`,
+      courseSlug ? `techverse_completed_modules_${courseSlug}` : null,
+      courseMongoId ? `techverse_completed_modules_${courseMongoId}` : null,
+    ].filter(Boolean);
+
+    const resultSet = new Set();
+    for (const k of keys) {
+      const raw = localStorage.getItem(k);
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((id) => resultSet.add(String(id)));
+          }
+        } catch { }
+      }
+    }
+    return Array.from(resultSet);
+  } catch {
+    return [];
   }
-  return COURSES;
 }
 
-function saveCourses(courses) {
+export function addLocalCompletedModule(courseKey, moduleId) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(courses));
-  } catch (e) {
-    console.error(e);
+    const strId = String(moduleId);
+    const keysToSave = [];
+
+    if (typeof courseKey === "string") {
+      keysToSave.push(`techverse_completed_modules_${courseKey}`);
+    } else if (courseKey && typeof courseKey === "object") {
+      if (courseKey.slug) keysToSave.push(`techverse_completed_modules_${courseKey.slug}`);
+      if (courseKey._id) keysToSave.push(`techverse_completed_modules_${courseKey._id}`);
+      if (courseKey.id) keysToSave.push(`techverse_completed_modules_${courseKey.id}`);
+    }
+
+    keysToSave.forEach((k) => {
+      const raw = localStorage.getItem(k);
+      const existing = raw ? JSON.parse(raw) : [];
+      if (!existing.includes(strId)) {
+        existing.push(strId);
+        localStorage.setItem(k, JSON.stringify(existing));
+      }
+    });
+  } catch (err) {
+    console.error("Error saving local completed module:", err);
   }
 }
 
@@ -50,60 +85,83 @@ export const courseService = {
       const res = await apiRequest(`/courses${queryString ? `?${queryString}` : ""}`);
       const courseList = res?.data?.courses || res?.courses;
       if (Array.isArray(courseList)) {
-        return courseList;
+        return courseList.map((c) => {
+          const cId = c.slug || c.id || c._id;
+          const localCompleted = getLocalCompletedModules(cId);
+          const totalMods = c.modules?.length || c.totalModules || 0;
+          const completedCount = localCompleted.length;
+          const calcProgress = totalMods > 0 ? Math.round((completedCount / totalMods) * 100) : 0;
+          return {
+            ...c,
+            progress: Math.max(calcProgress, c.progress || 0),
+          };
+        });
       }
     } catch (err) {
-      console.debug("Failed to fetch courses from API:", err);
+      console.error("Failed to fetch courses from MongoDB backend:", err);
     }
     return [];
   },
 
   async getCourseById(courseId) {
-    try {
-      const res = await apiRequest(`/courses/${courseId}`);
-      const courseData = res?.data?.course || res?.course;
-      if (courseData) {
-        return {
-          ...courseData,
-          modules: res?.data?.modules || res?.modules || [],
-          enrollment: res?.data?.enrollment || res?.enrollment || null,
-        };
-      }
-    } catch (err) {
-      console.debug("Failed to fetch course details from API:", err);
+    const res = await apiRequest(`/courses/${courseId}`);
+    const courseData = res?.data?.course || res?.course;
+    if (courseData) {
+      const cId = courseData.slug || courseData.id || courseData._id || courseId;
+      const rawModules = res?.data?.modules || res?.modules || [];
+      const localCompleted = getLocalCompletedModules(cId, courseData.slug, courseData._id);
+
+      const modules = rawModules.map((m) => {
+        const mId = String(m._id || m.id);
+        const isCompleted = Boolean(m.completed) || localCompleted.includes(mId);
+        return { ...m, completed: isCompleted };
+      });
+
+      const completedCount = modules.filter((m) => m.completed).length;
+      const totalCount = modules.length;
+      const calculatedProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+      const backendProgress = res?.data?.enrollment?.progressPercentage ?? courseData.progress ?? 0;
+      const progress = Math.max(calculatedProgress, backendProgress);
+
+      return {
+        ...courseData,
+        modules,
+        progress,
+        enrollment: res?.data?.enrollment || res?.enrollment ? {
+          ...res?.data?.enrollment,
+          progressPercentage: progress,
+        } : { progressPercentage: progress },
+      };
     }
 
-    throw new Error(`Course with ID ${courseId} not found in database.`);
+    throw new Error(`Course with ID '${courseId}' not found in MongoDB database.`);
+  },
+
+  async getCourseBySlug(slug) {
+    try {
+      const res = await apiRequest(`/courses/${slug}`);
+      return res?.data || res;
+    } catch (err) {
+      console.error("Failed to fetch course by slug:", err);
+      throw err;
+    }
   },
 
   async markModuleCompleted(courseId, moduleId) {
+    addLocalCompletedModule(courseId, moduleId);
     try {
-      const res = await apiRequest(`/courses/${courseId}/complete-module`, {
+      const targetId = typeof courseId === "object" ? (courseId.slug || courseId._id || courseId.id) : courseId;
+      const res = await apiRequest(`/courses/${targetId}/complete-module`, {
         method: "POST",
         body: JSON.stringify({ moduleId }),
       });
       if (res?.data?.success || res?.success) {
-        return res?.data?.enrollment || res?.enrollment;
+        return res?.data || res;
       }
     } catch (err) {
-      // Local fallback
+      console.warn("Backend progress sync fallback to local storage:", err);
     }
-
-    const courses = getStoredCourses();
-    const courseIndex = courses.findIndex((c) => c.id === courseId || c.slug === courseId || c._id === courseId);
-    if (courseIndex === -1) return null;
-
-    const course = { ...courses[courseIndex] };
-    course.modules = (course.modules || []).map((m) =>
-      m.id === moduleId || m._id === moduleId ? { ...m, completed: true } : m
-    );
-
-    const completedCount = course.modules.filter((m) => m.completed).length;
-    course.progress = Math.round((completedCount / course.modules.length) * 100);
-
-    courses[courseIndex] = course;
-    saveCourses(courses);
-    return course;
+    return { success: true };
   },
 
   async createCourse(courseData) {
@@ -113,67 +171,84 @@ export const courseService = {
       localStorage.getItem("vcetTechHubToken") ||
       sessionStorage.getItem("vcetTechHubToken");
 
-    console.log("TechVerse auth token exists:", !!token);
-    console.log(
-      "TechVerse token preview:",
-      token ? `${token.substring(0, 20)}...` : "MISSING"
-    );
-    console.log("Creating course with authenticated API request");
+    let body;
+    let headers = {};
+    if (courseData instanceof FormData) {
+      body = courseData;
+    } else {
+      body = JSON.stringify(courseData);
+      headers = { "Content-Type": "application/json" };
+    }
 
-    try {
-      let body;
-      let headers = {};
-      if (courseData instanceof FormData) {
-        body = courseData;
-      } else {
-        body = JSON.stringify(courseData);
-        headers = { "Content-Type": "application/json" };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const res = await fetch(`${API_BASE_URL}/courses`, {
+      method: "POST",
+      headers,
+      body,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.course;
+    } else {
+      const errData = await res.json().catch(() => ({}));
+      if (res.status === 401 && (errData.code === "USER_NOT_FOUND" || errData.code === "INVALID_TOKEN")) {
+        localStorage.removeItem("techverse_token");
+        localStorage.removeItem("techverse_user");
+        sessionStorage.removeItem("techverse_token");
+        sessionStorage.removeItem("techverse_user");
       }
-
-      if (token) {
-        headers.Authorization = `Bearer ${token}`;
-      }
-
-      const res = await fetch(`${API_BASE_URL}/courses`, {
-        method: "POST",
-        headers,
-        body,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        return data.course;
-      } else {
-        const errData = await res.json().catch(() => ({}));
-        if (res.status === 401 && (errData.code === "USER_NOT_FOUND" || errData.code === "INVALID_TOKEN")) {
-          localStorage.removeItem("techverse_token");
-          localStorage.removeItem("techverse_user");
-          sessionStorage.removeItem("techverse_token");
-          sessionStorage.removeItem("techverse_user");
-          localStorage.removeItem("vcetTechHubToken");
-          localStorage.removeItem("vcetTechHubSession");
-          sessionStorage.removeItem("vcetTechHubToken");
-          sessionStorage.removeItem("vcetTechHubSession");
-        }
-        throw new Error(errData.message || "Failed to create course in database");
-      }
-    } catch (err) {
-      console.warn("API course create failed:", err.message);
-      throw err;
+      throw new Error(errData.message || "Failed to create course in MongoDB database");
     }
   },
 
   async deleteCourse(courseId) {
-    try {
-      await apiRequest(`/courses/${courseId}`, { method: "DELETE" });
-      return true;
-    } catch (err) {
-      console.debug("Delete course API error:", err);
-    }
-
-    let courses = getStoredCourses();
-    courses = courses.filter((c) => c.id !== courseId && c.slug !== courseId && c._id !== courseId);
-    saveCourses(courses);
+    await apiRequest(`/courses/${courseId}`, { method: "DELETE" });
     return true;
   },
+
+  async recordVideoProgress(courseSlug, moduleId, data) {
+    try {
+      const res = await apiRequest(`/courses/${courseSlug}/modules/${moduleId}/video-progress`, {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+      return res?.data || res;
+    } catch (err) {
+      console.warn("Video progress tracking notice:", err.message);
+      throw err;
+    }
+  },
+
+  async getModuleProgression(courseSlug, moduleId) {
+    try {
+      const res = await apiRequest(`/courses/${courseSlug}/modules/${moduleId}/progression`);
+      return res?.data || res;
+    } catch (err) {
+      console.warn("Could not fetch module progression:", err.message);
+      return null;
+    }
+  },
+
+  async getCourseProgression(courseSlug) {
+    try {
+      const res = await apiRequest(`/courses/${courseSlug}/progression`);
+      return res?.data || res;
+    } catch (err) {
+      console.warn("Could not fetch course progression:", err.message);
+      return null;
+    }
+  },
+
+  async submitModuleTest(courseSlug, moduleId, data) {
+    const res = await apiRequest(`/courses/${courseSlug}/modules/${moduleId}/submit-test`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    return res?.data || res;
+  },
 };
+
