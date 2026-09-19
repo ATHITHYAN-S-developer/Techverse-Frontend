@@ -1,39 +1,40 @@
 import React, { useState, useEffect } from "react";
-import { BookOpen, Search, Plus, Trash2, Edit, X, Loader2 } from "lucide-react";
+import { BookOpen, Search, Plus, Edit, X, Loader2, ShieldCheck } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { subjectService, SUBJECT_SEMESTERS } from "../../services/subjectService";
 import { departmentService } from "../../services/departmentService";
-import ConfirmDialog from "../../components/ConfirmDialog";
 
 const EMPTY_FORM = { code: "", name: "", departmentId: "", semester: 4, credits: 3 };
 
-export default function AdminSubjectsPage() {
+export default function FacultySubjectsPage() {
+  const { user } = useAuth();
   const { showSuccess, showError } = useToast();
+
+  const ownDeptId = user?.departmentId || "";
+  const ownDeptCode = user?.department?.toUpperCase?.() || "";
+
+  const [department, setDepartment] = useState(null);
   const [subjects, setSubjects] = useState([]);
-  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [deptFilter, setDeptFilter] = useState("ALL");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, subject: null });
   const [toggling, setToggling] = useState(null);
 
   const loadAll = async () => {
+    if (!ownDeptId) return;
     try {
       const [deptList, subjectList] = await Promise.all([
         departmentService.getDepartments({ all: true }),
-        subjectService.getSubjectsByDepartment("", { all: true }),
+        subjectService.getSubjectsByDepartment(ownDeptId, { all: true }),
       ]);
-      setDepartments(Array.isArray(deptList) ? deptList : []);
+      const dept = (deptList || []).find((d) => d._id === ownDeptId || d.id === ownDeptId) || null;
+      setDepartment(dept);
       setSubjects(Array.isArray(subjectList) ? subjectList : []);
-      setFormData((f) => {
-        if (f.departmentId) return f;
-        const first = deptList[0];
-        return { ...f, departmentId: first?._id || first?.id || "" };
-      });
+      if (dept) setFormData((f) => ({ ...f, departmentId: dept._id || dept.id }));
     } catch {
       showError("Failed to load subjects");
     } finally {
@@ -44,20 +45,19 @@ export default function AdminSubjectsPage() {
   useEffect(() => {
     loadAll();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [ownDeptId]);
 
-  const deptById = (id) => departments.find((d) => d._id === id || d.id === id);
-
-  const deptCode = (s) => {
-    const dep = s.departmentId;
-    if (typeof dep === "object" && dep) return dep.code || dep.name || "";
-    return deptById(dep)?.code || dep || "—";
-  };
+  const deptName = department?.name || user?.department || "Your Department";
 
   const openAdd = () => {
     setEditing(null);
-    const first = departments.find((d) => d.isActive) || departments[0];
-    setFormData({ ...EMPTY_FORM, departmentId: first?._id || first?.id || "" });
+    setFormData({
+      code: "",
+      name: "",
+      departmentId: department?._id || ownDeptId,
+      semester: 4,
+      credits: 3,
+    });
     setModalOpen(true);
   };
 
@@ -66,7 +66,7 @@ export default function AdminSubjectsPage() {
     setFormData({
       code: subject.code || "",
       name: subject.name || "",
-      departmentId: subject.departmentId?._id || subject.departmentId || subject.department || "",
+      departmentId: department?._id || ownDeptId,
       semester: subject.semester || 4,
       credits: subject.credits || 3,
     });
@@ -77,13 +77,19 @@ export default function AdminSubjectsPage() {
     e.preventDefault();
     setSaving(true);
     try {
+      const payload = {
+        departmentId: department?._id || ownDeptId,
+        code: formData.code,
+        name: formData.name,
+        semester: Number(formData.semester),
+        credits: Number(formData.credits) || 3,
+      };
       if (editing) {
-        const { code, name, semester, credits } = formData;
-        await subjectService.updateSubject(editing._id, { code, name, semester, credits });
+        await subjectService.updateSubject(editing._id, payload);
         showSuccess("Subject updated ✓");
       } else {
-        await subjectService.createSubject(formData);
-        showSuccess("Subject added to curriculum ✓");
+        await subjectService.createSubject(payload);
+        showSuccess("Subject added to department curriculum ✓");
       }
       setModalOpen(false);
       await loadAll();
@@ -107,36 +113,25 @@ export default function AdminSubjectsPage() {
     }
   };
 
-  const confirmDelete = async () => {
-    const subject = deleteDialog.subject;
-    if (!subject) return;
-    try {
-      await subjectService.deleteSubject(subject._id);
-      showSuccess(`Subject "${subject.name}" permanently deleted ✓`);
-      setDeleteDialog({ open: false, subject: null });
-      await loadAll();
-    } catch (err) {
-      showError(err.message || "Failed to delete subject");
-    }
-  };
-
   const filtered = subjects.filter((s) => {
-    const code = typeof s.departmentId === "object" && s.departmentId ? s.departmentId.code : deptById(s.departmentId)?.code;
     const matchesSearch =
       s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.code.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = deptFilter === "ALL" || code === deptFilter || s.departmentId === deptFilter || s.departmentId?._id === deptFilter;
-    return matchesSearch && matchesDept;
+    return matchesSearch;
   });
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto text-slate-900">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900">Subjects & Curriculum Management</h1>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900">Manage Subjects</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Create, edit, activate, deactivate, or delete subjects per department. Deleted subjects also remove their uploaded notes.
+            Add and maintain subjects for your department, then upload notes for each subject.
           </p>
+          <span className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            {deptName} ({department?.code || ownDeptCode})
+          </span>
         </div>
 
         <button
@@ -148,30 +143,17 @@ export default function AdminSubjectsPage() {
         </button>
       </div>
 
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+        <div className="relative w-full">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search subjects by code (CS8492...) or name..."
+            placeholder={`Search ${deptName} subjects by code or name...`}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        <select
-          value={deptFilter}
-          onChange={(e) => setDeptFilter(e.target.value)}
-          className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-300 focus:outline-none w-full md:w-auto"
-        >
-          <option value="ALL">All Departments</option>
-          {departments.map((d) => (
-            <option key={d._id || d.code} value={d.code}>
-              {d.code}
-            </option>
-          ))}
-        </select>
       </div>
 
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
@@ -180,9 +162,9 @@ export default function AdminSubjectsPage() {
             <thead className="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-5 py-3.5">Subject Code & Name</th>
-                <th className="px-4 py-3.5">Department</th>
                 <th className="px-4 py-3.5">Semester</th>
                 <th className="px-4 py-3.5">Credits</th>
+                <th className="px-4 py-3.5">Resources</th>
                 <th className="px-4 py-3.5">Status</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
@@ -197,7 +179,7 @@ export default function AdminSubjectsPage() {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-16 text-center text-slate-400 text-sm">
-                    <BookOpen className="w-6 h-6 mx-auto mb-2" /> No subjects match. Click "Add Subject" to add one.
+                    <BookOpen className="w-6 h-6 mx-auto mb-2" /> No subjects yet. Click "Add Subject" to add one.
                   </td>
                 </tr>
               ) : (
@@ -207,13 +189,9 @@ export default function AdminSubjectsPage() {
                       <div className="font-bold text-slate-900 text-sm">{s.name}</div>
                       <div className="text-[#0062A8] font-mono font-bold text-[11px] mt-0.5">{s.code}</div>
                     </td>
-                    <td className="px-4 py-4">
-                      <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 font-semibold text-[#0062A8] text-[11px]">
-                        {deptCode(s)}
-                      </span>
-                    </td>
                     <td className="px-4 py-4 font-medium text-slate-700">Sem {s.semester}</td>
                     <td className="px-4 py-4 text-slate-600 font-medium">{s.credits ?? 3}</td>
+                    <td className="px-4 py-4 text-slate-600 font-medium">{s.resourceCount ?? 0}</td>
                     <td className="px-4 py-4">
                       <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
                         s.isActive
@@ -242,13 +220,6 @@ export default function AdminSubjectsPage() {
                       >
                         {s.isActive ? "Deactivate" : "Activate"}
                       </button>
-                      <button
-                        onClick={() => setDeleteDialog({ open: true, subject: s })}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Delete Subject"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
                     </td>
                   </tr>
                 ))
@@ -263,7 +234,7 @@ export default function AdminSubjectsPage() {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-900">
-                {editing ? "Edit Subject" : "Add Curriculum Subject"}
+                {editing ? "Edit Subject" : "Add Subject to " + (department?.name || "Your Department")}
               </h3>
               <button onClick={() => setModalOpen(false)} className="p-1 text-slate-400 hover:text-slate-600">
                 <X className="w-5 h-5" />
@@ -271,24 +242,6 @@ export default function AdminSubjectsPage() {
             </div>
 
             <form onSubmit={handleSave} className="space-y-4 mt-4 text-xs">
-              {!editing && (
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Department *</label>
-                  <select
-                    required
-                    value={formData.departmentId}
-                    onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-slate-900"
-                  >
-                    {departments.map((d) => (
-                      <option key={d._id || d.code} value={d._id || d.id}>
-                        {d.name} ({d.code})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="font-bold text-slate-700 block mb-1">Subject Code *</label>
@@ -347,22 +300,13 @@ export default function AdminSubjectsPage() {
                   className="px-5 py-2 bg-[#0062A8] text-white font-bold rounded-xl shadow hover:bg-[#00528c] disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  {editing ? "Save Changes" : "Save Subject"}
+                  {editing ? "Save Changes" : "Add Subject"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      <ConfirmDialog
-        isOpen={deleteDialog.open}
-        title="Delete this subject permanently?"
-        message={`This will permanently remove ${deleteDialog.subject?.name || "this subject"} (${deleteDialog.subject?.code || ""}) and every uploaded note/resource file attached to it. This cannot be undone.`}
-        confirmLabel="Delete Subject"
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteDialog({ open: false, subject: null })}
-      />
     </div>
   );
 }
