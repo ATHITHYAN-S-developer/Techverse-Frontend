@@ -88,7 +88,7 @@ export default function CoursesPage() {
           ? true
           : progressTab === "in-progress"
           ? c.progress > 0 && c.progress < 100
-          : c.progress === 100;
+          : c.progress >= 100;
 
       return matchesSearch && matchesCategory && matchesProgress;
     });

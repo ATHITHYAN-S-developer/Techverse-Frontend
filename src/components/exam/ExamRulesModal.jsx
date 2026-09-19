@@ -25,25 +25,25 @@ export default function ExamRulesModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-sky-100 overflow-hidden">
         {/* Modal Header */}
-        <div className="relative bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white">
+        <div className="relative bg-gradient-to-r from-sky-50 via-blue-50 to-white p-6 sm:p-8 border-b border-sky-100 text-slate-900">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-blue-300">
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center text-[#0B4A8F] shadow-2xs">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-blue-300">
+              <span className="text-xs font-bold uppercase tracking-widest text-[#0B4A8F]">
                 VCET Academic Integrity Control
               </span>
-              <h2 className="text-xl sm:text-2xl font-black text-white">
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
                 Exam Mode Security Protocol
               </h2>
             </div>
           </div>
-          <p className="text-xs sm:text-sm text-slate-300">
-            You are about to start <strong className="text-white font-semibold">{title}</strong>. Please review the proctored assessment policies below.
+          <p className="text-xs sm:text-sm text-slate-600">
+            You are about to start <strong className="text-slate-900 font-bold">{title}</strong>. Please review the proctored assessment policies below.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export default function ExamRulesModal({
             onClick={onStartExam}
             className={`ml-auto px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md cursor-pointer ${
               hasAgreed
-                ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-blue-500/20 active:scale-95"
+                ? "bg-[#0B4A8F] hover:bg-[#0062A8] text-white shadow-blue-500/20 active:scale-95"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
