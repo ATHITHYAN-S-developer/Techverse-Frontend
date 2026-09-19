@@ -142,6 +142,7 @@ export default function App() {
             >
               <Route index element={<Navigate to="/faculty/dashboard" replace />} />
               <Route path="dashboard" element={<FacultyDashboard />} />
+              <Route path="coding" element={<AdminCodingPage />} />
               <Route path="resources" element={<FacultyResourcesPage />} />
               <Route path="subjects" element={<FacultySubjectsPage />} />
               <Route path="announcements" element={<FacultyAnnouncementsPage />} />

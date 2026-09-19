@@ -12,7 +12,8 @@ import {
   X,
   ExternalLink,
   ShieldCheck,
-  BookOpen
+  BookOpen,
+  Code2
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "../components/NotificationBell";
@@ -21,6 +22,7 @@ import ScrollToTop from "../components/ScrollToTop";
 
 const FACULTY_NAV = [
   { name: "Faculty Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
+  { name: "Coding Arena & Tests", href: "/faculty/coding", icon: Code2 },
   { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
   { name: "Manage Subjects", href: "/faculty/subjects", icon: BookOpen },
   { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
