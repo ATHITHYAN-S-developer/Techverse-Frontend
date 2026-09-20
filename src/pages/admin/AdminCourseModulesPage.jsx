@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import {
   Puzzle,
   Plus,
@@ -25,6 +26,7 @@ import {
   Save,
   Check,
   Award,
+  ArrowLeft,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
@@ -41,8 +43,11 @@ function extractYouTubeId(url) {
 
 export default function AdminCourseModulesPage() {
   const { showSuccess, showError, showInfo } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramCourseId = searchParams.get("courseId") || "";
+
   const [courses, setCourses] = useState([]);
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState(paramCourseId);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -117,7 +122,11 @@ export default function AdminCourseModulesPage() {
       const courseList = res?.data?.courses || res?.courses || [];
       setCourses(courseList);
       if (courseList.length > 0) {
-        setSelectedCourseId(courseList[0]._id || courseList[0].id);
+        if (paramCourseId && courseList.some((c) => (c._id || c.id || c.slug) === paramCourseId)) {
+          setSelectedCourseId(paramCourseId);
+        } else if (!selectedCourseId) {
+          setSelectedCourseId(courseList[0]._id || courseList[0].id);
+        }
       }
     } catch (err) {
       console.debug("Error loading courses:", err);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   BookOpen,
   Search,
@@ -18,15 +18,22 @@ import {
   RefreshCw,
   Eye,
   ExternalLink,
+  Layers,
+  Sparkles,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { courseService, getCourseImageUrl } from "../../services/courseService";
 
 export default function AdminCoursesPage() {
   const { showSuccess, showError } = useToast();
+  const location = useLocation();
+  const isFaculty = location.pathname.startsWith("/faculty");
+  const moduleManagerBaseUrl = isFaculty ? "/faculty/modules" : "/admin/modules";
+
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState(null);
   const [uploading, setUploading] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -72,7 +79,8 @@ export default function AdminCoursesPage() {
     }
   };
 
-  const handleOpenModal = () => {
+  const handleOpenAddModal = () => {
+    setEditingCourse(null);
     setImageFile(null);
     setImagePreview(null);
     setFormData({
@@ -88,7 +96,24 @@ export default function AdminCoursesPage() {
     setModalOpen(true);
   };
 
-  const handleCreate = async (e) => {
+  const handleOpenEditModal = (course) => {
+    setEditingCourse(course);
+    setImageFile(null);
+    setImagePreview(getCourseImageUrl(course.thumbnailUrl, course.thumbnail));
+    setFormData({
+      title: course.title || "",
+      category: course.category || "Programming",
+      level: course.level || "Beginner to Intermediate",
+      duration: course.duration || "30 Days",
+      passingPercentage: course.passingPercentage || course.passingScore || 50,
+      instructor: course.instructor || course.instructorName || "Faculty Coordinator",
+      thumbnailUrl: course.thumbnailUrl || "",
+      description: course.description || "",
+    });
+    setModalOpen(true);
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.description.trim()) {
       showError("Please provide both title and description");
@@ -103,7 +128,8 @@ export default function AdminCoursesPage() {
       form.append("category", formData.category);
       form.append("level", formData.level);
       form.append("duration", formData.duration);
-      form.append("passingScore", formData.passingPercentage);
+      form.append("passingScore", String(formData.passingPercentage));
+      form.append("passingPercentage", String(formData.passingPercentage));
       form.append("instructor", formData.instructor);
       form.append("certificateEnabled", "true");
 
@@ -113,19 +139,24 @@ export default function AdminCoursesPage() {
         form.append("thumbnailUrl", formData.thumbnailUrl);
       }
 
-      await courseService.createCourse(form);
-      showSuccess("Course with cover image published to MongoDB database ✓");
+      if (editingCourse) {
+        await courseService.updateCourse(editingCourse._id || editingCourse.id, form);
+        showSuccess(`Course "${formData.title}" updated successfully!`);
+      } else {
+        await courseService.createCourse(form);
+        showSuccess("Course with cover image published to MongoDB database ✓");
+      }
       setModalOpen(false);
       loadCourses();
     } catch (err) {
-      showError(err.message || "Failed to create course");
+      showError(err.message || "Failed to save course");
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this course from MongoDB?")) return;
+    if (!window.confirm("Are you sure you want to delete this course and all associated modules from MongoDB?")) return;
     try {
       await courseService.deleteCourse(id);
       showSuccess("Course removed from MongoDB database ✓");
@@ -136,30 +167,34 @@ export default function AdminCoursesPage() {
   };
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto text-slate-900">
+    <div className="space-y-6 max-w-7xl mx-auto text-slate-900 pb-12">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-            <BookOpen className="w-6 h-6 text-[#0062A8]" />
-            Technical Course Catalog Management (MongoDB Synced)
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Configure courses with real image uploads, passing benchmarks, and syllabus modules stored in MongoDB.
+          <div className="flex items-center gap-2">
+            <span className="p-2 rounded-xl bg-blue-50 text-[#0062A8]">
+              <BookOpen className="w-5 h-5" />
+            </span>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900">
+              Technical Course Catalog Management
+            </h1>
+          </div>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Configure courses with real cover uploads, passing benchmarks, and syllabus modules stored in MongoDB.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
             onClick={loadCourses}
-            className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors"
+            className="p-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors cursor-pointer"
             title="Refresh Courses from DB"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
-            onClick={handleOpenModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
+            onClick={handleOpenAddModal}
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Create New Course</span>
@@ -178,8 +213,8 @@ export default function AdminCoursesPage() {
           <h3 className="text-base font-bold text-slate-800">No Courses in Database</h3>
           <p className="text-xs text-slate-500">Create your first course with custom thumbnail and syllabus modules.</p>
           <button
-            onClick={handleOpenModal}
-            className="px-5 py-2.5 bg-[#0062A8] text-white font-bold text-xs rounded-xl shadow hover:bg-[#00528c]"
+            onClick={handleOpenAddModal}
+            className="px-5 py-2.5 bg-[#0062A8] text-white font-bold text-xs rounded-xl shadow hover:bg-[#00528c] cursor-pointer"
           >
             Create First Course
           </button>
@@ -190,6 +225,7 @@ export default function AdminCoursesPage() {
             const courseId = course.slug || course.id || course._id;
             const courseUrl = `/courses/${courseId}`;
             const coverImage = getCourseImageUrl(course.thumbnailUrl, course.thumbnail);
+            const totalMods = course.totalModules || course.modulesCount || course.modules?.length || 0;
 
             return (
               <div
@@ -214,6 +250,9 @@ export default function AdminCoursesPage() {
                   <span className="absolute top-3 right-3 px-2 py-0.5 text-[10px] font-mono bg-slate-900/60 backdrop-blur-sm text-white rounded-md">
                     {course.duration || "30 Days"}
                   </span>
+                  <span className="absolute bottom-3 left-3 px-2.5 py-0.5 text-[10px] font-bold bg-white/90 backdrop-blur-sm text-slate-800 rounded-lg">
+                    {totalMods} Modules Configured
+                  </span>
                 </Link>
 
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
@@ -231,24 +270,34 @@ export default function AdminCoursesPage() {
                       Level: <strong className="text-slate-900">{course.level}</strong>
                     </span>
                     <span className="text-slate-600">
-                      Pass: <strong className="text-emerald-600">{course.passingPercentage || course.passingScore || 75}%</strong>
+                      Pass: <strong className="text-emerald-600">{course.passingPercentage || course.passingScore || 50}%</strong>
                     </span>
                   </div>
                 </div>
 
-                <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-600 font-medium truncate max-w-[150px]">
+                <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-slate-600 font-medium truncate max-w-[120px]">
                     By {course.instructor || course.instructorName || "Faculty"}
                   </span>
-                  <div className="flex items-center gap-1.5">
+
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <Link
-                      to={courseUrl}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-xs transition-all"
-                      title="View Course Curriculum & Modules"
+                      to={`${moduleManagerBaseUrl}?courseId=${course._id || course.id}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 text-[#0062A8] hover:bg-blue-100 border border-blue-200 font-bold text-xs transition-all"
+                      title="Manage Modules & Curriculum"
                     >
-                      <Eye className="w-3.5 h-3.5" />
+                      <Layers className="w-3.5 h-3.5" />
                       <span>Modules</span>
                     </Link>
+
+                    <button
+                      onClick={() => handleOpenEditModal(course)}
+                      className="p-1.5 rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 hover:border-blue-300 transition-colors"
+                      title="Edit Course Details"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+
                     <button
                       onClick={() => handleDelete(course._id || course.id)}
                       className="p-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-300 transition-colors"
@@ -277,10 +326,10 @@ export default function AdminCoursesPage() {
 
             <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-[#0062A8]" />
-              Create Technical Course in MongoDB
+              {editingCourse ? "Edit Technical Course" : "Create Technical Course in MongoDB"}
             </h2>
 
-            <form onSubmit={handleCreate} className="space-y-4 text-xs">
+            <form onSubmit={handleSave} className="space-y-4 text-xs">
               {/* Cover Image Upload Area */}
               <div>
                 <label className="block text-slate-700 font-bold mb-1.5">
@@ -310,7 +359,7 @@ export default function AdminCoursesPage() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-300 hover:border-[#0062A8] text-slate-700 hover:text-[#0062A8] rounded-xl font-bold shadow-xs transition-all text-xs"
+                      className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-300 hover:border-[#0062A8] text-slate-700 hover:text-[#0062A8] rounded-xl font-bold shadow-xs transition-all text-xs cursor-pointer"
                     >
                       <Upload className="w-3.5 h-3.5 text-[#0062A8]" />
                       <span>{imageFile ? "Change Image" : "Upload Cover Image"}</span>
@@ -349,21 +398,31 @@ export default function AdminCoursesPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-700 font-bold mb-1">Category</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="Programming">Programming</option>
+                    <option value="Web Development">Web Development</option>
+                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                    <option value="Cloud & DevOps">Cloud & DevOps</option>
+                    <option value="Cybersecurity & Networks">Cybersecurity & Networks</option>
+                    <option value="Data Science">Data Science</option>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-slate-700 font-bold mb-1">Target Level</label>
-                  <input
-                    type="text"
+                  <select
                     value={formData.level}
                     onChange={(e) => setFormData({ ...formData, level: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  >
+                    <option value="Beginner">Beginner</option>
+                    <option value="Beginner to Intermediate">Beginner to Intermediate</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
                 </div>
               </div>
 
@@ -374,6 +433,7 @@ export default function AdminCoursesPage() {
                     type="text"
                     value={formData.duration}
                     onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    placeholder="30 Days"
                     className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -381,6 +441,8 @@ export default function AdminCoursesPage() {
                   <label className="block text-slate-700 font-bold mb-1">Passing Score (%)</label>
                   <input
                     type="number"
+                    min="1"
+                    max="100"
                     value={formData.passingPercentage}
                     onChange={(e) => setFormData({ ...formData, passingPercentage: Number(e.target.value) })}
                     className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -403,14 +465,14 @@ export default function AdminCoursesPage() {
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold shadow-md disabled:opacity-50 flex items-center gap-2"
+                  className="px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold shadow-md disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                 >
                   {uploading ? (
                     <>
@@ -418,7 +480,7 @@ export default function AdminCoursesPage() {
                       <span>Saving to DB...</span>
                     </>
                   ) : (
-                    <span>Publish Course to DB</span>
+                    <span>{editingCourse ? "Update Course in DB" : "Publish Course to DB"}</span>
                   )}
                 </button>
               </div>

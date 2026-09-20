@@ -1,9 +1,9 @@
 /**
  * Course Service
- * Communicates exclusively with backend MongoDB endpoints (/api/courses).
+ * Communicates with backend MongoDB endpoints (/api/courses and /api/modules).
  */
 
-import { apiRequest, API_BASE_URL } from "./api";
+import { api, apiRequest, API_BASE_URL } from "./api";
 
 export function getCourseImageUrl(thumbnailUrl, thumbnail) {
   const url = thumbnailUrl || thumbnail;
@@ -82,13 +82,13 @@ export const courseService = {
   async getAllCourses(params = {}) {
     try {
       const queryString = new URLSearchParams(params).toString();
-      const res = await apiRequest(`/courses${queryString ? `?${queryString}` : ""}`);
-      const courseList = res?.data?.courses || res?.courses;
+      const res = await api.get(`/courses${queryString ? `?${queryString}` : ""}`);
+      const courseList = res?.courses || res?.data?.courses || res?.data || [];
       if (Array.isArray(courseList)) {
         return courseList.map((c) => {
           const cId = c.slug || c.id || c._id;
-          const localCompleted = getLocalCompletedModules(cId);
-          const totalMods = c.modules?.length || c.totalModules || 0;
+          const localCompleted = getLocalCompletedModules(cId, c.slug, c._id);
+          const totalMods = c.modules?.length || c.totalModules || c.modulesCount || 0;
           const completedCount = localCompleted.length;
           const calcProgress = totalMods > 0 ? Math.round((completedCount / totalMods) * 100) : 0;
           return {
@@ -98,17 +98,17 @@ export const courseService = {
         });
       }
     } catch (err) {
-      console.error("Failed to fetch courses from MongoDB backend:", err);
+      console.error("Failed to fetch courses from backend:", err);
     }
     return [];
   },
 
   async getCourseById(courseId) {
-    const res = await apiRequest(`/courses/${courseId}`);
-    const courseData = res?.data?.course || res?.course;
+    const res = await api.get(`/courses/${courseId}`);
+    const courseData = res?.course || res?.data?.course;
     if (courseData) {
       const cId = courseData.slug || courseData.id || courseData._id || courseId;
-      const rawModules = res?.data?.modules || res?.modules || [];
+      const rawModules = res?.modules || res?.data?.modules || [];
       const localCompleted = getLocalCompletedModules(cId, courseData.slug, courseData._id);
 
       const modules = rawModules.map((m) => {
@@ -120,26 +120,26 @@ export const courseService = {
       const completedCount = modules.filter((m) => m.completed).length;
       const totalCount = modules.length;
       const calculatedProgress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-      const backendProgress = res?.data?.enrollment?.progressPercentage ?? courseData.progress ?? 0;
+      const backendProgress = res?.enrollment?.progressPercentage ?? res?.data?.enrollment?.progressPercentage ?? courseData.progress ?? 0;
       const progress = Math.max(calculatedProgress, backendProgress);
 
       return {
         ...courseData,
         modules,
         progress,
-        enrollment: res?.data?.enrollment || res?.enrollment ? {
-          ...res?.data?.enrollment,
+        enrollment: res?.enrollment || res?.data?.enrollment ? {
+          ...(res?.enrollment || res?.data?.enrollment),
           progressPercentage: progress,
         } : { progressPercentage: progress },
       };
     }
 
-    throw new Error(`Course with ID '${courseId}' not found in MongoDB database.`);
+    throw new Error(`Course with ID '${courseId}' not found.`);
   },
 
   async getCourseBySlug(slug) {
     try {
-      const res = await apiRequest(`/courses/${slug}`);
+      const res = await api.get(`/courses/${slug}`);
       return res?.data || res;
     } catch (err) {
       console.error("Failed to fetch course by slug:", err);
@@ -147,15 +147,27 @@ export const courseService = {
     }
   },
 
+  async createCourse(courseData) {
+    const res = await api.post("/courses", courseData);
+    return res?.course || res?.data?.course || res?.data || res;
+  },
+
+  async updateCourse(courseId, courseData) {
+    const res = await api.put(`/courses/${courseId}`, courseData);
+    return res?.course || res?.data?.course || res?.data || res;
+  },
+
+  async deleteCourse(courseId) {
+    await api.delete(`/courses/${courseId}`);
+    return true;
+  },
+
   async markModuleCompleted(courseId, moduleId) {
     addLocalCompletedModule(courseId, moduleId);
     try {
       const targetId = typeof courseId === "object" ? (courseId.slug || courseId._id || courseId.id) : courseId;
-      const res = await apiRequest(`/courses/${targetId}/complete-module`, {
-        method: "POST",
-        body: JSON.stringify({ moduleId }),
-      });
-      if (res?.data?.success || res?.success) {
+      const res = await api.post(`/courses/${targetId}/complete-module`, { moduleId });
+      if (res?.success || res?.data?.success) {
         return res?.data || res;
       }
     } catch (err) {
@@ -164,58 +176,45 @@ export const courseService = {
     return { success: true };
   },
 
-  async createCourse(courseData) {
-    const token =
-      localStorage.getItem("techverse_token") ||
-      sessionStorage.getItem("techverse_token") ||
-      localStorage.getItem("vcetTechHubToken") ||
-      sessionStorage.getItem("vcetTechHubToken");
-
-    let body;
-    let headers = {};
-    if (courseData instanceof FormData) {
-      body = courseData;
-    } else {
-      body = JSON.stringify(courseData);
-      headers = { "Content-Type": "application/json" };
-    }
-
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
-
-    const res = await fetch(`${API_BASE_URL}/courses`, {
-      method: "POST",
-      headers,
-      body,
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      return data.course;
-    } else {
-      const errData = await res.json().catch(() => ({}));
-      if (res.status === 401 && (errData.code === "USER_NOT_FOUND" || errData.code === "INVALID_TOKEN")) {
-        localStorage.removeItem("techverse_token");
-        localStorage.removeItem("techverse_user");
-        sessionStorage.removeItem("techverse_token");
-        sessionStorage.removeItem("techverse_user");
-      }
-      throw new Error(errData.message || "Failed to create course in MongoDB database");
+  // ----------------------------------------------------------------
+  // Course Module Specific Methods (/api/modules)
+  // ----------------------------------------------------------------
+  async getModulesByCourse(courseId) {
+    try {
+      const res = await api.get(`/modules?courseId=${courseId}`);
+      return res?.modules || res?.data?.modules || res?.data || [];
+    } catch (err) {
+      console.error("Failed to fetch modules for course:", err);
+      return [];
     }
   },
 
-  async deleteCourse(courseId) {
-    await apiRequest(`/courses/${courseId}`, { method: "DELETE" });
+  async getModuleById(moduleId) {
+    const res = await api.get(`/modules/${moduleId}`);
+    return res?.module || res?.data?.module || res?.data || res;
+  },
+
+  async createModule(moduleData) {
+    const res = await api.post("/modules", moduleData);
+    return res?.module || res?.data?.module || res?.data || res;
+  },
+
+  async updateModule(moduleId, moduleData) {
+    const res = await api.put(`/modules/${moduleId}`, moduleData);
+    return res?.module || res?.data?.module || res?.data || res;
+  },
+
+  async deleteModule(moduleId) {
+    await api.delete(`/modules/${moduleId}`);
     return true;
   },
 
+  // ----------------------------------------------------------------
+  // Progression & Video & Test Submission Methods
+  // ----------------------------------------------------------------
   async recordVideoProgress(courseSlug, moduleId, data) {
     try {
-      const res = await apiRequest(`/courses/${courseSlug}/modules/${moduleId}/video-progress`, {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
+      const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/video-progress`, data);
       return res?.data || res;
     } catch (err) {
       console.warn("Video progress tracking notice:", err.message);
@@ -225,7 +224,7 @@ export const courseService = {
 
   async getModuleProgression(courseSlug, moduleId) {
     try {
-      const res = await apiRequest(`/courses/${courseSlug}/modules/${moduleId}/progression`);
+      const res = await api.get(`/courses/${courseSlug}/modules/${moduleId}/progression`);
       return res?.data || res;
     } catch (err) {
       console.warn("Could not fetch module progression:", err.message);
@@ -235,7 +234,7 @@ export const courseService = {
 
   async getCourseProgression(courseSlug) {
     try {
-      const res = await apiRequest(`/courses/${courseSlug}/progression`);
+      const res = await api.get(`/courses/${courseSlug}/progression`);
       return res?.data || res;
     } catch (err) {
       console.warn("Could not fetch course progression:", err.message);
@@ -244,11 +243,7 @@ export const courseService = {
   },
 
   async submitModuleTest(courseSlug, moduleId, data) {
-    const res = await apiRequest(`/courses/${courseSlug}/modules/${moduleId}/submit-test`, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+    const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/submit-test`, data);
     return res?.data || res;
   },
 };
-

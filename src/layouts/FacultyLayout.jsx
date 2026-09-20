@@ -22,6 +22,8 @@ import ScrollToTop from "../components/ScrollToTop";
 
 const FACULTY_NAV = [
   { name: "Faculty Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
+  { name: "Manage Courses", href: "/faculty/courses", icon: BookOpen },
+  { name: "Course Modules & Syllabus", href: "/faculty/modules", icon: Layers },
   { name: "Coding Arena & Tests", href: "/faculty/coding", icon: Code2 },
   { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
   { name: "Manage Subjects", href: "/faculty/subjects", icon: BookOpen },

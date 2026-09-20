@@ -18,8 +18,12 @@ import {
   RotateCcw,
   CheckCircle2,
   GraduationCap,
+  ShieldAlert,
+  Settings,
+  PlusCircle,
 } from "lucide-react";
 import { courseService } from "../services/courseService";
+import { useAuth } from "../context/AuthContext";
 import CourseCard from "../components/CourseCard";
 import TextReveal from "../components/TextReveal";
 
@@ -34,10 +38,16 @@ const CATEGORY_ICONS = {
 };
 
 export default function CoursesPage() {
+  const { user } = useAuth();
+  const isFacultyOrAdmin = user && (user.role === "faculty" || user.role === "teacher" || user.role === "admin");
+  const courseManagerLink = user?.role === "admin" ? "/admin/courses" : "/faculty/courses";
+  const moduleManagerLink = user?.role === "admin" ? "/admin/modules" : "/faculty/modules";
+
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
+  const [levelFilter, setLevelFilter] = useState("ALL");
   const [progressTab, setProgressTab] = useState("all"); // "all" | "in-progress" | "completed"
 
   useEffect(() => {
@@ -57,20 +67,28 @@ export default function CoursesPage() {
     }
   };
 
-  const categories = [
-    "ALL",
-    "Programming",
-    "Web Development",
-    "Artificial Intelligence",
-    "Cloud & DevOps",
-  ];
+  const categories = useMemo(() => {
+    const base = [
+      "ALL",
+      "Programming",
+      "Web Development",
+      "Artificial Intelligence",
+      "Cloud & DevOps",
+      "Cybersecurity & Networks",
+      "Data Science",
+    ];
+    const fromCourses = courses.map((c) => c.category).filter(Boolean);
+    const combined = Array.from(new Set([...base, ...fromCourses]));
+    return combined;
+  }, [courses]);
 
   const filteredCourses = useMemo(() => {
     return courses.filter((c) => {
       const title = c.title || "";
       const desc = c.description || "";
-      const instructor = c.instructor || "";
+      const instructor = c.instructor || c.instructorName || "";
       const cat = c.category || "";
+      const level = c.level || "";
       const q = searchQuery.toLowerCase().trim();
 
       const matchesSearch =
@@ -83,6 +101,10 @@ export default function CoursesPage() {
         categoryFilter === "ALL" ||
         cat.toLowerCase() === categoryFilter.toLowerCase();
 
+      const matchesLevel =
+        levelFilter === "ALL" ||
+        level.toLowerCase().includes(levelFilter.toLowerCase());
+
       const matchesProgress =
         progressTab === "all"
           ? true
@@ -90,13 +112,14 @@ export default function CoursesPage() {
           ? c.progress > 0 && c.progress < 100
           : c.progress >= 100;
 
-      return matchesSearch && matchesCategory && matchesProgress;
+      return matchesSearch && matchesCategory && matchesLevel && matchesProgress;
     });
-  }, [courses, searchQuery, categoryFilter, progressTab]);
+  }, [courses, searchQuery, categoryFilter, levelFilter, progressTab]);
 
   const handleResetFilters = () => {
     setSearchQuery("");
     setCategoryFilter("ALL");
+    setLevelFilter("ALL");
     setProgressTab("all");
   };
 
@@ -139,8 +162,18 @@ export default function CoursesPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
-              className="flex items-center gap-3 shrink-0"
+              className="flex items-center gap-3 shrink-0 flex-wrap"
             >
+              {isFacultyOrAdmin && (
+                <Link
+                  to={courseManagerLink}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-sky-300 text-[#0062A8] hover:bg-sky-50 font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-sm transition-all"
+                >
+                  <PlusCircle size={16} />
+                  <span>Author / Edit Courses</span>
+                </Link>
+              )}
+
               <Link
                 to="/prepzone"
                 className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-150 cursor-pointer"
@@ -160,6 +193,41 @@ export default function CoursesPage() {
           2. MAIN CONTENT AREA
           ========================================================================= */}
       <main className="w-full max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-8 mt-6 space-y-6">
+        {/* Faculty / Admin Quick Control Bar */}
+        {isFacultyOrAdmin && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 rounded-xl bg-[#0062A8] text-white font-bold text-xs">
+                <Settings className="w-4 h-4" />
+              </span>
+              <div>
+                <h4 className="text-xs font-bold text-slate-900">
+                  Faculty & Admin Curriculum Control Suite
+                </h4>
+                <p className="text-[11px] text-slate-500">
+                  Create custom courses, attach video playlists, configure coding challenges, and author MCQ knowledge tests.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Link
+                to={courseManagerLink}
+                className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-300 hover:border-[#0062A8] text-slate-800 hover:text-[#0062A8] text-xs font-bold transition-all shadow-2xs"
+              >
+                Manage Courses
+              </Link>
+              <Link
+                to={moduleManagerLink}
+                className="px-3.5 py-1.5 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Modules & Syllabus</span>
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Domain Category Selector Pills */}
         <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
           {categories.map((cat) => {
@@ -215,6 +283,20 @@ export default function CoursesPage() {
               />
             </div>
 
+            {/* Level Selector */}
+            <div className="flex items-center gap-2">
+              <select
+                value={levelFilter}
+                onChange={(e) => setLevelFilter(e.target.value)}
+                className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-[#0062A8]"
+              >
+                <option value="ALL">All Levels</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+
             {/* Progress Tabs & Status Selector */}
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/70">
@@ -237,7 +319,7 @@ export default function CoursesPage() {
                 ))}
               </div>
 
-              {(searchQuery || categoryFilter !== "ALL" || progressTab !== "all") && (
+              {(searchQuery || categoryFilter !== "ALL" || levelFilter !== "ALL" || progressTab !== "all") && (
                 <button
                   type="button"
                   onClick={handleResetFilters}
@@ -255,7 +337,7 @@ export default function CoursesPage() {
             3. COURSES GRID OR EMPTY STATE
             ========================================================================= */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-2">
             {[1, 2, 3, 4, 5, 6].map((n) => (
               <div
                 key={n}
