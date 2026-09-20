@@ -1,101 +1,55 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Search,
-  ExternalLink,
-  Sparkles,
-  ArrowRight,
-  Filter,
-  Layers,
-  GraduationCap,
-  X,
-  BookOpen,
-  Laptop,
-  Globe2,
-  FileText,
-  HelpCircle,
-  Download,
-  BookMarked,
-} from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useParams } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, Menu, Filter } from "lucide-react";
 import { departmentService } from "../services/departmentService";
-import { subjectService } from "../services/subjectService";
-import { resourceService, RESOURCE_TYPES, resolveResourceUrl } from "../services/resourceService";
+import { resourceService, resolveResourceUrl } from "../services/resourceService";
 import { apiRequest } from "../services/api";
 import { DEPARTMENTS_DATA } from "../data/departments";
-import TextReveal from "../components/TextReveal";
-
-const TYPE_LABEL = Object.fromEntries(RESOURCE_TYPES.map((t) => [t.value, t.label]));
+import { useAuth } from "../context/AuthContext";
+import ResourceSidebar from "../components/library/ResourceSidebar";
+import ResourceHeader from "../components/library/ResourceHeader";
+import ResourceSearch from "../components/library/ResourceSearch";
+import QuickFilters from "../components/library/QuickFilters";
+import FeaturedResource from "../components/library/FeaturedResource";
+import DepartmentExplorer from "../components/library/DepartmentExplorer";
+import SubjectExplorer from "../components/library/SubjectExplorer";
+import ResourceLibrary from "../components/library/ResourceLibrary";
+import RecentResources from "../components/library/RecentResources";
+import FilterDrawer from "../components/library/FilterDrawer";
+import ResourceSkeleton from "../components/library/ResourceSkeleton";
+import ErrorState from "../components/departments/ErrorState";
 
 export default function DepartmentResourcesPage() {
   const { departmentId: routeDeptId } = useParams();
+  const { user } = useAuth();
 
-  const [mainCategory, setMainCategory] = useState("notes");
+  const [category, setCategory] = useState("all");
   const [selectedDeptId, setSelectedDeptId] = useState(routeDeptId || "all");
   const [selectedSemester, setSelectedSemester] = useState("all");
+  const [selectedSubjectId, setSelectedSubjectId] = useState("all");
+  const [selectedType, setSelectedType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [expandedSubjectId, setExpandedSubjectId] = useState(null);
+  const [sortBy, setSortBy] = useState("latest");
+  const [viewMode, setViewMode] = useState("list");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [departments, setDepartments] = useState([]);
-  const [dbResources, setDbResources] = useState([]);
-
-  React.useEffect(() => {
-    async function loadData() {
-      try {
-        const [depts, resList] = await Promise.all([
-          departmentService.getDepartments(),
-          resourceService.getAllResources(),
-        ]);
-        setDepartments(depts || []);
-        setDbResources(resList || []);
-      } catch (err) {
-        console.error("Failed to load department resources from backend MongoDB:", err);
-      }
-    }
-    loadData();
-  }, []);
-
-  // Flatten all subjects across all departments
-  const allSubjects = useMemo(() => {
-    const list = [];
-    departments.forEach((dept) => {
-      const deptSubjects = dept.subjects || dept.curriculum?.flatMap(c => c.subjects) || [];
-      deptSubjects.forEach((subj) => {
-        list.push({
-          ...subj,
-          id: subj.id || subj._id || subj.code,
-          deptId: dept.id || dept._id || dept.code,
-          deptCode: dept.code,
-          deptName: dept.name,
-          units: subj.units || ["Unit 1", "Unit 2", "Unit 3", "Unit 4", "Unit 5"],
-          tags: subj.tags || [subj.code, dept.code],
-        });
-      });
-    });
-    return list;
-  }, [departments]);
-
-  // Flatten all resources across all departments
-  const allResources = useMemo(() => {
-    return dbResources.map((res) => ({
-      ...res,
-      id: res._id || res.id,
-      deptId: res.departmentId?._id || res.departmentId || res.department || "all",
-      deptCode: res.departmentCode || res.department || "CSE",
-      deptName: res.departmentName || "Department Resource",
-      tags: res.tags || [],
-    }));
-  }, [dbResources]);
   const [resources, setResources] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [liveReady, setLiveReady] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
+
+  const searchRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
-      // Static dept list for the dropdown, immediately available
+      setLoading(true);
+      setLoadError(false);
       setDepartments(
         Object.values(DEPARTMENTS_DATA).map((d) => ({ id: d.code.toLowerCase(), code: d.code, name: d.name }))
       );
@@ -110,25 +64,14 @@ export default function DepartmentResourcesPage() {
         if (cancelled) return;
 
         if (deptList.status === "fulfilled" && Array.isArray(deptList.value) && deptList.value.length > 0) {
-          setDepartments(
-            deptList.value.map((d) => ({ id: d._id || d.id, code: d.code, name: d.name }))
-          );
+          setDepartments(deptList.value.map((d) => ({ id: d._id || d.id, code: d.code, name: d.name })));
         }
 
         if (resList.status === "fulfilled") {
           const list = Array.isArray(resList.value) ? resList.value : [];
-          const deptIndex = {};
-          setLiveReady(true);
-          // Map departmentId to code when not populated
-          list.forEach((r) => {
-            if (!r.departmentId) {
-              const match = Object.values(DEPARTMENTS_DATA).find(
-                (d) => d.code.toLowerCase() === (r.departmentCode || r.department || "").toLowerCase()
-              );
-              if (match) deptIndex[r.departmentId] = match.code;
-            }
-          });
           setResources(list);
+        } else {
+          setLoadError(true);
         }
 
         if (subjList.status === "fulfilled") {
@@ -146,6 +89,18 @@ export default function DepartmentResourcesPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [retryKey]);
+
+  useEffect(() => {
+    function onKeyDown(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   const deptCodeById = useMemo(() => {
@@ -181,94 +136,145 @@ export default function DepartmentResourcesPage() {
     return t.includes("software") || t.includes("simulator") || t.includes("license") || t.includes("video") || t.includes("website");
   };
 
-  // ---- Soil filters ----
+  const myDept = useMemo(() => {
+    if (!user) return null;
+    const uid = typeof user.departmentId === "object" && user.departmentId ? user.departmentId._id || user.departmentId.id : user.departmentId;
+    const udc = user.departmentCode || "";
+    if (!uid && !udc) return null;
+    const dept = departments.find(
+      (d) =>
+        (uid && String(uid) === String(d.id)) ||
+        (uid && String(uid).toLowerCase() === String(d.code).toLowerCase()) ||
+        (udc && String(udc).toLowerCase() === String(d.code).toLowerCase())
+    );
+    return { id: uid || dept?.id || "all", code: udc || dept?.code || "", name: dept?.name };
+  }, [user, departments]);
+
+  const categoryMatches = (r) => {
+    if (category === "all" || category === "downloads") return true;
+    if (category === "subjects") return !isSoftware(r);
+    if (category === "notes") return (r.type || "") === "notes";
+    if (category === "question_bank") return ["question_bank", "previous_paper"].includes(r.type || "");
+    if (category === "software") return isSoftware(r);
+    return true;
+  };
+
   const q = (searchQuery || "").toLowerCase().trim();
 
-  // Resources view (softwares / all)
-  const filteredResources = useMemo(() => {
-    return resources.filter((r) => {
-      if (mainCategory === "softwares" && !isSoftware(r)) return false;
+  const libraryResources = useMemo(() => {
+    let list = resources.filter((r) => {
+      if (!categoryMatches(r)) return false;
       const matchDept =
-        effectiveDeptId === "all" || resourceDeptId(r) === effectiveDeptId ||
+        effectiveDeptId === "all" ||
+        resourceDeptId(r) === effectiveDeptId ||
         resourceDeptCode(r).toLowerCase() === effectiveDeptId.toLowerCase();
       if (!matchDept) return false;
+      const semMatch =
+        selectedSemester === "all" ||
+        String(r.semester || "") === String(selectedSemester).replace("Semester ", "");
+      if (!semMatch) return false;
+      const typeMatch = selectedType === "all" || (r.type || "") === selectedType;
+      if (!typeMatch) return false;
+      const subjMatch =
+        selectedSubjectId === "all" || (r.subjectId?._id || r.subjectId) === selectedSubjectId;
+      if (!subjMatch) return false;
       const txt = `${r.title || ""} ${r.description || ""} ${Array.isArray(r.tags) ? r.tags.join(" ") : ""}`.toLowerCase();
       return q === "" || txt.includes(q);
     });
+
+    if (sortBy === "az") {
+      list = [...list].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+    } else if (sortBy === "downloads") {
+      list = [...list].sort((a, b) => (b.downloadsCount || 0) - (a.downloadsCount || 0));
+    } else {
+      list = [...list].sort(
+        (a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()
+      );
+    }
+    return list;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resources, mainCategory, effectiveDeptId, q]);
+  }, [resources, category, effectiveDeptId, selectedSemester, selectedType, selectedSubjectId, sortBy, q]);
 
-  // Notes view: subject cards derived from live resources (grouped by subject)
-  const subjectGroups = useMemo(() => {
-    const groups = new Map();
+  const featuredResource = useMemo(() => {
+    if (!resources.length) return null;
+    const candidates = resources
+      .filter((r) => !isSoftware(r) && (r.fileUrl || r.externalUrl || r.url))
+      .sort((a, b) => (b.downloadsCount || 0) - (a.downloadsCount || 0));
+    return candidates[0] || resources[0];
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resources]);
+
+  const deptStats = useMemo(() => {
+    const map = new Map();
+    departments.forEach((d) => map.set(d.id, { total: 0, notes: 0, question_bank: 0, software: 0 }));
     resources.forEach((r) => {
-      const sid = r.subjectId?._id || r.subjectId;
-      if (!sid) return;
-      if (!groups.has(sid)) {
-        const subject = typeof r.subjectId === "object" && r.subjectId ? r.subjectId : null;
-        groups.set(sid, {
-          id: sid,
-          name: subject?.name || r.subjectName || "Academic Subject",
-          code: subject?.code || r.subjectCode || "SUBJ",
-          resources: [],
-        });
-      }
-      groups.get(sid).resources.push(r);
+      const rid = resourceDeptId(r);
+      const code = resourceDeptCode(r).toLowerCase();
+      const key = departments.find(
+        (d) => String(d.id) === String(rid) || String(d.code).toLowerCase() === code || String(d.code).toLowerCase() === String(rid).toLowerCase()
+      );
+      if (!key) return;
+      const s = map.get(key.id);
+      if (!s) return;
+      s.total += 1;
+      if (isSoftware(r)) s.software += 1;
+      else if (r.type === "question_bank" || r.type === "previous_paper") s.question_bank += 1;
+      else s.notes += 1;
     });
+    return map;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resources, departments]);
 
-    const enriched = [];
-    subjects.forEach((s) => {
-      const existing = groups.get(s._id);
-      const group = existing || { id: s._id, name: s.name, code: s.code, resources: [] };
-      group.departmentId = s.departmentId;
-      group.semester = s.semester;
-      group.credits = s.credits;
-      group.units = s.units || [];
-      enriched.push(group);
-      groups.delete(s._id);
-    });
-    groups.forEach((g) => enriched.push(g));
+  const explorerDepartments = useMemo(
+    () =>
+      departments
+        .map((d) => ({ ...d, count: deptStats.get(d.id)?.total || 0, counts: deptStats.get(d.id) }))
+        .sort((a, b) => b.count - a.count)
+        .filter((d) => d.count > 0),
+    [departments, deptStats]
+  );
 
-    return enriched
-      .map((g) => {
-        const deptId = g.departmentId || g.resources[0]?.departmentId?._id || g.resources[0]?.departmentId;
-        const deptCode = g.departmentId
-          ? deptCodeById[g.departmentId] || g.resources[0]?.departmentId?.code || ""
-          : resourceDeptCode(g.resources[0]) || "";
+  const subjectRows = useMemo(() => {
+    const rows = subjects
+      .map((s) => {
+        const count = resources.filter((r) => (r.subjectId?._id || r.subjectId) === s._id).length;
+        const dept = departments.find(
+          (d) =>
+            String(d.id) === String(s.departmentId) ||
+            String(d.code).toLowerCase() === String(s.departmentId || "").toLowerCase()
+        );
         return {
-          ...g,
-          deptId,
-          deptCode,
-          filteredResources: g.resources.filter((r) => {
-            const matchDept =
-              effectiveDeptId === "all" ||
-              resourceDeptId(r) === effectiveDeptId ||
-              deptCode.toLowerCase() === effectiveDeptId.toLowerCase();
-            const semMatch =
-              selectedSemester === "all" ||
-              String(g.semester || "") === selectedSemester.replace("Semester ", "");
-            const txt = `${r.title || ""} ${r.description || ""} ${Array.isArray(r.tags) ? r.tags.join(" ") : ""}`.toLowerCase();
-            return matchDept && semMatch && (q === "" || txt.includes(q));
-          }),
+          id: s._id,
+          name: s.name,
+          code: s.code,
+          departmentName: dept?.name || s.departmentName || "",
+          subjectCount: count,
+          semester: s.semester,
         };
       })
-      .filter((g) => g.filteredResources.length > 0);
+      .filter((row) => row.subjectCount > 0)
+      .sort((a, b) => b.subjectCount - a.subjectCount);
+    return rows.length ? rows : [];
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resources, subjects, effectiveDeptId, selectedSemester, q]);
-
-  const firstType = (group, type) => group.filteredResources.find((r) => (r.type || "") === type);
-
-  const hasActiveFilters =
-    effectiveDeptId !== "all" || selectedSemester !== "all" || searchQuery.trim() !== "";
+  }, [subjects, resources, departments]);
 
   const handleResetFilters = () => {
     setSelectedDeptId(routeDeptId || "all");
     setSelectedSemester("all");
+    setSelectedSubjectId("all");
+    setSelectedType("all");
     setSearchQuery("");
+    setSortBy("latest");
   };
 
-  const toggleSubjectExpand = (id) => {
-    setExpandedSubjectId((prev) => (prev === id ? null : id));
+  const handleNav = (key) => {
+    setCategory(key);
+    setSidebarOpen(false);
+  };
+
+  const handleDeptChange = (id) => {
+    setSelectedDeptId(id);
+    setSidebarOpen(false);
   };
 
   const openResource = (r) => {
@@ -276,540 +282,231 @@ export default function DepartmentResourcesPage() {
     if (url) window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const handleRetry = () => {
+    setRetryKey((k) => k + 1);
+  };
+
+  const activeChips = [];
+  if (effectiveDeptId !== "all") {
+    const dept = departments.find((d) => d.id === effectiveDeptId);
+    activeChips.push({ type: "dept", label: dept?.code || dept?.name || deptCodeById[effectiveDeptId] });
+  }
+  if (selectedSemester !== "all") activeChips.push({ type: "semester", label: `Semester ${selectedSemester}` });
+  if (selectedSubjectId !== "all") {
+    const sub = subjects.find((s) => s._id === selectedSubjectId);
+    if (sub) activeChips.push({ type: "subject", label: sub.name });
+  }
+  if (selectedType !== "all") activeChips.push({ type: "type", label: selectedType.replace(/_/g, " ") });
+  if (q) activeChips.push({ type: "search", label: `"${q}"` });
+
+  const removeChip = (type) => {
+    if (type === "dept") setSelectedDeptId(routeDeptId || "all");
+    if (type === "semester") setSelectedSemester("all");
+    if (type === "subject") setSelectedSubjectId("all");
+    if (type === "type") setSelectedType("all");
+    if (type === "search") setSearchQuery("");
+  };
+
+  const isOverview = category === "all";
+  const isSubjectsView = category === "subjects";
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center">
-        <p className="text-sm font-semibold text-slate-400">Loading department e-resources...</p>
+      <div className="min-h-screen bg-[#F8FAFC] px-5 py-10 sm:px-8 max-w-[1440px] mx-auto">
+        <div className="mb-6 space-y-2">
+          <div className="h-3 w-40 rounded-md bg-slate-200 animate-pulse" />
+          <div className="h-7 w-72 max-w-full rounded-lg bg-slate-200 animate-pulse" />
+          <div className="h-4 w-96 max-w-full rounded-md bg-slate-200 animate-pulse" />
+        </div>
+        <ResourceSkeleton rows={5} />
       </div>
     );
   }
 
-  const countOf = (fn) => filteredResources.filter(fn).length;
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-[#0B4A8F] selection:text-white scroll-smooth">
-      {/* =========================================================================
-          1. HERO SECTION
-          ========================================================================= */}
-      <section className="relative bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
-        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-25">
-          <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full border border-white/20" />
-          <div className="absolute right-[-40px] top-1/4 h-80 w-80 rounded-full border border-white/20" />
-          <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-blue-400/10 blur-2xl" />
-        </div>
-
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-            <div className="max-w-2xl">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-widest text-blue-100 mb-3 backdrop-blur-sm"
-              >
-                <Sparkles size={13} className="text-blue-200" />
-                <span>VCET ACADEMIC REPOSITORIES</span>
-              </motion.div>
-
-              <TextReveal
-                text="Department E-Resources & Subject Notes"
-                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white"
-                delay={0.12}
-              />
-
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
-                className="mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal max-w-xl"
-              >
-                Access verified university subject notes, lab manuals, question banks, and free
-                engineering tools categorized by department. New material uploaded by your faculty
-                appears here instantly.
-              </motion.p>
-            </div>
-
+    <div className="min-h-screen bg-[#F8FAFC] scroll-smooth selection:bg-[#0B4A8F] selection:text-white">
+      <div className="lg:flex lg:items-start lg:max-w-[1440px] lg:mx-auto lg:px-6 lg:gap-8">
+        <AnimatePresence>
+          {sidebarOpen && (
             <motion.div
+              key="sidebar-backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
-              className="flex items-center gap-3 shrink-0"
-            >
-              {liveReady ? (
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-400/15 border border-emerald-300/30 text-emerald-200 text-xs font-bold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  LIVE · {resources.length} resources online
-                </span>
-              ) : (
-                <Link
-                  to="/announcements"
-                  className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
-                >
-                  <span>LATEST NOTICES</span>
-                  <ArrowRight size={15} className="transition-transform duration-150 group-hover:translate-x-1 text-[#0B4A8F]" />
-                </Link>
-              )}
-            </motion.div>
-          </div>
-        </div>
-      </section>
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              onClick={() => setSidebarOpen(false)}
+              className="fixed inset-0 z-40 bg-[#0F172A]/40 backdrop-blur-[2px] lg:hidden"
+              aria-hidden="true"
+            />
+          )}
+        </AnimatePresence>
 
-      {/* =========================================================================
-          2. MAIN CATEGORY SELECTOR
-          ========================================================================= */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-7 space-y-6">
-        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
+        <ResourceSidebar
+          activeKey={category}
+          onNav={handleNav}
+          departments={departments}
+          selectedDeptId={selectedDeptId}
+          onDeptChange={handleDeptChange}
+          resourceCount={resources.length}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+
+        <main className="flex-1 min-w-0 w-full lg:pb-12">
           <button
-            type="button"
-            onClick={() => {
-              setMainCategory("notes");
-              setSelectedSemester("all");
-            }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-150 cursor-pointer select-none ${
-              mainCategory === "notes"
-                ? "bg-[#0B4A8F] text-white shadow-sm"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80"
-            }`}
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden mt-4 ml-5 sm:ml-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-bold text-[#0B4A8F] shadow-sm hover:border-[#0B4A8F] transition-colors"
           >
-            <BookOpen size={16} />
-            <span>Academic Notes & Subjects</span>
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                mainCategory === "notes" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              {subjectGroups.length}
-            </span>
+            <Menu size={15} />
+            E-Resources
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setMainCategory("softwares");
-              setSelectedSemester("all");
+          <ResourceHeader departments={departments.length} resources={resources.length} />
+          <ResourceSearch query={searchQuery} onChange={setSearchQuery} inputRef={searchRef} />
+          <QuickFilters
+            activeKey={category}
+            onSelect={handleNav}
+            userDeptName={myDept?.name || myDept?.code}
+            myDeptActive={Boolean(myDept) && effectiveDeptId === myDept?.id}
+            onMyDeptToggle={() => {
+              if (!myDept) return;
+              setSelectedDeptId(effectiveDeptId === myDept.id ? "all" : myDept.id);
+              if (effectiveDeptId !== myDept.id) setCategory("all");
             }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-150 cursor-pointer select-none ${
-              mainCategory === "softwares"
-                ? "bg-[#0B4A8F] text-white shadow-sm"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80"
-            }`}
-          >
-            <Laptop size={16} />
-            <span>Free Softwares & Tools</span>
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                mainCategory === "softwares" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              {countOf((r) => isSoftware(r))}
-            </span>
-          </button>
+          />
 
-          <button
-            type="button"
-            onClick={() => {
-              setMainCategory("all");
-              setSelectedSemester("all");
-            }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all duration-150 cursor-pointer select-none ${
-              mainCategory === "all"
-                ? "bg-[#0B4A8F] text-white shadow-sm"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200/80"
-            }`}
-          >
-            <Globe2 size={16} />
-            <span>All E-Resources</span>
-            <span
-              className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                mainCategory === "all" ? "bg-white/20 text-white" : "bg-slate-100 text-slate-600"
-              }`}
-            >
-              {resources.length}
-            </span>
-          </button>
-        </div>
-
-        {/* =========================================================================
-            3. FILTER CONTROLS BAR
-            ========================================================================= */}
-        <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs">
-          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div className="relative flex-1 min-w-[240px]">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={
-                  mainCategory === "notes"
-                    ? "Search subjects or study materials by name, code, or topic..."
-                    : "Search tools, simulation softwares, or topics..."
-                }
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] bg-slate-50/70 hover:bg-white transition-colors duration-150"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
-
-            <div className="flex flex-wrap sm:flex-nowrap items-center gap-3">
-              <div className="relative min-w-[200px] w-full sm:w-auto">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                  <GraduationCap size={15} />
-                </div>
-                <select
-                  value={selectedDeptId}
-                  onChange={(e) => setSelectedDeptId(e.target.value)}
-                  className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] appearance-none cursor-pointer transition-colors duration-150"
-                >
-                  <option value="all">All Departments ({departments.length} Branches)</option>
-                  {departments.map((dept) => (
-                    <option key={dept.id} value={dept.id}>
-                      {dept.code} — {dept.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                  <Filter size={13} />
-                </div>
-              </div>
-
-              {mainCategory === "notes" && (
-                <div className="relative min-w-[150px] w-full sm:w-auto">
-                  <select
-                    value={selectedSemester}
-                    onChange={(e) => setSelectedSemester(e.target.value)}
-                    className="w-full pl-4 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] appearance-none cursor-pointer transition-colors duration-150"
-                  >
-                    <option value="all">All Semesters</option>
-                    <option value="Semester 3">Semester 3</option>
-                    <option value="Semester 4">Semester 4</option>
-                    <option value="Semester 5">Semester 5</option>
-                    <option value="Semester 6">Semester 6</option>
-                  </select>
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                    <Filter size={13} />
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-bold text-slate-500 flex items-center gap-1.5">
-                <Layers size={14} className="text-[#0B4A8F]" />
-                {mainCategory === "notes" ? (
-                  <span>
-                    Showing{" "}
-                    <strong className="text-slate-800">
-                      {subjectGroups.reduce((n, g) => n + g.filteredResources.length, 0)}
-                    </strong>{" "}
-                    study materials across{" "}
-                    <strong className="text-slate-800">{subjectGroups.length}</strong> subjects
-                  </span>
-                ) : (
-                  <span>
-                    Showing <strong className="text-slate-800">{filteredResources.length}</strong> engineering resources
-                  </span>
-                )}
+          {activeChips.length > 0 && (
+            <div className="mt-4 px-5 sm:px-0 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+                <Filter size={12} />
+                Active filters:
               </span>
-
-              {effectiveDeptId !== "all" && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-[#0B4A8F] font-bold border border-blue-200">
-                  Dept: {departments.find((d) => d.id === effectiveDeptId)?.code || deptCodeById[effectiveDeptId]}
-                  <button
-                    onClick={() => setSelectedDeptId("all")}
-                    className="ml-1 hover:text-red-500 cursor-pointer"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-
-              {selectedSemester !== "all" && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-[#0B4A8F] font-bold border border-blue-200">
-                  {selectedSemester}
-                  <button
-                    onClick={() => setSelectedSemester("all")}
-                    className="ml-1 hover:text-red-500 cursor-pointer"
-                  >
-                    ×
-                  </button>
-                </span>
-              )}
-            </div>
-
-            {hasActiveFilters && (
+              {activeChips.map((chip) => (
+                <button
+                  key={chip.type}
+                  onClick={() => removeChip(chip.type)}
+                  aria-label={`Remove ${chip.label} filter`}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF6FF] border border-blue-100 px-3 py-1.5 text-[11px] font-bold text-[#0B4A8F] hover:bg-blue-100 transition-colors"
+                >
+                  {chip.label}
+                  <X size={11} />
+                </button>
+              ))}
               <button
                 onClick={handleResetFilters}
-                className="text-xs font-bold text-[#0B4A8F] hover:text-[#083E7A] hover:underline cursor-pointer"
+                className="text-[11px] font-semibold text-slate-500 underline underline-offset-2 hover:text-[#EF4444] transition-colors"
               >
-                Clear all filters
+                Clear all
               </button>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
 
-        {/* =========================================================================
-            4. CONTENT DISPLAY: SUBJECT NOTES VIEW
-            ========================================================================= */}
-        {mainCategory === "notes" && (
-          <div>
-            {subjectGroups.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-xs">
-                <h3 className="text-sm font-bold text-slate-800">
-                  No study materials found matching your filters
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Try clearing your search query or selecting "All Departments".
-                </p>
-                <button
-                  onClick={handleResetFilters}
-                  className="mt-4 px-4 py-2 rounded-xl bg-[#0B4A8F] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#083E7A] transition-colors"
-                >
-                  Reset Filters
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-5 md:grid-cols-2">
-                {subjectGroups.map((subj, index) => {
-                  const isExpanded = expandedSubjectId === subj.id;
-                  const notesRes = firstType(subj, "notes");
-                  const qbRes = firstType(subj, "question_bank");
-                  return (
-                    <motion.article
-                      key={subj.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.25, delay: (index % 4) * 0.05, ease: "easeOut" }}
-                      className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/40 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-150 flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[11px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-[#0B4A8F] text-white">
-                              {subj.deptCode || "Dept"}
-                            </span>
-                            <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0B4A8F] border border-blue-100">
-                              {subj.code}
-                            </span>
-                          </div>
+          {loadError ? (
+            <div className="mt-6 px-5 sm:px-0">
+              <ErrorState onRetry={handleRetry} />
+            </div>
+          ) : (
+            <>
+              {isOverview && (
+                <>
+                  <FeaturedResource
+                    resource={featuredResource}
+                    deptCode={featuredResource ? resourceDeptCode(featuredResource) : ""}
+                    onOpen={openResource}
+                  />
+                  <DepartmentExplorer
+                    departments={explorerDepartments}
+                    onSelect={(id) => {
+                      setSelectedDeptId(id);
+                      setCategory("all");
+                      setSidebarOpen(false);
+                    }}
+                  />
+                  {subjectRows.length > 0 && (
+                    <SubjectExplorer
+                      title="Popular Subjects"
+                      subtitle="Most-studied courses across departments"
+                      subjects={subjectRows}
+                      onSelect={(subject) => {
+                        setSelectedSubjectId(subject.id);
+                        setCategory("notes");
+                      }}
+                    />
+                  )}
+                </>
+              )}
 
-                          {(subj.semester || subj.credits) && (
-                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-500">
-                              {subj.semester && (
-                                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                                  Semester {subj.semester}
-                                </span>
-                              )}
-                              {subj.credits && (
-                                <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                                  {subj.credits} Credits
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
+              {isSubjectsView && subjectRows.length > 0 && (
+                <SubjectExplorer
+                  title="Subjects"
+                  subtitle="Lecture notes and question banks organised by course"
+                  subjects={subjectRows}
+                  onSelect={(subject) => {
+                    setSelectedSubjectId(subject.id);
+                    setCategory("notes");
+                  }}
+                />
+              )}
 
-                        <h3 className="text-base sm:text-lg font-extrabold text-slate-900 leading-snug mb-3">
-                          {subj.name}
-                        </h3>
+              <ResourceLibrary
+                title={
+                  category === "notes"
+                    ? "Lecture Notes"
+                    : category === "question_bank"
+                    ? "Question Banks"
+                    : category === "software"
+                    ? "Free Software"
+                    : category === "downloads"
+                    ? "Downloads"
+                    : "Resource Library"
+                }
+                subtitle={
+                  category === "subjects"
+                    ? "All academic materials"
+                    : category === "downloads"
+                    ? "Most downloaded resources first"
+                    : "Everything in one place"
+                }
+                count={libraryResources.length}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                items={libraryResources}
+                onOpen={openResource}
+                onReset={handleResetFilters}
+                emptyMessage="We couldn't find any resources matching your current filters."
+                loading={false}
+                onOpenFilters={() => setDrawerOpen(true)}
+              />
 
-                        {subj.units.length > 0 ? (
-                          <div className="mb-4 bg-slate-50 rounded-xl border border-slate-200/70 p-3">
-                            <button
-                              type="button"
-                              onClick={() => toggleSubjectExpand(subj.id)}
-                              className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none"
-                            >
-                              <span className="flex items-center gap-1.5">
-                                <FileText size={13} className="text-[#0B4A8F]" />
-                                <span>{subj.units.length} Course Units & Syllabus Outline</span>
-                              </span>
-                              <span className="text-slate-400">{isExpanded ? "−" : "+"}</span>
-                            </button>
-                            {isExpanded && (
-                              <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5 text-xs text-slate-600">
-                                {subj.units.map((unit, uIdx) => (
-                                  <div key={uIdx} className="flex items-start gap-2 py-0.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#0B4A8F] mt-1.5 shrink-0" />
-                                    <span className="leading-tight font-medium">
-                                      Unit {unit.unitNumber}: {unit.title}
-                                    </span>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="mb-4 bg-slate-50 rounded-xl border border-slate-200/70 p-3">
-                            <button
-                              type="button"
-                              onClick={() => toggleSubjectExpand(subj.id)}
-                              className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none"
-                            >
-                              <span className="flex items-center gap-1.5">
-                                <BookMarked size={13} className="text-[#0B4A8F]" />
-                                <span>{subj.filteredResources.length} Uploaded Study Material(s)</span>
-                              </span>
-                              <span className="text-slate-400">{isExpanded ? "−" : "+"}</span>
-                            </button>
-                            {isExpanded && (
-                              <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5 text-xs text-slate-600">
-                                {subj.filteredResources.map((r) => (
-                                  <button
-                                    key={r._id || r.id}
-                                    onClick={() => openResource(r)}
-                                    className="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-white transition-colors cursor-pointer text-left"
-                                  >
-                                    <span className="leading-tight font-medium text-slate-700 line-clamp-1">
-                                      {r.title}
-                                    </span>
-                                    <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-[#0B4A8F]">
-                                      <Download size={11} /> {r.downloadsCount || 0}
-                                    </span>
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
+              {isOverview && (
+                <RecentResources items={resources} onOpen={openResource} />
+              )}
+            </>
+          )}
+        </main>
+      </div>
 
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {subj.filteredResources.slice(0, 6).map((r) => (
-                            <span
-                              key={r._id || r.id}
-                              className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600"
-                            >
-                              {TYPE_LABEL[r.type] || r.type || "Notes"}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="pt-3.5 border-t border-slate-100 grid grid-cols-1 gap-2">
-                        <button
-                          onClick={() => openResource(notesRes || subj.filteredResources[0])}
-                          disabled={!notesRes && subj.filteredResources.length === 0}
-                          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors duration-150 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
-                        >
-                          <Download size={13} />
-                          <span>LECTURE NOTES</span>
-                        </button>
-
-                        {qbRes && (
-                          <button
-                            onClick={() => openResource(qbRes)}
-                            className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-[#0B4A8F] border border-blue-200 text-xs font-bold uppercase tracking-wider transition-colors duration-150"
-                          >
-                            <HelpCircle size={13} />
-                            <span>QUESTION BANK</span>
-                          </button>
-                        )}
-                      </div>
-                    </motion.article>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* =========================================================================
-            5. CONTENT DISPLAY: FREE SOFTWARES & ALL RESOURCES VIEW
-            ========================================================================= */}
-        {mainCategory !== "notes" && (
-          <div>
-            {filteredResources.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-xs">
-                <h3 className="text-sm font-bold text-slate-800">No resources matched your search</h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  Try adjusting your query or resetting filters.
-                </p>
-                <button
-                  onClick={handleResetFilters}
-                  className="mt-4 px-4 py-2 rounded-xl bg-[#0B4A8F] text-white text-xs font-bold uppercase tracking-wider hover:bg-[#083E7A] transition-colors"
-                >
-                  Reset Filters
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-                {filteredResources.map((resource, index) => (
-                  <motion.article
-                    key={resource._id || resource.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.25, delay: (index % 6) * 0.05, ease: "easeOut" }}
-                    className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/30 p-5 sm:p-6 flex flex-col justify-between shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-200 group"
-                  >
-                    <div>
-                      <div className="flex items-center justify-between gap-2 mb-3">
-                        <span className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-blue-50 text-[#0B4A8F] border border-blue-100">
-                          {resourceDeptCode(resource)} • {TYPE_LABEL[resource.type] || resource.type || "Notes"}
-                        </span>
-                        {resource.unit && (
-                          <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                            Unit {resource.unit}
-                          </span>
-                        )}
-                      </div>
-
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0B4A8F] transition-colors duration-150 leading-snug mb-1.5 line-clamp-2">
-                        {resource.title}
-                      </h3>
-
-                      <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal mb-4 line-clamp-3">
-                        {resource.description || "Department study material."}
-                      </p>
-                    </div>
-
-                    <div className="pt-3.5 border-t border-slate-100 space-y-3.5">
-                      <div className="flex flex-wrap gap-1.5">
-                        {Array.isArray(resource.tags) &&
-                          resource.tags.slice(0, 5).map((tag) => (
-                            <span
-                              key={tag}
-                              className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600"
-                            >
-                              #{tag}
-                            </span>
-                          ))}
-                      </div>
-
-                      <button
-                        onClick={() => openResource(resource)}
-                        disabled={!resource.fileUrl && !resource.externalUrl}
-                        className="group/btn w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors duration-150 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
-                      >
-                        <span>
-                          {resource.fileUrl || resource.externalUrl ? "OPEN / DOWNLOAD E-RESOURCE" : "NO FILE ATTACHED"}
-                        </span>
-                        <ExternalLink
-                          size={13}
-                          className="transition-transform duration-150 group-hover/btn:translate-x-0.5"
-                        />
-                      </button>
-                      <div className="flex items-center justify-between text-[10px] font-bold text-slate-400">
-                        <span>⬇ {resource.downloadsCount || 0} downloads</span>
-                        {resource.fileSize && <span>{(resource.fileSize || "").toUpperCase()}</span>}
-                      </div>
-                    </div>
-                  </motion.article>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </main>
+      <FilterDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        departments={departments}
+        subjects={subjects}
+        filters={{
+          dept: selectedDeptId === "all" ? "all" : effectiveDeptId,
+          semester: selectedSemester,
+          type: selectedType,
+          subjectId: selectedSubjectId,
+        }}
+        onApply={(f) => {
+          setSelectedDeptId(f.dept);
+          setSelectedSemester(f.semester);
+          setSelectedType(f.type);
+          setSelectedSubjectId(f.subjectId);
+          setDrawerOpen(false);
+        }}
+      />
     </div>
   );
 }
