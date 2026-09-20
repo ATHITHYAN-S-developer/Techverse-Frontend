@@ -7,9 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+**/dist/
+dist-ssr/
+.vite/
+**/.vite/
 *.local
 
 # Editor directories and files
@@ -23,14 +30,20 @@ dist-ssr
 *.sln
 *.sw?
 
-# Environment & Backend Files (Frontend Only Repo)
+# Environment
 .env
 .env.local
 .env.*.local
-backend/
-frontend/
+.env.production
+.env.development
+!.env.example
+
+# Local databases, binaries & archives
 mongodb/
 mongodb-extracted/
 mongodb-portable.zip
 scratch/
-
+backend/data/
+**/data/journal/
+*.pdb
+*.exe
