@@ -1,29 +1,27 @@
 /**
  * Department Service
- * Communicates exclusively with backend MongoDB endpoints (/api/departments, /api/subjects).
+ * Communicates with backend MongoDB endpoints (/api/departments, /api/subjects).
  */
 
-import { apiRequest } from "./api";
-
-export const departmentService = {
-  async getDepartments() {
-    try {
-      const res = await apiRequest("/departments");
-      if (res.success && Array.isArray(res.departments)) {
-        return res.departments;
-      }
-    } catch (err) {
-      console.error("Failed to fetch departments from MongoDB backend:", err);
-    }
-    return [];
 import api, { apiRequest } from "./api";
 import { DEPARTMENTS_DATA } from "../data/departments";
 
 export const departmentService = {
+  async getAllDepartments() {
+    return this.getDepartments({ all: true });
+  },
+
   async getDepartments({ all = false } = {}) {
-    const res = await apiRequest(`/departments${all ? "?all=true" : ""}`);
-    if (res.success && Array.isArray(res.departments) && res.departments.length > 0) {
-      return res.departments;
+    try {
+      const res = await apiRequest(`/departments${all ? "?all=true" : ""}`);
+      if (res?.success && Array.isArray(res.departments) && res.departments.length > 0) {
+        return res.departments;
+      }
+      if (Array.isArray(res) && res.length > 0) {
+        return res;
+      }
+    } catch (err) {
+      console.warn("Failed to fetch departments from backend:", err);
     }
     if (all) return [];
     return Object.values(DEPARTMENTS_DATA);
@@ -32,11 +30,12 @@ export const departmentService = {
   async getDepartmentById(deptId) {
     try {
       const res = await apiRequest(`/departments/${deptId}`);
-      if (res.success && res.department) {
+      if (res?.success && res.department) {
         return res.department;
       }
+      if (res?.data) return res.data;
     } catch (err) {
-      console.error(`Failed to fetch department '${deptId}' from MongoDB backend:`, err);
+      console.error(`Failed to fetch department '${deptId}':`, err);
     }
     return null;
   },
@@ -59,11 +58,12 @@ export const departmentService = {
   async getSubjectsForSemester(deptId, semesterNumber) {
     try {
       const res = await apiRequest(`/subjects?departmentId=${deptId}&semester=${semesterNumber}`);
-      if (res.success && Array.isArray(res.subjects)) {
+      if (res?.success && Array.isArray(res.subjects)) {
         return res.subjects;
       }
+      if (Array.isArray(res)) return res;
     } catch (err) {
-      console.error("Failed to fetch subjects from MongoDB backend:", err);
+      console.error("Failed to fetch subjects:", err);
     }
     return [];
   },

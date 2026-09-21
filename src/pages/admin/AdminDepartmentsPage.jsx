@@ -131,7 +131,11 @@ export default function AdminDepartmentsPage() {
         </button>
       </div>
 
-      {departments.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-24 text-slate-400">
+          <Loader2 className="w-6 h-6 animate-spin mr-3" /> Loading departments...
+        </div>
+      ) : departments.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-400">
           <Building2 className="w-10 h-10 mx-auto mb-3" />
           <p className="text-sm font-semibold">No departments yet. Click "Add Department" to create the first one.</p>

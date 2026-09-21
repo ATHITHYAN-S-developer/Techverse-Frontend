@@ -13,7 +13,13 @@ import {
   ChevronRight,
   ArrowLeft,
   Sparkles,
-  Info
+  Info,
+  Video,
+  Code2,
+  HelpCircle,
+  Layers,
+  Settings,
+  Edit,
 } from "lucide-react";
 import { courseService } from "../services/courseService";
 import { testService } from "../services/testService";
@@ -23,6 +29,10 @@ export default function CourseDetailPage() {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isFacultyOrAdmin = user && (user.role === "faculty" || user.role === "teacher" || user.role === "admin");
+  const moduleManagerLink = user?.role === "admin" ? "/admin/modules" : "/faculty/modules";
+  const courseManagerLink = user?.role === "admin" ? "/admin/courses" : "/faculty/courses";
+
   const [course, setCourse] = useState(null);
   const [courseTest, setCourseTest] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -65,7 +75,7 @@ export default function CourseDetailPage() {
       <div className="max-w-xl mx-auto py-16 text-center space-y-4">
         <h2 className="text-xl font-bold text-slate-800">Course Not Found</h2>
         <p className="text-xs text-slate-500">The requested course could not be located in the catalog.</p>
-        <Link to="/courses" className="inline-block px-4 py-2 bg-[#0062A8] text-white rounded-xl text-xs font-bold">
+        <Link to="/courses" className="inline-block px-4 py-2 bg-[#0062A8] text-white rounded-xl text-xs font-bold cursor-pointer">
           Back to Courses
         </Link>
       </div>
@@ -80,7 +90,7 @@ export default function CourseDetailPage() {
   const hasStarted = completedCount > 0 || userProgress > 0;
   const isNewToCourse = !hasStarted;
 
-  // Process 3-line course description as a clean paragraph
+  // Process course description as a clean paragraph
   const rawDesc = course.courseDescription || course.description || "";
   const cleanDescParagraph = rawDesc
     .replace(/^Line \d+:?\s*/gm, "")
@@ -94,7 +104,7 @@ export default function CourseDetailPage() {
   const courseSlug = course.id || course.slug || course._id;
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto py-3 sm:py-5 px-2 sm:px-4 lg:px-6 space-y-5">
+    <div className="w-full max-w-[1600px] mx-auto py-3 sm:py-5 px-2 sm:px-4 lg:px-6 space-y-5 select-none">
       {/* Back button */}
       <button
         onClick={() => navigate("/courses")}
@@ -102,6 +112,39 @@ export default function CourseDetailPage() {
       >
         <ArrowLeft className="w-4 h-4" /> Back to Courses Catalog
       </button>
+
+      {/* Faculty / Educator Management Bar */}
+      {isFacultyOrAdmin && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <span className="p-2 rounded-xl bg-[#0062A8] text-white">
+              <Settings className="w-4 h-4" />
+            </span>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900">Course Management Studio</h4>
+              <p className="text-[11px] text-slate-500">
+                You have educator permissions to modify this course and author its curriculum modules.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              to={`${moduleManagerLink}?courseId=${course._id || course.id}`}
+              className="px-3.5 py-1.5 bg-[#0062A8] hover:bg-[#0B4A8F] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Manage Modules ({totalMods})</span>
+            </Link>
+            <Link
+              to={courseManagerLink}
+              className="px-3.5 py-1.5 bg-white border border-slate-300 hover:border-[#0062A8] text-slate-800 hover:text-[#0062A8] text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer"
+            >
+              Edit Course Info
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* =========================================================================
           NEW STUDENT WELCOME BOX (Bright Ice-Blue Theme)
@@ -117,7 +160,7 @@ export default function CourseDetailPage() {
                 <span>Welcome New Student</span>
               </div>
               <span className="text-xs text-slate-600 font-medium">
-                Student ID: <span className="font-bold text-slate-900">{user?.registerNumber || user?.username || "csr004"}</span>
+                Student: <span className="font-bold text-slate-900">{user?.name || user?.username || "Student"}</span>
               </span>
             </div>
 
@@ -130,7 +173,7 @@ export default function CourseDetailPage() {
               </p>
             </div>
 
-            {/* Clean 3-Line Paragraph Box */}
+            {/* Clean Paragraph Box */}
             <div className="bg-white/90 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-sky-200/80 shadow-2xs">
               <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
                 {cleanDescParagraph}
@@ -140,7 +183,7 @@ export default function CourseDetailPage() {
             <div className="pt-2 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
                 <Info className="w-4 h-4 text-[#0062A8]" />
-                <span>Completion benchmark: {course.passingPercentage || 50}% assessment score for verified certificate.</span>
+                <span>Completion benchmark: {course.passingPercentage || course.passingScore || 50}% assessment score for verified certificate.</span>
               </div>
               {firstIncompleteModule && (
                 <Link
@@ -163,7 +206,7 @@ export default function CourseDetailPage() {
             <span className="px-3 py-1 text-xs font-bold bg-blue-50 text-[#0062A8] rounded-full border border-blue-200">
               {course.category}
             </span>
-            <span className="text-xs font-semibold text-slate-500">{course.level}</span>
+            <span className="text-xs font-semibold text-slate-500">{course.level || "Beginner to Intermediate"}</span>
             <span className="text-slate-300">•</span>
             <span className="flex items-center gap-1 text-xs font-bold text-amber-600">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {course.rating || 4.9}
@@ -177,11 +220,11 @@ export default function CourseDetailPage() {
           <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-slate-600 font-medium">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-[#0062A8]" />
-              <span>{course.duration}</span>
+              <span>{course.duration || "30 Days"}</span>
             </div>
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-[#0062A8]" />
-              <span>{course.modules?.length || 0} Modules</span>
+              <span>{course.modules?.length || course.totalModules || 0} Modules</span>
             </div>
             <div className="flex items-center gap-2">
               <Award className="w-4 h-4 text-emerald-600" />
@@ -204,7 +247,7 @@ export default function CourseDetailPage() {
               />
             </div>
             <p className="text-[11px] text-slate-500">
-              Pass benchmark: {course.passingPercentage || 50}% on module assessments to unlock certificate.
+              Pass benchmark: {course.passingPercentage || course.passingScore || 50}% on module assessments to unlock certificate.
             </p>
           </div>
 
@@ -232,9 +275,7 @@ export default function CourseDetailPage() {
         </div>
       </div>
 
-      {/* =========================================================================
-          COURSE DESCRIPTION (Clean 3-Line Paragraph for EVERY course)
-          ========================================================================= */}
+      {/* COURSE DESCRIPTION */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-xl bg-blue-50 text-[#0062A8]">
@@ -252,16 +293,31 @@ export default function CourseDetailPage() {
 
       {/* Modules Syllabus List */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
-        <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-          <BookOpen className="w-5 h-5 text-[#0062A8]" /> Course Curriculum & Modules
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-[#0062A8]" /> Course Curriculum & Modules ({totalMods})
+          </h2>
+          {isFacultyOrAdmin && (
+            <Link
+              to={`${moduleManagerLink}?courseId=${course._id || course.id}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#0062A8] hover:bg-blue-100 font-bold text-xs transition-colors cursor-pointer"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Add / Edit Modules</span>
+            </Link>
+          )}
+        </div>
 
         {course.modules && course.modules.length > 0 ? (
           <div className="divide-y divide-slate-100">
             {course.modules.map((mod, idx) => {
               const isPassed = mod.completed || Boolean(mod.testPassed);
               const isCourseCompleted = userProgress >= 100 || Boolean(course.isCourseCompleted) || (totalMods > 0 && completedCount >= totalMods);
-              const isUnlocked = isCourseCompleted || (mod.isUnlocked !== undefined ? mod.isUnlocked : (idx === 0 || isPassed));
+              const isUnlocked = isCourseCompleted || isFacultyOrAdmin || (mod.isUnlocked !== undefined ? mod.isUnlocked : (idx === 0 || isPassed));
+
+              const videoCount = mod.videos?.length || (mod.videoUrl ? 1 : 1);
+              const codingCount = mod.codingProblems?.length || (mod.hasCoding ? 1 : 0);
+              const mcqCount = mod.mcqs?.length || (mod.hasMCQ ? 5 : 0);
 
               return (
                 <div
@@ -288,7 +344,7 @@ export default function CourseDetailPage() {
                     </div>
 
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-bold font-mono text-slate-400 uppercase">
                           Module {mod.moduleNumber || idx + 1}
                         </span>
@@ -309,14 +365,29 @@ export default function CourseDetailPage() {
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-1">{mod.summary || mod.description}</p>
+
+                      <p className="text-xs text-slate-500 mt-1 line-clamp-1">{mod.summary || mod.description || "Interactive video lesson and practical assessment."}</p>
+
+                      {/* Content Badges */}
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#0062A8] border border-blue-200/60">
-                          🎥 Video Lesson
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#0062A8] border border-blue-200/60 flex items-center gap-1">
+                          <Video className="w-3 h-3" />
+                          <span>{videoCount} Video{videoCount > 1 ? "s" : ""}</span>
                         </span>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
-                          📝 Assessment Test
-                        </span>
+
+                        {(mod.hasCoding || codingCount > 0) && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-violet-50 text-violet-700 border border-violet-200/60 flex items-center gap-1">
+                            <Code2 className="w-3 h-3" />
+                            <span>{codingCount > 0 ? `${codingCount} Coding Challenge${codingCount > 1 ? "s" : ""}` : "Coding Arena"}</span>
+                          </span>
+                        )}
+
+                        {(mod.hasMCQ || mcqCount > 0) && (
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60 flex items-center gap-1">
+                            <HelpCircle className="w-3 h-3" />
+                            <span>{mcqCount > 0 ? `${mcqCount} MCQ Test` : "Knowledge Quiz"}</span>
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -345,9 +416,18 @@ export default function CourseDetailPage() {
             })}
           </div>
         ) : (
-          <div className="py-10 text-center space-y-2 border border-dashed border-slate-200 rounded-2xl">
+          <div className="py-10 text-center space-y-3 border border-dashed border-slate-200 rounded-2xl">
             <p className="text-sm font-semibold text-slate-600">No modules available yet</p>
             <p className="text-xs text-slate-400">Curriculum modules published by faculty or administrators in MongoDB will appear here.</p>
+            {isFacultyOrAdmin && (
+              <Link
+                to={`${moduleManagerLink}?courseId=${course._id || course.id}`}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0062A8] text-white font-bold text-xs shadow-xs"
+              >
+                <Layers className="w-3.5 h-3.5" />
+                <span>Add First Module</span>
+              </Link>
+            )}
           </div>
         )}
       </div>
@@ -418,7 +498,7 @@ export default function CourseDetailPage() {
                     className="px-6 py-3.5 bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider rounded-2xl border border-slate-700 shadow-md flex items-center gap-2 transition-all cursor-pointer"
                   >
                     <Lock className="w-4 h-4 text-amber-400" />
-                    <span>Complete All Module Tests First ({completedCount}/{totalMods})</span>
+                    <span>Complete All Module Tests First ({completedCount}/${totalMods})</span>
                   </Link>
                 )}
               </div>
