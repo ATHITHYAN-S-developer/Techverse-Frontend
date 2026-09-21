@@ -499,8 +499,6 @@ Comprehensive audit trail for admin tracking of all system modifications.
                                                        │
                                                        ▼
                                                 Common Notice Board
-```
-
 ---
 
 ## 📁 Recommended Node.js + Express + Mongoose Backend Structure

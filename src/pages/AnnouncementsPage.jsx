@@ -175,29 +175,6 @@ export default function AnnouncementsPage() {
           background: linear-gradient(135deg, #071E3D 0%, #0A3563 50%, #0062A8 100%);
         }
 
-        .vcet-title {
-          position: relative;
-          z-index: 3;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          gap: 18px;
-          margin-bottom: 16px;
-        }
-
-        .vcet-title strong {
-          font-size: 28px;
-          font-weight: 900;
-          letter-spacing: 6px;
-          color: white;
-        }
-
-        .vcet-title span {
-          font-size: 22px;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.7);
-        }
-
         .vcet-marquee-strip {
           position: relative;
           overflow: hidden;
@@ -256,13 +233,6 @@ export default function AnnouncementsPage() {
 
         {/* Content Container */}
         <div className="max-w-4xl mx-auto relative z-10 flex flex-col items-center">
-          {/* Centered Stationary Bold VCET Header */}
-          <div className="vcet-title">
-            <span>↔</span>
-            <strong>VCET</strong>
-            <span>↔</span>
-          </div>
-
           {/* Title */}
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Institutional Announcements

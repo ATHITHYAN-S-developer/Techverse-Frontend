@@ -9,8 +9,12 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { FiArrowLeft, FiArrowRight, FiExternalLink, FiChevronLeft, FiChevronRight, FiGlobe, FiSmartphone } from "react-icons/fi";
 import { FaAndroid, FaApple, FaYoutube, FaNewspaper } from "react-icons/fa";
+import VcetMarquee from "./VcetMarquee";
+import TextReveal from "./TextReveal";
 
 // Import Aptitude Logos
 import indiabixLogo from "../assets/logos/IndiaBIX.jpg";
@@ -88,7 +92,14 @@ const LOGO_MAP = {
   "anastasi-in-tech": anastasiLogo,
 };
 
-export default function ResourceListView({ resources = [], pageTitle = "" }) {
+export default function ResourceListView({
+  resources = [],
+  pageTitle = "",
+  badgeText = "VCET ACADEMIC & TECH REPOSITORIES",
+  subtitle = "Access hand-picked technology portals, AI research hubs, cybersecurity platforms, and interactive engineering learning resources.",
+  ctaText = "EXPLORE COURSES",
+  ctaLink = "/courses",
+}) {
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -183,23 +194,84 @@ export default function ResourceListView({ resources = [], pageTitle = "" }) {
   };
 
   return (
-    <div className="relative min-h-[85vh] bg-white text-[#444445] py-8 sm:py-12 flex flex-col justify-between select-none">
-      <div className="max-w-7xl mx-auto w-full px-6 sm:px-10 lg:px-16 flex items-center justify-between mb-8">
-        {/* Back to Home Button with slide-left hover micro-animation */}
+    <div className="relative min-h-[85vh] bg-[#F8FAFC] text-[#444445] pb-24 flex flex-col justify-between select-none">
+      {/* =========================================================================
+          1. HERO SECTION (Exact Match with Departments & Courses Pages)
+          ========================================================================= */}
+      <section className="relative bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
+        <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-25">
+          <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full border border-white/20" />
+          <div className="absolute right-[-40px] top-1/4 h-80 w-80 rounded-full border border-white/20" />
+          <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-blue-400/10 blur-2xl" />
+        </div>
+
+        <div className="max-w-6xl mx-auto relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+            <div className="max-w-2xl">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-xs font-bold uppercase tracking-widest text-blue-100 mb-3 backdrop-blur-sm"
+              >
+                <Sparkles size={13} className="text-blue-200" />
+                <span>{badgeText}</span>
+              </motion.div>
+
+              <TextReveal
+                text={pageTitle || "Tech Explorer — Websites to Improve Tech Knowledge"}
+                className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white"
+                delay={0.12}
+              />
+
+              {subtitle && (
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
+                  className="mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal max-w-xl"
+                >
+                  {subtitle}
+                </motion.p>
+              )}
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.3, ease: "easeOut" }}
+              className="flex items-center gap-3 shrink-0"
+            >
+              <Link
+                to={ctaLink}
+                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
+              >
+                <span>{ctaText}</span>
+                <ArrowRight
+                  size={15}
+                  className="transition-transform duration-150 group-hover:translate-x-1 text-[#0B4A8F]"
+                />
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* VCET Continuous Moving Marquee Strip */}
+      <VcetMarquee />
+
+      {/* Sub-Bar: Back to Home & Resource Count */}
+      <div className="max-w-7xl mx-auto w-full px-6 sm:px-10 lg:px-16 pt-6 flex items-center justify-between">
         <Link
           to="/"
-          className="group inline-flex items-center gap-2.5 text-xs font-bold uppercase tracking-wider text-[#0062A8] hover:text-[#004e87] transition-colors duration-200"
+          className="group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0062A8] hover:text-[#004e87] transition-colors duration-200"
         >
-          <FiArrowLeft
-            size={16}
-            className="group-hover:-translate-x-1.5 transition-transform duration-200"
-          />
+          <FiArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span className="border-b border-transparent group-hover:border-[#004e87]">
             Back to Home
           </span>
         </Link>
 
-        {/* Resources Counter */}
         <span className="text-xs font-mono font-bold text-[#444445]/60 uppercase tracking-widest">
           {resources.length} Resources
         </span>
