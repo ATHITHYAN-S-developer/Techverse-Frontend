@@ -37,7 +37,11 @@ export default function UpdatesPage() {
   return (
     <ResourceListView
       resources={updateResources}
+      badgeText="VCET TECH PULSE"
       pageTitle="Tech Pulse — Apps for Tech Updates"
+      subtitle="Stay informed with real-time tech news, developer digests, product launches, and industry engineering insights."
+      ctaText="LATEST NOTICES"
+      ctaLink="/announcements"
     />
   );
 }

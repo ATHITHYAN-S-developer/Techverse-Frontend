@@ -6,7 +6,6 @@ import {
   BookOpen,
   ShieldCheck,
   IdCard,
-  Calendar,
   Lock,
   Mail,
   Eye,
@@ -18,10 +17,12 @@ import {
   AlertCircle,
   Sparkles,
   UserCheck,
+  EyeIcon,
 } from "lucide-react";
 import { getCurrentUser, isAuthenticated } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import loginIllustration from "../assets/login-illustration.jpg";
+import campusBg from "../assets/college/campus-aerial-bw.jpg";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -30,15 +31,17 @@ export default function LoginPage() {
   // Active Role: "student" | "faculty" | "admin"
   const [activeRole, setActiveRole] = useState("student");
 
-  // Form Fields
+  // Student Form Fields
   const [studentReg, setStudentReg] = useState("");
   const [studentDob, setStudentDob] = useState("");
   const [showStudentPassword, setShowStudentPassword] = useState(false);
 
+  // Faculty Form Fields
   const [facultyEmail, setFacultyEmail] = useState("");
   const [facultyPassword, setFacultyPassword] = useState("");
   const [showFacultyPassword, setShowFacultyPassword] = useState(false);
 
+  // Admin Form Fields
   const [adminUsername, setAdminUsername] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
   const [showAdminPassword, setShowAdminPassword] = useState(false);
@@ -189,22 +192,19 @@ export default function LoginPage() {
       id: "student",
       label: "Students",
       icon: GraduationCap,
-      badge: "Student Portal",
-      bgGradient: "from-blue-600 to-sky-700",
+      badge: "STUDENT PORTAL",
     },
     {
       id: "faculty",
       label: "Teachers",
       icon: BookOpen,
-      badge: "Faculty Workspace",
-      bgGradient: "from-indigo-600 to-blue-700",
+      badge: "FACULTY WORKSPACE",
     },
     {
       id: "admin",
       label: "Admin",
       icon: ShieldCheck,
-      badge: "Administrative Control Center",
-      bgGradient: "from-slate-800 to-blue-900",
+      badge: "ADMINISTRATIVE CONTROL CENTER",
     },
   ];
 
@@ -233,18 +233,23 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] w-full bg-white flex flex-col md:flex-row overflow-hidden">
-      {/* 1. LEFT PANEL: Multi-Role Login Forms & Branding (52% Width) */}
+    <div className="min-h-screen w-full bg-white flex flex-col md:flex-row overflow-hidden selection:bg-[#0062A8] selection:text-white">
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="w-full md:w-[52%] flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white"
+        className="w-full md:w-[52%] flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white relative overflow-hidden"
       >
+        {/* Campus Background Image Overlay (Light Watermark for Maximum Readability) */}
+        <div
+          className="absolute inset-0 bg-cover bg-center opacity-[0.07] pointer-events-none filter contrast-110 grayscale"
+          style={{ backgroundImage: `url(${campusBg})` }}
+        />
+        <div className="absolute inset-0 bg-[#FAFAFC]/40 pointer-events-none" />
         {/* Header: Logo & Back Link */}
         <motion.div variants={itemVariants} className="flex items-center justify-between mb-6 md:mb-4">
           <Link to="/" className="inline-flex items-center gap-2.5 select-none group">
-            <div className="h-10 w-10 rounded-xl bg-[#0062A8] text-white flex items-center justify-center font-black text-lg shadow-sm shadow-[#0062A8]/20 transition-transform group-hover:scale-105">
+            <div className="h-10 w-10 rounded-xl bg-[#0062A8] text-white flex items-center justify-center font-black text-lg shadow-xs shadow-[#0062A8]/20 transition-transform group-hover:scale-105">
               <Sparkles size={19} />
             </div>
             <div className="flex flex-col">
@@ -252,7 +257,7 @@ export default function LoginPage() {
                 Tech<span className="text-[#0062A8]">Verse</span>
               </span>
               <span className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">
-                VCET Tech Hub
+                VCET TECH HUB
               </span>
             </div>
           </Link>
@@ -294,9 +299,9 @@ export default function LoginPage() {
                   key={role.id}
                   type="button"
                   onClick={() => handleRoleChange(role.id)}
-                  className={`flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200 cursor-pointer ${
+                  className={`flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-white text-[#0062A8] shadow-sm font-black border border-gray-200/50 scale-[1.02]"
+                      ? "bg-white text-[#0062A8] shadow-xs font-black border border-gray-200/50 scale-[1.02]"
                       : "text-gray-500 hover:text-gray-800 font-semibold"
                   }`}
                 >
@@ -322,7 +327,7 @@ export default function LoginPage() {
                     htmlFor="studentReg"
                     className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
                   >
-                    Register Number
+                    REGISTER NUMBER
                   </label>
                   <motion.div
                     animate={errors.studentReg ? shakeAnimation : {}}
@@ -372,7 +377,7 @@ export default function LoginPage() {
                       htmlFor="studentDob"
                       className="block text-xs font-bold uppercase tracking-wider text-gray-700"
                     >
-                      Password / Date of Birth
+                      PASSWORD / DATE OF BIRTH
                     </label>
                     <span className="text-[11px] text-gray-400 font-medium">e.g. student123</span>
                   </div>
@@ -435,7 +440,7 @@ export default function LoginPage() {
                     htmlFor="facultyEmail"
                     className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
                   >
-                    Faculty Email / Staff ID
+                    FACULTY EMAIL / STAFF ID
                   </label>
                   <motion.div
                     animate={errors.facultyEmail ? shakeAnimation : {}}
@@ -483,7 +488,7 @@ export default function LoginPage() {
                     htmlFor="facultyPassword"
                     className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
                   >
-                    Faculty Password
+                    FACULTY PASSWORD
                   </label>
                   <motion.div
                     animate={errors.facultyPassword ? shakeAnimation : {}}
@@ -515,7 +520,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowFacultyPassword((prev) => !prev)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
                     >
                       {showFacultyPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -543,7 +548,7 @@ export default function LoginPage() {
                     htmlFor="adminUsername"
                     className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
                   >
-                    Admin Account / Username
+                    ADMIN ACCOUNT / USERNAME
                   </label>
                   <motion.div
                     animate={errors.adminUsername ? shakeAnimation : {}}
@@ -591,7 +596,7 @@ export default function LoginPage() {
                     htmlFor="adminPassword"
                     className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
                   >
-                    Admin Security Key / Passcode
+                    ADMIN SECURITY KEY / PASSCODE
                   </label>
                   <motion.div
                     animate={errors.adminPassword ? shakeAnimation : {}}
@@ -623,7 +628,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowAdminPassword((prev) => !prev)}
-                      className="text-gray-400 hover:text-gray-600 p-1"
+                      className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
                     >
                       {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -649,7 +654,7 @@ export default function LoginPage() {
                 />
                 <span>Remember me on this device</span>
               </label>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
                 <ShieldCheck size={12} />
                 <span>
                   {activeRole === "student"
@@ -681,10 +686,10 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={status === "loading" || status === "success"}
-                className={`relative w-full h-12 rounded-xl text-sm font-bold tracking-wide uppercase text-white shadow-md shadow-blue-900/15 transition-all duration-200 flex items-center justify-center overflow-hidden cursor-pointer ${
+                className={`relative w-full h-12 rounded-xl text-xs sm:text-sm font-bold tracking-wide uppercase text-white shadow-md shadow-blue-900/15 transition-all duration-200 flex items-center justify-center overflow-hidden cursor-pointer ${
                   status === "success"
                     ? "bg-emerald-600 scale-[1.01]"
-                    : "bg-[#0062A8] hover:bg-[#00508a] hover:scale-[1.02] hover:shadow-lg hover:shadow-[#0062A8]/25 active:scale-[0.99]"
+                    : "bg-[#0062A8] hover:bg-[#00508a] hover:scale-[1.01] hover:shadow-lg hover:shadow-[#0062A8]/25 active:scale-[0.99]"
                 } disabled:cursor-not-allowed`}
               >
                 {status === "loading" && (
@@ -706,13 +711,13 @@ export default function LoginPage() {
                 )}
 
                 {status !== "loading" && status !== "success" && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 font-black">
                     <span>
                       {activeRole === "student"
-                        ? "Sign In as Student"
+                        ? "SIGN IN AS STUDENT"
                         : activeRole === "faculty"
-                        ? "Sign In as Faculty"
-                        : "Sign In as Administrator"}
+                        ? "SIGN IN AS FACULTY"
+                        : "SIGN IN AS ADMINISTRATOR"}
                     </span>
                     <ArrowRight size={16} />
                   </div>
@@ -722,7 +727,7 @@ export default function LoginPage() {
           </form>
 
           {/* Bottom Explore Link */}
-          <div className="text-center mt-6 text-sm text-gray-500 font-normal">
+          <div className="text-center mt-6 text-xs text-gray-500 font-normal">
             New to TechVerse?{" "}
             <Link to="/technology" className="font-bold text-[#0062A8] hover:underline">
               Explore Resources
@@ -736,12 +741,12 @@ export default function LoginPage() {
         </div>
       </motion.div>
 
-      {/* 2. RIGHT PANEL: Deep VCET Blue Background (#0062A8) with 2D Illustration (48% Width) */}
-      <div className="w-full md:w-[48%] bg-[#0062A8] flex items-center justify-center p-8 sm:p-12 lg:p-14 min-h-[380px] md:min-h-screen relative overflow-hidden">
+      {/* 2. RIGHT PANEL: Deep VCET Blue Background (#0062A8) with Framed Illustration Card (48% Width) */}
+      <div className="w-full md:w-[48%] bg-[#0062A8] flex flex-col justify-between p-8 sm:p-12 lg:p-14 min-h-[380px] md:min-h-screen relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-2xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-blue-400/20 blur-2xl pointer-events-none" />
 
-        <div className="max-w-lg w-full flex flex-col items-center justify-center text-center relative z-10">
+        <div className="max-w-lg w-full mx-auto my-auto flex flex-col items-center justify-center text-center relative z-10">
           <motion.div
             key={activeRole}
             initial={{ opacity: 0, scale: 0.96 }}
@@ -767,13 +772,13 @@ export default function LoginPage() {
               <Sparkles size={13} className="text-blue-200" />
               <span>
                 {activeRole === "student"
-                  ? "VCET TechVerse Student Hub"
+                  ? "VCET TECHVERSE STUDENT HUB"
                   : activeRole === "faculty"
-                  ? "VCET Faculty Teaching Hub"
-                  : "VCET Admin Management Console"}
+                  ? "VCET FACULTY TEACHING HUB"
+                  : "VCET ADMIN MANAGEMENT CONSOLE"}
               </span>
             </div>
-            <p className="text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal">
+            <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed font-normal">
               {activeRole === "student"
                 ? "Access curated technology stacks, placement aptitude training, GATE modules, and department updates."
                 : activeRole === "faculty"
@@ -781,6 +786,14 @@ export default function LoginPage() {
                 : "Manage institutional platform configurations, verify user privileges, and inspect learning analytics."}
             </p>
           </motion.div>
+        </div>
+
+        {/* Bottom Visitors Badge */}
+        <div className="relative z-10 flex justify-end">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white text-[11px] font-bold backdrop-blur-xs">
+            <EyeIcon size={13} />
+            <span>1,273 VISITORS</span>
+          </div>
         </div>
       </div>
     </div>

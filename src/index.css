@@ -138,3 +138,69 @@
     opacity: 0;
   }
 }
+
+/* =========================================================================
+   VCET Continuous Moving Marquee Strip (Left -> Right)
+   ========================================================================= */
+.vcet-marquee {
+    width: 100%;
+    overflow: hidden;
+    background: #ffffff;
+    border-top: 1px solid #edf1f7;
+    border-bottom: 1px solid #edf1f7;
+    height: 52px;
+
+    display: flex;
+    align-items: center;
+}
+
+.vcet-marquee-track {
+    display: flex;
+    align-items: center;
+    gap: 55px;
+
+    white-space: nowrap;
+    width: max-content;
+
+    animation: vcetMoveRight 18s linear infinite;
+}
+
+.vcet-marquee-track span {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 7px;
+    color: #e7edf5;
+}
+
+.vcet-marquee-track b {
+    font-size: 18px;
+    color: #cbd8e8;
+}
+
+/* LEFT → RIGHT */
+@keyframes vcetMoveRight {
+    from {
+        transform: translateX(-50%);
+    }
+
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .vcet-marquee {
+        height: 42px;
+    }
+
+    .vcet-marquee-track {
+        gap: 35px;
+        animation-duration: 14s;
+    }
+
+    .vcet-marquee-track span {
+        font-size: 20px;
+        letter-spacing: 5px;
+    }
+}

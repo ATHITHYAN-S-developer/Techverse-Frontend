@@ -24,6 +24,7 @@ import { resourceService, RESOURCE_TYPES, resolveResourceUrl } from "../services
 import { apiRequest } from "../services/api";
 import { DEPARTMENTS_DATA } from "../data/departments";
 import TextReveal from "../components/TextReveal";
+import VcetMarquee from "../components/VcetMarquee";
 
 const TYPE_LABEL = Object.fromEntries(RESOURCE_TYPES.map((t) => [t.value, t.label]));
 
@@ -353,6 +354,9 @@ export default function DepartmentResourcesPage() {
           </div>
         </div>
       </section>
+
+      {/* VCET Continuous Moving Marquee Strip */}
+      <VcetMarquee />
 
       {/* =========================================================================
           2. MAIN CATEGORY SELECTOR

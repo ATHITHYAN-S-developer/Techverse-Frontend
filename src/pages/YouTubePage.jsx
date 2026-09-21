@@ -37,7 +37,11 @@ export default function YouTubePage() {
   return (
     <ResourceListView
       resources={youtubeResources}
+      badgeText="VCET TECH VISION"
       pageTitle="Tech Vision — Tech YouTube Channels"
+      subtitle="Watch top technical creators, AI breakdowns, architecture deep-dives, and coding tutorials."
+      ctaText="TECH EXPLORER"
+      ctaLink="/technology"
     />
   );
 }

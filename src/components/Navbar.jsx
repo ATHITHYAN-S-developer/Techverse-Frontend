@@ -19,7 +19,8 @@ import {
   Code2,
   ShieldCheck,
   LogOut,
-  Flame
+  Flame,
+  Users
 } from "lucide-react";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import vcetWideLogo from "../assets/vcet-wide-logo.png";

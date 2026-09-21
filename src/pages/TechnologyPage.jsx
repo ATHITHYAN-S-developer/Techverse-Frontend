@@ -37,7 +37,11 @@ export default function TechnologyPage() {
   return (
     <ResourceListView
       resources={techResources}
+      badgeText="VCET TECH EXPLORER"
       pageTitle="Tech Explorer — Websites to Improve Tech Knowledge"
+      subtitle="Access hand-picked technology portals, AI research hubs, cybersecurity platforms, and interactive engineering learning resources."
+      ctaText="EXPLORE COURSES"
+      ctaLink="/courses"
     />
   );
 }
