@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import {
   Puzzle,
   Plus,
@@ -25,6 +26,7 @@ import {
   Save,
   Check,
   Award,
+  ArrowLeft,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
@@ -41,8 +43,11 @@ function extractYouTubeId(url) {
 
 export default function AdminCourseModulesPage() {
   const { showSuccess, showError, showInfo } = useToast();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const paramCourseId = searchParams.get("courseId") || "";
+
   const [courses, setCourses] = useState([]);
-  const [selectedCourseId, setSelectedCourseId] = useState("");
+  const [selectedCourseId, setSelectedCourseId] = useState(paramCourseId);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -117,7 +122,11 @@ export default function AdminCourseModulesPage() {
       const courseList = res?.data?.courses || res?.courses || [];
       setCourses(courseList);
       if (courseList.length > 0) {
-        setSelectedCourseId(courseList[0]._id || courseList[0].id);
+        if (paramCourseId && courseList.some((c) => (c._id || c.id || c.slug) === paramCourseId)) {
+          setSelectedCourseId(paramCourseId);
+        } else if (!selectedCourseId) {
+          setSelectedCourseId(courseList[0]._id || courseList[0].id);
+        }
       }
     } catch (err) {
       console.debug("Error loading courses:", err);
@@ -603,9 +612,12 @@ export default function AdminCourseModulesPage() {
           ========================================================================= */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/60 backdrop-blur-xs overflow-y-auto">
-          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <form
+            onSubmit={handleSaveModule}
+            className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+          >
             {/* Modal Header */}
-            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0B4A8F] block">
                   {editingModule ? "EDIT MODULE CONTENT" : "CREATE NEW MODULE"}
@@ -615,15 +627,16 @@ export default function AdminCourseModulesPage() {
                 </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setModalOpen(false)}
-                className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+                className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <form onSubmit={handleSaveModule} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+            {/* Modal Body (Scrollable) */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
               {/* Basic Module Details */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="sm:col-span-2 space-y-1.5">
@@ -1240,13 +1253,34 @@ export default function AdminCourseModulesPage() {
                   </div>
                 </div>
               )}
+            </div>
 
-              {/* Modal Footer Controls */}
-              <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-3 sticky bottom-0 bg-white">
+            {/* Modal Footer Controls (Pinned Cleanly at the Bottom) */}
+            <div className="p-4 sm:px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/90 shrink-0">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
+                <span className="inline-flex items-center gap-1 text-[#0B4A8F]">
+                  <Video className="w-3.5 h-3.5" />
+                  {formData.videos.length} Video{formData.videos.length === 1 ? "" : "s"}
+                </span>
+                {formData.hasCoding && (
+                  <span className="inline-flex items-center gap-1 text-purple-700">
+                    • <Code2 className="w-3.5 h-3.5" />
+                    {formData.codingProblems.length} Coding
+                  </span>
+                )}
+                {formData.hasMCQ && (
+                  <span className="inline-flex items-center gap-1 text-emerald-700">
+                    • <HelpCircle className="w-3.5 h-3.5" />
+                    {formData.mcqs.length} MCQ
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-3 ml-auto">
                 <button
                   type="button"
                   onClick={() => setModalOpen(false)}
-                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50 transition-colors"
+                  className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1259,8 +1293,8 @@ export default function AdminCourseModulesPage() {
                   <span>{saving ? "Saving to Database..." : editingModule ? "Update Module" : "Save & Publish Module"}</span>
                 </button>
               </div>
-            </form>
-          </div>
+            </div>
+          </form>
         </div>
       )}
     </div>
