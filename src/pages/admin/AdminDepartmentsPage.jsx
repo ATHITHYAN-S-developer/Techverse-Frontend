@@ -7,23 +7,6 @@ import ConfirmDialog from "../../components/ConfirmDialog";
 const EMPTY_FORM = { code: "", name: "", description: "", hodName: "", icon: "Layers" };
 
 export default function AdminDepartmentsPage() {
-  const { showSuccess } = useToast();
-  const [departments, setDepartments] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadDepts() {
-      try {
-        const data = await departmentService.getAllDepartments();
-        setDepartments(data.map((d) => ({ ...d, isActive: d.status === "active" || d.isActive !== false })));
-      } catch (err) {
-        console.error("Failed to load departments:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadDepts();
-  }, []);
   const { showSuccess, showError } = useToast();
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -149,26 +132,6 @@ export default function AdminDepartmentsPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {departments.map((d) => (
-          <div
-            key={d.code || d._id}
-            className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-50 text-[#0062A8] border border-blue-200 font-mono">
-                  {d.code}
-                </span>
-                <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
-                  d.isActive ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-rose-50 text-rose-700 border border-rose-200"
-                }`}>
-                  {d.isActive ? "Active" : "Inactive"}
-                </span>
-              </div>
-
-              <h3 className="text-base font-bold text-slate-900 leading-snug">{d.name}</h3>
-              <p className="text-xs text-slate-500 mt-1 line-clamp-2">{d.description || d.tagline}</p>
       {loading ? (
         <div className="flex items-center justify-center py-24 text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin mr-3" /> Loading departments...
@@ -259,17 +222,6 @@ export default function AdminDepartmentsPage() {
         </div>
       )}
 
-            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between">
-              <span className="text-[11px] text-slate-500 font-medium">HOD: {d.hodName || "Dr. K. Venkatachalam"}</span>
-              <button
-                onClick={() => toggleDept(d.code)}
-                className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-colors ${
-                  d.isActive
-                    ? "bg-rose-50 border-rose-200 text-rose-700 hover:bg-rose-100"
-                    : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
-                }`}
-              >
-                {d.isActive ? "Deactivate" : "Activate"}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm text-slate-900">
           <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
