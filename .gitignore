@@ -43,7 +43,7 @@ mongodb/
 mongodb-extracted/
 mongodb-portable.zip
 scratch/
-backend/data/
+backend/
 **/data/journal/
 *.pdb
 *.exe
