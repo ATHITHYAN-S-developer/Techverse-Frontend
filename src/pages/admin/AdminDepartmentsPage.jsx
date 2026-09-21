@@ -117,7 +117,6 @@ export default function AdminDepartmentsPage() {
           <h1 className="text-xl sm:text-2xl font-black text-slate-900">
             Department Management ({departments.length} Engineering Branches)
           </h1>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900">Department Management</h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Create, edit, activate, deactivate, or permanently delete departments.
           </p>
