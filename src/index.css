@@ -81,57 +81,9 @@
   overflow: hidden;
 }
 
-.vcet-watermark {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
 
-  font-family: 'Sora', 'Plus Jakarta Sans', sans-serif;
-  font-size: 180px;
-  font-weight: 800;
-  letter-spacing: 20px;
 
-  color: rgba(255, 255, 255, 0.07);
-  white-space: nowrap;
 
-  z-index: 0;
-  pointer-events: none;
-  user-select: none;
-
-  animation: vcetScroll 12s linear infinite;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-}
-
-@media (max-width: 768px) {
-  .vcet-watermark {
-    font-size: 90px;
-    letter-spacing: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .vcet-watermark {
-    font-size: 64px;
-    letter-spacing: 8px;
-  }
-}
-
-@keyframes vcetScroll {
-  0% {
-    transform: translate(-80%, -50%);
-  }
-  50% {
-    transform: translate(-20%, -50%);
-  }
-  100% {
-    transform: translate(80%, -50%);
-  }
-}
 
 /* Scroll-driven autoRotate animation using CSS view() timeline */
 .autoRotate {

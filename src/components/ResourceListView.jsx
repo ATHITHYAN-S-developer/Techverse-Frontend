@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { FiArrowLeft, FiArrowRight, FiExternalLink, FiChevronLeft, FiChevronRight, FiGlobe, FiSmartphone } from "react-icons/fi";
 import { FaAndroid, FaApple, FaYoutube, FaNewspaper } from "react-icons/fa";
-import VcetMarquee from "./VcetMarquee";
+
 import TextReveal from "./TextReveal";
 
 // Import Aptitude Logos
@@ -258,7 +258,7 @@ export default function ResourceListView({
       </section>
 
       {/* VCET Continuous Moving Marquee Strip */}
-      <VcetMarquee />
+
 
       {/* Sub-Bar: Back to Home & Resource Count */}
       <div className="max-w-7xl mx-auto w-full px-6 sm:px-10 lg:px-16 pt-6 flex items-center justify-between">

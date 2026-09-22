@@ -26,7 +26,7 @@ import { courseService } from "../services/courseService";
 import { useAuth } from "../context/AuthContext";
 import CourseCard from "../components/CourseCard";
 import TextReveal from "../components/TextReveal";
-import VcetMarquee from "../components/VcetMarquee";
+
 
 const CATEGORY_ICONS = {
   ALL: Layers,
@@ -190,8 +190,6 @@ export default function CoursesPage() {
         </div>
       </section>
 
-      {/* VCET Continuous Moving Marquee Strip */}
-      <VcetMarquee />
 
       {/* =========================================================================
           2. MAIN CONTENT AREA

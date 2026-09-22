@@ -242,7 +242,8 @@ export default function LoginPage() {
       >
         {/* Campus Background Image Overlay (Light Watermark for Maximum Readability) */}
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.07] pointer-events-none filter contrast-110 grayscale"
+          className="absolute inset-0 bg-cover bg-center opacity-[0.18] pointer-events-none filter contrast-110 grayscale"
+
           style={{ backgroundImage: `url(${campusBg})` }}
         />
         <div className="absolute inset-0 bg-[#FAFAFC]/40 pointer-events-none" />
@@ -256,7 +257,7 @@ export default function LoginPage() {
               <span className="text-xl font-extrabold tracking-tight text-gray-900 leading-tight">
                 Tech<span className="text-[#0062A8]">Verse</span>
               </span>
-              <span className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">
+              <span className="text-[10px] font-bold text-gray-600 tracking-wider uppercase">
                 VCET TECH HUB
               </span>
             </div>
@@ -264,7 +265,7 @@ export default function LoginPage() {
 
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-[#0062A8] transition-colors px-3 py-1.5 rounded-full bg-gray-50 hover:bg-blue-50 border border-gray-200/60"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-[#0062A8] transition-colors px-3 py-1.5 rounded-full bg-gray-50 hover:bg-blue-50 border border-gray-200/60"
           >
             <ArrowLeft size={14} />
             <span>Back to Home</span>
@@ -281,7 +282,7 @@ export default function LoginPage() {
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mt-1">
               Welcome Back
             </h1>
-            <p className="text-sm text-gray-500 mt-1.5 font-normal">
+            <p className="text-sm text-gray-700 mt-1.5 font-normal">
               Please choose your role and enter your institutional credentials.
             </p>
           </motion.div>
@@ -302,10 +303,11 @@ export default function LoginPage() {
                   className={`flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "bg-white text-[#0062A8] shadow-xs font-black border border-gray-200/50 scale-[1.02]"
-                      : "text-gray-500 hover:text-gray-800 font-semibold"
+                      : "text-gray-700 hover:text-gray-900 font-semibold"
+
                   }`}
                 >
-                  <Icon size={18} className={isActive ? "text-[#0062A8]" : "text-gray-400"} />
+                  <Icon size={18} className={isActive ? "text-[#0062A8]" : "text-gray-500"} />
                   <span className="text-xs mt-1 truncate max-w-full">{role.label}</span>
                 </button>
               );

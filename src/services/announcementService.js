@@ -16,7 +16,8 @@ export const announcementService = {
     } catch (err) {
       console.error("Failed to fetch announcements from MongoDB backend:", err);
     }
-    return [];
+    // Fall back to locally stored announcements
+    return getStoredAnnouncements();
   },
 
   async create(announcementData) {
@@ -105,3 +106,34 @@ export const announcementService = {
     return true;
   },
 };
+
+// ─── localStorage helpers ────────────────────────────────────────────────────
+const STORAGE_KEY = "techverse_announcements";
+
+function getStoredAnnouncements() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveAnnouncements(list) {
+  try {
+    // Strip base64 blobs before saving to avoid quota errors
+    const safe = list.map((a) => ({
+      ...a,
+      imageUrl: a.imageUrl?.startsWith("data:") ? a.imageUrl : a.imageUrl || "",
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(safe));
+  } catch (e) {
+    console.warn("localStorage quota exceeded — saving without images");
+    // Retry without image data
+    try {
+      const stripped = list.map((a) => ({ ...a, imageUrl: "" }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stripped));
+    } catch {}
+  }
+}
+

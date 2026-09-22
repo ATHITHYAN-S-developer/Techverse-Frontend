@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { trainingService } from "../services/trainingService";
 import TextReveal from "../components/TextReveal";
-import VcetMarquee from "../components/VcetMarquee";
+
 
 const TRACK_ICONS = {
   Target: Target,
@@ -166,8 +166,7 @@ export default function TrainingPage() {
         </div>
       </section>
 
-{/* VCET Continuous Moving Marquee Strip */}
-      <VcetMarquee />
+
 
       {/* =========================================================================
           2. MAIN CONTENT AREA

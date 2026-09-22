@@ -25,6 +25,8 @@ import GlobalSearchModal from "../components/GlobalSearchModal";
 import VisitorCounter from "../components/VisitorCounter";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
+import VcetBanner from "../components/VcetBanner";
 
 const STUDENT_NAV = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -149,8 +151,9 @@ export default function StudentLayout() {
           </div>
         </div>
       </header>
-
-      {/* 2. Main Body with Sidebar + Dynamic View */}
+      {/* VCET Banner + Marquee */}
+      <VcetBanner />
+      <AnnouncementMarquee />
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Navigation */}
         <aside
