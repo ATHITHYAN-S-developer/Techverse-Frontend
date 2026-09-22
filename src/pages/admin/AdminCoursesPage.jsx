@@ -7,6 +7,7 @@ import {
   Trash2,
   Edit,
   CheckCircle,
+  CheckCircle2,
   Ban,
   Star,
   X,
@@ -39,6 +40,7 @@ export default function AdminCoursesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [unassignedOnly, setUnassignedOnly] = useState(false);
 
   const fileInputRef = useRef(null);
   const [imageFile, setImageFile] = useState(null);
@@ -203,6 +205,9 @@ export default function AdminCoursesPage() {
     }
   };
 
+  const unassignedCount = courses.filter((c) => !c.assignedFacultyId).length;
+  const visibleCourses = unassignedOnly ? courses.filter((c) => !c.assignedFacultyId) : courses;
+
   return (
     <div className="space-y-6 max-w-7xl mx-auto text-slate-900 pb-12">
       {/* Header */}
@@ -241,6 +246,34 @@ export default function AdminCoursesPage() {
         </div>
       </div>
 
+      {!isFaculty && courses.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">
+            Filter:
+          </span>
+          <button
+            onClick={() => setUnassignedOnly(false)}
+            className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-colors cursor-pointer ${
+              !unassignedOnly
+                ? "bg-[#0062A8] text-white border-[#0062A8]"
+                : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
+            }`}
+          >
+            All ({courses.length})
+          </button>
+          <button
+            onClick={() => setUnassignedOnly(true)}
+            className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-colors cursor-pointer ${
+              unassignedOnly
+                ? "bg-amber-500 text-white border-amber-500"
+                : "bg-white text-amber-600 border-amber-200 hover:border-amber-400"
+            }`}
+          >
+            Unassigned ({unassignedCount})
+          </button>
+        </div>
+      )}
+
       {/* Courses Grid */}
       {loading ? (
         <div className="p-12 text-center text-slate-400 font-mono text-xs">
@@ -264,9 +297,17 @@ export default function AdminCoursesPage() {
             Create Course
           </button>
         </div>
+      ) : visibleCourses.length === 0 && unassignedOnly ? (
+        <div className="bg-white border border-amber-200 rounded-3xl p-12 text-center space-y-3 shadow-sm">
+          <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
+          <h3 className="text-base font-bold text-slate-800">All courses are assigned</h3>
+          <p className="text-xs text-slate-500">
+            Every course has a faculty member. Use the filter to check pending assignments.
+          </p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {courses.map((course) => {
+          {visibleCourses.map((course) => {
             const courseId = course.slug || course.id || course._id;
             const courseUrl = `/courses/${courseId}`;
             const coverImage = getCourseImageUrl(course.thumbnailUrl, course.thumbnail);
