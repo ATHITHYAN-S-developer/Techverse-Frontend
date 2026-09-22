@@ -47,3 +47,6 @@ backend/
 **/data/journal/
 *.pdb
 *.exe
+
+# Vercel deployment config (kept local)
+vercel.json
