@@ -19,6 +19,7 @@ import RecentResources from "../components/library/RecentResources";
 import FilterDrawer from "../components/library/FilterDrawer";
 import ResourceSkeleton from "../components/library/ResourceSkeleton";
 import ErrorState from "../components/departments/ErrorState";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 export default function DepartmentResourcesPage() {
   const { departmentId: routeDeptId } = useParams();
@@ -362,6 +363,7 @@ export default function DepartmentResourcesPage() {
           </button>
 
           <ResourceHeader departments={departments.length} resources={resources.length} />
+          <AnnouncementMarquee />
           <ResourceSearch query={searchQuery} onChange={setSearchQuery} inputRef={searchRef} />
           <QuickFilters
             activeKey={category}

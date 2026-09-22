@@ -26,6 +26,7 @@ import { courseService } from "../services/courseService";
 import { useAuth } from "../context/AuthContext";
 import CourseCard from "../components/CourseCard";
 import TextReveal from "../components/TextReveal";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 
 const CATEGORY_ICONS = {
@@ -189,6 +190,9 @@ export default function CoursesPage() {
           </div>
         </div>
       </section>
+
+      {/* VCET Watermark Marquee below the Hero */}
+      <AnnouncementMarquee />
 
 
       {/* =========================================================================

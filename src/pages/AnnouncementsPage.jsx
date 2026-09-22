@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { announcementService } from "../services/announcementService";
 import { API_BASE_URL } from "../services/api";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 /**
  * Resolve an announcement's poster image URL.
@@ -259,6 +260,9 @@ export default function AnnouncementsPage() {
           </div>
         </div>
       </section>
+
+      {/* VCET Watermark Marquee below the Hero */}
+      <AnnouncementMarquee />
 
       {/* 2. PROFESSIONAL EXPLORE SECTION */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 relative z-20">

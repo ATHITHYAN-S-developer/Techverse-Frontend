@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import Hero from "../components/Hero";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 import Domains from "../sections/Domains";
 import CertificatePreviewSection from "../sections/CertificatePreviewSection";
 import { resourceService } from "../services/resourceService";
@@ -28,6 +29,9 @@ export default function HomePage() {
     <div className="flex-grow">
       {/* 1. Hero Section with Campus Background Slideshow */}
       <Hero />
+
+      {/* VCET Watermark Marquee below the Hero */}
+      <AnnouncementMarquee />
 
 
       {/* 2. Four Main Resource Domains */}

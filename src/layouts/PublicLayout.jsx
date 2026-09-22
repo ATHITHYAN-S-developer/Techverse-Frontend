@@ -4,7 +4,6 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import VisitorCounter from "../components/VisitorCounter";
 import ScrollToTop from "../components/ScrollToTop";
-import AnnouncementMarquee from "../components/AnnouncementMarquee";
 import VcetBanner from "../components/VcetBanner";
 
 export default function PublicLayout() {
@@ -13,7 +12,6 @@ export default function PublicLayout() {
       <ScrollToTop />
       <Navbar />
       <VcetBanner />
-      <AnnouncementMarquee />
 
       <main className="flex-grow flex flex-col">
         <Outlet />
