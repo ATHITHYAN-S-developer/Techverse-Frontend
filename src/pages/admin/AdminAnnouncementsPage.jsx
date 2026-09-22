@@ -96,6 +96,8 @@ export default function AdminAnnouncementsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -126,12 +128,16 @@ export default function AdminAnnouncementsPage() {
       imageUrl: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=800&q=80",
       createdBy: "Institutional Admin"
     });
+    setImageFile(null);
+    setImagePreview(null);
     setModalOpen(true);
   };
 
   const handleOpenEdit = (ann) => {
     setEditingAnnouncement(ann);
     setFormData({ ...ann });
+    setImageFile(null);
+    setImagePreview(ann.imageUrl || null);
     setModalOpen(true);
   };
 
@@ -142,20 +148,24 @@ export default function AdminAnnouncementsPage() {
       return;
     }
 
+    const payload = { ...formData };
+    if (imagePreview) payload.imageUrl = imagePreview;
     if (editingAnnouncement) {
       setAnnouncements((prev) =>
-        prev.map((a) => (a.id === editingAnnouncement.id ? { ...a, ...formData } : a))
+        prev.map((a) => (a.id === editingAnnouncement.id ? { ...a, ...payload } : a))
       );
       showSuccess("Announcement broadcast updated ✓");
     } else {
       const newAnn = {
-        ...formData,
+        ...payload,
         id: `ann-${Date.now()}`,
         isActive: true
       };
       setAnnouncements((prev) => [newAnn, ...prev]);
       showSuccess("Announcement broadcasted across institutional feed ✓");
     }
+    setImageFile(null);
+    setImagePreview(null);
     setModalOpen(false);
   };
 
@@ -465,14 +475,45 @@ export default function AdminAnnouncementsPage() {
               </div>
 
               <div>
-                <label className="block text-slate-700 font-bold mb-1">Poster / Banner Image URL</label>
-                <input
-                  type="url"
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                  placeholder="https://images.unsplash.com/..."
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-[#0062A8] focus:bg-white"
-                />
+                <label className="block text-slate-700 font-bold mb-1">Upload Image <span className="text-slate-400 font-normal">(optional)</span></label>
+                {imagePreview ? (
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                    <img src={imagePreview} alt="Preview" className="w-full h-36 object-cover" />
+                    <div className="flex items-center justify-between px-3 py-1.5 bg-white border-t border-slate-100">
+                      <span className="text-[11px] text-slate-500 truncate max-w-[80%]">{imageFile?.name || "Current image"}</span>
+                      <button
+                        type="button"
+                        onClick={() => { setImageFile(null); setImagePreview(null); }}
+                        className="text-rose-500 hover:text-rose-700 text-xs font-bold ml-2 flex items-center gap-1"
+                      >
+                        <X className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center gap-1.5 w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors">
+                    <Upload className="w-6 h-6 text-slate-400" />
+                    <span className="text-xs text-slate-500 font-medium">Click to upload an image</span>
+                    <span className="text-[10px] text-slate-400">PNG, JPG, JPEG, WEBP • Max 5 MB</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) {
+                          showError("Image must be under 5 MB");
+                          return;
+                        }
+                        setImageFile(file);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setImagePreview(ev.target.result);
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">

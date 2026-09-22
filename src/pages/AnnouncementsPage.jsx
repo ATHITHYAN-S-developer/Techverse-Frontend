@@ -4,7 +4,6 @@ import {
   Search,
   Building2,
   Calendar,
-  Clock,
   ExternalLink,
   X,
   Briefcase,
@@ -13,14 +12,54 @@ import {
   FileText,
   PartyPopper,
   Megaphone,
-  Sparkles,
   Pin,
   ArrowRight,
-  ArrowUpRight,
   ChevronDown,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Flame,
+  CalendarDays,
 } from "lucide-react";
 import { announcementService } from "../services/announcementService";
+import { API_BASE_URL } from "../services/api";
+
+/**
+ * Resolve an announcement's poster image URL.
+ * - data: URIs and absolute http(s) URLs are used as-is.
+ * - App-relative /uploads/... paths are prefixed with the backend origin,
+ *   since uploads are served by the backend (not the Vite dev server).
+ */
+function resolvePoster(item) {
+  const raw = item.imageUrl || item.image || "";
+  if (!raw) return "";
+  if (raw.startsWith("data:") || /^https?:\/\//i.test(raw)) return raw;
+  const origin = API_BASE_URL.replace(/\/api\/?$/, "");
+  return `${origin}${raw.startsWith("/") ? raw : `/uploads/announcements/${raw}`}`;
+}
+
+/** Comparable timestamp so announcements sort newest-first (and pinned first). */
+function announcementTimestamp(item) {
+  const raw = item.publishDate || item.createdAt || item.date;
+  if (!raw) return 0;
+  const t = new Date(raw).getTime();
+  return Number.isNaN(t) ? 0 : t;
+}
+
+/** Humanised date label, e.g. "SEP 10, 2026". */
+function formatDate(item) {
+  const raw = item.publishDate || item.createdAt || item.date;
+  if (!raw) return "RECENT";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return "RECENT";
+  return d
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    .toUpperCase();
+}
+
+function deptLabel(item) {
+  return item.departmentId?.code || item.departmentId?.name || item.department || "ALL DEPARTMENTS";
+}
 
 // Professional Category Badges & Color Palette
 const categoryConfig = {
@@ -86,6 +125,9 @@ export default function AnnouncementsPage() {
   const [selectedDept, setSelectedDept] = useState("All");
   const [selected, setSelected] = useState(null);
 
+  const [slideIndex, setSlideIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
   const categories = ["ALL", "PLACEMENT", "HACKATHON", "ACADEMIC", "EXAM", "EVENTS", "GENERAL"];
   const departments = ["All", "CSE", "AI&DS", "IT", "ECE", "EEE", "MECH", "CIVIL"];
 
@@ -118,7 +160,7 @@ export default function AnnouncementsPage() {
       const desc = item.description || item.content || "";
       const author = item.authorName || item.author || "";
       const cat = item.category || "General";
-      const deptName = item.departmentId?.code || item.departmentId?.name || item.department || "All Departments";
+      const deptName = deptLabel(item);
 
       const matchSearch =
         title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -139,111 +181,73 @@ export default function AnnouncementsPage() {
     });
   }, [announcements, searchQuery, selectedCategory, selectedDept]);
 
-  // Extract featured announcement (pinned or first item)
-  const featuredItem = useMemo(() => {
-    if (filteredAnnouncements.length === 0) return null;
-    const pinned = filteredAnnouncements.find((item) => item.isPinned || item.pinned || item.priority === "urgent");
-    return pinned || filteredAnnouncements[0];
+  // Sort: pinned first, then newest-first. The newest announcement
+  // automatically becomes the FIRST slide of the Recent Updates carousel.
+  const sortedAnnouncements = useMemo(() => {
+    return [...filteredAnnouncements].sort((a, b) => {
+      const aPin = a.isPinned || a.pinned ? 1 : 0;
+      const bPin = b.isPinned || b.pinned ? 1 : 0;
+      if (aPin !== bPin) return bPin - aPin;
+      return announcementTimestamp(b) - announcementTimestamp(a);
+    });
   }, [filteredAnnouncements]);
 
-  // Remaining grid items
-  const gridItems = useMemo(() => {
-    if (!featuredItem) return filteredAnnouncements;
-    return filteredAnnouncements.filter((item) => (item._id || item.id) !== (featuredItem._id || featuredItem.id));
-  }, [filteredAnnouncements, featuredItem]);
+  // Top 3 newest go into the slideshow — everything older is a "Past Update".
+  const recentSlides = sortedAnnouncements.slice(0, 3);
+  const pastUpdates = sortedAnnouncements.slice(3);
+
+  // Keep slide index valid when the list shrinks
+  useEffect(() => {
+    if (recentSlides.length > 0 && slideIndex >= recentSlides.length) {
+      setSlideIndex(0);
+    }
+  }, [recentSlides.length, slideIndex]);
+
+  // Autoplay every 6s, paused on hover
+  useEffect(() => {
+    if (recentSlides.length <= 1 || paused) return;
+    const id = setInterval(() => {
+      setSlideIndex((prev) => (prev + 1) % recentSlides.length);
+    }, 6000);
+    return () => clearInterval(id);
+  }, [recentSlides.length, paused]);
+
+  const goPrev = () =>
+    setSlideIndex((prev) => (prev - 1 + recentSlides.length) % recentSlides.length);
+  const goNext = () => setSlideIndex((prev) => (prev + 1) % recentSlides.length);
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] text-[#0F172A] font-sans antialiased pb-24 relative overflow-hidden">
       {/* Dynamic CSS Styling for Watermark & Micro-interactions */}
       <style>{`
-        .vcet-background {
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          font-size: clamp(120px, 18vw, 280px);
-          font-weight: 900;
-          letter-spacing: 0.2em;
-          color: rgba(255, 255, 255, 0.055);
-          white-space: nowrap;
-          pointer-events: none;
-          user-select: none;
-          z-index: 0;
-        }
-
         .hero-gradient {
           background: linear-gradient(135deg, #071E3D 0%, #0A3563 50%, #0062A8 100%);
         }
-
-        .vcet-marquee-strip {
-          position: relative;
-          overflow: hidden;
-          background: #ffffff;
-          border-top: 1px solid #E2E8F0;
-          border-bottom: 1px solid #E2E8F0;
-          height: 48px;
-          display: flex;
-          align-items: center;
-          white-space: nowrap;
-          user-select: none;
-          pointer-events: none;
+        .vcet-slide-in {
+          animation: vcetSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-
-        .vcet-marquee-content {
-          display: flex;
-          align-items: center;
-          gap: 32px;
-          animation: vcetMarqueeScroll 20s linear infinite;
-          will-change: transform;
-          width: max-content;
-        }
-
-        .vcet-marquee-text {
-          font-size: 26px;
-          font-weight: 900;
-          letter-spacing: 0.25em;
-          color: rgba(0, 98, 168, 0.12);
-          line-height: 1;
-          font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-          text-transform: uppercase;
-        }
-
-        .vcet-marquee-bullet {
-          font-size: 14px;
-          color: rgba(0, 98, 168, 0.25);
-          line-height: 1;
-        }
-
-        @keyframes vcetMarqueeScroll {
-          0% {
-            transform: translateX(-50%);
-          }
-          100% {
-            transform: translateX(0%);
-          }
+        @keyframes vcetSlideIn {
+          from { opacity: 0; transform: translateX(14px); }
+          to   { opacity: 1; transform: none; }
         }
       `}</style>
 
       {/* 1. HERO SECTION */}
       <section className="hero-gradient text-white py-14 sm:py-18 lg:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden shadow-md text-center">
-        {/* Subtle Stationary Background Watermark */}
-        <div className="vcet-background" aria-hidden="true">
-          VCET
-        </div>
-
-        {/* Content Container */}
         <div className="max-w-4xl mx-auto relative z-10 flex flex-col items-center">
-          {/* Title */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[11px] font-bold uppercase tracking-widest mb-4 backdrop-blur-sm">
+            <Flame size={13} className="text-amber-300" />
+            <span>Institutional Circulars & Updates</span>
+          </div>
+
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
             Institutional Announcements
           </h1>
 
-          {/* Description */}
           <p className="text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal mt-3 max-w-xl">
             Stay updated with placements, examinations, hackathons, events and academic notifications.
           </p>
 
-          {/* Student Portal Button */}
           <div className="mt-6">
             <Link
               to="/dashboard"
@@ -256,34 +260,34 @@ export default function AnnouncementsPage() {
         </div>
       </section>
 
-      {/* VCET MARQUEE STRIP (Under Institutional Announcements, Above Search Bar) */}
-      <div className="vcet-marquee-strip" aria-hidden="true">
-        <div className="vcet-marquee-content">
-          {Array.from({ length: 20 }).map((_, idx) => (
-            <React.Fragment key={idx}>
-              <span className="vcet-marquee-text">VCET</span>
-              <span className="vcet-marquee-bullet">•</span>
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
-
       {/* 2. PROFESSIONAL EXPLORE SECTION */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 relative z-20">
-        {/* Explore Heading */}
-        <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
-            Explore Announcements
-          </h2>
-          <p className="text-sm text-[#64748B] mt-1 font-medium">
-            Discover the latest updates from across the institution.
-          </p>
+        <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
+              Explore Announcements
+            </h2>
+            <p className="text-sm text-[#64748B] mt-1 font-medium">
+              Discover the latest updates from across the institution.
+            </p>
+          </div>
+          {!loading && announcements.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200">
+                <Megaphone size={12} className="text-[#0062A8]" />
+                {announcements.length} total updates
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200">
+                <Flame size={12} />
+                {recentSlides.length} recent
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Search + Department Filter Box */}
         <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-4 sm:p-5 space-y-4">
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            {/* Search Input */}
             <div className="relative flex-1 w-full">
               <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
               <input
@@ -295,7 +299,6 @@ export default function AnnouncementsPage() {
               />
             </div>
 
-            {/* Department Filter Dropdown */}
             <div className="w-full sm:w-auto shrink-0 relative">
               <select
                 value={selectedDept}
@@ -334,8 +337,8 @@ export default function AnnouncementsPage() {
         </div>
       </section>
 
-      {/* 3. ANNOUNCEMENT GRID & FEATURED SECTION */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10 space-y-8">
+      {/* 3. RECENT UPDATES CAROUSEL + PAST UPDATES GRID */}
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10 space-y-10">
         {loading ? (
           <div className="py-20 text-center space-y-3">
             <div className="w-8 h-8 border-3 border-[#0062A8] border-t-transparent rounded-full animate-spin mx-auto" />
@@ -361,35 +364,52 @@ export default function AnnouncementsPage() {
           </div>
         ) : (
           <>
-            {/* FEATURED ANNOUNCEMENT (Visual Weight 1) */}
-            {featuredItem && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={14} className="text-[#0062A8]" />
-                  <span className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                    Featured Announcement
+            {/* ---- RECENT UPDATES (CAROUSEL) ---- */}
+            {recentSlides.length > 0 && (
+              <section className="space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[11px] font-black uppercase tracking-wider">
+                    <Flame size={13} />
+                    Recent Updates
+                  </span>
+                  <span className="text-xs font-medium text-[#64748B]">
+                    Newest circular goes first — hover to pause, use the arrows or dots to navigate
                   </span>
                 </div>
-                <FeaturedCard item={featuredItem} onClick={() => setSelected(featuredItem)} />
-              </div>
+
+                <RecentCarousel
+                  slides={recentSlides}
+                  activeIndex={slideIndex}
+                  paused={paused}
+                  onSelect={(i) => setSlideIndex(i)}
+                  onPrev={goPrev}
+                  onNext={goNext}
+                  onPause={() => setPaused(true)}
+                  onResume={() => setPaused(false)}
+                  onViewMore={(item) => setSelected(item)}
+                />
+              </section>
             )}
 
-            {/* ANNOUNCEMENT GRID (Visual Weight 2) */}
-            {gridItems.length > 0 && (
-              <div className="space-y-4 pt-2">
-                <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                  Recent Announcements ({gridItems.length})
-                </h3>
+            {/* ---- PAST UPDATES (GRID) ---- */}
+            {pastUpdates.length > 0 && (
+              <section className="space-y-3 pt-1">
+                <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3">
+                  <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
+                    Past Updates ({pastUpdates.length})
+                  </h3>
+                  <div className="flex-1 h-px bg-slate-200/70" />
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {gridItems.map((ann) => (
-                    <StandardCard
+                  {pastUpdates.map((ann) => (
+                    <PastUpdateCard
                       key={ann._id || ann.id}
                       item={ann}
                       onClick={() => setSelected(ann)}
                     />
                   ))}
                 </div>
-              </div>
+              </section>
             )}
           </>
         )}
@@ -414,114 +434,224 @@ export default function AnnouncementsPage() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* FEATURED ANNOUNCEMENT CARD (Visual Weight 1)                               */
+/* RECENT UPDATES CAROUSEL                                                     */
 /* -------------------------------------------------------------------------- */
-function FeaturedCard({ item, onClick }) {
+function RecentCarousel({
+  slides,
+  activeIndex,
+  paused,
+  onSelect,
+  onPrev,
+  onNext,
+  onPause,
+  onResume,
+  onViewMore,
+}) {
+  const safeIndex = slides.length ? activeIndex % slides.length : 0;
+  const item = slides[safeIndex];
   const catStyle = getCategoryStyle(item.category);
   const Icon = catStyle.icon;
-  const dateStr = item.publishDate
-    ? new Date(item.publishDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase()
-    : item.date || "ACTIVE";
-  const deptStr = item.departmentId?.code || item.departmentId?.name || item.department || "ALL DEPARTMENTS";
+  const poster = resolvePoster(item);
+  const multiple = slides.length > 1;
 
   return (
     <div
-      onClick={onClick}
-      className="group relative bg-white rounded-2xl border border-blue-200/90 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-200 p-6 sm:p-7 cursor-pointer overflow-hidden flex flex-col justify-between border-l-4 border-l-[#0062A8]"
+      className="relative rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-sm hover:shadow-lg transition-shadow"
+      onMouseEnter={onPause}
+      onMouseLeave={onResume}
     >
-      {/* Top Meta Row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-blue-100 text-[#0062A8]">
-            FEATURED • {item.category || "CIRCULAR"}
-          </span>
-          {item.isPinned && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-              <Pin size={10} /> PINNED
-            </span>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] min-h-[300px]">
+        {/* Poster / Fallback Visual */}
+        <div className="relative min-h-[210px] lg:min-h-[300px] overflow-hidden bg-[#0A3563]">
+          {poster ? (
+            <img
+              src={poster}
+              alt={`${item.title} poster`}
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0 hero-gradient flex items-center justify-center">
+              <Icon size={72} strokeWidth={1.25} className="text-white/25" />
+              <span className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] font-bold uppercase tracking-widest text-blue-100">
+                {catStyle.label}
+              </span>
+            </div>
           )}
+          {/* Soft gradient into text pane */}
+          <div className="absolute inset-0 lg:bg-gradient-to-r lg:from-transparent lg:to-black/15 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
         </div>
-        <span className="text-xs font-semibold text-[#64748B]">
-          {dateStr} • {deptStr}
-        </span>
+
+        {/* Text Pane */}
+        <div className="p-6 sm:p-8 lg:p-10 flex flex-col justify-center">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider border ${catStyle.badgeBg}`}
+            >
+              <Icon size={12} />
+              {catStyle.label}
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
+              <Flame size={11} />
+              Recent Update
+            </span>
+            {item.isPinned && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                <Pin size={10} /> PINNED
+              </span>
+            )}
+          </div>
+
+          <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0F172A] leading-tight mb-3 line-clamp-2">
+            {item.title}
+          </h3>
+
+          <p className="text-sm text-[#64748B] leading-relaxed line-clamp-3 mb-5">
+            {item.description || item.content || "No further details available."}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#64748B] mb-5">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">
+              <Building2 size={13} /> {deptLabel(item)}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <CalendarDays size={13} className="text-[#0062A8]" />
+              {formatDate(item)}
+            </span>
+            {item.deadline && (
+              <span className="inline-flex items-center gap-1 text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">
+                Deadline: {item.deadline}
+              </span>
+            )}
+            {paused && multiple && (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                ● Paused
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={() => onViewMore(item)}
+            className="inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs shadow-md transition-all cursor-pointer group/vm"
+          >
+            <span>View More</span>
+            <ArrowRight size={14} className="group-hover/vm:translate-x-0.5 transition-transform" />
+          </button>
+        </div>
       </div>
 
-      {/* Main Title & Description */}
-      <div className="space-y-2 mb-6">
-        <h3 className="text-xl sm:text-2xl font-bold text-[#0F172A] group-hover:text-[#0062A8] transition-colors leading-snug">
-          {item.title}
-        </h3>
-        <p className="text-sm text-[#64748B] line-clamp-3 leading-relaxed font-normal">
-          {item.description || item.content}
-        </p>
-      </div>
+      {/* Arrows */}
+      {multiple && (
+        <>
+          <button
+            onClick={onPrev}
+            title="Previous update"
+            aria-label="Previous update"
+            className="absolute top-4 right-16 w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-slate-200 text-slate-700 hover:text-[#0062A8] shadow-md flex items-center justify-center transition-all cursor-pointer"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={onNext}
+            title="Next update"
+            aria-label="Next update"
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-slate-200 text-slate-700 hover:text-[#0062A8] shadow-md flex items-center justify-center transition-all cursor-pointer"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </>
+      )}
 
-      {/* Bottom Action Row */}
-      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-        <span className="text-xs font-medium text-slate-500">
-          Issued by: <strong className="text-slate-700">{item.authorName || item.author || "VCET Admin"}</strong>
-        </span>
-        <button className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0062A8] group-hover:translate-x-0.5 transition-transform">
-          <span>View Details</span>
-          <ArrowRight size={14} className="group-hover:hidden" />
-          <ArrowUpRight size={14} className="hidden group-hover:block" />
-        </button>
-      </div>
+      {/* Dots */}
+      {multiple && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+          {slides.map((slide, i) => (
+            <button
+              key={slide._id || slide.id || i}
+              onClick={() => onSelect(i)}
+              aria-label={`Go to update ${i + 1}`}
+              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                i === safeIndex ? "w-8 bg-[#0062A8]" : "w-2.5 bg-slate-300 hover:bg-[#0062A8]/50"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* STANDARD ANNOUNCEMENT CARD (Visual Weight 2)                               */
+/* PAST UPDATE CARD (Grid)                                                     */
 /* -------------------------------------------------------------------------- */
-function StandardCard({ item, onClick }) {
+function PastUpdateCard({ item, onClick }) {
   const catStyle = getCategoryStyle(item.category);
   const Icon = catStyle.icon;
-  const dateStr = item.publishDate
-    ? new Date(item.publishDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase()
-    : item.date || "ACTIVE";
-  const deptStr = item.departmentId?.code || item.departmentId?.name || item.department || "ALL DEPT";
+  const poster = resolvePoster(item);
 
   return (
     <div
       onClick={onClick}
-      className="group relative bg-white rounded-xl border border-[#E2E8F0] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-blue-300/80 transition-all duration-200 p-5 flex flex-col justify-between cursor-pointer"
+      className="group relative bg-white rounded-2xl border border-[#E2E8F0] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-blue-300/80 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer"
     >
-      <div>
-        {/* Category Badge */}
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-bold tracking-wider border ${catStyle.badgeBg}`}>
-            <Icon size={12} />
+      {/* Poster / Visual */}
+      <div className="relative h-36 overflow-hidden bg-[#0A3563]">
+        {poster ? (
+          <img
+            src={poster}
+            alt={`${item.title} poster`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <div className="w-full h-full hero-gradient flex items-center justify-center">
+            <Icon size={44} strokeWidth={1.25} className="text-white/25" />
+          </div>
+        )}
+
+        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider border shadow-sm ${catStyle.badgeBg}`}
+          >
+            <Icon size={10} />
             {catStyle.label}
           </span>
-          {item.deadline && (
-            <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded">
-              Due: {item.deadline}
+          {item.isPinned && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
+              <Pin size={9} /> PIN
             </span>
           )}
         </div>
 
-        {/* Title */}
-        <h4 className="text-base font-bold text-[#0F172A] group-hover:text-[#0062A8] transition-colors leading-snug mb-2 line-clamp-2">
+        {item.deadline && (
+          <span className="absolute bottom-2 left-2 text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+            Due: {item.deadline}
+          </span>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="p-4 flex flex-col flex-1">
+        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] mb-1.5">
+          <Calendar size={12} className="text-[#0062A8]" />
+          <span>{formatDate(item)}</span>
+          <span className="text-slate-300">•</span>
+          <span className="truncate">{deptLabel(item)}</span>
+        </div>
+
+        <h4 className="text-sm font-bold text-[#0F172A] group-hover:text-[#0062A8] transition-colors leading-snug mb-1.5 line-clamp-2">
           {item.title}
         </h4>
 
-        {/* Short Description */}
-        <p className="text-xs text-[#64748B] line-clamp-2 leading-relaxed mb-4">
+        <p className="text-xs text-[#64748B] line-clamp-2 leading-relaxed mb-3 flex-1">
           {item.description || item.content}
         </p>
-      </div>
 
-      <div>
-        {/* Metadata & Action Divider */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-[#64748B]">
-          <span className="font-semibold text-[11px]">
-            {dateStr} • {deptStr}
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+          <span className="text-[10px] font-semibold text-slate-400 truncate max-w-[55%]">
+            {item.authorName || item.author || "VCET Admin"}
           </span>
-          <span className="inline-flex items-center gap-1 font-bold text-[#0062A8]">
-            <span>View Details</span>
-            <ArrowRight size={13} className="group-hover:hidden transition-transform" />
-            <ArrowUpRight size={13} className="hidden group-hover:block transition-transform" />
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0062A8]">
+            View More
+            <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
           </span>
         </div>
       </div>
@@ -530,15 +660,14 @@ function StandardCard({ item, onClick }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* ANNOUNCEMENT DETAIL MODAL                                                  */
+/* ANNOUNCEMENT DETAIL MODAL                                                   */
 /* -------------------------------------------------------------------------- */
 function AnnouncementModal({ item, onClose }) {
   const catStyle = getCategoryStyle(item.category);
   const Icon = catStyle.icon;
-  const dateStr = item.publishDate
-    ? new Date(item.publishDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    : item.date || "Active";
+  const dateStr = formatDate(item).toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   const deptStr = item.departmentId?.name || item.departmentId?.code || item.department || "All Departments";
+  const poster = resolvePoster(item);
 
   return (
     <>
@@ -568,6 +697,17 @@ function AnnouncementModal({ item, onClose }) {
 
       {/* Modal Body */}
       <div className="p-6 overflow-y-auto space-y-4">
+        {/* Poster Image */}
+        {poster && (
+          <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+            <img
+              src={poster}
+              alt={`${item.title} poster`}
+              className="w-full max-h-[55vh] object-contain bg-slate-50"
+            />
+          </div>
+        )}
+
         {/* Info Tags */}
         <div className="flex flex-wrap items-center gap-3 text-xs text-[#64748B] pb-3 border-b border-slate-100">
           <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">

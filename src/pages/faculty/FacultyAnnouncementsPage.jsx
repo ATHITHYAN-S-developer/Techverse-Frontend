@@ -8,7 +8,8 @@ import {
   Eye,
   X,
   AlertTriangle,
-  Pin
+  Pin,
+  ImageIcon
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -30,6 +31,8 @@ export default function FacultyAnnouncementsPage() {
     content: "",
     isPinned: false
   });
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -53,6 +56,8 @@ export default function FacultyAnnouncementsPage() {
       content: "",
       isPinned: false
     });
+    setImageFile(null);
+    setImagePreview(null);
     setModalOpen(true);
   };
 
@@ -65,6 +70,8 @@ export default function FacultyAnnouncementsPage() {
       content: item.content,
       isPinned: Boolean(item.isPinned)
     });
+    setImageFile(null);
+    setImagePreview(item.imageUrl || null);
     setModalOpen(true);
   };
 
@@ -76,20 +83,18 @@ export default function FacultyAnnouncementsPage() {
     }
 
     try {
+      const payload = { ...formData, department: "CSE Department" };
+      if (imageFile) payload.imageUrl = imagePreview; // base64 or URL
       if (editingItem) {
-        await announcementService.update(editingItem.id, formData);
+        await announcementService.update(editingItem.id, payload);
         showSuccess("Circular updated successfully ✓");
       } else {
-        await announcementService.create(
-          {
-            ...formData,
-            department: "CSE Department"
-          },
-          user
-        );
+        await announcementService.create(payload, user);
         showSuccess("Department circular published ✓");
       }
       setModalOpen(false);
+      setImageFile(null);
+      setImagePreview(null);
       loadData();
     } catch {
       showError("Failed to save circular");
@@ -136,7 +141,15 @@ export default function FacultyAnnouncementsPage() {
             className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div>
+              {item.imageUrl && (
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full h-32 object-cover rounded-xl mb-3"
+                />
+              )}
               <div className="flex items-center justify-between gap-2 mb-2">
+
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                   item.priority === "Urgent"
                     ? "bg-rose-100 text-rose-700"
@@ -242,6 +255,49 @@ export default function FacultyAnnouncementsPage() {
                   placeholder="Provide circular details, deadlines, and requirements..."
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
                 />
+              </div>
+
+              {/* Image Upload */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Upload Image <span className="text-slate-400 font-normal">(optional)</span></label>
+                {imagePreview ? (
+                  <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                    <img src={imagePreview} alt="Preview" className="w-full h-36 object-cover" />
+                    <div className="flex items-center justify-between px-3 py-1.5 bg-white border-t border-slate-100">
+                      <span className="text-[11px] text-slate-500 truncate max-w-[80%]">{imageFile?.name || "Current image"}</span>
+                      <button
+                        type="button"
+                        onClick={() => { setImageFile(null); setImagePreview(null); }}
+                        className="text-rose-500 hover:text-rose-700 text-xs font-bold ml-2 flex items-center gap-1"
+                      >
+                        <X className="w-3.5 h-3.5" /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center gap-1.5 w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors">
+                    <ImageIcon className="w-6 h-6 text-slate-400" />
+                    <span className="text-xs text-slate-500 font-medium">Click to upload an image</span>
+                    <span className="text-[10px] text-slate-400">PNG, JPG, JPEG, WEBP • Max 5 MB</span>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/jpg,image/webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) {
+                          showError("Image must be under 5 MB");
+                          return;
+                        }
+                        setImageFile(file);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => setImagePreview(ev.target.result);
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                  </label>
+                )}
               </div>
 
               <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">

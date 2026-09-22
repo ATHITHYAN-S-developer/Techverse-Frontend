@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import CollegeBackground from "./CollegeBackground";
-import empowerLogo from "../assets/vcet-empower-blue.png";
+
 
 export default function Hero() {
   return (
@@ -50,16 +50,7 @@ export default function Hero() {
         </div>
       </section>
 
-      {/* 2. Dedicated White Space Strip with Centered VCET Logo & Scroll View Animation */}
-      <section className="w-full bg-white py-8 sm:py-12 flex items-center justify-center border-b border-[#C9C9C9]/40 relative z-10 shadow-2xs">
-        <div className="flex flex-col items-center justify-center px-6">
-          <img
-            src={empowerLogo}
-            alt="Velalar College of Engineering and Technology - Empowering the Next Generation"
-            className="h-14 sm:h-18 md:h-20 max-w-[85vw] sm:max-w-[360px] object-contain autoRotate drop-shadow-xs"
-          />
-        </div>
-      </section>
+
     </>
   );
 }
