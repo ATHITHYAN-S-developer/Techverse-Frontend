@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   Puzzle,
   Plus,
@@ -29,6 +30,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { api } from "../../services/api";
+import { courseService } from "../../services/courseService";
 import { useToast } from "../../context/ToastContext";
 
 /**
@@ -43,8 +45,10 @@ function extractYouTubeId(url) {
 
 export default function AdminCourseModulesPage() {
   const { showSuccess, showError, showInfo } = useToast();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const paramCourseId = searchParams.get("courseId") || "";
+  const isFaculty = window.location.pathname.startsWith("/faculty") || user?.role === "teacher";
 
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState(paramCourseId);
@@ -118,8 +122,12 @@ export default function AdminCourseModulesPage() {
 
   const loadCourses = async () => {
     try {
-      const res = await api.get("/courses");
-      const courseList = res?.data?.courses || res?.courses || [];
+      const res = isFaculty ? await courseService.getMyCourses() : await api.get("/courses");
+      const courseList = isFaculty
+        ? Array.isArray(res)
+          ? res
+          : res?.courses || res?.data?.courses || []
+        : res?.data?.courses || res?.courses || [];
       setCourses(courseList);
       if (courseList.length > 0) {
         if (paramCourseId && courseList.some((c) => (c._id || c.id || c.slug) === paramCourseId)) {
