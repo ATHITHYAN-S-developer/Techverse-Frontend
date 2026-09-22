@@ -22,15 +22,19 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
+import { useAuth } from "../../context/AuthContext";
+import { api } from "../../services/api";
 import { courseService, getCourseImageUrl } from "../../services/courseService";
 
 export default function AdminCoursesPage() {
   const { showSuccess, showError } = useToast();
+  const { user } = useAuth();
   const location = useLocation();
-  const isFaculty = location.pathname.startsWith("/faculty");
+  const isFaculty = location.pathname.startsWith("/faculty") || user?.role === "teacher";
   const moduleManagerBaseUrl = isFaculty ? "/faculty/modules" : "/admin/modules";
 
   const [courses, setCourses] = useState([]);
+  const [facultyList, setFacultyList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
@@ -47,23 +51,40 @@ export default function AdminCoursesPage() {
     duration: "30 Days",
     passingPercentage: 50,
     instructor: "Dr. K. Sathish Kumar (CSE)",
+    assignedFacultyId: "",
+    assignedFacultyName: "",
     thumbnailUrl: "",
     description: "",
   });
 
   useEffect(() => {
     loadCourses();
-  }, []);
+    if (!isFaculty) {
+      loadFacultyList();
+    }
+  }, [isFaculty]);
 
   const loadCourses = async () => {
     setLoading(true);
     try {
-      const data = await courseService.getAllCourses();
+      const data = isFaculty
+        ? await courseService.getMyCourses()
+        : await courseService.getAllCourses();
       setCourses(data);
     } catch (err) {
       console.debug("Error loading courses:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadFacultyList = async () => {
+    try {
+      const res = await api.get("/admin/users?role=teacher&limit=100");
+      const users = res?.users || res?.data?.users || [];
+      setFacultyList(Array.isArray(users) ? users : []);
+    } catch (err) {
+      console.debug("Error loading faculty list:", err);
     }
   };
 
@@ -89,7 +110,9 @@ export default function AdminCoursesPage() {
       level: "Beginner to Intermediate",
       duration: "30 Days",
       passingPercentage: 50,
-      instructor: "Dr. K. Sathish Kumar (CSE)",
+      instructor: isFaculty ? (user?.name || "Faculty") : "",
+      assignedFacultyId: "",
+      assignedFacultyName: "",
       thumbnailUrl: "",
       description: "",
     });
@@ -107,6 +130,8 @@ export default function AdminCoursesPage() {
       duration: course.duration || "30 Days",
       passingPercentage: course.passingPercentage || course.passingScore || 50,
       instructor: course.instructor || course.instructorName || "Faculty Coordinator",
+      assignedFacultyId: course.assignedFacultyId?._id || course.assignedFacultyId || "",
+      assignedFacultyName: course.assignedFacultyName || "",
       thumbnailUrl: course.thumbnailUrl || "",
       description: course.description || "",
     });
@@ -117,6 +142,11 @@ export default function AdminCoursesPage() {
     e.preventDefault();
     if (!formData.title.trim() || !formData.description.trim()) {
       showError("Please provide both title and description");
+      return;
+    }
+
+    if (!isFaculty && !editingCourse && !formData.assignedFacultyId) {
+      showError("Faculty assignment is compulsory. Please select a faculty member.");
       return;
     }
 
@@ -132,6 +162,13 @@ export default function AdminCoursesPage() {
       form.append("passingPercentage", String(formData.passingPercentage));
       form.append("instructor", formData.instructor);
       form.append("certificateEnabled", "true");
+
+      if (!isFaculty && formData.assignedFacultyId) {
+        form.append("assignedFacultyId", formData.assignedFacultyId);
+        if (formData.assignedFacultyName) {
+          form.append("assignedFacultyName", formData.assignedFacultyName);
+        }
+      }
 
       if (imageFile) {
         form.append("thumbnail", imageFile);
@@ -176,11 +213,13 @@ export default function AdminCoursesPage() {
               <BookOpen className="w-5 h-5" />
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-              Technical Course Catalog Management
+              {isFaculty ? "My Courses & Curriculum" : "Technical Course Catalog Management"}
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Configure courses with real cover uploads, passing benchmarks, and syllabus modules stored in MongoDB.
+            {isFaculty
+              ? "Manage syllabus modules, video lectures, and assessments for courses assigned to you."
+              : "Configure courses with real cover uploads, passing benchmarks, faculty assignment, and syllabus modules stored in MongoDB."}
           </p>
         </div>
 
@@ -210,13 +249,19 @@ export default function AdminCoursesPage() {
       ) : courses.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center space-y-3 shadow-sm">
           <BookOpen className="w-12 h-12 text-slate-300 mx-auto" />
-          <h3 className="text-base font-bold text-slate-800">No Courses in Database</h3>
-          <p className="text-xs text-slate-500">Create your first course with custom thumbnail and syllabus modules.</p>
+          <h3 className="text-base font-bold text-slate-800">
+            {isFaculty ? "No Courses Assigned to You Yet" : "No Courses in Database"}
+          </h3>
+          <p className="text-xs text-slate-500">
+            {isFaculty
+              ? "You will see courses here once an administrator assigns courses to you, or you can create one."
+              : "Create your first course with custom thumbnail and syllabus modules."}
+          </p>
           <button
             onClick={handleOpenAddModal}
             className="px-5 py-2.5 bg-[#0062A8] text-white font-bold text-xs rounded-xl shadow hover:bg-[#00528c] cursor-pointer"
           >
-            Create First Course
+            Create Course
           </button>
         </div>
       ) : (
@@ -276,9 +321,24 @@ export default function AdminCoursesPage() {
                 </div>
 
                 <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
-                  <span className="text-[11px] text-slate-600 font-medium truncate max-w-[120px]">
-                    By {course.instructor || course.instructorName || "Faculty"}
-                  </span>
+                  <div className="flex flex-col min-w-0 pr-1">
+                    <span className="text-[11px] text-slate-600 font-medium truncate">
+                      By {course.instructor || course.instructorName || "Faculty"}
+                    </span>
+                    {course.assignedFacultyName ? (
+                      <span
+                        className="text-[10px] text-[#0062A8] font-semibold truncate flex items-center gap-1 mt-0.5"
+                        title={`Assigned to ${course.assignedFacultyName}`}
+                      >
+                        <User className="w-3 h-3 shrink-0" />
+                        <span>Assigned: {course.assignedFacultyName}</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-amber-600 font-medium truncate mt-0.5">
+                        Unassigned
+                      </span>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
                     <Link
@@ -450,6 +510,48 @@ export default function AdminCoursesPage() {
                 </div>
               </div>
 
+              {!isFaculty ? (
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1">
+                    Assign Faculty * <span className="text-[10px] text-amber-600 font-medium">(Compulsory course owner)</span>
+                  </label>
+                  <select
+                    required
+                    value={formData.assignedFacultyId}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const fac = facultyList.find((f) => String(f._id || f.id) === String(selectedId));
+                      setFormData((prev) => ({
+                        ...prev,
+                        assignedFacultyId: selectedId,
+                        assignedFacultyName: fac ? fac.name : "",
+                        instructor: fac
+                          ? `${fac.name}${fac.departmentId?.name ? ` (${fac.departmentId.name})` : fac.staffId ? ` (${fac.staffId})` : ""}`
+                          : prev.instructor,
+                      }));
+                    }}
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">-- Select Faculty Member (Compulsory) --</option>
+                    {facultyList.map((fac) => (
+                      <option key={fac._id || fac.id} value={fac._id || fac.id}>
+                        {fac.name} {fac.departmentId?.name ? `(${fac.departmentId.name})` : fac.staffId ? `[${fac.staffId}]` : `(${fac.email})`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                editingCourse && formData.assignedFacultyName && (
+                  <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-between text-[11px]">
+                    <span className="text-slate-600">Course Ownership:</span>
+                    <span className="font-bold text-[#0062A8] flex items-center gap-1">
+                      <User className="w-3.5 h-3.5" />
+                      Assigned to {formData.assignedFacultyName}
+                    </span>
+                  </div>
+                )
+              )}
+
               <div>
                 <label className="block text-slate-700 font-bold mb-1">Instructor Name & Department</label>
                 <input
@@ -471,8 +573,9 @@ export default function AdminCoursesPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={uploading}
+                  disabled={uploading || (!isFaculty && !editingCourse && !formData.assignedFacultyId)}
                   className="px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold shadow-md disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                  title={!isFaculty && !editingCourse && !formData.assignedFacultyId ? "Please assign a faculty member first" : ""}
                 >
                   {uploading ? (
                     <>
