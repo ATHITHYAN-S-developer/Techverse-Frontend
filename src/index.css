@@ -5,6 +5,17 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Neutralize browser autofill background (Chrome/Safari/Edge paint pale yellow over fields) */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: #1f2937;
+  -webkit-box-shadow: 0 0 0 1000px #f9fafb inset;
+  caret-color: #1f2937;
+  transition: background-color 9999s ease-in-out 0s;
+}
+
 @theme {
   --color-vcet-blue: #0062A8;
   --color-vcet-blue-hover: #00528c;
@@ -81,9 +92,10 @@
   overflow: hidden;
 }
 
-
-
-
+.hero-content {
+  position: relative;
+  z-index: 2;
+}
 
 /* Scroll-driven autoRotate animation using CSS view() timeline */
 .autoRotate {
