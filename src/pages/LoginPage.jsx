@@ -240,15 +240,25 @@ export default function LoginPage() {
         animate="visible"
         className="w-full md:w-[52%] flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-14 bg-white relative overflow-hidden"
       >
-        {/* Campus Background Image Overlay (Light Watermark for Maximum Readability) */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-[0.18] pointer-events-none filter contrast-110 grayscale"
-
-          style={{ backgroundImage: `url(${campusBg})` }}
-        />
-        <div className="absolute inset-0 bg-[#FAFAFC]/40 pointer-events-none" />
+        {/* Professional Light Backdrop */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          {/* VCET-tinted light base */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#F0F6FC] via-white to-[#E7F0F9]" />
+          {/* Faint campus hint, gently faded */}
+          <img
+            src={campusBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            style={{ opacity: 0.07, filter: "grayscale(1) brightness(1.08)" }}
+          />
+          {/* Soft brand glows */}
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#0062A8]/10 blur-3xl" />
+          <div className="absolute -bottom-28 -left-24 w-96 h-96 rounded-full bg-sky-200/50 blur-3xl" />
+          {/* Bottom fade keeps the copyright row legible */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent" />
+        </div>
         {/* Header: Logo & Back Link */}
-        <motion.div variants={itemVariants} className="flex items-center justify-between mb-6 md:mb-4">
+        <motion.div variants={itemVariants} className="relative z-10 flex items-center justify-between mb-6 md:mb-4">
           <Link to="/" className="inline-flex items-center gap-2.5 select-none group">
             <div className="h-10 w-10 rounded-xl bg-[#0062A8] text-white flex items-center justify-center font-black text-lg shadow-xs shadow-[#0062A8]/20 transition-transform group-hover:scale-105">
               <Sparkles size={19} />
@@ -273,7 +283,8 @@ export default function LoginPage() {
         </motion.div>
 
         {/* Center Container */}
-        <div className="w-full max-w-md mx-auto my-auto py-4">
+        <div className="relative z-10 w-full max-w-md mx-auto my-auto py-6">
+          <div className="bg-white/85 backdrop-blur-md rounded-2xl border border-white/70 shadow-xl shadow-[#0B4A8F]/[0.10] px-5 sm:px-8 py-7 sm:py-8">
           {/* Welcome Heading */}
           <motion.div variants={itemVariants} className="mb-5">
             <span className="text-xs font-black uppercase tracking-[0.2em] text-[#0062A8]">
@@ -735,10 +746,11 @@ export default function LoginPage() {
               Explore Resources
             </Link>
           </div>
+          </div>
         </div>
 
         {/* Bottom Copyright */}
-        <div className="text-xs text-[#0062A8] text-center md:text-left mt-4">
+        <div className="relative z-10 text-xs text-gray-400 text-center md:text-left mt-4">
           © {new Date().getFullYear()} Velalar College of Engineering and Technology (Autonomous).
         </div>
       </motion.div>

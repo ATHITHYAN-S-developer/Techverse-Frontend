@@ -71,8 +71,8 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 transition-all duration-200 ${
-          scrolled ? "py-2 shadow-sm" : "py-3 sm:py-3.5 shadow-none"
+        className={`w-full bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 transition-shadow duration-200 py-3 sm:py-3.5 ${
+          scrolled ? "shadow-sm border-slate-200" : "shadow-none"
         }`}
       >
         <div className="w-full max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-8 flex items-center justify-between gap-3">
@@ -86,18 +86,14 @@ export default function Navbar() {
               <img
                 src={vcetLogoImg}
                 alt="VCET Shield"
-                className={`transition-all duration-200 object-contain ${
-                  scrolled ? "h-8 w-8" : "h-9 w-9"
-                }`}
+                className="h-8.5 w-8.5 object-contain"
                 onError={() => setLogoError(true)}
               />
             ) : (
               <img
                 src={vcetWideLogo}
                 alt="VCET"
-                className={`transition-all duration-200 object-contain ${
-                  scrolled ? "h-7 max-w-[140px]" : "h-8 max-w-[160px]"
-                }`}
+                className="h-8 max-w-[160px] object-contain"
               />
             )}
 

@@ -15,8 +15,6 @@ export default function Hero() {
         {/* Layer 1 & 2: Continuous Campus Background Slideshow + Contrast Overlay */}
         <CollegeBackground />
 
-
-
         {/* Layer 3: Hero Content (Modern, high-end typography hierarchy) */}
         <div className="hero-content relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
           {/* Modern Contemporary Headline: Mixed-Weight & Gradient Effect */}
