@@ -189,7 +189,8 @@ export default function CurrentUpcomingEvents() {
       });
   }, [sortedAnnouncements]);
 
-  const slides = currentAnnouncements.slice(0, 3);
+  // Every current/upcoming event participates in the auto-cycle (no cap).
+  const slides = currentAnnouncements;
 
   // Keep the index valid when the list shrinks.
   useEffect(() => {
