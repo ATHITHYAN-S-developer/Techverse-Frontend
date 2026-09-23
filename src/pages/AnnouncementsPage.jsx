@@ -62,6 +62,17 @@ function deptLabel(item) {
   return item.departmentId?.code || item.departmentId?.name || item.department || "ALL DEPARTMENTS";
 }
 
+/** Resolve the announcement's issuer name (populated createdBy → legacy author fields). */
+function issuerName(item) {
+  return item.createdBy?.name || item.authorName || item.author || "";
+}
+
+/** Resolve the issuer's department when populated. */
+function issuerDepartment(item) {
+  const dept = item.createdBy?.departmentId;
+  return dept?.name || dept?.code || "";
+}
+
 // Professional Category Badges & Color Palette
 const categoryConfig = {
   placement: {
