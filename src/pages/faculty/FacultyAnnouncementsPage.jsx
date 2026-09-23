@@ -29,6 +29,7 @@ export default function FacultyAnnouncementsPage() {
     category: "Academic",
     priority: "Normal",
     content: "",
+    expiryDate: "",
     isPinned: false
   });
   const [imageFile, setImageFile] = useState(null);
@@ -54,6 +55,7 @@ export default function FacultyAnnouncementsPage() {
       category: "Academic",
       priority: "Normal",
       content: "",
+      expiryDate: "",
       isPinned: false
     });
     setImageFile(null);
@@ -68,6 +70,7 @@ export default function FacultyAnnouncementsPage() {
       category: item.category,
       priority: item.priority || "Normal",
       content: item.content,
+      expiryDate: item.expiryDate ? String(item.expiryDate).slice(0, 10) : "",
       isPinned: Boolean(item.isPinned)
     });
     setImageFile(null);
@@ -169,7 +172,7 @@ export default function FacultyAnnouncementsPage() {
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <span>{item.author || "CSE Department"}</span>
+              <span>{item.createdBy?.name || item.authorName || item.author || "CSE Department"}</span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleOpenEdit(item)}

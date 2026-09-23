@@ -264,7 +264,7 @@ export default function LoginPage() {
               <Sparkles size={19} />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-tight text-gray-900 leading-tight">
+              <span className="text-xl font-extrabold tracking-tight text-[#0062A8] leading-tight">
                 Tech<span className="text-[#0062A8]">Verse</span>
               </span>
               <span className="text-[10px] font-bold text-gray-600 tracking-wider uppercase">
@@ -290,7 +290,7 @@ export default function LoginPage() {
             <span className="text-xs font-black uppercase tracking-[0.2em] text-[#0062A8]">
               {roles.find((r) => r.id === activeRole)?.badge}
             </span>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mt-1">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0062A8] tracking-tight mt-1">
               Welcome Back
             </h1>
             <p className="text-sm text-gray-700 mt-1.5 font-normal">
@@ -338,7 +338,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="studentReg"
-                    className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
                     REGISTER NUMBER
                   </label>
@@ -353,7 +353,7 @@ export default function LoginPage() {
                     <IdCard
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.studentReg ? "text-red-500" : "text-gray-400 group-focus-within:text-[#0062A8]"
+                        errors.studentReg ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
                       }`}
                     />
                     <input
@@ -368,7 +368,7 @@ export default function LoginPage() {
                         if (errors.studentReg) setErrors((prev) => ({ ...prev, studentReg: "" }));
                       }}
                       placeholder="732924ECE001"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-gray-900 placeholder:text-gray-400 tracking-wider font-mono uppercase"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8] tracking-wider font-mono uppercase"
                     />
                   </motion.div>
                   {errors.studentReg && (
@@ -388,11 +388,11 @@ export default function LoginPage() {
                   <div className="flex items-center justify-between mb-1.5">
                     <label
                       htmlFor="studentDob"
-                      className="block text-xs font-bold uppercase tracking-wider text-gray-700"
+                      className="block text-xs font-bold uppercase tracking-wider text-[#0062A8]"
                     >
                       PASSWORD / DATE OF BIRTH
                     </label>
-                    <span className="text-[11px] text-gray-400 font-medium">e.g. student123</span>
+                    <span className="text-[11px] text-[#0062A8] font-medium">e.g. student123</span>
                   </div>
                   <motion.div
                     animate={errors.studentDob ? shakeAnimation : {}}
@@ -405,7 +405,7 @@ export default function LoginPage() {
                     <Lock
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.studentDob ? "text-red-500" : "text-gray-400 group-focus-within:text-[#0062A8]"
+                        errors.studentDob ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
                       }`}
                     />
                     <input
@@ -419,12 +419,12 @@ export default function LoginPage() {
                         if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
                       }}
                       placeholder="student123 or YYYY-MM-DD"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]"
                     />
                     <button
                       type="button"
                       onClick={() => setShowStudentPassword(!showStudentPassword)}
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none p-0.5 rounded cursor-pointer"
+                      className="text-slate-500 hover:text-slate-700 focus:outline-none p-0.5 rounded cursor-pointer"
                       tabIndex={-1}
                     >
                       {showStudentPassword ? <EyeOff size={17} /> : <Eye size={17} />}
@@ -451,7 +451,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="facultyEmail"
-                    className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
                     FACULTY EMAIL / STAFF ID
                   </label>
@@ -466,7 +466,7 @@ export default function LoginPage() {
                     <Mail
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.facultyEmail ? "text-red-500" : "text-gray-400 group-focus-within:text-[#0062A8]"
+                        errors.facultyEmail ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
                       }`}
                     />
                     <input
@@ -480,7 +480,7 @@ export default function LoginPage() {
                         if (errors.facultyEmail) setErrors((prev) => ({ ...prev, facultyEmail: "" }));
                       }}
                       placeholder="faculty.cse@vcet.ac.in"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-gray-900 placeholder:text-gray-400"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8]"
                     />
                   </motion.div>
                   {errors.facultyEmail && (
@@ -499,7 +499,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="facultyPassword"
-                    className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
                     FACULTY PASSWORD
                   </label>
@@ -514,7 +514,7 @@ export default function LoginPage() {
                     <Lock
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.facultyPassword ? "text-red-500" : "text-gray-400 group-focus-within:text-[#0062A8]"
+                        errors.facultyPassword ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
                       }`}
                     />
                     <input
@@ -528,12 +528,12 @@ export default function LoginPage() {
                         if (errors.facultyPassword) setErrors((prev) => ({ ...prev, facultyPassword: "" }));
                       }}
                       placeholder="••••••••"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]"
                     />
                     <button
                       type="button"
                       onClick={() => setShowFacultyPassword((prev) => !prev)}
-                      className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                      className="text-slate-500 hover:text-slate-700 p-1 cursor-pointer"
                     >
                       {showFacultyPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -559,7 +559,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="adminUsername"
-                    className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
                     ADMIN ACCOUNT / USERNAME
                   </label>
@@ -574,7 +574,7 @@ export default function LoginPage() {
                     <UserCheck
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.adminUsername ? "text-red-500" : "text-gray-400 group-focus-within:text-[#0062A8]"
+                        errors.adminUsername ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
                       }`}
                     />
                     <input
@@ -588,7 +588,7 @@ export default function LoginPage() {
                         if (errors.adminUsername) setErrors((prev) => ({ ...prev, adminUsername: "" }));
                       }}
                       placeholder="admin@vcet.ac.in"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-gray-900 placeholder:text-gray-400"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8]"
                     />
                   </motion.div>
                   {errors.adminUsername && (
@@ -607,7 +607,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="adminPassword"
-                    className="block text-xs font-bold uppercase tracking-wider text-gray-700 mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
                     ADMIN SECURITY KEY / PASSCODE
                   </label>
@@ -622,7 +622,7 @@ export default function LoginPage() {
                     <Lock
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.adminPassword ? "text-red-500" : "text-gray-400 group-focus-within:text-[#0062A8]"
+                        errors.adminPassword ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
                       }`}
                     />
                     <input
@@ -636,12 +636,12 @@ export default function LoginPage() {
                         if (errors.adminPassword) setErrors((prev) => ({ ...prev, adminPassword: "" }));
                       }}
                       placeholder="••••••••••••"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-gray-900 placeholder:text-gray-400"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]"
                     />
                     <button
                       type="button"
                       onClick={() => setShowAdminPassword((prev) => !prev)}
-                      className="text-gray-400 hover:text-gray-600 p-1 cursor-pointer"
+                      className="text-slate-500 hover:text-slate-700 p-1 cursor-pointer"
                     >
                       {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -658,7 +658,7 @@ export default function LoginPage() {
 
             {/* Remember Me Option */}
             <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-medium text-gray-600">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-medium text-[#0062A8]">
                 <input
                   type="checkbox"
                   checked={rememberMe}
@@ -667,8 +667,8 @@ export default function LoginPage() {
                 />
                 <span>Remember me on this device</span>
               </label>
-              <div className="flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
-                <ShieldCheck size={12} />
+              <div className="flex items-center gap-1 text-[11px] font-bold text-[#0062A8] bg-[#E8F3FB] px-2 py-0.5 rounded-md border border-[#BBD9EE]">
+                <ShieldCheck size={12} className="text-[#0062A8]" />
                 <span>
                   {activeRole === "student"
                     ? "Student Auth"
@@ -740,7 +740,7 @@ export default function LoginPage() {
           </form>
 
           {/* Bottom Explore Link */}
-          <div className="text-center mt-6 text-xs text-gray-500 font-normal">
+          <div className="text-center mt-6 text-xs text-[#0062A8] font-normal">
             New to TechVerse?{" "}
             <Link to="/technology" className="font-bold text-[#0062A8] hover:underline">
               Explore Resources

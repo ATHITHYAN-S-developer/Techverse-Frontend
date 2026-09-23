@@ -8,6 +8,7 @@ import Hero from "../components/Hero";
 import AnnouncementMarquee from "../components/AnnouncementMarquee";
 import Domains from "../sections/Domains";
 import CertificatePreviewSection from "../sections/CertificatePreviewSection";
+import CurrentUpcomingEvents from "../sections/CurrentUpcomingEvents";
 import { resourceService } from "../services/resourceService";
 
 export default function HomePage() {
@@ -34,7 +35,7 @@ export default function HomePage() {
       <AnnouncementMarquee />
 
 
-      {/* 2. Four Main Resource Domains */}
+      {/* 3. Four Main Resource Domains */}
       <Domains resources={resources} />
 
       {/* 3. Official VCET Certificate Showcase & Live Preview */}

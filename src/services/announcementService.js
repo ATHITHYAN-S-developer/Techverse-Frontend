@@ -4,6 +4,7 @@
  */
 
 import { apiRequest, API_BASE_URL } from "./api";
+import { getCurrentUser } from "./authService";
 
 export const announcementService = {
   async getAll(params = {}) {
@@ -49,9 +50,34 @@ export const announcementService = {
         const data = await res.json();
         return data.announcement;
       }
+
+      // Offline-ish / invalid-session responses fall back to local storage,
+      // but the record below is still stamped with the logged-in faculty.
+      if (res.status === 401 || res.status === 403) {
+        console.warn("[Announcement] Session rejected — saving locally with faculty identity.");
+      } else {
+        // Real server/validation failure — surface it instead of faking success.
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || `Failed to publish announcement (HTTP ${res.status}).`);
+      }
     } catch (err) {
-      console.warn("API announcement create failed, using local fallback");
+      if (err && err.message && !err.message.includes("Failed to fetch") && !err.message.includes("NetworkError")) {
+        if (err.message.startsWith("Failed to publish")) {
+          throw err;
+        }
+        console.warn("API announcement create failed, using local fallback");
+      } else {
+        console.warn("[Announcement] Backend offline — saving locally with faculty identity.");
+      }
     }
+
+    // Local fallback — always carries the authenticated faculty identity so
+    // "Issued by" never shows "Academic Office" for newly published circulars.
+    const currentUser = getCurrentUser();
+    const publisherName =
+      currentUser?.name || currentUser?.staffName || currentUser?.fullName || "";
+    const publisherStaffId =
+      currentUser?.staffId || currentUser?.staff_id || currentUser?.facultyId || "";
 
     const all = getStoredAnnouncements();
     const newAnn = {
@@ -61,8 +87,15 @@ export const announcementService = {
       category: announcementData.category || "General",
       priority: announcementData.priority || "normal",
       date: new Date().toISOString().split("T")[0],
+      publishDate: announcementData.publishDate || new Date().toISOString().split("T")[0],
+      expiryDate: announcementData.expiryDate || "",
       department: announcementData.department || "All Departments",
       imageUrl: announcementData.imageUrl || "",
+      authorName: announcementData.authorName || publisherName,
+      author: announcementData.author || publisherName,
+      createdBy: currentUser
+        ? { name: publisherName, staffId: publisherStaffId }
+        : null,
       isPinned: Boolean(announcementData.isPinned),
       status: "Published",
     };

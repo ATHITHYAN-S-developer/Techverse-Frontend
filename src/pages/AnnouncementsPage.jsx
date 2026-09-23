@@ -159,7 +159,7 @@ export default function AnnouncementsPage() {
     return announcements.filter((item) => {
       const title = item.title || "";
       const desc = item.description || item.content || "";
-      const author = item.authorName || item.author || "";
+      const author = issuerName(item);
       const cat = item.category || "General";
       const deptName = deptLabel(item);
 
@@ -725,6 +725,11 @@ function AnnouncementModal({ item, onClose }) {
               Deadline: {item.deadline}
             </span>
           )}
+          {eventDateString(item) && (
+            <span className="inline-flex items-center gap-1 text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">
+              {isPastEvent(item) ? "Ended:" : "Ends:"} {formatDateString(eventDateString(item))}
+            </span>
+          )}
         </div>
 
         {/* Content */}
@@ -733,8 +738,15 @@ function AnnouncementModal({ item, onClose }) {
         </div>
 
         {/* Issuer info */}
-        <div className="text-xs text-[#64748B] pt-2">
-          Issued by: <strong className="text-[#0F172A]">{item.authorName || item.author || "Academic Office"}</strong>
+        <div className="text-xs text-[#64748B] pt-2 space-y-1">
+          <div>
+            Issued by: <strong className="text-[#0F172A]">{issuerName(item) || "Academic Office"}</strong>
+          </div>
+          {issuerDepartment(item) && (
+            <div>
+              Department: <strong className="text-[#0F172A]">{issuerDepartment(item)}</strong>
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
