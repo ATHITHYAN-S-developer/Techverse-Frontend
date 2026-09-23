@@ -58,6 +58,34 @@ function formatDate(item) {
     .toUpperCase();
 }
 
+function todayString() {
+  const d = new Date();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/** The actual event date (YYYY-MM-DD) — eventDate, else expiryDate, else deadline. */
+function eventDateString(item) {
+  const raw = item.eventDate || item.expiryDate || item.deadline || "";
+  return raw ? String(raw).slice(0, 10) : "";
+}
+
+function isPastEvent(item) {
+  const ev = eventDateString(item);
+  if (!ev) return false; // no date → ongoing
+  return ev < todayString();
+}
+
+function formatDateString(raw) {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return String(raw).toUpperCase();
+  return d
+    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    .toUpperCase();
+}
+
 function deptLabel(item) {
   return item.departmentId?.code || item.departmentId?.name || item.department || "ALL DEPARTMENTS";
 }
