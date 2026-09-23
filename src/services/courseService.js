@@ -103,6 +103,30 @@ export const courseService = {
     return [];
   },
 
+  async getMyCourses(params = {}) {
+    try {
+      const queryString = new URLSearchParams(params).toString();
+      const res = await api.get(`/courses/my${queryString ? `?${queryString}` : ""}`);
+      const courseList = res?.courses || res?.data?.courses || res?.data || [];
+      if (Array.isArray(courseList)) {
+        return courseList.map((c) => {
+          const cId = c.slug || c.id || c._id;
+          const localCompleted = getLocalCompletedModules(cId, c.slug, c._id);
+          const totalMods = c.modules?.length || c.totalModules || c.modulesCount || 0;
+          const completedCount = localCompleted.length;
+          const calcProgress = totalMods > 0 ? Math.round((completedCount / totalMods) * 100) : 0;
+          return {
+            ...c,
+            progress: Math.max(calcProgress, c.progress || 0),
+          };
+        });
+      }
+    } catch (err) {
+      console.error("Failed to fetch my courses from backend:", err);
+    }
+    return [];
+  },
+
   async getCourseById(courseId) {
     const res = await api.get(`/courses/${courseId}`);
     const courseData = res?.course || res?.data?.course;

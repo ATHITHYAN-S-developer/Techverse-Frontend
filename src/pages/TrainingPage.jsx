@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { trainingService } from "../services/trainingService";
 import TextReveal from "../components/TextReveal";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 
 const TRACK_ICONS = {
@@ -166,6 +167,8 @@ export default function TrainingPage() {
         </div>
       </section>
 
+      {/* VCET Watermark Marquee below the Hero */}
+      <AnnouncementMarquee />
 
 
       {/* =========================================================================

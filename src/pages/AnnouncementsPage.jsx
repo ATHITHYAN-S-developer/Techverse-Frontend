@@ -16,11 +16,14 @@ import {
   ArrowRight,
   ChevronDown,
   AlertCircle,
+  ChevronLeft,
+  ChevronRight,
   Flame,
   CalendarDays,
 } from "lucide-react";
 import { announcementService } from "../services/announcementService";
 import { API_BASE_URL } from "../services/api";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 /**
  * Resolve an announcement's poster image URL.
@@ -57,65 +60,6 @@ function formatDate(item) {
 
 function deptLabel(item) {
   return item.departmentId?.code || item.departmentId?.name || item.department || "ALL DEPARTMENTS";
-}
-
-/** Name of the faculty/person who issued the announcement (populated user → stored name → fallback). */
-function issuerName(item) {
-  return item.createdBy?.name || item.authorName || item.author || "";
-}
-
-/** Department of the person who issued the announcement. */
-function issuerDepartment(item) {
-  const dept = item.createdBy?.departmentId;
-  return dept?.name || dept?.code || dept?.department || "";
-}
-
-/** Today's date as YYYY-MM-DD for event-status comparison. */
-function todayString() {
-  const d = new Date();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${d.getFullYear()}-${m}-${day}`;
-}
-
-/** The event/validity date (YYYY-MM-DD) if one is set. */
-function eventDateString(item) {
-  const raw = item.expiryDate || item.eventDate || item.deadline || "";
-  return raw ? String(raw).slice(0, 10) : "";
-}
-
-/** True when the announcement's event date is strictly before today. */
-function isPastEvent(item) {
-  const ev = eventDateString(item);
-  if (!ev) return false; // no date set → treated as ongoing/current
-  return ev < todayString();
-}
-
-/** "current" (today / no date = ongoing) or "upcoming" (event date is after today). */
-function eventStatus(item) {
-  const ev = eventDateString(item);
-  if (!ev || ev === todayString()) return "current";
-  return "upcoming";
-}
-
-/** Humanised date from a raw value, e.g. "SEP 20, 2026". */
-function formatDateString(raw) {
-  if (!raw) return "";
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return String(raw).toUpperCase();
-  return d
-    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    .toUpperCase();
-}
-
-/** Compact date label, e.g. "SEP 20". */
-function formatShortDate(raw) {
-  if (!raw) return "";
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return String(raw).toUpperCase();
-  return d
-    .toLocaleDateString("en-US", { month: "short", day: "numeric" })
-    .toUpperCase();
 }
 
 // Professional Category Badges & Color Palette
@@ -238,7 +182,8 @@ export default function AnnouncementsPage() {
     });
   }, [announcements, searchQuery, selectedCategory, selectedDept]);
 
-  // Sort: pinned first, then newest-first.
+  // Sort: pinned first, then newest-first. The newest announcement
+  // automatically becomes the FIRST slide of the Recent Updates carousel.
   const sortedAnnouncements = useMemo(() => {
     return [...filteredAnnouncements].sort((a, b) => {
       const aPin = a.isPinned || a.pinned ? 1 : 0;
@@ -248,38 +193,9 @@ export default function AnnouncementsPage() {
     });
   }, [filteredAnnouncements]);
 
-  // CURRENT & FUTURE events → slideshow. Past-dated events → grid below.
-  const currentAnnouncements = useMemo(() => {
-    return sortedAnnouncements
-      .filter((a) => !isPastEvent(a))
-      .sort((a, b) => {
-        const aPin = a.isPinned || a.pinned ? 1 : 0;
-        const bPin = b.isPinned || b.pinned ? 1 : 0;
-        if (aPin !== bPin) return bPin - aPin;
-        // Soonest-ending event first (most urgent), then ongoing (no date) newest-first
-        const ea = eventDateString(a);
-        const eb = eventDateString(b);
-        if (ea && eb && ea !== eb) return ea < eb ? -1 : 1;
-        if (ea && !eb) return -1;
-        if (!ea && eb) return 1;
-        return announcementTimestamp(b) - announcementTimestamp(a);
-      });
-  }, [sortedAnnouncements]);
-
-  const pastAnnouncements = useMemo(() => {
-    return sortedAnnouncements
-      .filter(isPastEvent)
-      .sort((a, b) => {
-        const ea = eventDateString(a);
-        const eb = eventDateString(b);
-        if (ea && eb && ea !== eb) return ea > eb ? -1 : 1; // most recently ended first
-        return announcementTimestamp(b) - announcementTimestamp(a);
-      });
-  }, [sortedAnnouncements]);
-
-  // Top 3 current/future go into the auto-slideshow; past ones form the grid below.
-  const recentSlides = currentAnnouncements.slice(0, 3);
-  const pastUpdates = pastAnnouncements;
+  // Top 3 newest go into the slideshow — everything older is a "Past Update".
+  const recentSlides = sortedAnnouncements.slice(0, 3);
+  const pastUpdates = sortedAnnouncements.slice(3);
 
   // Keep slide index valid when the list shrinks
   useEffect(() => {
@@ -288,14 +204,18 @@ export default function AnnouncementsPage() {
     }
   }, [recentSlides.length, slideIndex]);
 
-  // Autoplay every 2s — fully automatic (no manual navigation controls), pauses on hover.
+  // Autoplay every 6s, paused on hover
   useEffect(() => {
     if (recentSlides.length <= 1 || paused) return;
     const id = setInterval(() => {
       setSlideIndex((prev) => (prev + 1) % recentSlides.length);
-    }, 2000);
+    }, 6000);
     return () => clearInterval(id);
   }, [recentSlides.length, paused]);
+
+  const goPrev = () =>
+    setSlideIndex((prev) => (prev - 1 + recentSlides.length) % recentSlides.length);
+  const goNext = () => setSlideIndex((prev) => (prev + 1) % recentSlides.length);
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] text-[#0F172A] font-sans antialiased pb-24 relative overflow-hidden">
@@ -341,6 +261,9 @@ export default function AnnouncementsPage() {
         </div>
       </section>
 
+      {/* VCET Watermark Marquee below the Hero */}
+      <AnnouncementMarquee />
+
       {/* 2. PROFESSIONAL EXPLORE SECTION */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 relative z-20">
         <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
@@ -360,7 +283,7 @@ export default function AnnouncementsPage() {
               </span>
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200">
                 <Flame size={12} />
-                {currentAnnouncements.length} current & upcoming
+                {recentSlides.length} recent
               </span>
             </div>
           )}
@@ -445,16 +368,16 @@ export default function AnnouncementsPage() {
           </div>
         ) : (
           <>
-            {/* ---- CURRENT & FUTURE EVENTS (AUTO SLIDESHOW) ---- */}
+            {/* ---- RECENT UPDATES (CAROUSEL) ---- */}
             {recentSlides.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[11px] font-black uppercase tracking-wider">
                     <Flame size={13} />
-                    Current & Upcoming Events
+                    Recent Updates
                   </span>
                   <span className="text-xs font-medium text-[#64748B]">
-                    Auto-playing slideshow — hover to pause, or use the arrows and dots to navigate
+                    Newest circular goes first — hover to pause, use the arrows or dots to navigate
                   </span>
                 </div>
 
@@ -462,6 +385,9 @@ export default function AnnouncementsPage() {
                   slides={recentSlides}
                   activeIndex={slideIndex}
                   paused={paused}
+                  onSelect={(i) => setSlideIndex(i)}
+                  onPrev={goPrev}
+                  onNext={goNext}
                   onPause={() => setPaused(true)}
                   onResume={() => setPaused(false)}
                   onViewMore={(item) => setSelected(item)}
@@ -474,7 +400,7 @@ export default function AnnouncementsPage() {
               <section className="space-y-3 pt-1">
                 <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3">
                   <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                    Past Events ({pastUpdates.length})
+                    Past Updates ({pastUpdates.length})
                   </h3>
                   <div className="flex-1 h-px bg-slate-200/70" />
                 </div>
@@ -518,6 +444,9 @@ function RecentCarousel({
   slides,
   activeIndex,
   paused,
+  onSelect,
+  onPrev,
+  onNext,
   onPause,
   onResume,
   onViewMore,
@@ -565,17 +494,10 @@ function RecentCarousel({
               <Icon size={12} />
               {catStyle.label}
             </span>
-            {eventStatus(item) === "upcoming" ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0062A8] border border-blue-200/80 text-[10px] font-black uppercase tracking-wider">
-                <CalendarDays size={11} />
-                Upcoming Event
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
-                <Flame size={11} />
-                Current Event
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
+              <Flame size={11} />
+              Recent Update
+            </span>
             {item.isPinned && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
                 <Pin size={10} /> PINNED
@@ -604,11 +526,6 @@ function RecentCarousel({
                 Deadline: {item.deadline}
               </span>
             )}
-            {eventDateString(item) && (
-              <span className="inline-flex items-center gap-1 font-bold text-[#0062A8] bg-[#E8F3FB] px-2 py-0.5 rounded">
-                <CalendarDays size={12} /> Ends: {formatDateString(eventDateString(item))}
-              </span>
-            )}
             {paused && multiple && (
               <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 ● Paused
@@ -625,6 +542,44 @@ function RecentCarousel({
           </button>
         </div>
       </div>
+
+      {/* Arrows */}
+      {multiple && (
+        <>
+          <button
+            onClick={onPrev}
+            title="Previous update"
+            aria-label="Previous update"
+            className="absolute top-4 right-16 w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-slate-200 text-slate-700 hover:text-[#0062A8] shadow-md flex items-center justify-center transition-all cursor-pointer"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={onNext}
+            title="Next update"
+            aria-label="Next update"
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-slate-200 text-slate-700 hover:text-[#0062A8] shadow-md flex items-center justify-center transition-all cursor-pointer"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </>
+      )}
+
+      {/* Dots */}
+      {multiple && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+          {slides.map((slide, i) => (
+            <button
+              key={slide._id || slide.id || i}
+              onClick={() => onSelect(i)}
+              aria-label={`Go to update ${i + 1}`}
+              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
+                i === safeIndex ? "w-8 bg-[#0062A8]" : "w-2.5 bg-slate-300 hover:bg-[#0062A8]/50"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -675,12 +630,6 @@ function PastUpdateCard({ item, onClick }) {
             Due: {item.deadline}
           </span>
         )}
-
-        {eventDateString(item) && (
-          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
-            <Calendar size={9} /> Ended {formatShortDate(eventDateString(item))}
-          </span>
-        )}
       </div>
 
       {/* Body */}
@@ -702,7 +651,7 @@ function PastUpdateCard({ item, onClick }) {
 
         <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <span className="text-[10px] font-semibold text-slate-400 truncate max-w-[55%]">
-            {issuerName(item) || "VCET Admin"}
+            {item.authorName || item.author || "VCET Admin"}
           </span>
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0062A8]">
             View More

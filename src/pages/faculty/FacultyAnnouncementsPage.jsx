@@ -260,22 +260,6 @@ export default function FacultyAnnouncementsPage() {
                 />
               </div>
 
-              {/* Event / Valid Until Date */}
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">
-                  Event / Valid Until Date <span className="text-slate-400 font-normal">(optional)</span>
-                </label>
-                <input
-                  type="date"
-                  value={formData.expiryDate}
-                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                />
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Circulars whose date has passed appear under "Past Events". Leave empty to keep them in the Current &amp; Upcoming slideshow.
-                </p>
-              </div>
-
               {/* Image Upload */}
               <div>
                 <label className="font-bold text-slate-700 block mb-1">Upload Image <span className="text-slate-400 font-normal">(optional)</span></label>

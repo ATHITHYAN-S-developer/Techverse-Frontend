@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import Hero from "../components/Hero";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 import Domains from "../sections/Domains";
 import CertificatePreviewSection from "../sections/CertificatePreviewSection";
 import CurrentUpcomingEvents from "../sections/CurrentUpcomingEvents";
@@ -30,8 +31,9 @@ export default function HomePage() {
       {/* 1. Hero Section with Campus Background Slideshow */}
       <Hero />
 
-      {/* 2. Current & Upcoming Events: auto slideshow + past events grid */}
-      <CurrentUpcomingEvents />
+      {/* VCET Watermark Marquee below the Hero */}
+      <AnnouncementMarquee />
+
 
       {/* 3. Four Main Resource Domains */}
       <Domains resources={resources} />

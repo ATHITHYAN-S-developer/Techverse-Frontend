@@ -24,6 +24,7 @@ import {
 import { courseService } from "../services/courseService";
 import { testService } from "../services/testService";
 import { useAuth } from "../context/AuthContext";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 export default function CourseDetailPage() {
   const { courseId } = useParams();
@@ -145,6 +146,9 @@ export default function CourseDetailPage() {
           </div>
         </div>
       )}
+
+      {/* VCET Watermark Marquee below the Header */}
+      <AnnouncementMarquee />
 
       {/* =========================================================================
           NEW STUDENT WELCOME BOX (Bright Ice-Blue Theme)

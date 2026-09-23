@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
   Puzzle,
   Plus,
@@ -27,8 +28,10 @@ import {
   Check,
   Award,
   ArrowLeft,
+  User,
 } from "lucide-react";
 import { api } from "../../services/api";
+import { courseService } from "../../services/courseService";
 import { useToast } from "../../context/ToastContext";
 
 /**
@@ -43,8 +46,10 @@ function extractYouTubeId(url) {
 
 export default function AdminCourseModulesPage() {
   const { showSuccess, showError, showInfo } = useToast();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const paramCourseId = searchParams.get("courseId") || "";
+  const isFaculty = window.location.pathname.startsWith("/faculty") || user?.role === "teacher";
 
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState(paramCourseId);
@@ -118,8 +123,12 @@ export default function AdminCourseModulesPage() {
 
   const loadCourses = async () => {
     try {
-      const res = await api.get("/courses");
-      const courseList = res?.data?.courses || res?.courses || [];
+      const res = isFaculty ? await courseService.getMyCourses() : await api.get("/courses");
+      const courseList = isFaculty
+        ? Array.isArray(res)
+          ? res
+          : res?.courses || res?.data?.courses || []
+        : res?.data?.courses || res?.courses || [];
       setCourses(courseList);
       if (courseList.length > 0) {
         if (paramCourseId && courseList.some((c) => (c._id || c.id || c.slug) === paramCourseId)) {
@@ -449,6 +458,19 @@ export default function AdminCourseModulesPage() {
         </div>
       </div>
 
+      {/* Empty State — faculty with no assigned courses */}
+      {courses.length === 0 && (
+        <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center space-y-2 shadow-xs">
+          <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
+          <h3 className="text-base font-bold text-slate-800">No Courses Assigned to You Yet</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            {isFaculty
+              ? "You will manage modules here once an administrator assigns courses to you. Ask your admin to assign a course to get started."
+              : "No courses are available yet. Create a course first from the course catalog."}
+          </p>
+        </div>
+      )}
+
       {/* 2. Course Overview & Rules Callout */}
       {selectedCourse && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -462,6 +484,12 @@ export default function AdminCourseModulesPage() {
             <p className="text-xs text-slate-500 mt-1">
               Category: {selectedCourse.category} • {modules.length} Published Modules
             </p>
+            {selectedCourse.assignedFacultyName && (
+              <p className="text-[11px] font-semibold text-[#0B4A8F] mt-1.5 inline-flex items-center gap-1">
+                <User className="w-3 h-3" />
+                Assigned to: {selectedCourse.assignedFacultyName}
+              </p>
+            )}
           </div>
 
           <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">

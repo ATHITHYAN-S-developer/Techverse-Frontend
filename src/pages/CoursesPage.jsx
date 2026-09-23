@@ -26,6 +26,7 @@ import { courseService } from "../services/courseService";
 import { useAuth } from "../context/AuthContext";
 import CourseCard from "../components/CourseCard";
 import TextReveal from "../components/TextReveal";
+import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 
 const CATEGORY_ICONS = {
@@ -175,7 +176,20 @@ export default function CoursesPage() {
                 </Link>
               )}
 
-              <Link
+              <Link tT
+hariraja-07
+hariraja-07
+style(library): redesign E-Resources header into gradient banner
+948d7ba
+ · 
+13 hours ago
+Name	Last commit message
+	Last commit date
+public
+	
+feat: complete TechVerse frontend with student, faculty, admin portal…
+	
+last week
                 to="/prepzone"
                 className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-150 cursor-pointer"
               >
@@ -189,6 +203,9 @@ export default function CoursesPage() {
           </div>
         </div>
       </section>
+
+      {/* VCET Watermark Marquee below the Hero */}
+      <AnnouncementMarquee />
 
 
       {/* =========================================================================

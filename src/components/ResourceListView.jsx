@@ -15,6 +15,7 @@ import { FiArrowLeft, FiArrowRight, FiExternalLink, FiChevronLeft, FiChevronRigh
 import { FaAndroid, FaApple, FaYoutube, FaNewspaper } from "react-icons/fa";
 
 import TextReveal from "./TextReveal";
+import AnnouncementMarquee from "./AnnouncementMarquee";
 
 // Import Aptitude Logos
 import indiabixLogo from "../assets/logos/IndiaBIX.jpg";
@@ -258,6 +259,7 @@ export default function ResourceListView({
       </section>
 
       {/* VCET Continuous Moving Marquee Strip */}
+      <AnnouncementMarquee />
 
 
       {/* Sub-Bar: Back to Home & Resource Count */}
