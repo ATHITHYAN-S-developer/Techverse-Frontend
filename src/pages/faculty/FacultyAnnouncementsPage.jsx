@@ -29,6 +29,7 @@ export default function FacultyAnnouncementsPage() {
     category: "Academic",
     priority: "Normal",
     content: "",
+    expiryDate: "",
     isPinned: false
   });
   const [imageFile, setImageFile] = useState(null);
@@ -54,6 +55,7 @@ export default function FacultyAnnouncementsPage() {
       category: "Academic",
       priority: "Normal",
       content: "",
+      expiryDate: "",
       isPinned: false
     });
     setImageFile(null);
@@ -68,6 +70,7 @@ export default function FacultyAnnouncementsPage() {
       category: item.category,
       priority: item.priority || "Normal",
       content: item.content,
+      expiryDate: item.expiryDate ? String(item.expiryDate).slice(0, 10) : "",
       isPinned: Boolean(item.isPinned)
     });
     setImageFile(null);
@@ -169,7 +172,7 @@ export default function FacultyAnnouncementsPage() {
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <span>{item.author || "CSE Department"}</span>
+              <span>{item.createdBy?.name || item.authorName || item.author || "CSE Department"}</span>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleOpenEdit(item)}
@@ -255,6 +258,22 @@ export default function FacultyAnnouncementsPage() {
                   placeholder="Provide circular details, deadlines, and requirements..."
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
                 />
+              </div>
+
+              {/* Event / Valid Until Date */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">
+                  Event / Valid Until Date <span className="text-slate-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="date"
+                  value={formData.expiryDate}
+                  onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Circulars whose date has passed appear under "Past Events". Leave empty to keep them in the Current &amp; Upcoming slideshow.
+                </p>
               </div>
 
               {/* Image Upload */}

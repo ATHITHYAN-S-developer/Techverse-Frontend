@@ -7,6 +7,7 @@ import React, { useState, useEffect } from "react";
 import Hero from "../components/Hero";
 import Domains from "../sections/Domains";
 import CertificatePreviewSection from "../sections/CertificatePreviewSection";
+import CurrentUpcomingEvents from "../sections/CurrentUpcomingEvents";
 import { resourceService } from "../services/resourceService";
 
 export default function HomePage() {
@@ -29,8 +30,10 @@ export default function HomePage() {
       {/* 1. Hero Section with Campus Background Slideshow */}
       <Hero />
 
+      {/* 2. Current & Upcoming Events: auto slideshow + past events grid */}
+      <CurrentUpcomingEvents />
 
-      {/* 2. Four Main Resource Domains */}
+      {/* 3. Four Main Resource Domains */}
       <Domains resources={resources} />
 
       {/* 3. Official VCET Certificate Showcase & Live Preview */}
