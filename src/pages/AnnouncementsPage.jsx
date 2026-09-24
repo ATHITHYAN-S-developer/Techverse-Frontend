@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
 import {
   Search,
   Building2,
@@ -23,7 +22,6 @@ import {
 import { announcementService } from "../services/announcementService";
 import { departmentService } from "../services/departmentService";
 import { API_BASE_URL } from "../services/api";
-import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
 /**
  * Resolve an announcement's poster image URL.
@@ -341,38 +339,7 @@ export default function AnnouncementsPage() {
         }
       `}</style>
 
-      {/* 1. HERO SECTION */}
-      <section className="hero-gradient text-white py-14 sm:py-18 lg:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden shadow-md text-center">
-        <div className="max-w-4xl mx-auto relative z-10 flex flex-col items-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 text-[11px] font-bold uppercase tracking-widest mb-4 backdrop-blur-sm">
-            <Flame size={13} className="text-amber-300" />
-            <span>Institutional Circulars & Updates</span>
-          </div>
-
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight">
-            Institutional Announcements
-          </h1>
-
-          <p className="text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal mt-3 max-w-xl">
-            Stay updated with placements, examinations, hackathons, events and academic notifications.
-          </p>
-
-          <div className="mt-6">
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/25 text-sm font-semibold text-white transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer"
-            >
-              <span>Student Portal</span>
-              <ArrowRight size={16} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* VCET Watermark Marquee below the Hero */}
-      <AnnouncementMarquee />
-
-      {/* 2. PROFESSIONAL EXPLORE SECTION */}
+      {/* Announcements Directory */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 relative z-20">
         <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
           <div>
@@ -730,7 +697,7 @@ function PastUpdateCard({ item, onClick }) {
 
         <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <span className="text-[10px] font-semibold text-slate-400 truncate max-w-[55%]">
-            {issuerName(item) || "VCET Admin"}
+            {issuerName(item)}
           </span>
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0062A8]">
             View More
@@ -812,16 +779,18 @@ function AnnouncementModal({ item, onClose }) {
         </div>
 
         {/* Issuer info */}
-        <div className="text-xs text-[#64748B] pt-2 space-y-1">
-          <div>
-            Issued by: <strong className="text-[#0F172A]">{issuerName(item) || "Academic Office"}</strong>
-          </div>
-          {issuerDepartment(item) && (
+        {issuerName(item) && (
+          <div className="text-xs text-[#64748B] pt-2 space-y-1">
             <div>
-              Department: <strong className="text-[#0F172A]">{issuerDepartment(item)}</strong>
+              Issued by: <strong className="text-[#0F172A]">{issuerName(item)}</strong>
             </div>
-          )}
-        </div>
+            {issuerDepartment(item) && (
+              <div>
+                Department: <strong className="text-[#0F172A]">{issuerDepartment(item)}</strong>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4 border-t border-slate-100">
