@@ -9,7 +9,8 @@ import {
   X,
   AlertTriangle,
   Pin,
-  ImageIcon
+  ImageIcon,
+  CalendarDays,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
@@ -82,6 +83,11 @@ export default function FacultyAnnouncementsPage() {
     e.preventDefault();
     if (!formData.title.trim()) {
       showError("Please enter circular title");
+      return;
+    }
+
+    if (!formData.expiryDate) {
+      showError("Please select a deadline/end date.");
       return;
     }
 
@@ -258,6 +264,24 @@ export default function FacultyAnnouncementsPage() {
                   placeholder="Provide circular details, deadlines, and requirements..."
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
                 />
+              </div>
+
+              {/* Deadline / End Date */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Deadline / End Date *</label>
+                <div className="relative">
+                  <CalendarDays className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="date"
+                    required
+                    value={formData.expiryDate}
+                    onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
+                    className="w-full p-2.5 pl-9 bg-slate-50 border border-slate-200 rounded-xl"
+                  />
+                </div>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  The announcement stays CURRENT / UPCOMING until this date, then automatically moves to past events.
+                </p>
               </div>
 
               {/* Image Upload */}

@@ -131,7 +131,6 @@ export default function CurrentUpcomingEvents() {
   const [announcements, setAnnouncements] = useState([]);
   const [loaded, setLoaded] = useState(false);
   const [slideIndex, setSlideIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -197,14 +196,14 @@ export default function CurrentUpcomingEvents() {
     if (slides.length > 0 && slideIndex >= slides.length) setSlideIndex(0);
   }, [slides.length, slideIndex]);
 
-  // Autoplay every 3s — fully automatic (no manual navigation controls).
+  // Autoplay every 3s — fully automatic (no manual navigation, no hover-pause).
   useEffect(() => {
-    if (slides.length <= 1 || paused) return;
+    if (slides.length <= 1) return;
     const id = setInterval(() => {
       setSlideIndex((prev) => (prev + 1) % slides.length);
     }, AUTO_PLAY_INTERVAL);
     return () => clearInterval(id);
-  }, [slides.length, paused]);
+  }, [slides.length]);
 
   return (
     <section
@@ -267,13 +266,7 @@ export default function CurrentUpcomingEvents() {
             {/* SLIDESHOW (current + upcoming only) */}
             {slides.length > 0 ? (
               <div className="space-y-3">
-                <SlideCarousel
-                  slides={slides}
-                  activeIndex={slideIndex}
-                  paused={paused}
-                  onPause={() => setPaused(true)}
-                  onResume={() => setPaused(false)}
-                />
+                <SlideCarousel slides={slides} activeIndex={slideIndex} />
               </div>
             ) : (
               <div className="bg-white rounded-2xl border border-[#E2E8F0] p-10 text-center shadow-xs">
@@ -308,7 +301,7 @@ export default function CurrentUpcomingEvents() {
 
 /* ─────────────────────────── slide carousel ─────────────────────────── */
 
-function SlideCarousel({ slides, activeIndex, paused, onPause, onResume }) {
+function SlideCarousel({ slides, activeIndex }) {
   const safeIndex = slides.length ? activeIndex % slides.length : 0;
   const item = slides[safeIndex];
   const catStyle = getCategoryStyle(item.category);
@@ -319,11 +312,7 @@ function SlideCarousel({ slides, activeIndex, paused, onPause, onResume }) {
   const ev = eventDateString(item);
 
   return (
-    <div
-      className="relative rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-sm hover:shadow-lg transition-shadow"
-      onMouseEnter={onPause}
-      onMouseLeave={onResume}
-    >
+    <div className="relative rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-sm hover:shadow-lg transition-shadow">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] min-h-[300px]">
         {/* Poster / Fallback Visual */}
         <div key={`poster-${safeIndex}`} className="relative min-h-[210px] lg:min-h-[300px] overflow-hidden bg-[#0A3563] vcet-fade-in">
@@ -398,11 +387,6 @@ function SlideCarousel({ slides, activeIndex, paused, onPause, onResume }) {
                 {formatPublishDate(item)}
               </span>
             )}
-            {paused && multiple && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                ● Paused
-              </span>
-            )}
           </div>
 
           <Link
@@ -414,6 +398,21 @@ function SlideCarousel({ slides, activeIndex, paused, onPause, onResume }) {
           </Link>
         </div>
       </div>
+
+      {/* Indicator dots (non-interactive — show the current slide) */}
+      {multiple && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
+          {slides.map((slide, i) => (
+            <span
+              key={slide._id || slide.id || i}
+              aria-hidden="true"
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                i === safeIndex ? "w-8 bg-[#0062A8]" : "w-2.5 bg-slate-300"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

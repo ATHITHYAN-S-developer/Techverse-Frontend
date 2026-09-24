@@ -16,12 +16,12 @@ import {
   ArrowRight,
   ChevronDown,
   AlertCircle,
-  ChevronLeft,
-  ChevronRight,
   Flame,
   CalendarDays,
+  UserRound,
 } from "lucide-react";
 import { announcementService } from "../services/announcementService";
+import { departmentService } from "../services/departmentService";
 import { API_BASE_URL } from "../services/api";
 import AnnouncementMarquee from "../components/AnnouncementMarquee";
 
@@ -77,12 +77,28 @@ function isPastEvent(item) {
   return ev < todayString();
 }
 
+/** "current" (today / no date = ongoing) or "upcoming" (event date is after today). */
+function eventStatus(item) {
+  const ev = eventDateString(item);
+  if (!ev || ev === todayString()) return "current";
+  return "upcoming";
+}
+
 function formatDateString(raw) {
   if (!raw) return "";
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return String(raw).toUpperCase();
   return d
     .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    .toUpperCase();
+}
+
+function formatShortDate(raw) {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return String(raw).toUpperCase();
+  return d
+    .toLocaleDateString("en-US", { month: "short", day: "numeric" })
     .toUpperCase();
 }
 
@@ -157,6 +173,8 @@ function getCategoryStyle(cat) {
   return categoryConfig.general;
 }
 
+const AUTO_PLAY_INTERVAL = 3000;
+
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -164,19 +182,44 @@ export default function AnnouncementsPage() {
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [selectedDept, setSelectedDept] = useState("All");
   const [selected, setSelected] = useState(null);
+  const [departments, setDepartments] = useState(["All"]);
 
   const [slideIndex, setSlideIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
 
-  const categories = ["ALL", "PLACEMENT", "HACKATHON", "ACADEMIC", "EXAM", "EVENTS", "GENERAL"];
-  const departments = ["All", "CSE", "AI&DS", "IT", "ECE", "EEE", "MECH", "CIVIL"];
+  // Dynamic categories derived from standard set + any categories present in announcements
+  const categories = useMemo(() => {
+    const base = ["ALL", "PLACEMENT", "HACKATHON", "ACADEMIC", "EXAM", "EVENTS", "GENERAL"];
+    const dynamic = announcements
+      .map((a) => a.category?.toUpperCase()?.trim())
+      .filter(Boolean);
+    return Array.from(new Set([...base, ...dynamic]));
+  }, [announcements]);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
-      const data = await announcementService.getAll();
-      setAnnouncements(data || []);
-      setLoading(false);
+      try {
+        const [data, deptsData] = await Promise.all([
+          announcementService.getAll(),
+          departmentService.getDepartments({ all: true }).catch(() => []),
+        ]);
+        const list = data || [];
+        setAnnouncements(list);
+
+        const dbDepts = (Array.isArray(deptsData) ? deptsData : [])
+          .map((d) => d.code || d.name)
+          .filter(Boolean);
+        const annDepts = list
+          .map((a) => deptLabel(a))
+          .filter((d) => d && d !== "ALL DEPARTMENTS" && d !== "All Departments");
+
+        const uniqueDepts = Array.from(new Set(["All", ...dbDepts, ...annDepts]));
+        setDepartments(uniqueDepts);
+      } catch (err) {
+        console.error("Failed to load announcements data:", err);
+      } finally {
+        setLoading(false);
+      }
     }
     loadData();
   }, []);
@@ -221,8 +264,7 @@ export default function AnnouncementsPage() {
     });
   }, [announcements, searchQuery, selectedCategory, selectedDept]);
 
-  // Sort: pinned first, then newest-first. The newest announcement
-  // automatically becomes the FIRST slide of the Recent Updates carousel.
+  // Sort: pinned first, then newest-first.
   const sortedAnnouncements = useMemo(() => {
     return [...filteredAnnouncements].sort((a, b) => {
       const aPin = a.isPinned || a.pinned ? 1 : 0;
@@ -232,9 +274,40 @@ export default function AnnouncementsPage() {
     });
   }, [filteredAnnouncements]);
 
-  // Top 3 newest go into the slideshow — everything older is a "Past Update".
-  const recentSlides = sortedAnnouncements.slice(0, 3);
-  const pastUpdates = sortedAnnouncements.slice(3);
+  // CURRENT & UPCOMING events → slideshow (pinned first, then closest upcoming event first).
+  const currentAnnouncements = useMemo(() => {
+    return sortedAnnouncements
+      .filter((a) => !isPastEvent(a))
+      .sort((a, b) => {
+        const aPin = a.isPinned || a.pinned ? 1 : 0;
+        const bPin = b.isPinned || b.pinned ? 1 : 0;
+        if (aPin !== bPin) return bPin - aPin;
+        const ea = eventDateString(a);
+        const eb = eventDateString(b);
+        if (ea && eb && ea !== eb) return ea < eb ? -1 : 1;
+        if (ea && !eb) return -1;
+        if (!ea && eb) return 1;
+        return announcementTimestamp(b) - announcementTimestamp(a);
+      });
+  }, [sortedAnnouncements]);
+
+  // PAST events → grid below (most recently ended first).
+  const pastAnnouncements = useMemo(() => {
+    return sortedAnnouncements
+      .filter(isPastEvent)
+      .sort((a, b) => {
+        const ea = eventDateString(a);
+        const eb = eventDateString(b);
+        if (ea && eb && ea !== eb) return ea > eb ? -1 : 1;
+        return announcementTimestamp(b) - announcementTimestamp(a);
+      });
+  }, [sortedAnnouncements]);
+
+  // Dynamic slideshow & grid partition: no hardcoded 3-slide limit.
+  const recentSlides = currentAnnouncements.length > 0 ? currentAnnouncements : sortedAnnouncements.slice(0, 1);
+  const pastUpdates = pastAnnouncements.length > 0
+    ? pastAnnouncements
+    : (sortedAnnouncements.length > 1 ? sortedAnnouncements.slice(1) : []);
 
   // Keep slide index valid when the list shrinks
   useEffect(() => {
@@ -243,18 +316,14 @@ export default function AnnouncementsPage() {
     }
   }, [recentSlides.length, slideIndex]);
 
-  // Autoplay every 6s, paused on hover
+  // Autoplay every 3s — fully automatic (no manual navigation, no hover-pause).
   useEffect(() => {
-    if (recentSlides.length <= 1 || paused) return;
+    if (recentSlides.length <= 1) return;
     const id = setInterval(() => {
       setSlideIndex((prev) => (prev + 1) % recentSlides.length);
-    }, 6000);
+    }, AUTO_PLAY_INTERVAL);
     return () => clearInterval(id);
-  }, [recentSlides.length, paused]);
-
-  const goPrev = () =>
-    setSlideIndex((prev) => (prev - 1 + recentSlides.length) % recentSlides.length);
-  const goNext = () => setSlideIndex((prev) => (prev + 1) % recentSlides.length);
+  }, [recentSlides.length]);
 
   return (
     <div className="min-h-screen bg-[#F7F9FC] text-[#0F172A] font-sans antialiased pb-24 relative overflow-hidden">
@@ -322,7 +391,7 @@ export default function AnnouncementsPage() {
               </span>
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200">
                 <Flame size={12} />
-                {recentSlides.length} recent
+                {currentAnnouncements.length} current & upcoming
               </span>
             </div>
           )}
@@ -407,39 +476,33 @@ export default function AnnouncementsPage() {
           </div>
         ) : (
           <>
-            {/* ---- RECENT UPDATES (CAROUSEL) ---- */}
+            {/* ---- CURRENT & UPCOMING EVENTS (CAROUSEL) ---- */}
             {recentSlides.length > 0 && (
               <section className="space-y-3">
                 <div className="flex items-center gap-2.5">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[11px] font-black uppercase tracking-wider">
                     <Flame size={13} />
-                    Recent Updates
+                    Current & Upcoming Events
                   </span>
                   <span className="text-xs font-medium text-[#64748B]">
-                    Newest circular goes first — hover to pause, use the arrows or dots to navigate
+                    Events change automatically every 3 seconds
                   </span>
                 </div>
 
                 <RecentCarousel
                   slides={recentSlides}
                   activeIndex={slideIndex}
-                  paused={paused}
-                  onSelect={(i) => setSlideIndex(i)}
-                  onPrev={goPrev}
-                  onNext={goNext}
-                  onPause={() => setPaused(true)}
-                  onResume={() => setPaused(false)}
                   onViewMore={(item) => setSelected(item)}
                 />
               </section>
             )}
 
-            {/* ---- PAST UPDATES (GRID) ---- */}
+            {/* ---- PAST UPDATES / ARCHIVE (GRID) ---- */}
             {pastUpdates.length > 0 && (
               <section className="space-y-3 pt-1">
                 <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3">
                   <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                    Past Updates ({pastUpdates.length})
+                    Past Events & Circulars ({pastUpdates.length})
                   </h3>
                   <div className="flex-1 h-px bg-slate-200/70" />
                 </div>
@@ -479,17 +542,7 @@ export default function AnnouncementsPage() {
 /* -------------------------------------------------------------------------- */
 /* RECENT UPDATES CAROUSEL                                                     */
 /* -------------------------------------------------------------------------- */
-function RecentCarousel({
-  slides,
-  activeIndex,
-  paused,
-  onSelect,
-  onPrev,
-  onNext,
-  onPause,
-  onResume,
-  onViewMore,
-}) {
+function RecentCarousel({ slides, activeIndex, onViewMore }) {
   const safeIndex = slides.length ? activeIndex % slides.length : 0;
   const item = slides[safeIndex];
   const catStyle = getCategoryStyle(item.category);
@@ -498,11 +551,7 @@ function RecentCarousel({
   const multiple = slides.length > 1;
 
   return (
-    <div
-      className="relative rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-sm hover:shadow-lg transition-shadow"
-      onMouseEnter={onPause}
-      onMouseLeave={onResume}
-    >
+    <div className="relative rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-sm hover:shadow-lg transition-shadow">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] min-h-[300px]">
         {/* Poster / Fallback Visual */}
         <div className="relative min-h-[210px] lg:min-h-[300px] overflow-hidden bg-[#0A3563]">
@@ -533,10 +582,17 @@ function RecentCarousel({
               <Icon size={12} />
               {catStyle.label}
             </span>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
-              <Flame size={11} />
-              Recent Update
-            </span>
+            {eventStatus(item) === "upcoming" ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0062A8] border border-blue-200/80 text-[10px] font-black uppercase tracking-wider">
+                <CalendarDays size={11} />
+                Upcoming Event
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
+                <Flame size={11} />
+                Current Event
+              </span>
+            )}
             {item.isPinned && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
                 <Pin size={10} /> PINNED
@@ -556,18 +612,19 @@ function RecentCarousel({
             <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">
               <Building2 size={13} /> {deptLabel(item)}
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <CalendarDays size={13} className="text-[#0062A8]" />
-              {formatDate(item)}
-            </span>
-            {item.deadline && (
-              <span className="inline-flex items-center gap-1 text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">
-                Deadline: {item.deadline}
+            {issuerName(item) && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">
+                <UserRound size={13} className="text-[#0062A8]" /> Issued by {issuerName(item)}
               </span>
             )}
-            {paused && multiple && (
-              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                ● Paused
+            {eventDateString(item) ? (
+              <span className="inline-flex items-center gap-1.5 font-bold text-[#0062A8] bg-[#E8F3FB] px-2 py-0.5 rounded">
+                <CalendarDays size={13} /> Event: {formatDateString(eventDateString(item))}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                <CalendarDays size={13} className="text-[#0062A8]" />
+                {formatDate(item)}
               </span>
             )}
           </div>
@@ -582,38 +639,15 @@ function RecentCarousel({
         </div>
       </div>
 
-      {/* Arrows */}
-      {multiple && (
-        <>
-          <button
-            onClick={onPrev}
-            title="Previous update"
-            aria-label="Previous update"
-            className="absolute top-4 right-16 w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-slate-200 text-slate-700 hover:text-[#0062A8] shadow-md flex items-center justify-center transition-all cursor-pointer"
-          >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            onClick={onNext}
-            title="Next update"
-            aria-label="Next update"
-            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/90 hover:bg-white border border-slate-200 text-slate-700 hover:text-[#0062A8] shadow-md flex items-center justify-center transition-all cursor-pointer"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </>
-      )}
-
-      {/* Dots */}
+      {/* Indicator dots (non-interactive — show the current slide) */}
       {multiple && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
           {slides.map((slide, i) => (
-            <button
+            <span
               key={slide._id || slide.id || i}
-              onClick={() => onSelect(i)}
-              aria-label={`Go to update ${i + 1}`}
-              className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                i === safeIndex ? "w-8 bg-[#0062A8]" : "w-2.5 bg-slate-300 hover:bg-[#0062A8]/50"
+              aria-hidden="true"
+              className={`h-2.5 rounded-full transition-all duration-300 ${
+                i === safeIndex ? "w-8 bg-[#0062A8]" : "w-2.5 bg-slate-300"
               }`}
             />
           ))}
@@ -669,6 +703,12 @@ function PastUpdateCard({ item, onClick }) {
             Due: {item.deadline}
           </span>
         )}
+
+        {eventDateString(item) && (
+          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
+            <Calendar size={9} /> Ended {formatShortDate(eventDateString(item))}
+          </span>
+        )}
       </div>
 
       {/* Body */}
@@ -690,7 +730,7 @@ function PastUpdateCard({ item, onClick }) {
 
         <div className="flex items-center justify-between pt-3 border-t border-slate-100">
           <span className="text-[10px] font-semibold text-slate-400 truncate max-w-[55%]">
-            {item.authorName || item.author || "VCET Admin"}
+            {issuerName(item) || "VCET Admin"}
           </span>
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0062A8]">
             View More
@@ -759,11 +799,6 @@ function AnnouncementModal({ item, onClose }) {
           <span className="inline-flex items-center gap-1">
             <Calendar size={13} /> {dateStr}
           </span>
-          {item.deadline && (
-            <span className="inline-flex items-center gap-1 text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">
-              Deadline: {item.deadline}
-            </span>
-          )}
           {eventDateString(item) && (
             <span className="inline-flex items-center gap-1 text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">
               {isPastEvent(item) ? "Ended:" : "Ends:"} {formatDateString(eventDateString(item))}
