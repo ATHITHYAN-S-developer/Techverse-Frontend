@@ -3,7 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { ShieldCheck, Search, CheckCircle2, XCircle, Award, Calendar, User, BookOpen, ArrowRight } from "lucide-react";
 import { certificateService } from "../services/certificateService";
 import { downloadCertificatePdf } from "../services/certificatePdfGenerator";
-import AnnouncementMarquee from "../components/AnnouncementMarquee";
+
 import vcetLogoImg from "../assets/vcet-logo.png";
 
 export default function VerifyCertificatePage() {
@@ -47,9 +47,6 @@ export default function VerifyCertificatePage() {
           Validate the authenticity of course completion certificates and technical honors awarded by Velalar College of Engineering and Technology.
         </p>
       </div>
-
-      {/* VCET Watermark Marquee below the Header */}
-      <AnnouncementMarquee />
 
       {/* 2. Search Verification Box */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-md space-y-4">

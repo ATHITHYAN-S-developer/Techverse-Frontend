@@ -25,7 +25,7 @@ import GlobalSearchModal from "../components/GlobalSearchModal";
 import VisitorCounter from "../components/VisitorCounter";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
-import AnnouncementMarquee from "../components/AnnouncementMarquee";
+
 import VcetBanner from "../components/VcetBanner";
 
 const STUDENT_NAV = [
@@ -151,9 +151,8 @@ export default function StudentLayout() {
           </div>
         </div>
       </header>
-      {/* VCET Banner + Marquee */}
+      {/* VCET Banner */}
       <VcetBanner />
-      <AnnouncementMarquee />
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar Navigation */}
         <aside

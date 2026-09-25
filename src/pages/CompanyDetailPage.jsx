@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Target, ArrowLeft, Clock, Briefcase, ArrowRight } from "lucide-react";
 import { trainingService } from "../services/trainingService";
-import AnnouncementMarquee from "../components/AnnouncementMarquee";
+
 
 export default function CompanyDetailPage() {
   const { company } = useParams();
@@ -66,9 +66,6 @@ export default function CompanyDetailPage() {
           <div className="text-lg font-black">{companyData.packageRange || companyData.salary}</div>
         </div>
       </div>
-
-      {/* VCET Watermark Marquee below the Header */}
-      <AnnouncementMarquee />
 
       {/* Overview */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm space-y-3">
