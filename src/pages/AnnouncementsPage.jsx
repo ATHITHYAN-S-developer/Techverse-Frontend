@@ -779,18 +779,16 @@ function AnnouncementModal({ item, onClose }) {
         </div>
 
         {/* Issuer info */}
-        {issuerName(item) && (
-          <div className="text-xs text-[#64748B] pt-2 space-y-1">
-            <div>
-              Issued by: <strong className="text-[#0F172A]">{issuerName(item)}</strong>
-            </div>
-            {issuerDepartment(item) && (
-              <div>
-                Department: <strong className="text-[#0F172A]">{issuerDepartment(item)}</strong>
-              </div>
-            )}
+        <div className="text-xs text-[#64748B] pt-2 space-y-1">
+          <div>
+            Issued by: <strong className="text-[#0F172A]">{issuerName(item) || "Academic Office"}</strong>
           </div>
-        )}
+          {issuerDepartment(item) && (
+            <div>
+              Department: <strong className="text-[#0F172A]">{issuerDepartment(item)}</strong>
+            </div>
+          )}
+        </div>
 
         {/* Action Buttons */}
         <div className="flex gap-3 pt-4 border-t border-slate-100">
