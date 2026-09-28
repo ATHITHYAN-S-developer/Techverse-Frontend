@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import {
   Code2,
@@ -32,7 +32,7 @@ import { useToast } from "../context/ToastContext";
 import { useExamMode } from "../hooks/useExamMode";
 import ExamRulesModal from "../components/exam/ExamRulesModal";
 import ViolationWarningModal from "../components/exam/ViolationWarningModal";
-import CodeEditor from "../components/exam/CodeEditor";
+const CodeEditor = lazy(() => import("../components/exam/CodeEditor"));
 
 const SUPPORTED_LANGUAGES = [
   { id: "python", name: "Python 3", extension: ".py" },
@@ -559,12 +559,24 @@ export default function CodingPage() {
               </div>
 
               <div className="h-[420px]">
-                <CodeEditor
-                  value={code}
-                  onChange={setCode}
-                  language={language}
-                  placeholder="Write your algorithmic solution here..."
-                />
+                <Suspense
+                  fallback={
+                    <textarea
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      spellCheck="false"
+                      className="w-full h-full p-4 bg-transparent text-slate-100 font-mono text-xs sm:text-sm leading-relaxed focus:outline-none resize-none selection:bg-blue-600/40"
+                      placeholder="Loading editor..."
+                    />
+                  }
+                >
+                  <CodeEditor
+                    value={code}
+                    onChange={setCode}
+                    language={language}
+                    placeholder="Write your algorithmic solution here..."
+                  />
+                </Suspense>
               </div>
             </div>
 
