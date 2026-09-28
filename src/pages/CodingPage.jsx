@@ -38,7 +38,7 @@ const SUPPORTED_LANGUAGES = [
   { id: "javascript", name: "JavaScript (Node.js)", extension: ".js" },
   { id: "cpp", name: "C++ (GCC)", extension: ".cpp" },
   { id: "java", name: "Java (OpenJDK)", extension: ".java" },
-  { id: "c", name: "C (Clang)", extension: ".c" },
+  { id: "c", name: "C (GCC)", extension: ".c" },
 ];
 
 export default function CodingPage() {
@@ -169,7 +169,9 @@ export default function CodingPage() {
           incrementStreak();
         } else {
           setConsoleOutput(
-            `❌ ${result.status} (${result.passedCases || 0}/${result.totalCases} cases passed)\n\nExecution Time: ${result.executionTime}s\nMemory: ${result.memory}MB`
+            `❌ ${result.status} (${result.passedCases || 0}/${result.totalCases} cases passed)\n\nExecution Time: ${result.executionTime}s\nMemory: ${result.memory}MB${
+              result.compileErrorMessage ? `\n\nCompiler output:\n${result.compileErrorMessage}` : ""
+            }`
           );
           showError(`Solution status: ${result.status}`);
         }
@@ -223,8 +225,11 @@ export default function CodingPage() {
         );
         showSuccess("Public test cases passed!");
       } else {
+        const compilerDetail = res.compileErrorMessage
+          ? `\n\nCompiler output:\n${res.compileErrorMessage}`
+          : `\n\nError/Details:\n${res.testResults?.[0]?.errorMessage || "Output did not match expected output."}`;
         setConsoleOutput(
-          `>>> [Public Test Suite: ${res.status}]\nPassed ${res.passed || res.passedCases || 0}/${res.total || res.totalCases || 2} public cases.\n\nError/Details:\n${res.testResults?.[0]?.errorMessage || "Output did not match expected output."}`
+          `>>> [Public Test Suite: ${res.status}]\nPassed ${res.passed || res.passedCases || 0}/${res.total || res.totalCases || 2} public cases.${compilerDetail}`
         );
         showInfo("Some public test cases failed. Check details in Test Cases tab.");
       }

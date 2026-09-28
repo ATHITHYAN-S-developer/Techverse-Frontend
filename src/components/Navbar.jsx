@@ -29,8 +29,8 @@ import { useAuth } from "../context/AuthContext";
 const NAV_LINKS = [
   { name: "Home", href: "/", icon: Home },
   { name: "Departments", href: "/departments", icon: Layers },
-  { name: "Courses", href: "/courses", icon: BookOpen },
-  { name: "PrepZone", href: "/prepzone", icon: Target },
+  { name: "PrepZone", href: "/courses", icon: BookOpen },
+  { name: "Placement", href: "/prepzone", icon: Target },
   { name: "Technology", href: "/technology", icon: Globe },
   { name: "Tech Pulse", href: "/updates", icon: Zap },
   {

@@ -19,6 +19,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import HomePage from "./pages/HomePage";
 import DepartmentResourcesPage from "./pages/DepartmentResourcesPage";
 import TrainingPage from "./pages/TrainingPage";
+import PlacementEventsPage from "./pages/PlacementEventsPage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLearningPage from "./pages/CourseLearningPage";
@@ -97,9 +98,9 @@ export default function App() {
               <Route path="/technology" element={<TechnologyPage />} />
               <Route path="/departments" element={<DepartmentResourcesPage />} />
               <Route path="/departments/:departmentId" element={<DepartmentResourcesPage />} />
-              <Route path="/prepzone" element={<TrainingPage />} />
+              <Route path="/prepzone" element={<PlacementEventsPage />} />
               <Route path="/training" element={<TrainingPage />} />
-              <Route path="/placement" element={<Navigate to="/prepzone" replace />} />
+              <Route path="/placement" element={<PlacementEventsPage />} />
               <Route path="/companies/:company" element={<CompanyDetailPage />} />
               <Route path="/updates" element={<UpdatesPage />} />
               <Route path="/youtube" element={<YouTubePage />} />

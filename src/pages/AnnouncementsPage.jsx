@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  Search,
   Building2,
   Calendar,
   ExternalLink,
@@ -13,14 +12,12 @@ import {
   Megaphone,
   Pin,
   ArrowRight,
-  ChevronDown,
   AlertCircle,
   Flame,
   CalendarDays,
   UserRound,
 } from "lucide-react";
 import { announcementService } from "../services/announcementService";
-import { departmentService } from "../services/departmentService";
 import { API_BASE_URL } from "../services/api";
 
 /**
@@ -37,23 +34,25 @@ function resolvePoster(item) {
   return `${origin}${raw.startsWith("/") ? raw : `/uploads/announcements/${raw}`}`;
 }
 
-/** Comparable timestamp so announcements sort newest-first (and pinned first). */
+/** Comparable timestamp for upload-order sorting. Never rendered to the user. */
 function announcementTimestamp(item) {
-  const raw = item.publishDate || item.createdAt || item.date;
+  // createdAt first: the database stamps it at insert time, so a brand-new
+  // upload always outranks older posts regardless of its publish date.
+  const raw = item.createdAt || item.publishDate || item.date;
   if (!raw) return 0;
   const t = new Date(raw).getTime();
   return Number.isNaN(t) ? 0 : t;
 }
 
-/** Humanised date label, e.g. "SEP 10, 2026". */
-function formatDate(item) {
-  const raw = item.publishDate || item.createdAt || item.date;
-  if (!raw) return "RECENT";
-  const d = new Date(raw);
-  if (Number.isNaN(d.getTime())) return "RECENT";
-  return d
-    .toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
-    .toUpperCase();
+/**
+ * Newest-upload-first comparator. A batch insert stamps every document with the
+ * same createdAt millisecond, so _id (which increases with insertion order)
+ * breaks the tie and keeps the order stable across re-seeds.
+ */
+function compareUploadOrder(a, b) {
+  const delta = announcementTimestamp(b) - announcementTimestamp(a);
+  if (delta !== 0) return delta;
+  return String(b._id || "").localeCompare(String(a._id || ""));
 }
 
 function todayString() {
@@ -69,16 +68,17 @@ function eventDateString(item) {
   return raw ? String(raw).slice(0, 10) : "";
 }
 
-function isPastEvent(item) {
+/** True once an event's date has passed — such posts are retired from the page. */
+function isPastEvent(item, today = todayString()) {
   const ev = eventDateString(item);
   if (!ev) return false; // no date → ongoing
-  return ev < todayString();
+  return ev < today;
 }
 
 /** "current" (today / no date = ongoing) or "upcoming" (event date is after today). */
-function eventStatus(item) {
+function eventStatus(item, today = todayString()) {
   const ev = eventDateString(item);
-  if (!ev || ev === todayString()) return "current";
+  if (!ev || ev === today) return "current";
   return "upcoming";
 }
 
@@ -173,46 +173,48 @@ function getCategoryStyle(cat) {
 
 const AUTO_PLAY_INTERVAL = 3000;
 
+/** How many of the most recently uploaded events run in the fullscreen hero; the rest list below. */
+const HERO_SLIDE_COUNT = 5;
+
+/**
+ * Announcement categories that belong to the Placement page. Placement
+ * circulars are listed there only and must never surface here.
+ */
+function isPlacementCategory(cat) {
+  return String(cat || "").toLowerCase().includes("placement");
+}
+
+/**
+ * True when an announcement is withheld from this page. Driven by category
+ * rather than by title, so a newly published placement drive is routed away
+ * automatically instead of needing to be listed here by hand.
+ */
+function isHiddenAnnouncement(item) {
+  return isPlacementCategory(item?.category);
+}
+
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("ALL");
-  const [selectedDept, setSelectedDept] = useState("All");
   const [selected, setSelected] = useState(null);
-  const [departments, setDepartments] = useState(["All"]);
 
   const [slideIndex, setSlideIndex] = useState(0);
 
-  // Dynamic categories derived from standard set + any categories present in announcements
-  const categories = useMemo(() => {
-    const base = ["ALL", "PLACEMENT", "HACKATHON", "ACADEMIC", "EXAM", "EVENTS", "GENERAL"];
-    const dynamic = announcements
-      .map((a) => a.category?.toUpperCase()?.trim())
-      .filter(Boolean);
-    return Array.from(new Set([...base, ...dynamic]));
-  }, [announcements]);
+  // Today's date, re-read every minute. Drives auto-retirement so a post drops
+  // off the page the moment its event date passes, without a manual reload.
+  const [today, setToday] = useState(todayString);
+
+  useEffect(() => {
+    const id = setInterval(() => setToday(todayString()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     async function loadData() {
       setLoading(true);
       try {
-        const [data, deptsData] = await Promise.all([
-          announcementService.getAll(),
-          departmentService.getDepartments({ all: true }).catch(() => []),
-        ]);
-        const list = data || [];
-        setAnnouncements(list);
-
-        const dbDepts = (Array.isArray(deptsData) ? deptsData : [])
-          .map((d) => d.code || d.name)
-          .filter(Boolean);
-        const annDepts = list
-          .map((a) => deptLabel(a))
-          .filter((d) => d && d !== "ALL DEPARTMENTS" && d !== "All Departments");
-
-        const uniqueDepts = Array.from(new Set(["All", ...dbDepts, ...annDepts]));
-        setDepartments(uniqueDepts);
+        const data = await announcementService.getAll();
+        setAnnouncements((data || []).filter((a) => !isHiddenAnnouncement(a)));
       } catch (err) {
         console.error("Failed to load announcements data:", err);
       } finally {
@@ -222,90 +224,52 @@ export default function AnnouncementsPage() {
     loadData();
   }, []);
 
-  // Body scroll lock on modal
+  // Freeze the page behind the modal. Without this, scrolling past the end of
+  // the dialog chains through and scrolls the main page underneath. The
+  // scrollbar width is replaced with padding so the layout does not jump when
+  // the scrollbar disappears.
   useEffect(() => {
-    if (selected) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
+    if (!selected) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const previousPadding = document.body.style.paddingRight;
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+    document.body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
     }
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPadding;
     };
   }, [selected]);
 
-  // Filtering announcements
-  const filteredAnnouncements = useMemo(() => {
-    return announcements.filter((item) => {
-      const title = item.title || "";
-      const desc = item.description || item.content || "";
-      const author = issuerName(item);
-      const cat = item.category || "General";
-      const deptName = deptLabel(item);
+  // Auto-retire expired posts — anything whose event date has already passed is
+  // removed from this page entirely rather than lingering in the list below.
+  const liveAnnouncements = useMemo(
+    () => announcements.filter((a) => !isPastEvent(a, today)),
+    [announcements, today]
+  );
 
-      const matchSearch =
-        title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        desc.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        author.toLowerCase().includes(searchQuery.toLowerCase());
+  // Upload order: most recently posted first, so the newest uploads lead both
+  // the slideshow and the list below it.
+  const orderedByUpload = useMemo(() => {
+    return [...liveAnnouncements].sort(compareUploadOrder);
+  }, [liveAnnouncements]);
 
-      const matchCategory =
-        selectedCategory === "ALL" ||
-        cat.toUpperCase().includes(selectedCategory) ||
-        (selectedCategory === "EVENTS" && cat.toUpperCase().includes("EVENT"));
+  // Fullscreen slideshow: the most recently uploaded events.
+  const recentSlides = useMemo(
+    () => orderedByUpload.slice(0, HERO_SLIDE_COUNT),
+    [orderedByUpload]
+  );
 
-      const matchDept =
-        selectedDept === "All" ||
-        deptName.toLowerCase().includes(selectedDept.toLowerCase()) ||
-        deptName === "All Departments";
-
-      return matchSearch && matchCategory && matchDept;
-    });
-  }, [announcements, searchQuery, selectedCategory, selectedDept]);
-
-  // Sort: pinned first, then newest-first.
-  const sortedAnnouncements = useMemo(() => {
-    return [...filteredAnnouncements].sort((a, b) => {
-      const aPin = a.isPinned || a.pinned ? 1 : 0;
-      const bPin = b.isPinned || b.pinned ? 1 : 0;
-      if (aPin !== bPin) return bPin - aPin;
-      return announcementTimestamp(b) - announcementTimestamp(a);
-    });
-  }, [filteredAnnouncements]);
-
-  // CURRENT & UPCOMING events → slideshow (pinned first, then closest upcoming event first).
-  const currentAnnouncements = useMemo(() => {
-    return sortedAnnouncements
-      .filter((a) => !isPastEvent(a))
-      .sort((a, b) => {
-        const aPin = a.isPinned || a.pinned ? 1 : 0;
-        const bPin = b.isPinned || b.pinned ? 1 : 0;
-        if (aPin !== bPin) return bPin - aPin;
-        const ea = eventDateString(a);
-        const eb = eventDateString(b);
-        if (ea && eb && ea !== eb) return ea < eb ? -1 : 1;
-        if (ea && !eb) return -1;
-        if (!ea && eb) return 1;
-        return announcementTimestamp(b) - announcementTimestamp(a);
-      });
-  }, [sortedAnnouncements]);
-
-  // PAST events → grid below (most recently ended first).
-  const pastAnnouncements = useMemo(() => {
-    return sortedAnnouncements
-      .filter(isPastEvent)
-      .sort((a, b) => {
-        const ea = eventDateString(a);
-        const eb = eventDateString(b);
-        if (ea && eb && ea !== eb) return ea > eb ? -1 : 1;
-        return announcementTimestamp(b) - announcementTimestamp(a);
-      });
-  }, [sortedAnnouncements]);
-
-  // Dynamic slideshow & grid partition: no hardcoded 3-slide limit.
-  const recentSlides = currentAnnouncements.length > 0 ? currentAnnouncements : sortedAnnouncements.slice(0, 1);
-  const pastUpdates = pastAnnouncements.length > 0
-    ? pastAnnouncements
-    : (sortedAnnouncements.length > 1 ? sortedAnnouncements.slice(1) : []);
+  // Everything beyond that is listed under the hero, reached by scrolling.
+  const pastUpdates = useMemo(
+    () => orderedByUpload.slice(HERO_SLIDE_COUNT),
+    [orderedByUpload]
+  );
 
   // Keep slide index valid when the list shrinks
   useEffect(() => {
@@ -324,169 +288,75 @@ export default function AnnouncementsPage() {
   }, [recentSlides.length]);
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] text-[#0F172A] font-sans antialiased pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-[#F7F9FC] text-[#0F172A] font-sans antialiased relative overflow-hidden">
       {/* Dynamic CSS Styling for Watermark & Micro-interactions */}
       <style>{`
         .hero-gradient {
           background: linear-gradient(135deg, #071E3D 0%, #0A3563 50%, #0062A8 100%);
         }
-        .vcet-slide-in {
-          animation: vcetSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+        /* Fullscreen hero: staggered copy entrance + slow poster push-in. */
+        .vcet-hero-copy {
+          animation: vcetHeroCopy 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
-        @keyframes vcetSlideIn {
-          from { opacity: 0; transform: translateX(14px); }
+        @keyframes vcetHeroCopy {
+          from { opacity: 0; transform: translateY(34px); }
           to   { opacity: 1; transform: none; }
+        }
+        .vcet-hero-zoom {
+          animation: vcetHeroZoom 9s ease-out both;
+        }
+        @keyframes vcetHeroZoom {
+          from { transform: scale(1.03); }
+          to   { transform: scale(1.15); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .vcet-hero-copy, .vcet-hero-zoom { animation: none; }
         }
       `}</style>
 
-      {/* Announcements Directory */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-10 relative z-20">
-        <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[#0F172A] tracking-tight">
-              Explore Announcements
-            </h2>
-            <p className="text-sm text-[#64748B] mt-1 font-medium">
-              Discover the latest updates from across the institution.
-            </p>
-          </div>
-          {!loading && announcements.length > 0 && (
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200">
-                <Megaphone size={12} className="text-[#0062A8]" />
-                {announcements.length} total updates
-              </span>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-600 bg-rose-50 px-3 py-1.5 rounded-full border border-rose-200">
-                <Flame size={12} />
-                {currentAnnouncements.length} current & upcoming
-              </span>
-            </div>
-          )}
+      {loading ? (
+        <div className="h-[calc(100vh-64px)] supports-[height:100svh]:h-[calc(100svh-64px)] flex flex-col items-center justify-center gap-3">
+          <div className="w-8 h-8 border-3 border-[#0062A8] border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-medium text-[#64748B]">Fetching VCET announcements...</p>
         </div>
-
-        {/* Search + Department Filter Box */}
-        <div className="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm p-4 sm:p-5 space-y-4">
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative flex-1 w-full">
-              <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search announcements, events, placements..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#E2E8F0] text-sm text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0062A8]/20 focus:border-[#0062A8] bg-[#F7F9FC] focus:bg-white transition-all font-medium"
-              />
-            </div>
-
-            <div className="w-full sm:w-auto shrink-0 relative">
-              <select
-                value={selectedDept}
-                onChange={(e) => setSelectedDept(e.target.value)}
-                className="w-full sm:w-auto appearance-none pl-4 pr-10 py-2.5 rounded-xl border border-[#E2E8F0] text-sm font-semibold text-[#0F172A] bg-[#F7F9FC] hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#0062A8]/20 cursor-pointer transition-all"
-              >
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept === "All" ? "Department: All" : `Dept: ${dept}`}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={16} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#64748B] pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Category Navigation Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-slate-100 no-scrollbar">
-            {categories.map((cat) => {
-              const active = selectedCategory === cat;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold tracking-wide uppercase transition-all whitespace-nowrap cursor-pointer border ${
-                    active
-                      ? "bg-[#0062A8] text-white border-[#0062A8] shadow-xs"
-                      : "bg-[#F7F9FC] text-[#64748B] border-[#E2E8F0] hover:bg-slate-100 hover:text-[#0F172A]"
-                  }`}
-                >
-                  {cat}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 3. RECENT UPDATES CAROUSEL + PAST UPDATES GRID */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-10 space-y-10">
-        {loading ? (
-          <div className="py-20 text-center space-y-3">
-            <div className="w-8 h-8 border-3 border-[#0062A8] border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-sm font-medium text-[#64748B]">Fetching VCET announcements...</p>
-          </div>
-        ) : filteredAnnouncements.length === 0 ? (
+      ) : liveAnnouncements.length === 0 ? (
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pb-24">
           <div className="bg-white rounded-2xl border border-[#E2E8F0] p-12 text-center shadow-xs">
             <AlertCircle size={40} className="text-amber-500 mx-auto mb-3" />
-            <h3 className="text-lg font-bold text-[#0F172A]">No matching announcements</h3>
+            <h3 className="text-lg font-bold text-[#0F172A]">No announcements yet</h3>
             <p className="text-sm text-[#64748B] mt-1">
-              Try adjusting your search criteria or resetting filters.
+              Check back soon for the latest updates from across the institution.
             </p>
-            <button
-              onClick={() => {
-                setSearchQuery("");
-                setSelectedCategory("ALL");
-                setSelectedDept("All");
-              }}
-              className="mt-4 px-4 py-2 rounded-xl bg-[#0062A8] text-white text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-[#004f87] transition-colors"
-            >
-              Reset Filters
-            </button>
           </div>
-        ) : (
-          <>
-            {/* ---- CURRENT & UPCOMING EVENTS (CAROUSEL) ---- */}
-            {recentSlides.length > 0 && (
-              <section className="space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200 text-[11px] font-black uppercase tracking-wider">
-                    <Flame size={13} />
-                    Current & Upcoming Events
-                  </span>
-                  <span className="text-xs font-medium text-[#64748B]">
-                    Events change automatically every 3 seconds
-                  </span>
-                </div>
+        </div>
+      ) : (
+        <>
+          {/* ---- FULLSCREEN CURRENT & UPCOMING EVENTS (EDGE-TO-EDGE HERO) ---- */}
+          {recentSlides.length > 0 && (
+            <FullscreenHero
+              slides={recentSlides}
+              activeIndex={slideIndex}
+              totalCount={liveAnnouncements.length}
+              onViewMore={(item) => setSelected(item)}
+            />
+          )}
 
-                <RecentCarousel
-                  slides={recentSlides}
-                  activeIndex={slideIndex}
-                  onViewMore={(item) => setSelected(item)}
-                />
-              </section>
-            )}
-
-            {/* ---- PAST UPDATES / ARCHIVE (GRID) ---- */}
-            {pastUpdates.length > 0 && (
-              <section className="space-y-3 pt-1">
-                <div className="flex items-center gap-2 border-b border-slate-200/80 pb-3">
-                  <h3 className="text-xs font-bold text-[#64748B] uppercase tracking-wider">
-                    Past Events & Circulars ({pastUpdates.length})
-                  </h3>
-                  <div className="flex-1 h-px bg-slate-200/70" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {pastUpdates.map((ann) => (
-                    <PastUpdateCard
-                      key={ann._id || ann.id}
-                      item={ann}
-                      onClick={() => setSelected(ann)}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
-          </>
-        )}
-      </main>
+          {/* ---- PAST EVENTS / ARCHIVE GRID ---- */}
+          {pastUpdates.length > 0 && (
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 pb-24">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {pastUpdates.map((ann) => (
+                  <PastUpdateCard
+                    key={ann._id || ann.id}
+                    item={ann}
+                    onClick={() => setSelected(ann)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* 4. ANNOUNCEMENT DETAILS MODAL */}
       {selected && (
@@ -507,120 +377,162 @@ export default function AnnouncementsPage() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* RECENT UPDATES CAROUSEL                                                     */
+/* FULLSCREEN HERO — Current & Upcoming Events                                  */
+/* Edge-to-edge, viewport-filling slideshow: poster as full-bleed background   */
+/* with the copy overlaid on a legibility scrim. Slides cross-fade.            */
 /* -------------------------------------------------------------------------- */
-function RecentCarousel({ slides, activeIndex, onViewMore }) {
+function FullscreenHero({ slides, activeIndex, totalCount, onViewMore }) {
   const safeIndex = slides.length ? activeIndex % slides.length : 0;
-  const item = slides[safeIndex];
-  const catStyle = getCategoryStyle(item.category);
-  const Icon = catStyle.icon;
-  const poster = resolvePoster(item);
   const multiple = slides.length > 1;
 
   return (
-    <div className="relative rounded-3xl overflow-hidden bg-white border border-[#E2E8F0] shadow-sm hover:shadow-lg transition-shadow">
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] min-h-[300px]">
-        {/* Poster / Fallback Visual */}
-        <div className="relative min-h-[210px] lg:min-h-[300px] overflow-hidden bg-[#0A3563]">
-          {poster ? (
-            <img
-              src={poster}
-              alt={`${item.title} poster`}
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          ) : (
-            <div className="absolute inset-0 hero-gradient flex items-center justify-center">
-              <Icon size={72} strokeWidth={1.25} className="text-white/25" />
-              <span className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] font-bold uppercase tracking-widest text-blue-100">
-                {catStyle.label}
-              </span>
-            </div>
-          )}
-          {/* Soft gradient into text pane */}
-          <div className="absolute inset-0 lg:bg-gradient-to-r lg:from-transparent lg:to-black/15 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-        </div>
+    <section
+      aria-roledescription="carousel"
+      aria-label="Current and upcoming events"
+      className="relative w-full h-[calc(100vh-64px)] supports-[height:100svh]:h-[calc(100svh-64px)] overflow-hidden bg-[#071E3D]"
+    >
+      {slides.map((item, i) => (
+        <HeroSlide
+          key={item._id || item.id || i}
+          item={item}
+          active={i === safeIndex}
+          onViewMore={onViewMore}
+        />
+      ))}
 
-        {/* Text Pane */}
-        <div className="p-6 sm:p-8 lg:p-10 flex flex-col justify-center">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+      {/* Total events on record — current, upcoming and past combined */}
+      <div className="absolute top-6 left-4 sm:left-6 lg:left-8 z-20 select-none">
+        <span className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-white/90 bg-black/30 backdrop-blur-md border border-white/20 rounded-full px-3.5 py-1.5">
+          <Megaphone size={13} />
+          {totalCount} {totalCount === 1 ? "event" : "events"} total
+        </span>
+      </div>
+
+      {/* Slide dots (decorative — the hero autoplays) */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 pointer-events-none select-none">
+        {slides.map((slide, i) => (
+          <span
+            key={slide._id || slide.id || i}
+            aria-hidden="true"
+            className={`h-1.5 rounded-full transition-all duration-500 ${
+              i === safeIndex ? "w-10 bg-white" : "w-4 bg-white/40"
+            }`}
+          />
+        ))}
+        {multiple && (
+          <span className="ml-2 text-[10px] font-bold tracking-widest text-white/70 tabular-nums">
+            {String(safeIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* HERO SLIDE                                                                    */
+/* -------------------------------------------------------------------------- */
+function HeroSlide({ item, active, onViewMore }) {
+  const catStyle = getCategoryStyle(item.category);
+  const Icon = catStyle.icon;
+  const poster = resolvePoster(item);
+  const upcoming = eventStatus(item) === "upcoming";
+
+  return (
+    <article
+      aria-hidden={!active}
+      className={`absolute inset-0 transition-opacity duration-[1200ms] ease-out ${
+        active ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+      }`}
+    >
+      {/* Full-bleed background */}
+      {poster ? (
+        <img
+          src={poster}
+          alt=""
+          aria-hidden="true"
+          className={`absolute inset-0 h-full w-full object-cover ${active ? "vcet-hero-zoom" : ""}`}
+        />
+      ) : (
+        <div className="absolute inset-0 hero-gradient flex items-center justify-center">
+          <Icon size={220} strokeWidth={0.5} className="text-white/[0.07]" />
+        </div>
+      )}
+
+      {/* Legibility scrims — vertical for the copy, horizontal for the left rail */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/15 to-transparent" />
+
+      {/* Overlaid copy */}
+      <div className="absolute inset-0 flex items-end">
+        <div
+          className={`w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-24 ${
+            active ? "vcet-hero-copy" : ""
+          }`}
+        >
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500 text-white text-[11px] font-black uppercase tracking-wider">
+              <Flame size={13} />
+              Current &amp; Upcoming Events
+            </span>
             <span
-              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider border ${catStyle.badgeBg}`}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider border backdrop-blur-sm ${catStyle.badgeBg}`}
             >
               <Icon size={12} />
               {catStyle.label}
             </span>
-            {eventStatus(item) === "upcoming" ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0062A8] border border-blue-200/80 text-[10px] font-black uppercase tracking-wider">
-                <CalendarDays size={11} />
-                Upcoming Event
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-wider">
-                <Flame size={11} />
-                Current Event
-              </span>
-            )}
+            <span
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider backdrop-blur-sm border ${
+                upcoming
+                  ? "bg-blue-500/25 text-white border-blue-300/40"
+                  : "bg-rose-500/25 text-white border-rose-300/40"
+              }`}
+            >
+              {upcoming ? <CalendarDays size={11} /> : <Flame size={11} />}
+              {upcoming ? "Upcoming Event" : "Current Event"}
+            </span>
             {item.isPinned && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-amber-950 border border-amber-300">
                 <Pin size={10} /> PINNED
               </span>
             )}
           </div>
 
-          <h3 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[#0F172A] leading-tight mb-3 line-clamp-2">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-extrabold text-white leading-[1.06] tracking-tight max-w-4xl drop-shadow-[0_2px_18px_rgba(0,0,0,0.55)]">
             {item.title}
-          </h3>
+          </h2>
 
-          <p className="text-sm text-[#64748B] leading-relaxed line-clamp-3 mb-5">
+          <p className="mt-5 text-sm sm:text-base text-white/80 leading-relaxed max-w-2xl line-clamp-2 sm:line-clamp-3">
             {item.description || item.content || "No further details available."}
           </p>
 
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#64748B] mb-5">
-            <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">
+          <div className="mt-6 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/80">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
               <Building2 size={13} /> {deptLabel(item)}
             </span>
             {issuerName(item) && (
-              <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">
-                <UserRound size={13} className="text-[#0062A8]" /> Issued by {issuerName(item)}
+              <span className="inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <UserRound size={13} /> Issued by {issuerName(item)}
               </span>
             )}
-            {eventDateString(item) ? (
-              <span className="inline-flex items-center gap-1.5 font-bold text-[#0062A8] bg-[#E8F3FB] px-2 py-0.5 rounded">
-                <CalendarDays size={13} /> Event: {formatDateString(eventDateString(item))}
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5">
-                <CalendarDays size={13} className="text-[#0062A8]" />
-                {formatDate(item)}
+            {eventDateString(item) && (
+              <span className="inline-flex items-center gap-1.5 font-bold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <CalendarDays size={13} />
+                Event: {formatDateString(eventDateString(item))}
               </span>
             )}
           </div>
 
           <button
             onClick={() => onViewMore(item)}
-            className="inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs shadow-md transition-all cursor-pointer group/vm"
+            className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#0F172A] hover:bg-white/90 font-bold text-xs sm:text-sm shadow-lg transition-all cursor-pointer group/vm"
           >
             <span>View More</span>
-            <ArrowRight size={14} className="group-hover/vm:translate-x-0.5 transition-transform" />
+            <ArrowRight size={16} className="transition-transform group-hover/vm:translate-x-1" />
           </button>
         </div>
       </div>
-
-      {/* Indicator dots (non-interactive — show the current slide) */}
-      {multiple && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2">
-          {slides.map((slide, i) => (
-            <span
-              key={slide._id || slide.id || i}
-              aria-hidden="true"
-              className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === safeIndex ? "w-8 bg-[#0062A8]" : "w-2.5 bg-slate-300"
-              }`}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    </article>
   );
 }
 
@@ -673,7 +585,7 @@ function PastUpdateCard({ item, onClick }) {
 
         {eventDateString(item) && (
           <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
-            <Calendar size={9} /> Ended {formatShortDate(eventDateString(item))}
+            <Calendar size={9} /> {isPastEvent(item) ? "Ended" : "Ends by"} {formatShortDate(eventDateString(item))}
           </span>
         )}
       </div>
@@ -681,9 +593,7 @@ function PastUpdateCard({ item, onClick }) {
       {/* Body */}
       <div className="p-4 flex flex-col flex-1">
         <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] mb-1.5">
-          <Calendar size={12} className="text-[#0062A8]" />
-          <span>{formatDate(item)}</span>
-          <span className="text-slate-300">•</span>
+          <Building2 size={12} className="text-[#0062A8]" />
           <span className="truncate">{deptLabel(item)}</span>
         </div>
 
@@ -715,7 +625,6 @@ function PastUpdateCard({ item, onClick }) {
 function AnnouncementModal({ item, onClose }) {
   const catStyle = getCategoryStyle(item.category);
   const Icon = catStyle.icon;
-  const dateStr = formatDate(item).toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   const deptStr = item.departmentId?.name || item.departmentId?.code || item.department || "All Departments";
   const poster = resolvePoster(item);
 
@@ -746,7 +655,7 @@ function AnnouncementModal({ item, onClose }) {
       </div>
 
       {/* Modal Body */}
-      <div className="p-6 overflow-y-auto space-y-4">
+        <div className="p-6 overflow-y-auto overscroll-contain space-y-4">
         {/* Poster Image */}
         {poster && (
           <div className="rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
@@ -763,12 +672,9 @@ function AnnouncementModal({ item, onClose }) {
           <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">
             <Building2 size={13} /> {deptStr}
           </span>
-          <span className="inline-flex items-center gap-1">
-            <Calendar size={13} /> {dateStr}
-          </span>
           {eventDateString(item) && (
             <span className="inline-flex items-center gap-1 text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded">
-              {isPastEvent(item) ? "Ended:" : "Ends:"} {formatDateString(eventDateString(item))}
+              {isPastEvent(item) ? "Ended:" : "Ends by:"} {formatDateString(eventDateString(item))}
             </span>
           )}
         </div>
