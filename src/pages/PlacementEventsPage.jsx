@@ -228,6 +228,15 @@ const EXTRA_EVENTS = [
   },
 ];
 
+const CATEGORY_TABS = [
+  { id: "all", label: "Offers for you" },
+  { id: "it-software", label: "IT & Software" },
+  { id: "core-engineering", label: "Core Engineering" },
+  { id: "product-ai", label: "Product & AI" },
+  { id: "consulting", label: "Consulting & Services" },
+  { id: "internships", label: "Internships & GET" },
+];
+
 function isPlacementCategory(cat) {
   return String(cat || "").toLowerCase().includes("placement");
 }
@@ -754,26 +763,50 @@ function HeroSlide({ event, active, onViewMore }) {
  * ========================================================================== */
 
 function PlacementBentoShowcase({ events, onSelectEvent, onOpenHelp }) {
+  const [activeTab, setActiveTab] = useState("all");
   const [pageIndex, setPageIndex] = useState(0);
+
+  // Filter events based on active category
+  const filteredEvents = useMemo(() => {
+    if (activeTab === "all") return events;
+    const directMatches = events.filter((e) => e.category === activeTab);
+    if (directMatches.length > 0) return directMatches;
+    // If not enough direct matches, fallback gracefully with tag search
+    return events.filter((e) => {
+      const matchString = `${e.title} ${e.department} ${(e.tags || []).join(" ")}`.toLowerCase();
+      if (activeTab === "it-software") return matchString.includes("cse") || matchString.includes("it") || matchString.includes("software");
+      if (activeTab === "core-engineering") return matchString.includes("core") || matchString.includes("ece") || matchString.includes("eee") || matchString.includes("mechanical");
+      if (activeTab === "product-ai") return matchString.includes("product") || matchString.includes("ai") || matchString.includes("ds");
+      if (activeTab === "internships") return matchString.includes("intern") || matchString.includes("get") || matchString.includes("trainee");
+      if (activeTab === "consulting") return matchString.includes("consult") || matchString.includes("management") || matchString.includes("associate");
+      return true;
+    });
+  }, [events, activeTab]);
+
+  // Reset pagination on tab change
+  useEffect(() => {
+    setPageIndex(0);
+  }, [activeTab]);
 
   // Total pages of 5 items per bento layout
   const pageSize = 5;
-  const totalPages = Math.max(1, Math.ceil(events.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(filteredEvents.length / pageSize));
   const currentPage = Math.min(pageIndex, totalPages - 1);
 
   // Get current 5 items (pad with recycled items if < 5 so layout is always pristine)
   const currentChunk = useMemo(() => {
     const start = currentPage * pageSize;
-    let items = events.slice(start, start + pageSize);
-    if (items.length < pageSize && events.length > 0) {
+    let items = filteredEvents.slice(start, start + pageSize);
+    if (items.length < pageSize && filteredEvents.length > 0) {
+      // Pad from beginning of array to maintain 5 cards
       let padIndex = 0;
-      while (items.length < pageSize && padIndex < events.length) {
-        items.push(events[padIndex % events.length]);
+      while (items.length < pageSize && padIndex < filteredEvents.length) {
+        items.push(filteredEvents[padIndex % filteredEvents.length]);
         padIndex++;
       }
     }
     return items;
-  }, [events, currentPage]);
+  }, [filteredEvents, currentPage]);
 
   const handlePrev = () => {
     setPageIndex((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
@@ -791,10 +824,35 @@ function PlacementBentoShowcase({ events, onSelectEvent, onOpenHelp }) {
   const card4 = currentChunk[4] || events[4] || events[0]; // Right Bottom
 
   return (
-    <section className="w-full bg-[#FFFFFF] py-12 sm:py-14 px-4 sm:px-6 lg:px-10 relative">
+    <section className="w-full bg-[#FFFFFF] py-14 sm:py-16 px-4 sm:px-6 lg:px-10 relative">
       <div className="max-w-[1400px] mx-auto">
         {/* -------------------------------------------------------------- */}
-        {/* SAMSUNG BENTO 5-CARD SHOWCASE CONTAINER                        */}
+        {/* 1. SAMSUNG STYLE CATEGORY TABS BAR                              */}
+        {/* -------------------------------------------------------------- */}
+        <div className="flex items-center justify-center border-b border-slate-200/80 mb-8 sm:mb-10 overflow-x-auto hide-scrollbar select-none">
+          <nav className="flex items-center gap-6 sm:gap-10 md:gap-12 px-2 pb-0 shrink-0" aria-label="Placement Categories">
+            {CATEGORY_TABS.map((tab) => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative py-3.5 sm:py-4 text-xs sm:text-sm md:text-[15px] font-bold tracking-tight transition-colors whitespace-nowrap cursor-pointer ${
+                    active ? "text-[#0F172A]" : "text-[#64748B] hover:text-[#0F172A]"
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                  {active && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-[#0F172A] rounded-t-full transition-all" />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* -------------------------------------------------------------- */}
+        {/* 2. SAMSUNG BENTO 5-CARD SHOWCASE CONTAINER                     */}
         {/* -------------------------------------------------------------- */}
         <div className="relative group/bento">
           {/* CAROUSEL CONTROLS: LEFT & RIGHT FLOATING BUTTONS */}

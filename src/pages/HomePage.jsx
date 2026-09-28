@@ -1,12 +1,13 @@
 /**
  * HomePage Component for VCET Tech Hub (TechVerse)
- * Renders real-data sections: Domain Resources and Certificate Showcase.
- * No hardcoded hero copy or decorative watermark marquee.
+ * Includes campus slideshow hero, domain resources, official certificate showcase, and about section.
  */
 
 import React, { useState, useEffect } from "react";
+import Hero from "../components/Hero";
 import Domains from "../sections/Domains";
 import CertificatePreviewSection from "../sections/CertificatePreviewSection";
+import About from "../sections/About";
 import { resourceService } from "../services/resourceService";
 
 export default function HomePage() {
@@ -26,11 +27,17 @@ export default function HomePage() {
 
   return (
     <div className="flex-grow">
-      {/* 1. Four Main Resource Domains (real resource data) */}
+      {/* 1. Hero Showcase with Continuous VCET Campus Background Slideshow */}
+      <Hero />
+
+      {/* 2. Four Main Resource Domains */}
       <Domains resources={resources} />
 
-      {/* 2. Official VCET Certificate Showcase & Live Preview (real data) */}
+      {/* 3. Official VCET Certificate Showcase & Live Preview */}
       <CertificatePreviewSection />
+
+      {/* 4. About the Platform */}
+      <About />
     </div>
   );
 }
