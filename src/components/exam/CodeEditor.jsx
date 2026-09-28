@@ -2,11 +2,10 @@ import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { EditorState } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, placeholder } from "@codemirror/view";
 import {
-  defaultKeymap,
+  standardKeymap,
   history,
   historyKeymap,
   indentWithTab,
-  commentKeymap,
 } from "@codemirror/commands";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import {
@@ -79,7 +78,7 @@ const arenaEditorExtensions = (language) => [
   closeBrackets(),
   indentOnInput(),
   history(),
-  keymap.of([...closeBracketsKeymap, ...defaultKeymap, ...historyKeymap, ...commentKeymap, indentWithTab]),
+  keymap.of([...closeBracketsKeymap, ...standardKeymap, ...historyKeymap, indentWithTab]),
   syntaxHighlighting(arenaHighlightStyle),
   EditorView.lineWrapping,
   EditorView.theme({
