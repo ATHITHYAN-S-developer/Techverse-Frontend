@@ -223,7 +223,10 @@ export default function AnnouncementsPage() {
     async function loadData() {
       setLoading(true);
       try {
-        const data = await announcementService.getAll();
+        // Request the full set explicitly. The endpoint paginates at 15 by
+        // default, which silently truncated the feed and left the last few
+        // uploads off the page entirely.
+        const data = await announcementService.getAll({ limit: 100 });
         setAnnouncements((data || []).filter((a) => !isHiddenAnnouncement(a)));
       } catch (err) {
         console.error("Failed to load announcements data:", err);
@@ -272,6 +275,14 @@ export default function AnnouncementsPage() {
   // Fullscreen slideshow: the most recently uploaded events.
   const recentSlides = useMemo(
     () => orderedByUpload.slice(0, HERO_SLIDE_COUNT),
+    [orderedByUpload]
+  );
+
+  // Everything the slideshow did not show. The section below renders only
+  // these — it must not repeat the hero's items, otherwise the counts the
+  // layout below is built around are wrong.
+  const olderAnnouncements = useMemo(
+    () => orderedByUpload.slice(HERO_SLIDE_COUNT),
     [orderedByUpload]
   );
 
@@ -360,9 +371,9 @@ export default function AnnouncementsPage() {
             />
           )}
 
-          {/* ---- SAMSUNG STYLE BENTO SHOWCASE (SCROLL DOWN) ---- */}
-          <AnnouncementBentoShowcase
-            announcements={orderedByUpload}
+          {/* ---- EVERYTHING BELOW THE SLIDESHOW, ADAPTED TO HOW MANY ARE LEFT ---- */}
+          <AnnouncementGrid
+            announcements={olderAnnouncements}
             onSelect={(item) => setSelected(item)}
           />
         </>
@@ -558,99 +569,128 @@ function HeroSlide({ item, active, onViewMore }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* SAMSUNG-STYLE BENTO SHOWCASE (SCROLLED CONTENT)                             */
-/* 5-card layout, 5 per page, driven by the floating arrows + page dots.       */
+/* ADAPTIVE GRID — everything that did not fit in the slideshow                */
+/*                                                                            */
+/* The slideshow owns the 5 newest uploads, so this section renders only the   */
+/* remainder. The remainder's size picks the layout:                          */
+/*   1 → one full-bleed card                                                   */
+/*   2 → two equal columns                                                    */
+/*   3 → three equal columns                                                  */
+/*   4 → 2x2 grid                                                             */
+/*   5 → the bento (2 stacked | 1 tall | 2 stacked)                           */
+/*   6+ → bento, then slide right for the rest as full-width cards             */
 /* -------------------------------------------------------------------------- */
-function AnnouncementBentoShowcase({ announcements, onSelect }) {
-  const [pageIndex, setPageIndex] = useState(0);
 
-  // Total pages of 5 items per bento layout
-  const pageSize = 5;
-  const totalPages = Math.max(1, Math.ceil(announcements.length / pageSize));
-  const currentPage = Math.min(pageIndex, totalPages - 1);
+/** Cards in one bento page. */
+const BENTO_PAGE_SIZE = 5;
 
-  // Get current 5 items (pad with recycled items if < 5 so layout is always pristine)
-  const currentChunk = useMemo(() => {
-    const start = currentPage * pageSize;
-    let items = announcements.slice(start, start + pageSize);
-    if (items.length < pageSize && announcements.length > 0) {
-      let padIndex = 0;
-      while (items.length < pageSize && padIndex < announcements.length) {
-        items.push(announcements[padIndex % announcements.length]);
-        padIndex++;
-      }
-    }
-    return items;
-  }, [announcements, currentPage]);
+/**
+ * Build the list of pages shown below the slideshow.
+ *
+ * Full groups of 5 become bento pages. A trailing partial group of 1-4 items
+ * becomes one "rest" page that is laid out by count, using the same rules as
+ * a short list: 1 → full-screen slide, 2 → split into two, 3 → three across,
+ * 4 → 2x2. Partial groups are never squeezed into an incomplete bento, which
+ * would leave empty columns.
+ */
+function buildGridPages(announcements) {
+  const pages = [];
+  for (let i = 0; i < announcements.length; i += BENTO_PAGE_SIZE) {
+    const chunk = announcements.slice(i, i + BENTO_PAGE_SIZE);
+    pages.push({ type: chunk.length === BENTO_PAGE_SIZE ? "bento" : "rest", items: chunk });
+  }
+  return pages;
+}
 
-  const handlePrev = () => {
-    setPageIndex((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
-  };
+function AnnouncementGrid({ announcements, onSelect }) {
+  const [page, setPage] = useState(0);
 
-  const handleNext = () => {
-    setPageIndex((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
-  };
+  const total = announcements.length;
 
-  // Extract 5 items for the slots
-  const card0 = currentChunk[0] || announcements[0]; // Left Top
-  const card1 = currentChunk[1] || announcements[1] || announcements[0]; // Left Bottom
-  const card2 = currentChunk[2] || announcements[2] || announcements[0]; // Center Hero (Tall)
-  const card3 = currentChunk[3] || announcements[3] || announcements[0]; // Right Top (Dark card)
-  const card4 = currentChunk[4] || announcements[4] || announcements[0]; // Right Bottom
+  const pages = useMemo(() => buildGridPages(announcements), [announcements]);
+  const totalPages = pages.length;
+  const safePage = Math.min(page, totalPages - 1);
+
+  // Clamp back to a valid page whenever the list shrinks (e.g. an expired post
+  // retires) so the view never lands on an empty page.
+  useEffect(() => {
+    if (page > safePage) setPage(safePage);
+  }, [page, safePage]);
+
+  if (total === 0) return null;
+
+  const goPrev = () => setPage((p) => (p > 0 ? p - 1 : totalPages - 1));
+  const goNext = () => setPage((p) => (p < totalPages - 1 ? p + 1 : 0));
+
+  // ---- 1 to 4 items: a single screen, layout chosen by count, no arrows ----
+  if (total < BENTO_PAGE_SIZE) {
+    // A lone item is full-bleed, matching the remainder-page treatment.
+    const fullBleed = total === 1;
+
+    return (
+      <section
+        className={`w-full bg-[#FFFFFF] ${fullBleed ? "pb-0 px-0" : "pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10"}`}
+      >
+        <div className={fullBleed ? "w-full" : "max-w-[1400px] mx-auto"}>
+          <div key={total} className="bento-fade-in">
+            <EqualRowGrid items={announcements} onSelect={onSelect} />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ---- 5 or more: page through bento screens and remainder rows ----
+  const current = pages[safePage];
+
+  // A single leftover renders as a full-bleed slide; 2-4 share a padded row.
+  const isFullBleed = current?.type === "rest" && current.items.length === 1;
 
   return (
-    <section className="w-full bg-[#FFFFFF] pt-0 pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10 relative">
-      <div className="max-w-[1400px] mx-auto">
-        <div className="relative group/bento">
-          {/* CAROUSEL CONTROLS: LEFT & RIGHT FLOATING BUTTONS */}
+    <section
+      className={`w-full bg-[#FFFFFF] relative ${
+        isFullBleed ? "pb-0 px-0" : "pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10"
+      }`}
+    >
+      <div className={isFullBleed ? "w-full" : "max-w-[1400px] mx-auto"}>
+        <div className="relative group/grid">
+          {/* Arrows sit inside the padded area so a full-bleed slide still
+              has somewhere to put them. */}
           <button
-            onClick={handlePrev}
+            onClick={goPrev}
             aria-label="Previous updates"
-            className="absolute -left-2 sm:-left-4 lg:-left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+            className={`absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10 ${
+              isFullBleed ? "left-2 sm:left-6" : "left-0 lg:-left-6"
+            }`}
           >
             <ChevronLeft size={24} className="stroke-[2.5]" />
           </button>
-
           <button
-            onClick={handleNext}
+            onClick={goNext}
             aria-label="Next updates"
-            className="absolute -right-2 sm:-right-4 lg:-right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+            className={`absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10 ${
+              isFullBleed ? "right-2 sm:right-6" : "right-0 lg:-right-6"
+            }`}
           >
             <ChevronRight size={24} className="stroke-[2.5]" />
           </button>
 
-          {/* GRID LAYOUT: 3 COLUMNS (Left 2 stacked, Center 1 Tall, Right 2 stacked) */}
-          <div
-            key={currentPage}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch bento-fade-in"
-          >
-            {/* LEFT COLUMN: 2 STACKED CARDS */}
-            <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
-              <AnnouncementCardSmall item={card0} tone="silver" onClick={() => onSelect(card0)} />
-              <AnnouncementCardSmall item={card1} tone="white" onClick={() => onSelect(card1)} />
-            </div>
-
-            {/* CENTER COLUMN: 1 TALL FEATURED CARD */}
-            <div className="lg:col-span-6 flex">
-              <AnnouncementCardTall item={card2} onClick={() => onSelect(card2)} />
-            </div>
-
-            {/* RIGHT COLUMN: 2 STACKED CARDS */}
-            <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
-              <AnnouncementCardSmall item={card3} tone="dark" onClick={() => onSelect(card3)} />
-              <AnnouncementCardSmall item={card4} tone="white" onClick={() => onSelect(card4)} />
-            </div>
+          <div key={safePage} className="bento-fade-in">
+            {current?.type === "rest" ? (
+              <EqualRowGrid items={current.items} onSelect={onSelect} />
+            ) : (
+              <BentoGrid items={current.items} onSelect={onSelect} />
+            )}
           </div>
 
-          {/* PAGE DOTS INDICATOR */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              {Array.from({ length: totalPages }).map((_, i) => (
+            <div className={`flex items-center justify-center gap-2 ${isFullBleed ? "mt-6 px-4" : "mt-8"}`}>
+              {pages.map((p, i) => (
                 <button
                   key={i}
-                  onClick={() => setPageIndex(i)}
+                  onClick={() => setPage(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentPage ? "w-8 bg-[#0F172A]" : "w-2 bg-slate-300 hover:bg-slate-400"
+                    i === safePage ? "w-8 bg-[#0F172A]" : "w-2 bg-slate-300 hover:bg-slate-400"
                   }`}
                   aria-label={`Go to page ${i + 1}`}
                 />
@@ -660,6 +700,241 @@ function AnnouncementBentoShowcase({ announcements, onSelect }) {
         </div>
       </div>
     </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* EQUAL-COLUMN GRID — used for 1 to 4 leftover items                          */
+/* 1 → full bleed · 2 → two across · 3 → three across · 4 → 2x2                 */
+/* -------------------------------------------------------------------------- */
+function EqualRowGrid({ items, onSelect }) {
+  const count = items.length;
+
+  const columns = {
+    1: "grid-cols-1",
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-1 sm:grid-cols-2",
+  }[count] || "grid-cols-1";
+
+  // A lone item gets the full-screen slide, matching the tail treatment.
+  if (count === 1) {
+    return <FullScreenSlide item={items[0]} onClick={() => onSelect(items[0])} />;
+  }
+
+  return (
+    <div className={`grid ${columns} gap-5 sm:gap-6 items-stretch`}>
+      {items.map((item, i) => (
+        <EqualCard key={item._id || item.id || i} item={item} onClick={() => onSelect(item)} />
+      ))}
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* EQUAL CARD — one cell of the 2 / 3 / 4-up row                                */
+/* -------------------------------------------------------------------------- */
+function EqualCard({ item, onClick }) {
+  if (!item) return null;
+
+  const catStyle = getCategoryStyle(item.category);
+  const Icon = catStyle.icon;
+  const poster = resolvePoster(item);
+  const dateStr = eventDateString(item);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group relative flex flex-col overflow-hidden rounded-[28px] bg-[#EBEFF4] border border-slate-200/80 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:shadow-2xl min-h-[300px] sm:min-h-[340px]"
+    >
+      {/* Poster fills the card, copy sits over a bottom scrim */}
+      {poster ? (
+        <img
+          src={poster}
+          alt={item.title}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 hero-gradient flex items-center justify-center">
+          <Icon size={120} strokeWidth={0.75} className="text-white/[0.09]" />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/15" />
+
+      {/* Badges */}
+      <div className="relative z-10 flex items-start justify-between gap-2 p-5">
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider backdrop-blur-md ${
+            poster
+              ? "bg-black/60 text-white border border-white/15"
+              : "bg-white/20 text-white border border-white/20"
+          }`}
+        >
+          <Icon size={10} />
+          {catStyle.label}
+        </span>
+        {dateStr && (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider backdrop-blur-md">
+            <CalendarDays size={9} /> {formatShortDate(dateStr)}
+          </span>
+        )}
+      </div>
+
+      {/* Copy */}
+      <div className="relative z-10 mt-auto p-5 sm:p-6">
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white/75">
+          <Flame size={11} /> {relativeLabel(item)}
+        </span>
+        <h3 className="mt-2 text-lg sm:text-xl font-extrabold text-white leading-tight tracking-tight line-clamp-2 group-hover:text-white/90 transition-colors">
+          {item.title}
+        </h3>
+        <p className="mt-1.5 text-xs font-semibold text-white/70 line-clamp-1">
+          {deptLabel(item)}
+          {issuerName(item) ? ` • ${issuerName(item)}` : ""}
+        </p>
+        <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-3.5 py-1.5 rounded-full">
+          View Details
+          <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* FULL-SCREEN SLIDE — the tail item, shown alone once the bento fills up       */
+/* -------------------------------------------------------------------------- */
+function FullScreenSlide({ item, onClick }) {
+  if (!item) return null;
+
+  const catStyle = getCategoryStyle(item.category);
+  const Icon = catStyle.icon;
+  const poster = resolvePoster(item);
+  const dateStr = eventDateString(item);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group relative w-full h-[clamp(360px,62vh,560px)] overflow-hidden bg-[#071E3D] cursor-pointer"
+    >
+      {poster ? (
+        <img
+          src={poster}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover vcet-hero-zoom"
+        />
+      ) : (
+        <div className="absolute inset-0 hero-gradient flex items-center justify-center">
+          <Icon size={220} strokeWidth={0.5} className="text-white/[0.07]" />
+        </div>
+      )}
+
+      {/* Legibility scrims, same as the hero above */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/15 to-transparent" />
+
+      <div className="absolute inset-0 flex items-end z-20">
+        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 pb-20 sm:pb-24 vcet-hero-copy">
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500 text-white text-[11px] font-black uppercase tracking-wider">
+              <Flame size={13} />
+              More Updates
+            </span>
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider border backdrop-blur-sm ${catStyle.badgeBg}`}
+            >
+              <Icon size={12} />
+              {catStyle.label}
+            </span>
+            {dateStr && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold text-white bg-white/10 border border-white/15 backdrop-blur-sm">
+                <CalendarDays size={11} /> Event: {formatDateString(dateStr)}
+              </span>
+            )}
+            {item.isPinned && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-400 text-amber-950 border border-amber-300">
+                <Pin size={10} /> PINNED
+              </span>
+            )}
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.08] tracking-tight max-w-4xl drop-shadow-[0_2px_18px_rgba(0,0,0,0.55)]">
+            {item.title}
+          </h2>
+
+          <p className="mt-4 text-sm sm:text-base text-white/80 leading-relaxed max-w-2xl line-clamp-2">
+            {item.description || item.content || "No further details available."}
+          </p>
+
+          <div className="mt-6 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/80">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
+              <Building2 size={13} /> {deptLabel(item)}
+            </span>
+            {issuerName(item) && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <UserRound size={13} /> Issued by {issuerName(item)}
+              </span>
+            )}
+          </div>
+
+          <span className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#0F172A] font-bold text-xs sm:text-sm shadow-lg">
+            View More
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          </span>
+        </div>
+      </div>
+
+      {/* Fade into the page background at the very bottom */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 inset-x-0 h-24 z-10 pointer-events-none bg-gradient-to-b from-transparent to-white"
+      />
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* BENTO GRID — 5 items: 2 stacked | 1 tall | 2 stacked                        */
+/* -------------------------------------------------------------------------- */
+function BentoGrid({ items, onSelect }) {
+  const [card0, card1, card2, card3, card4] = items;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
+      {/* LEFT COLUMN: 2 STACKED CARDS */}
+      <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
+        <AnnouncementCardSmall item={card0} tone="silver" onClick={() => onSelect(card0)} />
+        <AnnouncementCardSmall item={card1} tone="white" onClick={() => onSelect(card1)} />
+      </div>
+
+      {/* CENTER COLUMN: 1 TALL FEATURED CARD */}
+      <div className="lg:col-span-6 flex">
+        <AnnouncementCardTall item={card2} onClick={() => onSelect(card2)} />
+      </div>
+
+      {/* RIGHT COLUMN: 2 STACKED CARDS */}
+      <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
+        <AnnouncementCardSmall item={card3} tone="dark" onClick={() => onSelect(card3)} />
+        <AnnouncementCardSmall item={card4} tone="white" onClick={() => onSelect(card4)} />
+      </div>
+    </div>
   );
 }
 

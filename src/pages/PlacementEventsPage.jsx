@@ -23,265 +23,45 @@ import {
   PhoneCall,
   Mail,
 } from "lucide-react";
-import { announcementService } from "../services/announcementService";
+import { placementEventService } from "../services/placementEventService";
 import { API_BASE_URL } from "../services/api";
 
-/* ============================================================================
- * EVENT CONTENT & DATA
- * ========================================================================== */
-
-const EXTRA_EVENTS = [
-  {
-    id: "hexaware-campus-hiring-2026",
-    title: "Hexaware Campus Hiring Drive 2026 — Graduate Engineer Trainee",
-    subtitle: "Starting ₹ 6.0 - 8.5 LPA*",
-    badge: "Featured GET Drive",
-    category: "it-software",
-    date: "2026-10-10",
-    time: "10:00 AM – 04:00 PM",
-    venue: "VCET Placement Cell, Block A — Seminar Hall 1",
-    organiser: "Hexaware Technologies Talent Acquisition",
-    department: "CSE, IT, AI & DS, ECE, EEE",
-    description:
-      "Hexaware Technologies is conducting its 2026 campus hiring drive for Graduate Engineer Trainee roles at Velalar College of Engineering and Technology.\n\n" +
-      "The selection process runs across three stages on a single day: an online aptitude assessment covering logical reasoning and quantitative ability, a group discussion, and a technical interview followed by an HR interview.\n\n" +
-      "Final-year B.E./B.Tech students in CSE, IT, AI & DS, ECE and EEE may register. Shortlisted candidates must report by 9:15 AM carrying two printed copies of their resume, all consolidated mark sheets, a government photo ID and their college ID card.",
-    tags: ["Placement", "Hexaware", "Campus Hiring", "GET", "CSE", "IT", "AI & DS", "Final Year"],
-    poster: "/images/hexaware-placement-2026.jpg",
-    linkUrl: "https://www.hexaware.com/careers/",
-    linkText: "Hexaware Careers",
-    postedAt: "2026-09-26T07:00:00.000Z",
-  },
-  {
-    id: "tcs-campus-hiring-2026",
-    title: "TCS Campus Hiring Drive 2026 — Prime & Digital Recruitment",
-    subtitle: "Save up to 15%* extra prep • ₹ 7.0 - 9.0 LPA*",
-    badge: "Prime & Digital",
-    category: "it-software",
-    date: "2026-10-24",
-    time: "09:30 AM – 04:00 PM",
-    venue: "VCET Placement Cell, Block A — Seminar Hall 1",
-    organiser: "TCS Talent Acquisition Team",
-    department: "CSE, IT, AI & DS, ECE, EEE",
-    description:
-      "Tata Consultancy Services conducts its 2026 campus hiring round for final-year and pre-final-year students of Velalar College of Engineering and Technology.\n\n" +
-      "TCS NQT (National Qualifier Test) forms the first stage, followed by advanced coding, a group discussion, a technical interview and an HR interview, all conducted on the same day. Candidates shortlisted from the aptitude round are required to report by 8:45 AM carrying two printed copies of their resume and college ID.",
-    tags: ["Placement", "TCS", "Campus Hiring", "CSE", "IT", "AI & DS", "Final Year"],
-    poster: "/images/tcs-placement-2026.jpg",
-    linkUrl: "https://www.tcs.com/careers",
-    linkText: "TCS Careers",
-    postedAt: "2026-09-26T05:00:00.000Z",
-  },
-  {
-    id: "zoho-campus-hiring-2026",
-    title: "Zoho Campus Hiring Drive 2026 — Technical & Design Round",
-    subtitle: "Product Roles • Up to 8.4 LPA*",
-    badge: "Direct Product Dev",
-    category: "product-ai",
-    date: "2026-10-19",
-    time: "09:00 AM – 03:30 PM",
-    venue: "VCET Placement Cell, Block A — Seminar Hall 2",
-    organiser: "Zoho Corporation Talent Acquisition",
-    department: "CSE, IT, AI & DS",
-    description:
-      "Zoho Corporation is conducting its 2026 campus hiring drive for Software Developer roles at Velalar College of Engineering and Technology.\n\n" +
-      "The selection process runs across three stages on a single day: a written aptitude test on C and Java fundamentals, a pure problem-solving round without standard library support, and a final advanced application design interview.\n\n" +
-      "III Year and IV Year B.E./B.Tech students in CSE, IT and AI & DS may register.",
-    tags: ["Placement", "Zoho", "Campus Hiring", "CSE", "IT", "AI & DS", "Technical"],
-    poster: "/images/zoho-placement-2026.jpg",
-    linkUrl: "https://www.zoho.com/careers/",
-    linkText: "Zoho Careers",
-    postedAt: "2026-09-26T06:00:00.000Z",
-  },
-  {
-    id: "cognizant-genc-2026",
-    title: "Cognizant GenC Elevate & Next Hiring",
-    subtitle: "Save 10%* extra • ₹ 6.75 LPA*",
-    badge: "Cloud & Full-Stack",
-    category: "it-software",
-    date: "2026-11-05",
-    time: "09:00 AM – 05:00 PM",
-    venue: "VCET Central Computing Center Lab 3",
-    organiser: "Cognizant Campus Recruitment",
-    department: "CSE, IT, AI & DS, ECE",
-    description:
-      "Cognizant is inviting applications for GenC Elevate & GenC Next roles with specialized tracks in Cloud Architecture, AI engineering, and Full Stack development.\n\nAssessment includes advanced programming rounds in Java/Python and system architecture evaluation.",
-    tags: ["Placement", "Cognizant", "GenC", "CSE", "IT"],
-    poster: "",
-    linkUrl: "https://careers.cognizant.com",
-    linkText: "Cognizant Careers",
-    postedAt: "2026-09-25T08:00:00.000Z",
-  },
-  {
-    id: "accenture-ase-2026",
-    title: "Accenture Innovation League & ASE Hiring",
-    subtitle: "Starting ₹ 5.4 - 8.0 LPA*",
-    badge: "All Branches Eligible",
-    category: "consulting",
-    date: "2026-11-12",
-    time: "10:00 AM – 04:30 PM",
-    venue: "VCET Placement Cell Auditorium",
-    organiser: "Accenture Talent Operations",
-    department: "All Branches (Circuit & Non-Circuit)",
-    description:
-      "Accenture Advanced Application Engineering (ASE & FSE) recruitment program for 2026 batch graduates. Focuses on agile software delivery, enterprise digital solutions, and cloud integration.",
-    tags: ["Placement", "Accenture", "ASE", "All Branches"],
-    poster: "",
-    linkUrl: "https://www.accenture.com/careers",
-    linkText: "Accenture Careers",
-    postedAt: "2026-09-25T07:00:00.000Z",
-  },
-  {
-    id: "amazon-sde-2026",
-    title: "Amazon SDE & Applied AI Campus Track",
-    subtitle: "Dream Offer • ₹ 28.0 LPA*",
-    badge: "Dream Offer",
-    category: "product-ai",
-    date: "2026-11-20",
-    time: "09:00 AM – 06:00 PM",
-    venue: "VCET Virtual / Online Test Center",
-    organiser: "Amazon University Recruiting",
-    department: "CSE, IT, AI & DS, ECE",
-    description:
-      "Amazon India hiring drive for Software Development Engineer (SDE-1) and Machine Learning Interns. Candidates with high proficiency in Data Structures, Algorithms, and Distributed Systems are encouraged to register.",
-    tags: ["Placement", "Amazon", "SDE", "High Package", "Dream Offer"],
-    poster: "",
-    linkUrl: "https://www.amazon.jobs",
-    linkText: "Amazon Jobs",
-    postedAt: "2026-09-24T05:00:00.000Z",
-  },
-  {
-    id: "bosch-embedded-2026",
-    title: "Bosch Global Core Embedded & IoT Systems",
-    subtitle: "Starting ₹ 7.2 LPA*",
-    badge: "Core Engineering",
-    category: "core-engineering",
-    date: "2026-11-18",
-    time: "09:30 AM – 04:00 PM",
-    venue: "VCET ECE Department Embedded Lab",
-    organiser: "Robert Bosch Engineering",
-    department: "ECE, EEE, Mechanical, Mechatronics",
-    description:
-      "Bosch hiring for Automotive Embedded Software, Microcontroller firmware design, and Connected Mobility solutions.",
-    tags: ["Placement", "Bosch", "Core", "ECE", "EEE"],
-    poster: "",
-    linkUrl: "https://www.bosch.com/careers",
-    linkText: "Bosch Careers",
-    postedAt: "2026-09-24T04:00:00.000Z",
-  },
-  {
-    id: "lt-core-engineering-2026",
-    title: "Larsen & Toubro (L&T) GET & Smart City Drive",
-    subtitle: "Starting ₹ 6.5 LPA*",
-    badge: "Core Engineering",
-    category: "core-engineering",
-    date: "2026-11-25",
-    time: "10:00 AM – 03:30 PM",
-    venue: "VCET Main Auditorium, Block B",
-    organiser: "L&T Construction & Infrastructure HR",
-    department: "Civil, Mechanical, EEE, ECE",
-    description:
-      "Larsen & Toubro Graduate Engineer Trainee recruitment for smart infrastructure, power grid automation, and heavy structural engineering.",
-    tags: ["Placement", "L&T", "GET", "Core", "Civil", "Mechanical"],
-    poster: "",
-    linkUrl: "https://www.larsentoubro.com/careers",
-    linkText: "L&T Careers",
-    postedAt: "2026-09-23T09:00:00.000Z",
-  },
-  {
-    id: "virtusa-neural-hack-2026",
-    title: "Virtusa NeuralHack Season 8 & FTE Hiring",
-    subtitle: "Save up to 20% prep • ₹ 6.5 - 9.0 LPA*",
-    badge: "Internship & FTE",
-    category: "internships",
-    date: "2026-12-02",
-    time: "09:00 AM – 05:00 PM",
-    venue: "VCET Placement Online Arena",
-    organiser: "Virtusa University Relations",
-    department: "CSE, IT, AI & DS, ECE",
-    description:
-      "National level technical hackathon with direct full-time employment and paid internship offers for top performing finalists.",
-    tags: ["Placement", "Virtusa", "NeuralHack", "Internship"],
-    poster: "",
-    linkUrl: "https://www.virtusa.com/careers",
-    linkText: "Virtusa Careers",
-    postedAt: "2026-09-23T08:00:00.000Z",
-  },
-  {
-    id: "infosys-sp-2026",
-    title: "Infosys Specialist Programmer & DSE Track",
-    subtitle: "Starting ₹ 9.5 LPA*",
-    badge: "Specialist Track",
-    category: "it-software",
-    date: "2026-12-08",
-    time: "10:00 AM – 04:00 PM",
-    venue: "VCET Placement Block A Lab 1",
-    organiser: "Infosys Talent Acquisition",
-    department: "CSE, IT, AI & DS, ECE, EEE",
-    description:
-      "Specialist Programmer role hiring by Infosys focusing on competitive coding, dynamic programming, graph algorithms, and machine learning problem statements.",
-    tags: ["Placement", "Infosys", "Specialist Programmer", "High Package"],
-    poster: "",
-    linkUrl: "https://www.infosys.com/careers",
-    linkText: "Infosys Careers",
-    postedAt: "2026-09-22T05:00:00.000Z",
-  },
-];
-
-function isPlacementCategory(cat) {
-  return String(cat || "").toLowerCase().includes("placement");
-}
-
-const HIDDEN_PLACEMENT_TITLES = new Set([
-  "Zoho Campus Hiring Drive 2026: Technical & Advanced Coding Registration",
-]);
-
-function isHiddenPlacementEvent(event) {
-  return HIDDEN_PLACEMENT_TITLES.has(String(event?.title || "").trim());
-}
-
+/**
+ * Placement drives come exclusively from the backend PlacementEvent
+ * collection. Nothing on this page is hardcoded, so an offline or empty
+ * backend surfaces as the "no placement events" state rather than stale
+ * copy baked into the bundle.
+ */
 function resolvePoster(item) {
-  const raw = item.imageUrl || item.image || "";
+  const raw = item.poster || item.imageUrl || item.image || "";
   if (!raw) return "";
   if (raw.startsWith("data:") || /^https?:\/\//i.test(raw)) return raw;
   const origin = API_BASE_URL.replace(/\/api\/?$/, "");
   return `${origin}${raw.startsWith("/") ? raw : `/uploads/announcements/${raw}`}`;
 }
 
-function announcementToEvent(a) {
-  const rawDate = a.eventDate || a.expiryDate || a.deadline || "";
+function placementEventToCard(e) {
+  const rawDate = e.date || e.eventDate || "";
   const date = rawDate ? String(rawDate).slice(0, 10) : "";
-  const department = a.departmentId?.name || a.departmentId?.code || a.department || "";
-
-  let category = "it-software";
-  const text = `${a.title || ""} ${a.description || ""} ${department}`.toLowerCase();
-  if (text.includes("core") || text.includes("mechanical") || text.includes("civil") || text.includes("embedded")) {
-    category = "core-engineering";
-  } else if (text.includes("product") || text.includes("ai") || text.includes("data") || text.includes("amazon")) {
-    category = "product-ai";
-  } else if (text.includes("intern") || text.includes("get") || text.includes("trainee")) {
-    category = "internships";
-  } else if (text.includes("consult") || text.includes("management") || text.includes("accenture")) {
-    category = "consulting";
-  }
 
   return {
-    id: a._id || a.id,
-    title: a.title || "Untitled Placement Event",
-    subtitle: a.subtitle || "Placement Cell Notification",
-    badge: a.badge || "Campus Drive",
-    category,
+    id: e._id || e.slug || e.id,
+    slug: e.slug || "",
+    title: e.title || "Untitled Placement Event",
+    subtitle: e.subtitle || "Placement Cell Notification",
+    badge: e.badge || "Campus Drive",
+    category: e.category || "it-software",
     date,
-    time: a.time || "",
-    venue: a.venue || "VCET Campus",
-    organiser: a.createdBy?.name || a.authorName || a.author || "Placement Cell",
-    department,
-    description: a.description || a.content || "",
-    tags: [a.category, department, a.targetAudience].filter(Boolean),
-    poster: resolvePoster(a),
-    linkUrl: a.linkUrl || "",
-    linkText: a.linkText || "View Details",
-    postedAt: a.createdAt || a.publishDate || "",
+    time: e.time || "",
+    venue: e.venue || "VCET Campus",
+    organiser: e.organiser || "Career Development Cell",
+    department: e.department || "",
+    description: e.description || "",
+    tags: Array.isArray(e.tags) ? e.tags : [],
+    poster: resolvePoster(e),
+    linkUrl: e.linkUrl || "",
+    linkText: e.linkText || "View Details",
+    postedAt: e.postedAt || e.createdAt || "",
   };
 }
 
@@ -348,8 +128,9 @@ function compareUploadOrder(a, b) {
 
 export default function PlacementEventsPage() {
   const [selected, setSelected] = useState(null);
-  const [events, setEvents] = useState(EXTRA_EVENTS);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [backendReachable, setBackendReachable] = useState(true);
   const [slideIndex, setSlideIndex] = useState(0);
   const [showHelpModal, setShowHelpModal] = useState(false);
 
@@ -359,15 +140,16 @@ export default function PlacementEventsPage() {
     async function loadEvents() {
       setLoading(true);
       try {
-        const announcements = await announcementService.getAll({ limit: 100 });
+        const { events: rows, connected } = await placementEventService.getAll({ limit: 100 });
         if (cancelled) return;
-        const fromFeed = (announcements || [])
-          .filter((a) => isPlacementCategory(a.category))
-          .map(announcementToEvent);
-        setEvents([...EXTRA_EVENTS, ...fromFeed]);
+        setBackendReachable(connected);
+        setEvents((rows || []).map(placementEventToCard));
       } catch (err) {
         console.error("Failed to load placement events:", err);
-        if (!cancelled) setEvents(EXTRA_EVENTS);
+        if (!cancelled) {
+          setBackendReachable(false);
+          setEvents([]);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -381,7 +163,7 @@ export default function PlacementEventsPage() {
 
   const { slides, orderedEvents } = useMemo(() => {
     const ordered = events
-      .filter((e) => !isHiddenPlacementEvent(e) && !isPastEvent(e))
+      .filter((e) => !isPastEvent(e))
       .sort(compareUploadOrder);
 
     return {
@@ -468,10 +250,22 @@ export default function PlacementEventsPage() {
             <div className="w-16 h-16 rounded-2xl bg-[#F7F9FC] border border-[#E2E8F0] flex items-center justify-center mx-auto mb-4">
               <PartyPopper size={28} className="text-[#0062A8]/40" />
             </div>
-            <h3 className="text-lg font-bold text-[#0F172A]">No placement events right now</h3>
+            <h3 className="text-lg font-bold text-[#0F172A]">
+              {backendReachable ? "No placement events right now" : "Placement events are unavailable"}
+            </h3>
             <p className="text-sm text-[#64748B] mt-1 max-w-md mx-auto">
-              New placement drives, workshops and career events will appear here as soon as they are scheduled.
+              {backendReachable
+                ? "New placement drives, workshops and career events will appear here as soon as they are scheduled."
+                : "We could not reach the placement server. Please check your connection and try again shortly."}
             </p>
+            {!backendReachable && (
+              <button
+                onClick={() => window.location.reload()}
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#0062A8] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#004E86] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0062A8]/50"
+              >
+                Retry
+              </button>
+            )}
           </div>
         </div>
       ) : (
