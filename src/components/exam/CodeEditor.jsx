@@ -1,6 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef } from "react";
 import { EditorState } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, placeholder } from "@codemirror/view";
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, placeholder as placeholderExtension } from "@codemirror/view";
 import {
   standardKeymap,
   history,
@@ -133,7 +133,7 @@ export default function CodeEditor({
               onChangeRef.current(update.state.doc.toString());
             }
           }),
-          ...(placeholder ? [placeholder(placeholder)] : []),
+          ...(placeholder ? [placeholderExtension(placeholder)] : []),
         ],
       }),
       parent: containerRef.current,
