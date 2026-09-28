@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   Building2,
-  Calendar,
+  ChevronLeft,
+  ChevronRight,
   ExternalLink,
   X,
   Briefcase,
@@ -193,6 +194,15 @@ function isHiddenAnnouncement(item) {
   return isPlacementCategory(item?.category);
 }
 
+/** Short status line used on the bento cards — "HAPPENING TODAY" / "ENDS BY SEP 30". */
+function relativeLabel(item) {
+  const ev = eventDateString(item);
+  if (!ev) return "ONGOING";
+  if (ev === todayString()) return "HAPPENING TODAY";
+  if (ev < todayString()) return "ENDED";
+  return `ENDS BY ${formatShortDate(ev)}`;
+}
+
 export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -265,12 +275,6 @@ export default function AnnouncementsPage() {
     [orderedByUpload]
   );
 
-  // Everything beyond that is listed under the hero, reached by scrolling.
-  const pastUpdates = useMemo(
-    () => orderedByUpload.slice(HERO_SLIDE_COUNT),
-    [orderedByUpload]
-  );
-
   // Keep slide index valid when the list shrinks
   useEffect(() => {
     if (recentSlides.length > 0 && slideIndex >= recentSlides.length) {
@@ -288,7 +292,7 @@ export default function AnnouncementsPage() {
   }, [recentSlides.length]);
 
   return (
-    <div className="min-h-screen bg-[#F7F9FC] text-[#0F172A] font-sans antialiased relative overflow-hidden">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#0F172A] font-sans antialiased pb-24 relative overflow-hidden selection:bg-[#0062A8]/15 selection:text-[#0062A8]">
       {/* Dynamic CSS Styling for Watermark & Micro-interactions */}
       <style>{`
         .hero-gradient {
@@ -309,8 +313,23 @@ export default function AnnouncementsPage() {
           from { transform: scale(1.03); }
           to   { transform: scale(1.15); }
         }
+        /* Bento grid: fade/rise on every page change. */
+        .bento-fade-in {
+          animation: bentoFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes bentoFadeIn {
+          from { opacity: 0; transform: translateY(12px) scale(0.99); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        /* Hero → bento handoff: blur strongest at the seam, masked out above. */
+        .vcet-hero-blur {
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          -webkit-mask-image: linear-gradient(to top, #000 0%, #000 35%, transparent 100%);
+          mask-image: linear-gradient(to top, #000 0%, #000 35%, transparent 100%);
+        }
         @media (prefers-reduced-motion: reduce) {
-          .vcet-hero-copy, .vcet-hero-zoom { animation: none; }
+          .vcet-hero-copy, .vcet-hero-zoom, .bento-fade-in { animation: none; }
         }
       `}</style>
 
@@ -341,20 +360,11 @@ export default function AnnouncementsPage() {
             />
           )}
 
-          {/* ---- PAST EVENTS / ARCHIVE GRID ---- */}
-          {pastUpdates.length > 0 && (
-            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 pb-24">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {pastUpdates.map((ann) => (
-                  <PastUpdateCard
-                    key={ann._id || ann.id}
-                    item={ann}
-                    onClick={() => setSelected(ann)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+          {/* ---- SAMSUNG STYLE BENTO SHOWCASE (SCROLL DOWN) ---- */}
+          <AnnouncementBentoShowcase
+            announcements={orderedByUpload}
+            onSelect={(item) => setSelected(item)}
+          />
         </>
       )}
 
@@ -408,6 +418,17 @@ function FullscreenHero({ slides, activeIndex, totalCount, onViewMore }) {
         </span>
       </div>
 
+      {/* ---- BLUR + FADE TRANSITION: dissolves the hero into the white
+              bento showcase below so there is no hard seam or gap ---- */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 inset-x-0 h-40 sm:h-48 z-10 pointer-events-none vcet-hero-blur"
+      />
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 inset-x-0 h-40 sm:h-48 z-10 pointer-events-none bg-gradient-to-b from-transparent via-white/60 to-white"
+      />
+
       {/* Slide dots (decorative — the hero autoplays) */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 pointer-events-none select-none">
         {slides.map((slide, i) => (
@@ -415,12 +436,12 @@ function FullscreenHero({ slides, activeIndex, totalCount, onViewMore }) {
             key={slide._id || slide.id || i}
             aria-hidden="true"
             className={`h-1.5 rounded-full transition-all duration-500 ${
-              i === safeIndex ? "w-10 bg-white" : "w-4 bg-white/40"
+              i === safeIndex ? "w-10 bg-[#0F172A]" : "w-4 bg-[#0F172A]/25"
             }`}
           />
         ))}
         {multiple && (
-          <span className="ml-2 text-[10px] font-bold tracking-widest text-white/70 tabular-nums">
+          <span className="ml-2 text-[10px] font-bold tracking-widest text-[#0F172A]/45 tabular-nums">
             {String(safeIndex + 1).padStart(2, "0")} / {String(slides.length).padStart(2, "0")}
           </span>
         )}
@@ -464,9 +485,9 @@ function HeroSlide({ item, active, onViewMore }) {
       <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/15 to-transparent" />
 
       {/* Overlaid copy */}
-      <div className="absolute inset-0 flex items-end">
+      <div className="absolute inset-0 flex items-end z-20">
         <div
-          className={`w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 sm:pb-24 ${
+          className={`w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-48 sm:pb-56 ${
             active ? "vcet-hero-copy" : ""
           }`}
         >
@@ -537,81 +558,273 @@ function HeroSlide({ item, active, onViewMore }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/* PAST UPDATE CARD (Grid)                                                     */
+/* SAMSUNG-STYLE BENTO SHOWCASE (SCROLLED CONTENT)                             */
+/* 5-card layout, 5 per page, driven by the floating arrows + page dots.       */
 /* -------------------------------------------------------------------------- */
-function PastUpdateCard({ item, onClick }) {
+function AnnouncementBentoShowcase({ announcements, onSelect }) {
+  const [pageIndex, setPageIndex] = useState(0);
+
+  // Total pages of 5 items per bento layout
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(announcements.length / pageSize));
+  const currentPage = Math.min(pageIndex, totalPages - 1);
+
+  // Get current 5 items (pad with recycled items if < 5 so layout is always pristine)
+  const currentChunk = useMemo(() => {
+    const start = currentPage * pageSize;
+    let items = announcements.slice(start, start + pageSize);
+    if (items.length < pageSize && announcements.length > 0) {
+      let padIndex = 0;
+      while (items.length < pageSize && padIndex < announcements.length) {
+        items.push(announcements[padIndex % announcements.length]);
+        padIndex++;
+      }
+    }
+    return items;
+  }, [announcements, currentPage]);
+
+  const handlePrev = () => {
+    setPageIndex((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
+  };
+
+  const handleNext = () => {
+    setPageIndex((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
+  };
+
+  // Extract 5 items for the slots
+  const card0 = currentChunk[0] || announcements[0]; // Left Top
+  const card1 = currentChunk[1] || announcements[1] || announcements[0]; // Left Bottom
+  const card2 = currentChunk[2] || announcements[2] || announcements[0]; // Center Hero (Tall)
+  const card3 = currentChunk[3] || announcements[3] || announcements[0]; // Right Top (Dark card)
+  const card4 = currentChunk[4] || announcements[4] || announcements[0]; // Right Bottom
+
+  return (
+    <section className="w-full bg-[#FFFFFF] pt-0 pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10 relative">
+      <div className="max-w-[1400px] mx-auto">
+        <div className="relative group/bento">
+          {/* CAROUSEL CONTROLS: LEFT & RIGHT FLOATING BUTTONS */}
+          <button
+            onClick={handlePrev}
+            aria-label="Previous updates"
+            className="absolute -left-2 sm:-left-4 lg:-left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+          >
+            <ChevronLeft size={24} className="stroke-[2.5]" />
+          </button>
+
+          <button
+            onClick={handleNext}
+            aria-label="Next updates"
+            className="absolute -right-2 sm:-right-4 lg:-right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+          >
+            <ChevronRight size={24} className="stroke-[2.5]" />
+          </button>
+
+          {/* GRID LAYOUT: 3 COLUMNS (Left 2 stacked, Center 1 Tall, Right 2 stacked) */}
+          <div
+            key={currentPage}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch bento-fade-in"
+          >
+            {/* LEFT COLUMN: 2 STACKED CARDS */}
+            <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
+              <AnnouncementCardSmall item={card0} tone="silver" onClick={() => onSelect(card0)} />
+              <AnnouncementCardSmall item={card1} tone="white" onClick={() => onSelect(card1)} />
+            </div>
+
+            {/* CENTER COLUMN: 1 TALL FEATURED CARD */}
+            <div className="lg:col-span-6 flex">
+              <AnnouncementCardTall item={card2} onClick={() => onSelect(card2)} />
+            </div>
+
+            {/* RIGHT COLUMN: 2 STACKED CARDS */}
+            <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
+              <AnnouncementCardSmall item={card3} tone="dark" onClick={() => onSelect(card3)} />
+              <AnnouncementCardSmall item={card4} tone="white" onClick={() => onSelect(card4)} />
+            </div>
+          </div>
+
+          {/* PAGE DOTS INDICATOR */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setPageIndex(i)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === currentPage ? "w-8 bg-[#0F172A]" : "w-2 bg-slate-300 hover:bg-slate-400"
+                  }`}
+                  aria-label={`Go to page ${i + 1}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* SMALL BENTO CARD (Left & Right stacked items)                               */
+/* -------------------------------------------------------------------------- */
+function AnnouncementCardSmall({ item, tone = "white", onClick }) {
+  if (!item) return null;
+
+  const catStyle = getCategoryStyle(item.category);
+  const Icon = catStyle.icon;
+  const poster = resolvePoster(item);
+  const dateStr = eventDateString(item);
+
+  const isDark = tone === "dark";
+  const isSilver = tone === "silver";
+
+  const containerClasses = isDark
+    ? "bg-gradient-to-br from-[#0B1528] via-[#0F1E38] to-[#162744] text-white border border-slate-800"
+    : isSilver
+    ? "bg-[#ECEEF2] text-[#0F172A] border border-slate-200/60"
+    : "bg-white text-[#0F172A] border border-slate-200/80 shadow-xs";
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className={`group relative flex-1 min-h-[220px] sm:min-h-[240px] rounded-[26px] p-5 sm:p-6 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${containerClasses}`}
+    >
+      {/* Top Graphic / Preview Area */}
+      <div className="relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden flex items-center justify-center">
+        {poster ? (
+          <img
+            src={poster}
+            alt={item.title}
+            className="w-full h-full object-cover rounded-xl transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div
+            className={`w-full h-full rounded-xl flex items-center justify-center transition-transform duration-500 group-hover:scale-105 ${
+              isDark ? "bg-white/[0.04] border border-white/10" : "bg-black/[0.03] border border-black/5"
+            }`}
+          >
+            <Icon size={36} strokeWidth={1.25} className={isDark ? "text-cyan-300/60" : "text-slate-400"} />
+          </div>
+        )}
+
+        {/* Category + pinned badges at top-left of the preview */}
+        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider backdrop-blur-md ${
+              isDark
+                ? "bg-white/20 text-white border border-white/20"
+                : "bg-black/60 text-white border border-black/10"
+            }`}
+          >
+            <Icon size={10} />
+            {catStyle.label}
+          </span>
+          {item.isPinned && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-400 text-amber-950 border border-amber-300">
+              <Pin size={9} /> PIN
+            </span>
+          )}
+        </div>
+
+        {/* Date chip at top-right of the preview */}
+        {dateStr && (
+          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider backdrop-blur-md">
+            <CalendarDays size={9} /> {formatShortDate(dateStr)}
+          </span>
+        )}
+      </div>
+
+      {/* Bottom Typography & Details */}
+      <div className="pt-4 text-center">
+        <h3
+          className={`text-sm sm:text-base font-bold tracking-tight line-clamp-1 group-hover:text-[#0062A8] transition-colors ${
+            isDark ? "group-hover:text-cyan-400" : ""
+          }`}
+        >
+          {item.title}
+        </h3>
+        <p
+          className={`text-xs mt-1 font-medium line-clamp-1 ${
+            isDark ? "text-slate-300" : "text-slate-600"
+          }`}
+        >
+          {deptLabel(item)}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* TALL FEATURED BENTO CARD (Center full-height card)                          */
+/* -------------------------------------------------------------------------- */
+function AnnouncementCardTall({ item, onClick }) {
+  if (!item) return null;
+
   const catStyle = getCategoryStyle(item.category);
   const Icon = catStyle.icon;
   const poster = resolvePoster(item);
 
   return (
     <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="group relative bg-white rounded-2xl border border-[#E2E8F0] shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-blue-300/80 transition-all duration-200 overflow-hidden flex flex-col cursor-pointer"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group relative w-full h-full min-h-[460px] sm:min-h-[500px] lg:min-h-[510px] rounded-[32px] bg-[#EBEFF4] border border-slate-200/80 p-6 sm:p-8 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:shadow-2xl"
     >
-      {/* Poster / Visual */}
-      <div className="relative h-36 overflow-hidden bg-[#0A3563]">
+      {/* Top Badge */}
+      <div className="flex items-center justify-between z-10 gap-3">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-white text-[11px] font-bold tracking-wide">
+          <Flame size={13} className="text-amber-400" />
+          Featured Update
+        </span>
+        <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider text-right">
+          {relativeLabel(item)}
+        </span>
+      </div>
+
+      {/* Center Showcase Visual Preview */}
+      <div className="relative flex-1 my-4 flex items-center justify-center overflow-hidden">
         {poster ? (
-          <img
-            src={poster}
-            alt={`${item.title} poster`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
-        ) : (
-          <div className="w-full h-full hero-gradient flex items-center justify-center">
-            <Icon size={44} strokeWidth={1.25} className="text-white/25" />
+          <div className="w-full max-w-sm h-full max-h-[290px] sm:max-h-[320px] rounded-2xl overflow-hidden shadow-xl border border-slate-300/60 bg-white group-hover:scale-105 transition-transform duration-500">
+            <img src={poster} alt={item.title} className="w-full h-full object-cover" />
           </div>
-        )}
-
-        <div className="absolute top-2 left-2 flex items-center gap-1.5">
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider border shadow-sm ${catStyle.badgeBg}`}
-          >
-            <Icon size={10} />
-            {catStyle.label}
-          </span>
-          {item.isPinned && (
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200 shadow-sm">
-              <Pin size={9} /> PIN
-            </span>
-          )}
-        </div>
-
-        {item.deadline && (
-          <span className="absolute bottom-2 left-2 text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
-            Due: {item.deadline}
-          </span>
-        )}
-
-        {eventDateString(item) && (
-          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
-            <Calendar size={9} /> {isPastEvent(item) ? "Ended" : "Ends by"} {formatShortDate(eventDateString(item))}
-          </span>
+        ) : (
+          <div className="w-full max-w-sm h-64 rounded-2xl hero-gradient text-white p-6 flex flex-col items-center justify-center text-center shadow-xl group-hover:scale-105 transition-transform duration-500">
+            <Icon size={54} strokeWidth={1.5} className="text-cyan-300 mb-3" />
+            <h4 className="font-extrabold text-lg text-white line-clamp-2">{item.title}</h4>
+            <p className="text-xs text-white/80 mt-1">{deptLabel(item)}</p>
+          </div>
         )}
       </div>
 
-      {/* Body */}
-      <div className="p-4 flex flex-col flex-1">
-        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#64748B] mb-1.5">
-          <Building2 size={12} className="text-[#0062A8]" />
-          <span className="truncate">{deptLabel(item)}</span>
-        </div>
-
-        <h4 className="text-sm font-bold text-[#0F172A] group-hover:text-[#0062A8] transition-colors leading-snug mb-1.5 line-clamp-2">
+      {/* Bottom Typography & Details */}
+      <div className="text-center pt-2 z-10">
+        <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-[#0F172A] tracking-tight line-clamp-2 group-hover:text-[#0062A8] transition-colors">
           {item.title}
-        </h4>
-
-        <p className="text-xs text-[#64748B] line-clamp-2 leading-relaxed mb-3 flex-1">
-          {item.description || item.content}
+        </h3>
+        <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1.5 line-clamp-1">
+          {deptLabel(item)}
+          {issuerName(item) ? ` • ${issuerName(item)}` : ""}
         </p>
 
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
-          <span className="text-[10px] font-semibold text-slate-400 truncate max-w-[55%]">
-            {issuerName(item)}
-          </span>
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#0062A8]">
-            View More
-            <ArrowRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0062A8] bg-blue-50 border border-blue-200/80 px-4 py-1.5 rounded-full shadow-xs group-hover:bg-[#0062A8] group-hover:text-white transition-colors">
+            View Details
+            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
           </span>
         </div>
       </div>
