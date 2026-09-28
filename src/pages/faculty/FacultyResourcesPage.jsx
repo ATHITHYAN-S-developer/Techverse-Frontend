@@ -33,6 +33,12 @@ export default function FacultyResourcesPage() {
 
   const ownDeptId = user?.departmentId || "";
   const ownDeptCode = user?.department?.toUpperCase?.() || "";
+  const currentUserId = String(user?._id || user?.id || "");
+
+  const canModifyResource = (res) =>
+    user?.role === "admin" ||
+    res.uploadedBy?._id === currentUserId ||
+    res.uploadedBy === currentUserId;
 
   const [resources, setResources] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -288,20 +294,24 @@ export default function FacultyResourcesPage() {
                           >
                             {item.fileUrl ? <Download className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
                           </button>
-                          <button
-                            onClick={() => openEdit(item)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#0062A8] hover:bg-slate-100"
-                            title="Edit Resource"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteDialog({ open: true, id: itemId })}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50"
-                            title="Delete Resource"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canModifyResource(item) && (
+                            <>
+                              <button
+                                onClick={() => openEdit(item)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-[#0062A8] hover:bg-slate-100"
+                                title="Edit Resource"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteDialog({ open: true, id: itemId })}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50"
+                                title="Delete Resource"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
