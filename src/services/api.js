@@ -50,9 +50,13 @@ export async function apiRequest(endpoint, options = {}) {
         sessionStorage.removeItem("vcetTechHubToken");
         sessionStorage.removeItem("vcetTechHubSession");
       }
-      throw new Error(
+      const error = new Error(
         errorData.message || `Request failed with HTTP status ${response.status}`
       );
+      error.status = response.status;
+      error.code = errorData.code;
+      error.data = errorData;
+      throw error;
     }
 
     const data = await response.json();

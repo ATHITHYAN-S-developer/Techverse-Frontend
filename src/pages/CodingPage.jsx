@@ -176,7 +176,12 @@ export default function CodingPage() {
           showError(`Solution status: ${result.status}`);
         }
       } catch (err) {
-        showError("Submission failed. Please check network connection.");
+        if (err?.busy) {
+          setConsoleOutput(`>>> Arena temporarily unavailable.\n${err.message}`);
+          showError(err.message);
+        } else {
+          showError("Submission failed. Please check network connection.");
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -234,7 +239,12 @@ export default function CodingPage() {
         showInfo("Some public test cases failed. Check details in Test Cases tab.");
       }
     } catch (err) {
-      showError("Execution failed. Please check code syntax.");
+      if (err?.busy) {
+        setConsoleOutput(`>>> Arena temporarily unavailable.\n${err.message}`);
+        showError(err.message);
+      } else {
+        showError("Execution failed. Please check code syntax.");
+      }
     } finally {
       setIsRunning(false);
     }

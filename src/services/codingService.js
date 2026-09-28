@@ -8,6 +8,19 @@ import { CODING_PROBLEMS } from "../data/codingProblems";
 
 const LOCAL_STORAGE_KEY = "techverse_custom_coding_tests";
 
+function buildBusyError(err) {
+  const retryAfter = Number(err?.data?.retryAfter);
+  const waitHint = Number.isFinite(retryAfter) && retryAfter > 0 ? ` Retry in ~${retryAfter}s.` : "";
+  const message =
+    err.status === 503
+      ? `The coding arena is busy right now.${waitHint}`
+      : `You're running code too quickly.${waitHint}`;
+  const busyError = new Error(message);
+  busyError.status = err.status;
+  busyError.busy = true;
+  return busyError;
+}
+
 function getLocalCustomTests() {
   try {
     const raw = localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -290,6 +303,9 @@ export const codingService = {
       });
       return res.data;
     } catch (err) {
+      if (err?.status === 429 || err?.status === 503) {
+        throw buildBusyError(err);
+      }
       console.warn("Backend code run error, executing client-side simulation:", err.message);
       return {
         success: true,
@@ -337,6 +353,9 @@ export const codingService = {
       });
       return res.data;
     } catch (err) {
+      if (err?.status === 429 || err?.status === 503) {
+        throw buildBusyError(err);
+      }
       console.warn("Backend submitCode failed, using local simulated submission:", err.message);
       return {
         success: true,
