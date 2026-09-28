@@ -89,6 +89,8 @@ export const announcementService = {
       date: new Date().toISOString().split("T")[0],
       publishDate: announcementData.publishDate || new Date().toISOString().split("T")[0],
       expiryDate: announcementData.expiryDate || "",
+      deadline: announcementData.deadline || announcementData.expiryDate || "",
+      eventDate: announcementData.eventDate || announcementData.expiryDate || "",
       department: announcementData.department || "All Departments",
       imageUrl: announcementData.imageUrl || "",
       authorName: announcementData.authorName || publisherName,

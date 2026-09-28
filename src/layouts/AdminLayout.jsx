@@ -35,7 +35,7 @@ import { useAuth } from "../context/AuthContext";
 import NotificationBell from "../components/NotificationBell";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
-import AnnouncementMarquee from "../components/AnnouncementMarquee";
+
 import VcetBanner from "../components/VcetBanner";
 
 const ADMIN_NAV_TREE = [
@@ -257,7 +257,6 @@ export default function AdminLayout() {
 
       {/* VCET Banner */}
       <VcetBanner />
-      <AnnouncementMarquee />
 
       {/* 2. BODY: FIXED SIDEBAR + MAIN CONTENT AREA */}
       <div className="flex flex-1 relative">
