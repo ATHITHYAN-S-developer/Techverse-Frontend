@@ -13,12 +13,10 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { resourceService, RESOURCE_TYPES, resolveResourceUrl } from "../../services/resourceService";
-import { subjectService } from "../../services/subjectService";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 const EMPTY_FORM = {
   title: "",
-  subjectId: "",
   type: "notes",
   unit: "",
   description: "",
@@ -41,7 +39,6 @@ export default function FacultyResourcesPage() {
     res.uploadedBy === currentUserId;
 
   const [resources, setResources] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -53,7 +50,6 @@ export default function FacultyResourcesPage() {
 
   useEffect(() => {
     loadResources();
-    loadSubjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.departmentId]);
 
@@ -61,24 +57,11 @@ export default function FacultyResourcesPage() {
     try {
       const data = await resourceService.getAllResources();
       const list = Array.isArray(data) ? data : [];
-      const filtered = ownDeptId
-        ? list.filter((r) => r.departmentId?._id === ownDeptId || r.departmentId === ownDeptId)
-        : list;
-      setResources(filtered);
+      setResources(list);
     } catch {
       showError("Failed to load department resources");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadSubjects = async () => {
-    if (!ownDeptId) return;
-    try {
-      const data = await subjectService.getSubjectsByDepartment(ownDeptId);
-      setSubjects(Array.isArray(data) ? data : []);
-    } catch {
-      setSubjects([]);
     }
   };
 
@@ -92,7 +75,6 @@ export default function FacultyResourcesPage() {
     setEditingResource(res);
     setFormData({
       title: res.title || "",
-      subjectId: res.subjectId?._id || res.subjectId || "",
       type: res.type || "notes",
       unit: res.unit ? String(res.unit) : "",
       description: res.description || "",
@@ -107,10 +89,6 @@ export default function FacultyResourcesPage() {
     e.preventDefault();
     if (!formData.title.trim()) {
       showError("Please enter a resource title");
-      return;
-    }
-    if (!formData.subjectId) {
-      showError("Please select a subject");
       return;
     }
     if (!editingResource && !formData.file && !formData.externalUrl.trim()) {
@@ -167,11 +145,10 @@ export default function FacultyResourcesPage() {
     if (url) window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const subjectLabel = (res) => {
-    const s = res.subjectId;
-    if (typeof s === "object" && s) return `${s.code} - ${s.name}`;
-    const match = subjects.find((x) => x._id === (typeof s === "string" ? s : null));
-    return match ? `${match.code} - ${match.name}` : "Subject";
+  const departmentLabel = (res) => {
+    const d = res.departmentId;
+    if (typeof d === "object" && d) return d.code || d.name || "Department";
+    return "Department";
   };
 
   const q = (searchTerm || "").toLowerCase().trim();
@@ -199,7 +176,7 @@ export default function FacultyResourcesPage() {
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             {ownDeptCode
-              ? `Upload and manage academic notes, lab manuals, and question banks for the ${ownDeptCode} department.`
+              ? `Upload notes, lab manuals, and question banks for the ${ownDeptCode} department; other departments' shared notes are visible here too.`
               : "Upload and manage academic resources for your department."}
           </p>
           {ownDeptCode && (
@@ -240,7 +217,7 @@ export default function FacultyResourcesPage() {
             <thead className="bg-slate-50 text-slate-700 font-bold uppercase text-[10px] tracking-wider border-b border-slate-100">
               <tr>
                 <th className="px-5 py-3.5">Resource</th>
-                <th className="px-4 py-3.5">Subject</th>
+                <th className="px-4 py-3.5">Department</th>
                 <th className="px-4 py-3.5">Type</th>
                 <th className="px-4 py-3.5">Downloads</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
@@ -256,7 +233,7 @@ export default function FacultyResourcesPage() {
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12 text-slate-400">
-                    No departmental resources yet. Click "Add New Resource" to upload the first one.
+                    No resources yet. Click "Add New Resource" to upload the first one.
                   </td>
                 </tr>
               ) : (
@@ -277,7 +254,9 @@ export default function FacultyResourcesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span className="font-semibold text-slate-800">{subjectLabel(item)}</span>
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          {departmentLabel(item)}
+                        </span>
                       </td>
                       <td className="px-4 py-4">
                         <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#0062A8] border border-blue-200">
@@ -346,22 +325,6 @@ export default function FacultyResourcesPage() {
                   placeholder="e.g. Unit 3 DBMS Relational Algebra & SQL Notes"
                   className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0062A8]"
                 />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Subject *</label>
-                <select
-                  value={formData.subjectId}
-                  onChange={(e) => setFormData({ ...formData, subjectId: e.target.value })}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800"
-                >
-                  <option value="">Select a subject...</option>
-                  {subjects.map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.code} - {s.name} (Sem {s.semester})
-                    </option>
-                  ))}
-                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
