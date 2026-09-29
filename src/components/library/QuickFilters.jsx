@@ -30,11 +30,11 @@ export default function QuickFilters({
               aria-pressed={active}
               className={`shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-200 border ${
                 active
-                  ? "bg-[#0B4A8F] text-white border-[#0B4A8F] shadow-md shadow-blue-900/10"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-[#0B4A8F] hover:text-[#0B4A8F]"
+                  ? "bg-profile-main text-white border-profile-main shadow-md shadow-profile-main/10"
+                  : "bg-white text-profile-ink/80 border-profile-rule hover:border-profile-main hover:text-profile-main"
               }`}
             >
-              <Icon size={15} className={active ? "text-white" : "text-slate-400"} />
+              <Icon size={15} className={active ? "text-white" : "text-profile-ink/60"} />
               {pill.label}
             </button>
           );
@@ -45,11 +45,11 @@ export default function QuickFilters({
             aria-pressed={myDeptActive}
             className={`shrink-0 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold transition-all duration-200 border ${
               myDeptActive
-                ? "bg-[#0B4A8F] text-white border-[#0B4A8F] shadow-md shadow-blue-900/10"
-                : "bg-white text-slate-600 border-slate-200 hover:border-[#0B4A8F] hover:text-[#0B4A8F]"
+                ? "bg-profile-main text-white border-profile-main shadow-md shadow-profile-main/10"
+                : "bg-white text-profile-ink/80 border-profile-rule hover:border-profile-main hover:text-profile-main"
             }`}
           >
-            <UserCircle2 size={15} className={myDeptActive ? "text-white" : "text-slate-400"} />
+            <UserCircle2 size={15} className={myDeptActive ? "text-white" : "text-profile-ink/60"} />
             My Department
           </button>
         )}

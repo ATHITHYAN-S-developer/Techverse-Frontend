@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import "@fontsource-variable/sora";
+@import "@fontsource-variable/fraunces";
+@import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -28,13 +31,35 @@ input:-webkit-autofill:active {
   --color-vcet-gray-border: #C9C9C9;
   --color-white: #FFFFFF;
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Portal design tokens — academic register: VCET blue carries the identity,
+     gold is reserved for streak/points/active emphasis. */
+  --color-vcet-gold: #B8860B;
+  --color-vcet-gold-soft: #D4A017;
+  --color-vcet-gold-light: #FBF6E7;
+  --color-vcet-ink: #1B1B1C;
+  --color-vcet-ink-soft: #4A4A4B;
+  --color-vcet-paper: #FCFCFA;
+  --color-vcet-paper-alt: #F6F5F0;
+  --color-vcet-rule: #E4E1D8;
+  --font-display: 'Sora Variable', 'Sora', 'Plus Jakarta Sans', 'Inter', sans-serif;
+  --font-serif: 'Fraunces Variable', 'Fraunces', 'Georgia', 'Times New Roman', serif;
+  --font-body: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+
+  --color-profile-main: #0062A9;
+  --color-profile-hover: #004E85;
+  --color-profile-light: #E8F1F9;
+  --color-profile-alt: #F5F5F6;
+  --color-profile-ink: #444446;
+  --color-profile-paper: #FFFFFF;
+  --color-profile-rule: #C9C9C9;
 }
 
 @layer base {
   html {
     scroll-behavior: smooth;
     font-family: var(--font-sans);
-    background-color: #FFFFFF;
+    background-color: var(--color-vcet-paper);
     color: #444445;
     overflow-x: hidden;
     max-width: 100vw;

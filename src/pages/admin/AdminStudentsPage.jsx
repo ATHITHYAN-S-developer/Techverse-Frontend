@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   GraduationCap,
   Search,
@@ -26,32 +26,136 @@ import {
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { api } from "../../services/api";
+import { departmentService } from "../../services/departmentService";
 
 const INITIAL_STUDENTS = [];
 
-const DEPARTMENTS = ["ALL", "CSE", "AI&DS", "IT", "ECE", "EEE", "MECH", "CIVIL"];
+// Page size for the student table. The public /users endpoint caps `limit` at
+// 100, so the roster is walked page by page through the admin endpoint.
+const PAGE_SIZE = 25;
+
+const ROMAN_YEARS = { 1: "I Year", 2: "II Year", 3: "III Year", 4: "IV Year" };
+
+const FALLBACK_AVATAR =
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80";
+
+/**
+ * Map a `User` document from `GET /admin/users` onto the view model this page
+ * renders. The API returns `registerNumber` / `courseCode` / a populated
+ * `departmentId`, while the table expects `regNo` / `department` / `class`.
+ * Gamification aggregates come straight off the user record; the per-student
+ * course and certificate counts are not part of this endpoint, so they start at
+ * zero rather than showing invented figures.
+ */
+function toStudentView(user) {
+  const department = user.courseCode || user.departmentId?.code || "—";
+  const yearLabel = ROMAN_YEARS[user.year] || (user.year ? `Year ${user.year}` : "—");
+  const section = user.section ? ` - ${user.section}` : "";
+  const batch =
+    user.batchStartYear && user.batchEndYear
+      ? `${user.batchStartYear} - ${user.batchEndYear}`
+      : null;
+
+  return {
+    id: user._id,
+    regNo: user.registerNumber || "—",
+    name: user.name,
+    email: user.email,
+    department,
+    year: yearLabel,
+    class: user.year ? `${yearLabel.replace(" Year", "")} ${department}${section}` : "—",
+    semester: user.semester || null,
+    section: user.section || "",
+    batch,
+    dateOfBirth: user.dateOfBirth || null,
+    isActive: user.isActive !== false,
+    avatar: user.profileImage || FALLBACK_AVATAR,
+    stats: {
+      coursesEnrolled: 0,
+      coursesCompleted: 0,
+      testsAttempted: 0,
+      averageScore: 0,
+      points: user.points?.totalPoints || 0,
+      streak: user.streak?.currentStreak || 0,
+      certificates: 0,
+    },
+    activity: [],
+  };
+}
+
+/** "2007-09-20" -> "20 Sep 2007" (or the raw value if it is not a date). */
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+function formatDate(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${day} ${MONTHS[date.getMonth()]} ${date.getFullYear()}`;
+}
 
 export default function AdminStudentsPage() {
   const { showSuccess, showError } = useToast();
   const [students, setStudents] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deptFilter, setDeptFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalStudents, setTotalStudents] = useState(0);
+  const searchReady = useRef(false);
 
   useEffect(() => {
     loadStudents();
+    loadDepartments();
   }, []);
 
-  const loadStudents = async () => {
+  // The department list comes from the database so a new branch shows up in the
+  // filter without a frontend change.
+  const loadDepartments = async () => {
+    try {
+      const list = await departmentService.getDepartments({ all: true });
+      const items = Array.isArray(list) ? list : list?.departments || [];
+      setDepartments(items.map((d) => d.code).filter(Boolean));
+    } catch (err) {
+      console.debug("Load departments note:", err);
+      setDepartments([]);
+    }
+  };
+
+  const loadStudents = async (targetPage = 1, filters = {}) => {
     try {
       setLoading(true);
-      const res = await api.get("/users?role=student");
+      const search = filters.search !== undefined ? filters.search : searchTerm;
+      const department = filters.dept !== undefined ? filters.dept : deptFilter;
+      const status = filters.status !== undefined ? filters.status : statusFilter;
+
+      const params = new URLSearchParams({
+        role: "student",
+        page: String(targetPage),
+        limit: String(PAGE_SIZE),
+      });
+      if (search) params.set("search", search);
+      if (department && department !== "ALL") {
+        params.set("departmentCode", department);
+      }
+      if (status !== "ALL") params.set("isActive", String(status === "ACTIVE"));
+
+      const res = await api.get(`/admin/users?${params.toString()}`);
       const list = res?.data?.users || res?.users || [];
-      setStudents(list);
+      const pagination = res?.data?.pagination || res?.pagination;
+
+      setStudents(list.map(toStudentView));
+      setTotalPages(pagination?.totalPages || 1);
+      setTotalStudents(pagination?.total ?? list.length);
+      setPage(targetPage);
     } catch (err) {
       console.debug("Load students note:", err);
       setStudents([]);
+      setTotalPages(1);
+      setTotalStudents(0);
     } finally {
       setLoading(false);
     }
@@ -166,18 +270,20 @@ export default function AdminStudentsPage() {
     setNewPassword("");
   };
 
-  const filtered = students.filter((s) => {
-    const matchesSearch =
-      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.regNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDept = deptFilter === "ALL" || s.department === deptFilter;
-    const matchesStatus =
-      statusFilter === "ALL" ||
-      (statusFilter === "active" && s.isActive) ||
-      (statusFilter === "blocked" && !s.isActive);
-    return matchesSearch && matchesDept && matchesStatus;
-  });
+  // Filtering and search run on the server so results span the whole roster,
+  // not just the 25 rows on the current page. The first render is skipped
+  // because the mount effect already loads the unfiltered page.
+  useEffect(() => {
+    if (!searchReady.current) {
+      searchReady.current = true;
+      return;
+    }
+    const timer = setTimeout(() => loadStudents(1, { search: searchTerm }), 350);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
+
+  const filtered = students;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto text-slate-800">
@@ -218,19 +324,26 @@ export default function AdminStudentsPage() {
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <select
             value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
+            onChange={(e) => {
+              setDeptFilter(e.target.value);
+              loadStudents(1, { dept: e.target.value });
+            }}
             className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 focus:outline-none focus:bg-white"
           >
-            {DEPARTMENTS.map((d) => (
+            <option value="ALL">All Departments</option>
+            {departments.map((d) => (
               <option key={d} value={d}>
-                {d === "ALL" ? "All Departments" : d}
+                {d}
               </option>
             ))}
           </select>
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              loadStudents(1, { status: e.target.value });
+            }}
             className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 focus:outline-none focus:bg-white"
           >
             <option value="ALL">All Status</option>
@@ -339,6 +452,36 @@ export default function AdminStudentsPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination - the roster is well past the 100-row cap of /users */}
+        {totalStudents > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5 border-t border-slate-200 bg-slate-50">
+            <span className="text-[11px] font-semibold text-slate-500">
+              Showing {(page - 1) * PAGE_SIZE + 1}–
+              {Math.min(page * PAGE_SIZE, totalStudents)} of {totalStudents} students
+            </span>
+
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => loadStudents(page - 1)}
+                disabled={page <= 1 || loading}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-[11px] font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Prev
+              </button>
+              <span className="px-2 text-[11px] font-mono font-bold text-slate-700">
+                {page} / {totalPages}
+              </span>
+              <button
+                onClick={() => loadStudents(page + 1)}
+                disabled={page >= totalPages || loading}
+                className="px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-[11px] font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Student Profile Drawer / Modal - White Mode */}
@@ -379,6 +522,39 @@ export default function AdminStudentsPage() {
                   <span>{profileStudent.class} (Sem {profileStudent.semester})</span>
                   <span>•</span>
                   <span>{profileStudent.email}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Roster Details */}
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                Roster Details
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500">Date of Birth</span>
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">
+                    {formatDate(profileStudent.dateOfBirth)}
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500">Batch</span>
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">
+                    {profileStudent.batch || "—"}
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500">Course</span>
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">
+                    {profileStudent.department}
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  <span className="text-[10px] text-slate-500">Semester</span>
+                  <p className="text-xs font-bold text-slate-900 mt-0.5">
+                    {profileStudent.semester ? `Sem ${profileStudent.semester}` : "—"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -430,12 +606,18 @@ export default function AdminStudentsPage() {
                 Recent Activity Logs
               </h3>
               <div className="bg-slate-50 rounded-xl border border-slate-200 divide-y divide-slate-200">
-                {profileStudent.activity.map((act, i) => (
-                  <div key={i} className="p-3 flex items-center justify-between text-xs">
-                    <span className="text-slate-800 font-medium">{act.action}</span>
-                    <span className="text-slate-500 text-[11px] shrink-0">{act.time}</span>
-                  </div>
-                ))}
+                {profileStudent.activity.length === 0 ? (
+                  <p className="p-3 text-xs text-slate-400">
+                    No recorded activity for this student yet.
+                  </p>
+                ) : (
+                  profileStudent.activity.map((act, i) => (
+                    <div key={i} className="p-3 flex items-center justify-between text-xs">
+                      <span className="text-slate-800 font-medium">{act.action}</span>
+                      <span className="text-slate-500 text-[11px] shrink-0">{act.time}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -516,7 +698,7 @@ export default function AdminStudentsPage() {
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
                     className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
                   >
-                    {DEPARTMENTS.filter((d) => d !== "ALL").map((d) => (
+                    {departments.map((d) => (
                       <option key={d} value={d}>
                         {d}
                       </option>

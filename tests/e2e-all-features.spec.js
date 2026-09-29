@@ -17,8 +17,8 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
     await expect(page.getByText("Python Programming Masterclass").first()).toBeVisible({ timeout: 5000 });
   });
 
-  // 2. STUDENT PORTAL (Login, Dashboard, Tests, Leaderboard, Certificates)
-  test("Student Portal: Login, Dashboard, Tests, and Leaderboard", async ({ page }) => {
+  // 2. STUDENT PORTAL (Login, Dashboard, Tests, Profile, Certificates)
+  test("Student Portal: Login, Dashboard, Tests, and Profile", async ({ page }) => {
     // Navigate to Login
     await page.goto("/login");
     await expect(page.getByText("Welcome Back")).toBeVisible();
@@ -34,14 +34,27 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
     await expect(page.getByText("Total Points")).toBeVisible();
     await expect(page.locator("body")).not.toBeEmpty();
 
+    // The streak and points figures must be real numbers, not placeholders.
+    // Previously the context seeded 7/820 from localStorage, so these labels
+    // rendered even with the whole gamification pipeline broken.
+    const metricValue = (label) =>
+      page.locator('section[aria-label="Key metrics"] a', { hasText: label }).locator("p").first();
+
+    await expect(metricValue("Current Streak")).toHaveText(/^\d+$/);
+    await expect(metricValue("Total Points")).toHaveText(/^\d+$/);
+
     // Verify Daily Tests Page (BUG #008 Regression Check)
     await page.goto("/tests");
     await expect(page.locator("body")).not.toBeEmpty();
 
-    // Verify Leaderboard Page (BUG #005 Regression Check)
+    // The leaderboard was removed; the route should no longer exist.
     await page.goto("/leaderboard");
-    await expect(page.getByText("Student Leaderboard")).toBeVisible();
-    await expect(page.locator("body")).not.toBeEmpty();
+    await expect(page).not.toHaveURL(/.*leaderboard/);
+
+    // Verify Profile Page (streak and points live here now)
+    await page.goto("/profile");
+    await expect(page.getByText("Streak", { exact: true })).toBeVisible();
+    await expect(page.getByText("Points", { exact: true })).toBeVisible();
 
     // Verify Certificates Page
     await page.goto("/certificates");

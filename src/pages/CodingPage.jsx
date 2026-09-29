@@ -43,7 +43,7 @@ const SUPPORTED_LANGUAGES = [
 ];
 
 export default function CodingPage() {
-  const { user, addPoints, incrementStreak } = useAuth();
+  const { user, refreshGamification } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
 
   const [tests, setTests] = useState([]);
@@ -164,10 +164,8 @@ export default function CodingPage() {
           );
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
           showSuccess(`🎉 Accepted! Solution passed all test suites (+${result.pointsAwarded || selectedProblem.points || 30} Points)`);
-          if (result.pointsAwarded) {
-            addPoints(result.pointsAwarded, `Solved Coding Problem: ${selectedProblem.title}`);
-          }
-          incrementStreak();
+          // Points and streak are awarded server-side; re-read the totals.
+          refreshGamification();
         } else {
           setConsoleOutput(
             `❌ ${result.status} (${result.passedCases || 0}/${result.totalCases} cases passed)\n\nExecution Time: ${result.executionTime}s\nMemory: ${result.memory}MB${
@@ -187,7 +185,7 @@ export default function CodingPage() {
         setIsSubmitting(false);
       }
     },
-    [currentTest, selectedProblem, isSubmitting, language, code, addPoints, incrementStreak, showSuccess, showError]
+    [currentTest, selectedProblem, isSubmitting, language, code, refreshGamification, showSuccess, showError]
   );
 
   // Hook for Exam Mode Proctoring

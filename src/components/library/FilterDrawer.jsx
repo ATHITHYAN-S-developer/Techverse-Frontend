@@ -47,7 +47,7 @@ export default function FilterDrawer({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[60] bg-[#0F172A]/40 backdrop-blur-[2px]"
+        className="fixed inset-0 z-[60] bg-profile-ink/40 backdrop-blur-[2px]"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -62,12 +62,12 @@ export default function FilterDrawer({
         aria-modal="true"
         aria-label="Filter resources"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-white/95 backdrop-blur border-b border-slate-100">
-          <h3 className="text-sm font-extrabold text-[#0F172A]">Filter Resources</h3>
+        <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-4 bg-white/95 backdrop-blur border-b border-profile-rule/40">
+          <h3 className="text-sm font-extrabold text-profile-ink">Filter Resources</h3>
           <button
             onClick={onClose}
             aria-label="Close filters"
-            className="p-1.5 rounded-lg text-slate-400 hover:text-[#0B4A8F] hover:bg-slate-100 transition-colors"
+            className="p-1.5 rounded-lg text-profile-ink/60 hover:text-profile-main hover:bg-profile-alt transition-colors"
           >
             <X size={18} />
           </button>
@@ -131,17 +131,17 @@ export default function FilterDrawer({
           </FilterGroup>
         </div>
 
-        <div className="sticky bottom-0 flex items-center gap-3 px-5 py-4 bg-white/95 backdrop-blur border-t border-slate-100">
+        <div className="sticky bottom-0 flex items-center gap-3 px-5 py-4 bg-white/95 backdrop-blur border-t border-profile-rule/40">
           <button
             onClick={reset}
-            className="flex items-center justify-center gap-2 flex-1 rounded-xl border border-slate-200 px-4 py-3 text-[13px] font-bold text-slate-600 hover:border-[#EF4444] hover:text-[#EF4444] transition-colors"
+            className="flex items-center justify-center gap-2 flex-1 rounded-xl border border-profile-rule px-4 py-3 text-[13px] font-bold text-profile-ink/80 hover:border-[#EF4444] hover:text-[#EF4444] transition-colors"
           >
             <RotateCcw size={14} />
             Reset
           </button>
           <button
             onClick={() => onApply({ dept, semester, type, subjectId })}
-            className={optionClass + " flex-1 rounded-xl bg-[#0B4A8F] hover:bg-[#084282] px-4 py-3 text-[13px] font-bold text-white shadow-md shadow-blue-900/10 transition-colors"}
+            className={optionClass + " flex-1 rounded-xl bg-profile-main hover:bg-profile-hover px-4 py-3 text-[13px] font-bold text-white shadow-md shadow-profile-main/10 transition-colors"}
           >
             Apply Filters
           </button>
@@ -154,7 +154,7 @@ export default function FilterDrawer({
 function FilterGroup({ label, children }) {
   return (
     <div>
-      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400 mb-2.5">
+      <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-profile-ink/60 mb-2.5">
         {label}
       </p>
       {children}
@@ -169,8 +169,8 @@ function Pill({ active, onClick, children }) {
       aria-pressed={active}
       className={`rounded-full px-3.5 py-2 text-[12px] font-semibold transition-colors duration-150 border ${
         active
-          ? "bg-[#0B4A8F] text-white border-[#0B4A8F]"
-          : "bg-white text-slate-600 border-slate-200 hover:border-[#0B4A8F] hover:text-[#0B4A8F]"
+          ? "bg-profile-main text-white border-profile-main"
+          : "bg-white text-profile-ink/80 border-profile-rule hover:border-profile-main hover:text-profile-main"
       }`}
     >
       {children}

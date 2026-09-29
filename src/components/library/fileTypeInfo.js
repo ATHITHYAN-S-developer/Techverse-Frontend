@@ -3,11 +3,11 @@ const EXT_MAP = [
   { re: /\.(exe|msi|apk|dmg)(\?|$)/, label: "APP", bg: "#ECFDF5", color: "#059669" },
   { re: /\.(zip|rar|7z|tar|gz)(\?|$)/, label: "ZIP", bg: "#FFF7ED", color: "#D97706" },
   { re: /\.(jpg|jpeg|png|gif|webp|svg)(\?|$)/, label: "IMG", bg: "#FEF2F2", color: "#DC2626" },
-  { re: /\.(doc|docx)(\?|$)/, label: "DOC", bg: "#EFF6FF", color: "#2563EB" },
+  { re: /\.(doc|docx)(\?|$)/, label: "DOC", bg: "#E8F1F9", color: "#0062A9" },
   { re: /\.(ppt|pptx)(\?|$)/, label: "PPT", bg: "#FFF7ED", color: "#EA580C" },
   { re: /\.(xls|xlsx|csv)(\?|$)/, label: "XLS", bg: "#ECFDF5", color: "#059669" },
-  { re: /\.(txt|md)(\?|$)/, label: "TXT", bg: "#F8FAFC", color: "#64748B" },
-  { re: /\.(html?|json|js|ts)(\?|$)/, label: "CODE", bg: "#0B4A8F", color: "#EFF6FF" },
+  { re: /\.(txt|md)(\?|$)/, label: "TXT", bg: "#F5F5F6", color: "#444446" },
+  { re: /\.(html?|json|js|ts)(\?|$)/, label: "CODE", bg: "#0062A9", color: "#E8F1F9" },
 ];
 
 export function fileBadge(resource) {
@@ -18,11 +18,11 @@ export function fileBadge(resource) {
   const type = resource?.type;
   if (type === "video") return { label: "VIDEO", bg: "#F5F3FF", color: "#7C3AED" };
   if (type === "software" || type === "website") return { label: "APP", bg: "#ECFDF5", color: "#059669" };
-  if (type === "lab_manual") return { label: "LAB", bg: "#EFF6FF", color: "#2563EB" };
+  if (type === "lab_manual") return { label: "LAB", bg: "#E8F1F9", color: "#0062A9" };
   if (type === "question_bank") return { label: "QB", bg: "#F5F3FF", color: "#7C3AED" };
   if (type === "previous_paper") return { label: "PYQ", bg: "#FFF7ED", color: "#D97706" };
   if (type === "syllabus") return { label: "SYL", bg: "#ECFDF5", color: "#059669" };
-  if (type === "project") return { label: "PRJ", bg: "#EFF6FF", color: "#2563EB" };
+  if (type === "project") return { label: "PRJ", bg: "#E8F1F9", color: "#0062A9" };
   return { label: "PDF", bg: "#FEF2F2", color: "#DC2626" };
 }
 

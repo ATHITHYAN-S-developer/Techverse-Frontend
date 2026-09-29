@@ -1,61 +1,91 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Building2, FileText, Monitor, ClipboardList } from "lucide-react";
+import {
+  Cpu,
+  Brain,
+  Radio,
+  Zap,
+  Building,
+  HeartPulse,
+  Activity,
+  Network,
+  Building2,
+  ArrowRight,
+  BookOpen
+} from "lucide-react";
 
-const TYPE_ICONS = {
-  notes: FileText,
-  question_bank: ClipboardList,
-  software: Monitor,
+const ICON_MAP = {
+  Cpu,
+  Brain,
+  Radio,
+  Zap,
+  Building,
+  HeartPulse,
+  Activity,
+  Network,
+  Building2
 };
 
-function typeIconFor(dept, count) {
-  const best = Object.entries(dept.counts || {})
-    .map(([k, v]) => [k, v])
-    .sort((a, b) => b[1] - a[1])[0];
-  const T = TYPE_ICONS[best?.[0]] || Building2;
-  return { Icon: T, count: best?.[1] || count };
-}
-
-export default function DepartmentExplorer({ departments, onSelect }) {
+export default function DepartmentExplorer({ departments = [], selectedDeptId, onSelect }) {
   if (!departments.length) return null;
 
   return (
-    <section className="mt-8 px-5 sm:px-0" aria-label="Browse by department">
-      <div className="flex items-end justify-between mb-3">
+    <section aria-label="Browse by department" className="my-6">
+      <div className="flex items-center justify-between mb-3 px-1">
         <div>
-          <h2 className="text-base sm:text-lg font-extrabold text-[#0F172A] tracking-tight">
-            Explore Departments
+          <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-400">
+            Departments Overview
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
-            A curated library for every branch
-          </p>
         </div>
+        {selectedDeptId !== "all" && (
+          <button
+            onClick={() => onSelect("all")}
+            className="text-xs font-bold text-blue-600 hover:text-blue-700"
+          >
+            View All Departments
+          </button>
+        )}
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 sm:mx-0 sm:px-0 no-scrollbar">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-8 gap-2.5">
         {departments.map((dept, idx) => {
-          const { Icon, count } = typeIconFor(dept, dept.count || 0);
+          const Icon = ICON_MAP[dept.icon] || Building2;
+          const isSelected =
+            String(selectedDeptId) === String(dept.id) ||
+            String(selectedDeptId).toLowerCase() === String(dept.code).toLowerCase();
+          const deptColor = dept.color || "#0284c7";
+
           return (
             <motion.button
-              key={dept.id}
-              initial={{ opacity: 0, y: 8 }}
+              key={dept.id || dept._id || idx}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.04, duration: 0.35, ease: "easeOut" }}
+              transition={{ delay: idx * 0.03, duration: 0.3, ease: "easeOut" }}
+              whileHover={{ y: -2 }}
               onClick={() => onSelect(dept.id)}
-              className="shrink-0 w-[168px] sm:w-[180px] text-left rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-[#0B4A8F] hover:shadow-md hover:shadow-blue-900/5 transition-all duration-200 group"
+              className={`relative flex flex-col items-center justify-between p-3.5 rounded-xl border text-center transition-all duration-200 group ${
+                isSelected
+                  ? "bg-blue-50/80 border-blue-500 shadow-sm shadow-blue-500/10 ring-2 ring-blue-500/20"
+                  : "bg-white border-slate-200/80 hover:border-slate-300 hover:shadow-sm"
+              }`}
             >
-              <div className="flex items-center justify-between">
-                <div className="h-10 w-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center group-hover:bg-[#0B4A8F] transition-colors duration-200">
-                  <Icon size={18} className="text-[#0B4A8F] group-hover:text-white transition-colors duration-200" />
-                </div>
-                <ArrowRight size={15} className="text-slate-300 group-hover:text-[#0B4A8F] group-hover:translate-x-0.5 transition-all duration-200" />
-              </div>
-              <p className="mt-3 text-[13px] font-bold text-[#0F172A] leading-tight line-clamp-2">
-                {dept.name}
-              </p>
-              <p className="mt-1 text-[11px] font-semibold text-slate-400">
-                {count > 0 ? `${count} resources` : "Browse library"}
-              </p>
+              <span
+                className="w-10 h-10 rounded-xl flex items-center justify-center mb-2 transition-transform duration-200 group-hover:scale-105"
+                style={{
+                  backgroundColor: `${deptColor}15`,
+                  color: deptColor
+                }}
+              >
+                <Icon size={20} strokeWidth={2} />
+              </span>
+
+              <span className="text-[12px] font-extrabold text-slate-800 leading-tight line-clamp-1 group-hover:text-blue-600 transition-colors">
+                {dept.code}
+              </span>
+
+              <span className="text-[10px] font-semibold text-slate-400 mt-1">
+                {dept.count ? `${dept.count} items` : "Explore"}
+              </span>
             </motion.button>
           );
         })}

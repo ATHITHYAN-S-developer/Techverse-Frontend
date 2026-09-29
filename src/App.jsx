@@ -24,7 +24,6 @@ import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLearningPage from "./pages/CourseLearningPage";
 import DailyTestPage from "./pages/DailyTestPage";
-import LeaderboardPage from "./pages/LeaderboardPage";
 import CertificatesPage from "./pages/CertificatesPage";
 import VerifyCertificatePage from "./pages/VerifyCertificatePage";
 import CodingPage from "./pages/CodingPage";
@@ -124,8 +123,6 @@ export default function App() {
               <Route path="/courses/:courseId/module/:moduleId" element={<CourseLearningPage />} />
               <Route path="/tests" element={<DailyTestPage />} />
               <Route path="/tests/:testId" element={<DailyTestPage />} />
-              <Route path="/leaderboard" element={<LeaderboardPage />} />
-              <Route path="/points" element={<LeaderboardPage />} />
               <Route path="/certificates" element={<CertificatesPage />} />
               <Route path="/coding" element={<CodingPage />} />
               <Route path="/bookmarks" element={<BookmarksPage />} />

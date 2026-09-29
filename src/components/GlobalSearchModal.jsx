@@ -3,6 +3,10 @@ import { Search, X, BookOpen, GraduationCap, Bell, FileText, ArrowRight, CornerD
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { api } from "../services/api";
+import { COURSES } from "../data/courses";
+import { RESOURCES } from "../data/resources";
+import { ANNOUNCEMENTS } from "../data/announcements";
+import { DEPARTMENTS_DATA } from "../data/departments";
 
 export default function GlobalSearchModal({ isOpen, onClose }) {
   const [query, setQuery] = useState("");
@@ -96,7 +100,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
     : [];
 
   const filteredDepartments = q
-    ? Object.values(DEPARTMENTS_DATA)
+    ? (liveDepartments.length > 0 ? liveDepartments : Object.values(DEPARTMENTS_DATA || {}))
         .filter(
           (d) =>
             (d.name || "").toLowerCase().includes(q) ||

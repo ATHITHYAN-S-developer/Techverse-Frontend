@@ -70,6 +70,19 @@ export default function LoginPage() {
     setTimeout(() => setIsShaking(false), 500);
   };
 
+  // Helper to auto-format DOB input with slashes (e.g., 20092007 -> 20/09/2007)
+  const formatDobInput = (val) => {
+    // If the user is backspacing over a slash, allow deletion smoothly
+    const digits = val.replace(/\D/g, "").slice(0, 8);
+    if (digits.length <= 2) {
+      return digits;
+    }
+    if (digits.length <= 4) {
+      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    }
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+  };
+
   const handleRoleChange = (role) => {
     setActiveRole(role);
     setErrors({});
@@ -82,7 +95,12 @@ export default function LoginPage() {
 
     if (activeRole === "student") {
       const cleanReg = studentReg.trim().toUpperCase();
-      const cleanDob = studentDob.trim();
+      let cleanDob = studentDob.trim();
+
+      // If user typed 8 digits without slashes, automatically convert to DD/MM/YYYY
+      if (/^\d{8}$/.test(cleanDob)) {
+        cleanDob = `${cleanDob.slice(0, 2)}/${cleanDob.slice(2, 4)}/${cleanDob.slice(4, 8)}`;
+      }
 
       const regPattern = /^[0-9]{2,6}[A-Z]{2,5}[0-9]{2,4}$/;
       const newErrors = {};
@@ -94,7 +112,9 @@ export default function LoginPage() {
       }
 
       if (!cleanDob) {
-        newErrors.studentDob = "Password / Date of birth is required";
+        newErrors.studentDob = "Date of birth is required";
+      } else if (!/^\d{1,2}[/\-.]\d{1,2}[/\-.]\d{4}$/.test(cleanDob)) {
+        newErrors.studentDob = "Enter your date of birth as DD/MM/YYYY (e.g. 20/09/2007)";
       }
 
       if (Object.keys(newErrors).length > 0) {
@@ -390,9 +410,9 @@ export default function LoginPage() {
                       htmlFor="studentDob"
                       className="block text-xs font-bold uppercase tracking-wider text-[#0062A8]"
                     >
-                      PASSWORD / DATE OF BIRTH
+                      DATE OF BIRTH
                     </label>
-                    <span className="text-[11px] text-[#0062A8] font-medium">e.g. student123</span>
+                    <span className="text-[11px] text-[#0062A8] font-medium">e.g. 15/08/2006</span>
                   </div>
                   <motion.div
                     animate={errors.studentDob ? shakeAnimation : {}}
@@ -412,14 +432,17 @@ export default function LoginPage() {
                       id="studentDob"
                       name="studentDob"
                       type={showStudentPassword ? "text" : "password"}
-                      autoComplete="current-password"
+                      autoComplete="bday"
+                      inputMode="numeric"
+                      maxLength={10}
                       value={studentDob}
                       onChange={(e) => {
-                        setStudentDob(e.target.value);
+                        const formatted = formatDobInput(e.target.value);
+                        setStudentDob(formatted);
                         if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
                       }}
-                      placeholder="student123 or YYYY-MM-DD"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]"
+                      placeholder="DD/MM/YYYY"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]/60"
                     />
                     <button
                       type="button"

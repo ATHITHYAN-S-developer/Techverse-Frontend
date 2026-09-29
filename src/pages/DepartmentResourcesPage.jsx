@@ -1,25 +1,33 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Menu, Filter } from "lucide-react";
+import {
+  ChevronRight,
+  Sparkles,
+  BookOpen,
+  FileText,
+  ClipboardList,
+  Monitor,
+  Download,
+  Building2,
+  GraduationCap,
+  Layers,
+  Search,
+  SlidersHorizontal
+} from "lucide-react";
 import { departmentService } from "../services/departmentService";
 import { resourceService, resolveResourceUrl } from "../services/resourceService";
 import { apiRequest } from "../services/api";
 import { DEPARTMENTS_DATA } from "../data/departments";
 import { useAuth } from "../context/AuthContext";
-import ResourceSidebar from "../components/library/ResourceSidebar";
-import ResourceHeader from "../components/library/ResourceHeader";
-import ResourceSearch from "../components/library/ResourceSearch";
-import QuickFilters from "../components/library/QuickFilters";
+import UnifiedFilterBar, { CATEGORIES } from "../components/library/UnifiedFilterBar";
 import FeaturedResource from "../components/library/FeaturedResource";
 import DepartmentExplorer from "../components/library/DepartmentExplorer";
 import SubjectExplorer from "../components/library/SubjectExplorer";
 import ResourceLibrary from "../components/library/ResourceLibrary";
-import RecentResources from "../components/library/RecentResources";
-import FilterDrawer from "../components/library/FilterDrawer";
 import ResourceSkeleton from "../components/library/ResourceSkeleton";
 import ErrorState from "../components/departments/ErrorState";
-
+import { TextReveal, FadeInUp } from "../components/common/TextReveal";
 
 export default function DepartmentResourcesPage() {
   const { departmentId: routeDeptId } = useParams();
@@ -33,8 +41,6 @@ export default function DepartmentResourcesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
   const [viewMode, setViewMode] = useState("list");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [departments, setDepartments] = useState([]);
   const [resources, setResources] = useState([]);
@@ -43,8 +49,6 @@ export default function DepartmentResourcesPage() {
   const [loadError, setLoadError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
 
-  const searchRef = useRef(null);
-
   useEffect(() => {
     let cancelled = false;
 
@@ -52,20 +56,34 @@ export default function DepartmentResourcesPage() {
       setLoading(true);
       setLoadError(false);
       setDepartments(
-        Object.values(DEPARTMENTS_DATA).map((d) => ({ id: d.code.toLowerCase(), code: d.code, name: d.name }))
+        Object.values(DEPARTMENTS_DATA).map((d) => ({
+          id: d.code.toLowerCase(),
+          code: d.code,
+          name: d.name,
+          color: d.color || "#0284c7"
+        }))
       );
 
       try {
         const [deptList, resList, subjList] = await Promise.allSettled([
           departmentService.getDepartments(),
           resourceService.getAllResources(),
-          apiRequest("/subjects"),
+          apiRequest("/subjects")
         ]);
 
         if (cancelled) return;
 
         if (deptList.status === "fulfilled" && Array.isArray(deptList.value) && deptList.value.length > 0) {
-          setDepartments(deptList.value.map((d) => ({ id: d._id || d.id, code: d.code, name: d.name })));
+          setDepartments(
+            deptList.value.map((d) => ({
+              id: d._id || d.id,
+              code: d.code,
+              name: d.name,
+              color: d.color || "#0284c7",
+              icon: d.icon,
+              stats: d.stats
+            }))
+          );
         }
 
         if (resList.status === "fulfilled") {
@@ -80,6 +98,8 @@ export default function DepartmentResourcesPage() {
             subjList.value?.subjects || subjList.value?.data || (Array.isArray(subjList.value) ? subjList.value : []);
           setSubjects(Array.isArray(list) ? list : []);
         }
+      } catch (err) {
+        if (!cancelled) setLoadError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -89,20 +109,7 @@ export default function DepartmentResourcesPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [retryKey]);
-
-  useEffect(() => {
-    function onKeyDown(e) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        searchRef.current?.focus();
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   const deptCodeById = useMemo(() => {
     const map = {};
@@ -123,7 +130,7 @@ export default function DepartmentResourcesPage() {
   }, [selectedDeptId, routeDeptId]);
 
   const resourceDeptId = (r) => {
-    if (typeof r.departmentId === "object" && r.departmentId) return r.departmentId._id;
+    if (typeof r.departmentId === "object" && r.departmentId) return r.departmentId._id || r.departmentId.id;
     return r.departmentId || r.departmentCode || r.department || "";
   };
 
@@ -134,12 +141,22 @@ export default function DepartmentResourcesPage() {
 
   const isSoftware = (r) => {
     const t = (r.type || "").toLowerCase();
-    return t.includes("software") || t.includes("simulator") || t.includes("license") || t.includes("video") || t.includes("website");
+    return (
+      t.includes("software") ||
+      t.includes("simulator") ||
+      t.includes("license") ||
+      t.includes("video") ||
+      t.includes("website") ||
+      t.includes("technology")
+    );
   };
 
   const myDept = useMemo(() => {
     if (!user) return null;
-    const uid = typeof user.departmentId === "object" && user.departmentId ? user.departmentId._id || user.departmentId.id : user.departmentId;
+    const uid =
+      typeof user.departmentId === "object" && user.departmentId
+        ? user.departmentId._id || user.departmentId.id
+        : user.departmentId;
     const udc = user.departmentCode || "";
     if (!uid && !udc) return null;
     const dept = departments.find(
@@ -152,34 +169,41 @@ export default function DepartmentResourcesPage() {
   }, [user, departments]);
 
   const categoryMatches = (r) => {
-    if (category === "all" || category === "downloads") return true;
+    if (category === "all") return true;
+    if (category === "downloads") return Boolean(r.fileUrl || r.downloadUrl || r.externalUrl);
     if (category === "subjects") return !isSoftware(r);
-    if (category === "notes") return (r.type || "") === "notes";
-    if (category === "question_bank") return ["question_bank", "previous_paper"].includes(r.type || "");
+    if (category === "notes") return (r.type || "").toLowerCase() === "notes" || (r.type || "").toLowerCase() === "syllabus";
+    if (category === "question_bank") return ["question_bank", "previous_paper"].includes((r.type || "").toLowerCase());
     if (category === "software") return isSoftware(r);
     return true;
   };
 
   const q = (searchQuery || "").toLowerCase().trim();
 
-  const libraryResources = useMemo(() => {
+  const filteredResources = useMemo(() => {
     let list = resources.filter((r) => {
       if (!categoryMatches(r)) return false;
       const matchDept =
         effectiveDeptId === "all" ||
-        resourceDeptId(r) === effectiveDeptId ||
+        String(resourceDeptId(r)) === String(effectiveDeptId) ||
         resourceDeptCode(r).toLowerCase() === effectiveDeptId.toLowerCase();
       if (!matchDept) return false;
+
       const semMatch =
         selectedSemester === "all" ||
         String(r.semester || "") === String(selectedSemester).replace("Semester ", "");
       if (!semMatch) return false;
+
       const typeMatch = selectedType === "all" || (r.type || "") === selectedType;
       if (!typeMatch) return false;
+
       const subjMatch =
         selectedSubjectId === "all" || (r.subjectId?._id || r.subjectId) === selectedSubjectId;
       if (!subjMatch) return false;
-      const txt = `${r.title || ""} ${r.description || ""} ${Array.isArray(r.tags) ? r.tags.join(" ") : ""}`.toLowerCase();
+
+      const txt = `${r.title || ""} ${r.description || ""} ${r.departmentCode || ""} ${
+        Array.isArray(r.tags) ? r.tags.join(" ") : ""
+      }`.toLowerCase();
       return q === "" || txt.includes(q);
     });
 
@@ -193,16 +217,14 @@ export default function DepartmentResourcesPage() {
       );
     }
     return list;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resources, category, effectiveDeptId, selectedSemester, selectedType, selectedSubjectId, sortBy, q]);
 
   const featuredResource = useMemo(() => {
     if (!resources.length) return null;
     const candidates = resources
-      .filter((r) => !isSoftware(r) && (r.fileUrl || r.externalUrl || r.url))
+      .filter((r) => !isSoftware(r) && (r.fileUrl || r.externalUrl || r.downloadUrl))
       .sort((a, b) => (b.downloadsCount || 0) - (a.downloadsCount || 0));
     return candidates[0] || resources[0];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resources]);
 
   const deptStats = useMemo(() => {
@@ -212,7 +234,10 @@ export default function DepartmentResourcesPage() {
       const rid = resourceDeptId(r);
       const code = resourceDeptCode(r).toLowerCase();
       const key = departments.find(
-        (d) => String(d.id) === String(rid) || String(d.code).toLowerCase() === code || String(d.code).toLowerCase() === String(rid).toLowerCase()
+        (d) =>
+          String(d.id) === String(rid) ||
+          String(d.code).toLowerCase() === code ||
+          String(d.code).toLowerCase() === String(rid).toLowerCase()
       );
       if (!key) return;
       const s = map.get(key.id);
@@ -223,26 +248,30 @@ export default function DepartmentResourcesPage() {
       else s.notes += 1;
     });
     return map;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resources, departments]);
 
   const explorerDepartments = useMemo(
     () =>
       departments
-        .map((d) => ({ ...d, count: deptStats.get(d.id)?.total || 0, counts: deptStats.get(d.id) }))
-        .sort((a, b) => b.count - a.count)
-        .filter((d) => d.count > 0),
+        .map((d) => ({
+          ...d,
+          count: deptStats.get(d.id)?.total || (d.stats?.resources || 0),
+          counts: deptStats.get(d.id)
+        }))
+        .sort((a, b) => b.count - a.count),
     [departments, deptStats]
   );
 
   const subjectRows = useMemo(() => {
     const rows = subjects
       .map((s) => {
-        const count = resources.filter((r) => (r.subjectId?._id || r.subjectId) === s._id).length;
+        const count = resources.filter(
+          (r) => (r.subjectId?._id || r.subjectId) === s._id || (r.subjectId?.code || r.subjectCode) === s.code
+        ).length;
         const dept = departments.find(
           (d) =>
-            String(d.id) === String(s.departmentId) ||
-            String(d.code).toLowerCase() === String(s.departmentId || "").toLowerCase()
+            String(d.id) === String(s.departmentId?._id || s.departmentId) ||
+            String(d.code).toLowerCase() === String(s.departmentId?.code || s.departmentId || "").toLowerCase()
         );
         return {
           id: s._id,
@@ -250,32 +279,22 @@ export default function DepartmentResourcesPage() {
           code: s.code,
           departmentName: dept?.name || s.departmentName || "",
           subjectCount: count,
-          semester: s.semester,
+          semester: s.semester
         };
       })
-      .filter((row) => row.subjectCount > 0)
+      .filter((row) => (effectiveDeptId === "all" ? true : row.departmentName.toLowerCase().includes(effectiveDeptId.toLowerCase()) || row.subjectCount > 0))
       .sort((a, b) => b.subjectCount - a.subjectCount);
     return rows.length ? rows : [];
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subjects, resources, departments]);
+  }, [subjects, resources, departments, effectiveDeptId]);
 
   const handleResetFilters = () => {
+    setCategory("all");
     setSelectedDeptId(routeDeptId || "all");
     setSelectedSemester("all");
     setSelectedSubjectId("all");
     setSelectedType("all");
     setSearchQuery("");
     setSortBy("latest");
-  };
-
-  const handleNav = (key) => {
-    setCategory(key);
-    setSidebarOpen(false);
-  };
-
-  const handleDeptChange = (id) => {
-    setSelectedDeptId(id);
-    setSidebarOpen(false);
   };
 
   const openResource = (r) => {
@@ -287,227 +306,187 @@ export default function DepartmentResourcesPage() {
     setRetryKey((k) => k + 1);
   };
 
-  const activeChips = [];
-  if (effectiveDeptId !== "all") {
-    const dept = departments.find((d) => d.id === effectiveDeptId);
-    activeChips.push({ type: "dept", label: dept?.code || dept?.name || deptCodeById[effectiveDeptId] });
-  }
-  if (selectedSemester !== "all") activeChips.push({ type: "semester", label: `Semester ${selectedSemester}` });
-  if (selectedSubjectId !== "all") {
-    const sub = subjects.find((s) => s._id === selectedSubjectId);
-    if (sub) activeChips.push({ type: "subject", label: sub.name });
-  }
-  if (selectedType !== "all") activeChips.push({ type: "type", label: selectedType.replace(/_/g, " ") });
-  if (q) activeChips.push({ type: "search", label: `"${q}"` });
-
-  const removeChip = (type) => {
-    if (type === "dept") setSelectedDeptId(routeDeptId || "all");
-    if (type === "semester") setSelectedSemester("all");
-    if (type === "subject") setSelectedSubjectId("all");
-    if (type === "type") setSelectedType("all");
-    if (type === "search") setSearchQuery("");
-  };
-
-  const isOverview = category === "all";
-  const isSubjectsView = category === "subjects";
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#F8FAFC] px-5 py-10 sm:px-8 max-w-[1440px] mx-auto">
-        <div className="mb-6 space-y-2">
-          <div className="h-3 w-40 rounded-md bg-slate-200 animate-pulse" />
-          <div className="h-7 w-72 max-w-full rounded-lg bg-slate-200 animate-pulse" />
-          <div className="h-4 w-96 max-w-full rounded-md bg-slate-200 animate-pulse" />
-        </div>
-        <ResourceSkeleton rows={5} />
-      </div>
-    );
-  }
+  const activeCategoryMeta = CATEGORIES.find((c) => c.key === category) || CATEGORIES[0];
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] scroll-smooth selection:bg-[#0B4A8F] selection:text-white">
-      <div className="lg:flex lg:items-start lg:max-w-[1440px] lg:mx-auto lg:px-6 lg:gap-8">
-        <AnimatePresence>
-          {sidebarOpen && (
-            <motion.div
-              key="sidebar-backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              onClick={() => setSidebarOpen(false)}
-              className="fixed inset-0 z-40 bg-[#0F172A]/40 backdrop-blur-[2px] lg:hidden"
-              aria-hidden="true"
-            />
-          )}
-        </AnimatePresence>
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-600 selection:text-white">
+      {/* 1. HERO HEADER SECTION WITH TEXT REVEALING ANIMATION */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#021838] via-[#082952] to-[#0A3A6B] text-white pt-10 pb-12 px-5 sm:px-8 lg:px-12 border-b border-blue-950/40">
+        {/* Subtle grid background */}
+        <div className="pointer-events-none absolute inset-0 opacity-[0.12] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black,transparent_75%)]" />
+        <div className="pointer-events-none absolute -top-32 right-[-20px] h-96 w-96 rounded-2xl bg-blue-500/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-32 left-1/4 h-80 w-80 rounded-2xl bg-emerald-500/10 blur-3xl" />
 
-        <ResourceSidebar
-          activeKey={category}
-          onNav={handleNav}
-          departments={departments}
-          selectedDeptId={selectedDeptId}
-          onDeptChange={handleDeptChange}
-          resourceCount={resources.length}
-          open={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+        <div className="relative max-w-7xl mx-auto">
+          {/* Breadcrumb Navigation */}
+          <nav
+            className="flex items-center gap-2 text-xs font-semibold text-blue-200/70 mb-6"
+            aria-label="Breadcrumb"
+          >
+            <span className="hover:text-white cursor-pointer transition-colors">Home</span>
+            <ChevronRight size={13} className="text-blue-400/50" />
+            <span className="hover:text-white cursor-pointer transition-colors">Academic Hub</span>
+            <ChevronRight size={13} className="text-blue-400/50" />
+            <span className="text-blue-300 font-bold">E-Resources</span>
+          </nav>
+
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
+            <div className="max-w-2xl">
+              {/* Badge */}
+              <FadeInUp delay={0.05}>
+                <div className="inline-flex items-center gap-2 rounded-lg bg-blue-500/20 border border-blue-400/30 px-3.5 py-1.5 mb-4 backdrop-blur-sm">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                  </span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-100">
+                    Institutional Knowledge Repository
+                  </span>
+                </div>
+              </FadeInUp>
+
+              {/* Text Revealing Headline */}
+              <div className="mt-1">
+                <TextReveal
+                  text="Velalar College Academic Resources"
+                  className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight"
+                  delay={0.1}
+                />
+              </div>
+
+              {/* Subtitle with fade-in */}
+              <FadeInUp delay={0.25}>
+                <p className="mt-3 text-sm sm:text-base text-blue-100/80 leading-relaxed max-w-xl">
+                  Curated unit lecture notes, Anna University syllabus outlines, question banks, and licensed software across all engineering branches.
+                </p>
+              </FadeInUp>
+            </div>
+
+            {/* Quick Metrics Statistics */}
+            <FadeInUp delay={0.3} className="flex items-center gap-3 flex-wrap">
+              <div className="flex flex-col px-4.5 py-3 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
+                <span className="text-2xl font-black text-white">{resources.length}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-200">
+                  Total Items
+                </span>
+              </div>
+              <div className="flex flex-col px-4.5 py-3 rounded-xl bg-emerald-500/15 border border-emerald-400/30 backdrop-blur-md">
+                <span className="text-2xl font-black text-emerald-300">{departments.length}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                  Branches
+                </span>
+              </div>
+              <div className="flex flex-col px-4.5 py-3 rounded-xl bg-purple-500/15 border border-purple-400/30 backdrop-blur-md">
+                <span className="text-2xl font-black text-purple-200">{subjects.length}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-200">
+                  Courses
+                </span>
+              </div>
+            </FadeInUp>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. MAIN WORKSPACE CONTAINER */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Department Quick Filter Grid */}
+        <DepartmentExplorer
+          departments={explorerDepartments}
+          selectedDeptId={effectiveDeptId}
+          onSelect={(id) => {
+            setSelectedDeptId(id);
+          }}
         />
 
-        <main className="flex-1 min-w-0 w-full lg:pb-12">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="lg:hidden mt-4 ml-5 sm:ml-6 inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-[12px] font-bold text-[#0B4A8F] shadow-sm hover:border-[#0B4A8F] transition-colors"
-          >
-            <Menu size={15} />
-            E-Resources
-          </button>
+        {/* Unified Single Filter Dropdown Toolbar */}
+        <UnifiedFilterBar
+          category={category}
+          onCategoryChange={(cat) => setCategory(cat)}
+          selectedDeptId={selectedDeptId}
+          onDeptChange={(d) => setSelectedDeptId(d)}
+          departments={departments}
+          selectedSemester={selectedSemester}
+          onSemesterChange={(sem) => setSelectedSemester(sem)}
+          searchQuery={searchQuery}
+          onSearchChange={(q) => setSearchQuery(q)}
+          sortBy={sortBy}
+          onSortChange={(s) => setSortBy(s)}
+          viewMode={viewMode}
+          onViewModeChange={(m) => setViewMode(m)}
+          myDept={myDept}
+          onResetFilters={handleResetFilters}
+          totalCount={filteredResources.length}
+        />
 
-          <ResourceHeader departments={departments.length} resources={resources.length} />
-          <ResourceSearch query={searchQuery} onChange={setSearchQuery} inputRef={searchRef} />
-          <QuickFilters
-            activeKey={category}
-            onSelect={handleNav}
-            userDeptName={myDept?.name || myDept?.code}
-            myDeptActive={Boolean(myDept) && effectiveDeptId === myDept?.id}
-            onMyDeptToggle={() => {
-              if (!myDept) return;
-              setSelectedDeptId(effectiveDeptId === myDept.id ? "all" : myDept.id);
-              if (effectiveDeptId !== myDept.id) setCategory("all");
-            }}
-          />
+        {/* Dynamic Content Display */}
+        {loading ? (
+          <ResourceSkeleton rows={5} />
+        ) : loadError ? (
+          <ErrorState onRetry={handleRetry} />
+        ) : (
+          <div>
+            {/* When category is 'all' and no active search query: Show Featured Resource & Popular Subjects */}
+            {category === "all" && !q && effectiveDeptId === "all" && selectedSemester === "all" && (
+              <>
+                <FeaturedResource
+                  resource={featuredResource}
+                  deptCode={featuredResource ? resourceDeptCode(featuredResource) : ""}
+                  onOpen={openResource}
+                />
 
-          {activeChips.length > 0 && (
-            <div className="mt-4 px-5 sm:px-0 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
-                <Filter size={12} />
-                Active filters:
-              </span>
-              {activeChips.map((chip) => (
-                <button
-                  key={chip.type}
-                  onClick={() => removeChip(chip.type)}
-                  aria-label={`Remove ${chip.label} filter`}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-[#EFF6FF] border border-blue-100 px-3 py-1.5 text-[11px] font-bold text-[#0B4A8F] hover:bg-blue-100 transition-colors"
-                >
-                  {chip.label}
-                  <X size={11} />
-                </button>
-              ))}
-              <button
-                onClick={handleResetFilters}
-                className="text-[11px] font-semibold text-slate-500 underline underline-offset-2 hover:text-[#EF4444] transition-colors"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-
-          {loadError ? (
-            <div className="mt-6 px-5 sm:px-0">
-              <ErrorState onRetry={handleRetry} />
-            </div>
-          ) : (
-            <>
-              {isOverview && (
-                <>
-                  <FeaturedResource
-                    resource={featuredResource}
-                    deptCode={featuredResource ? resourceDeptCode(featuredResource) : ""}
-                    onOpen={openResource}
-                  />
-                  <DepartmentExplorer
-                    departments={explorerDepartments}
-                    onSelect={(id) => {
-                      setSelectedDeptId(id);
-                      setCategory("all");
-                      setSidebarOpen(false);
+                {subjectRows.length > 0 && (
+                  <SubjectExplorer
+                    title="Popular Subjects"
+                    subtitle="Most-accessed semester courses across departments"
+                    subjects={subjectRows.slice(0, 6)}
+                    onSelect={(subject) => {
+                      setSelectedSubjectId(subject.id);
+                      setCategory("notes");
                     }}
                   />
-                  {subjectRows.length > 0 && (
-                    <SubjectExplorer
-                      title="Popular Subjects"
-                      subtitle="Most-studied courses across departments"
-                      subjects={subjectRows}
-                      onSelect={(subject) => {
-                        setSelectedSubjectId(subject.id);
-                        setCategory("notes");
-                      }}
-                    />
-                  )}
-                </>
-              )}
+                )}
+              </>
+            )}
 
-              {isSubjectsView && subjectRows.length > 0 && (
-                <SubjectExplorer
-                  title="Subjects"
-                  subtitle="Lecture notes and question banks organised by course"
-                  subjects={subjectRows}
-                  onSelect={(subject) => {
-                    setSelectedSubjectId(subject.id);
-                    setCategory("notes");
-                  }}
-                />
-              )}
+            {/* When category is 'subjects': Render Subject Explorer */}
+            {category === "subjects" && (
+              <SubjectExplorer
+                title="Curriculum Subjects & Syllabi"
+                subtitle="Organized courses with lecture notes and semester units"
+                subjects={subjectRows}
+                onSelect={(subject) => {
+                  setSelectedSubjectId(subject.id);
+                  setCategory("notes");
+                }}
+              />
+            )}
 
+            {/* Render Filtered Resource Feed for All, Notes, Question Bank, Software, Downloads, or whenever searched/filtered */}
+            {(category !== "subjects" || q !== "" || effectiveDeptId !== "all" || selectedSemester !== "all") && (
               <ResourceLibrary
                 title={
-                  category === "notes"
-                    ? "Lecture Notes"
-                    : category === "question_bank"
-                    ? "Question Banks"
-                    : category === "software"
-                    ? "Free Software"
-                    : category === "downloads"
-                    ? "Downloads"
-                    : "Resource Library"
+                  category === "all"
+                    ? "All Academic Resources"
+                    : activeCategoryMeta.label
                 }
                 subtitle={
-                  category === "subjects"
-                    ? "All academic materials"
-                    : category === "downloads"
-                    ? "Most downloaded resources first"
-                    : "Everything in one place"
+                  effectiveDeptId !== "all"
+                    ? `Showing resources for ${deptCodeById[effectiveDeptId] || effectiveDeptId}`
+                    : activeCategoryMeta.description
                 }
-                count={libraryResources.length}
-                sortBy={sortBy}
-                onSortChange={setSortBy}
+                count={filteredResources.length}
                 viewMode={viewMode}
-                onViewModeChange={setViewMode}
-                items={libraryResources}
+                items={filteredResources}
                 onOpen={openResource}
                 onReset={handleResetFilters}
-                emptyMessage="We couldn't find any resources matching your current filters."
-                loading={false}
-                onOpenFilters={() => setDrawerOpen(true)}
+                emptyMessage={`No ${activeCategoryMeta.label.toLowerCase()} found matching the current filters.`}
+                loading={loading}
               />
-
-              {isOverview && (
-                <RecentResources items={resources} onOpen={openResource} />
-              )}
-            </>
-          )}
-        </main>
-      </div>
-
-      <FilterDrawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        departments={departments}
-        subjects={subjects}
-        filters={{
-          dept: selectedDeptId === "all" ? "all" : effectiveDeptId,
-          semester: selectedSemester,
-          type: selectedType,
-          subjectId: selectedSubjectId,
-        }}
-        onApply={(f) => {
-          setSelectedDeptId(f.dept);
-          setSelectedSemester(f.semester);
-          setSelectedType(f.type);
-          setSelectedSubjectId(f.subjectId);
-          setDrawerOpen(false);
-        }}
-      />
+            )}
+          </div>
+        )}
+      </main>
     </div>
   );
 }

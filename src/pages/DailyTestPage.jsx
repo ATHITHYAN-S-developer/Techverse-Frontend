@@ -31,7 +31,7 @@ import ExamModeHeader from "../components/exam/ExamModeHeader";
 export default function DailyTestPage() {
   const { testId } = useParams();
   const navigate = useNavigate();
-  const { user, addPoints, incrementStreak, streak } = useAuth();
+  const { user, refreshGamification, streak } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
 
   const [test, setTest] = useState(null);
@@ -142,10 +142,9 @@ export default function DailyTestPage() {
       if (evaluation) {
         setResult(evaluation);
 
-        if (evaluation.pointsAwarded > 0) {
-          addPoints(evaluation.pointsAwarded, `Completed Daily Test: ${test.title}`);
-        }
-        incrementStreak();
+        // The server already awarded points and advanced the streak as part of
+        // the submission; re-read them rather than counting locally.
+        await refreshGamification();
 
         if (evaluation.passed) {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
@@ -156,7 +155,7 @@ export default function DailyTestPage() {
       }
       setIsSubmitting(false);
     },
-    [submitted, isSubmitting, test, user, timeSpent, addPoints, incrementStreak, showSuccess, showInfo]
+    [submitted, isSubmitting, test, user, timeSpent, refreshGamification, showSuccess, showInfo]
   );
 
   // Hook for Exam Mode (Fullscreen, Tab Switch, Clipboard, Auto-submit)
@@ -672,16 +671,16 @@ export default function DailyTestPage() {
             {/* Post-Test Actions (White & Ice Blue Buttons) */}
             <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-sky-100">
               <Link
-                to="/daily-test"
+                to="/tests"
                 className="px-6 py-3 rounded-xl font-bold text-xs bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 transition-colors shadow-xs"
               >
                 ← Back to Daily Tests
               </Link>
               <Link
-                to="/leaderboard"
+                to="/dashboard"
                 className="px-6 py-3 rounded-xl font-extrabold text-xs bg-sky-600 hover:bg-sky-700 text-white transition-all shadow-sm flex items-center gap-2"
               >
-                <span>View Leaderboard</span>
+                <span>Back to Dashboard</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

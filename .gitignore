@@ -48,5 +48,11 @@ backend/
 *.pdb
 *.exe
 
+# Local dev & test artifacts
+screenshots/
+test-results/
+tests/_dashboard-shot.spec.js
+tests/_dump.spec.js
+
 # Vercel deployment config (kept local)
 vercel.json

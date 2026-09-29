@@ -37,90 +37,87 @@ import {
 } from "recharts";
 import { analyticsService } from "../../services/analyticsService";
 
-const DEPT_BAR_DATA = [
-  { name: "CSE", students: 420, courses: 18, resources: 243, color: "#0284c7" },
-  { name: "AI&DS", students: 380, courses: 14, resources: 195, color: "#7c3aed" },
-  { name: "ECE", students: 340, courses: 12, resources: 210, color: "#db2777" },
-  { name: "IT", students: 310, courses: 10, resources: 180, color: "#0891b2" },
-  { name: "EEE", students: 260, courses: 8, resources: 145, color: "#d97706" },
-  { name: "MECH", students: 230, courses: 6, resources: 130, color: "#dc2626" },
-  { name: "CIVIL", students: 190, courses: 5, resources: 95, color: "#059669" },
-];
+/** Compact display for large counts: 723 -> "723", 48210 -> "48,210". */
+const formatNumber = (value) =>
+  typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("en-IN") : "0";
 
-const STUDENT_ACTIVITY_TRENDS = [
-  { date: "Mon", logins: 1840, courseActive: 620, testAttempts: 340, downloads: 480 },
-  { date: "Tue", logins: 2120, courseActive: 780, testAttempts: 410, downloads: 590 },
-  { date: "Wed", logins: 2450, courseActive: 890, testAttempts: 490, downloads: 720 },
-  { date: "Thu", logins: 2310, courseActive: 840, testAttempts: 460, downloads: 680 },
-  { date: "Fri", logins: 2580, courseActive: 950, testAttempts: 520, downloads: 810 },
-  { date: "Sat", logins: 1420, courseActive: 510, testAttempts: 290, downloads: 390 },
-  { date: "Sun", logins: 1190, courseActive: 430, testAttempts: 210, downloads: 280 },
-];
+/** "3 mins ago" from an ISO timestamp, or "just now" for anything sub-minute. */
+function timeAgo(input) {
+  if (!input) return "";
+  const then = new Date(input).getTime();
+  if (!Number.isFinite(then)) return "";
 
-const COURSE_COMPLETION_RATES = [
-  { name: "Python Programming Masterclass", rate: 78, color: "bg-blue-600" },
-  { name: "Full Stack Web Development (MERN)", rate: 82, color: "bg-emerald-600" },
-  { name: "Java Core & Algorithmic Thinking", rate: 64, color: "bg-amber-600" },
-  { name: "Applied AI & Machine Learning", rate: 51, color: "bg-purple-600" },
-  { name: "AWS Cloud Architecture Essentials", rate: 43, color: "bg-sky-600" },
-];
+  const seconds = Math.max(0, Math.round((Date.now() - then) / 1000));
+  if (seconds < 60) return "just now";
 
-const RECENT_ACTIVITIES = [
-  {
-    type: "course",
-    title: "Student completed Python course",
-    user: "Athithya V (732924CSE001)",
-    time: "4 mins ago",
-    badge: "Completed",
-    badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  },
-  {
-    type: "resource",
-    title: "Teacher uploaded CSE resource",
-    user: "Prof. S. R. Murugesan (DBMS Unit 3)",
-    time: "18 mins ago",
-    badge: "Upload",
-    badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-  },
-  {
-    type: "announcement",
-    title: "Admin published announcement",
-    user: "Smart India Hackathon 2026 Internal Round",
-    time: "1 hour ago",
-    badge: "Broadcast",
-    badgeColor: "bg-amber-50 text-amber-700 border-amber-200",
-  },
-  {
-    type: "test",
-    title: "Student completed Daily Test #14",
-    user: "Dharshini K (732922CSE042) • Score: 95%",
-    time: "2 hours ago",
-    badge: "Assessment",
-    badgeColor: "bg-purple-50 text-purple-700 border-purple-200",
-  },
-  {
-    type: "cert",
-    title: "Institutional Certificate Issued",
-    user: "TV-2026-000182 to Karthik R (AI&DS)",
-    time: "3 hours ago",
-    badge: "Certificate",
-    badgeColor: "bg-sky-50 text-sky-700 border-sky-200",
-  },
-];
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
+
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+
+  const days = Math.round(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+const SKELETON = "text-slate-300";
 
 export default function AdminDashboard() {
   const [summary, setSummary] = useState(null);
   const [activityMetric, setActivityMetric] = useState("all");
+  const [error, setError] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function load() {
-      const s = await analyticsService.getDashboardSummary();
-      setSummary(s);
+      try {
+        const s = await analyticsService.getDashboardSummary();
+        if (!cancelled) {
+          setSummary(s);
+          setError(null);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err.message);
+      }
     }
+
     load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
+  const kpis = summary?.kpis || {};
+  const students = kpis.students || {};
+  const teachers = kpis.teachers || {};
+  const courses = kpis.courses || {};
+  const resources = kpis.resources || {};
+  const tests = kpis.tests || {};
+  const certificates = kpis.certificates || {};
+  const visitors = kpis.visitors || {};
+  const activeUsers = kpis.activeUsers || {};
+
+  const branches = summary?.departmentDistribution || [];
+  const largestBranch = branches.reduce((max, b) => Math.max(max, b.students || 0), 0);
+
+  // Activity chart is driven by summary.activityTelemetry (logins / course
+  // activity / test attempts / downloads). summary.visitors.series carries a
+  // different shape (totalVisits, resourceViews, ...), so it must not be
+  // mapped onto these keys.
+  const activityTrend = (summary?.activityTelemetry || []).map((point) => ({
+    date: point.date,
+    logins: Number(point.logins) || 0,
+    courseActive: Number(point.courseActive) || 0,
+    testAttempts: Number(point.testAttempts) || 0,
+    downloads: Number(point.downloads) || 0,
+  }));
+
+  const courseCompletion = summary?.courseVelocity || [];
+  const recentActivities = summary?.recentActivity || [];
+
   return (
+
     <div className="space-y-6 max-w-7xl mx-auto text-slate-800">
       {/* 1. Header Hero Banner - Crisp Institutional Blue */}
       <div className="bg-gradient-to-r from-[#0B4A8F] via-[#0062A8] to-sky-600 border border-blue-800 rounded-3xl p-6 sm:p-8 shadow-md text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -153,6 +150,13 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {error && (
+        <div className="flex items-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-xs font-semibold text-red-700">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          Could not load live dashboard data: {error}
+        </div>
+      )}
+
       {/* 2. Primary 8 Key Performance Metrics Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {/* Total Students */}
@@ -165,13 +169,15 @@ export default function AdminDashboard() {
               <GraduationCap className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            2,450
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(students.total)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
-            <span className="text-emerald-600 font-bold">2,132 Active</span>
+            <span className="text-emerald-600 font-bold">
+              {formatNumber(students.active)} Active
+            </span>
             <span className="text-slate-300">•</span>
-            <span className="text-slate-400">18 Blocked</span>
+            <span className="text-slate-400">{formatNumber(students.blocked)} Blocked</span>
           </div>
         </div>
 
@@ -185,13 +191,15 @@ export default function AdminDashboard() {
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            124
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(teachers.total)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
-            <span className="text-purple-600 font-bold">7 Departments</span>
+            <span className="text-purple-600 font-bold">
+              {formatNumber(teachers.departments)} Departments
+            </span>
             <span className="text-slate-300">•</span>
-            <span className="text-slate-400">100% Verified</span>
+            <span className="text-slate-400">{formatNumber(teachers.active)} Active</span>
           </div>
         </div>
 
@@ -205,13 +213,15 @@ export default function AdminDashboard() {
               <BookOpen className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            86
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(courses.total)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
-            <span className="text-amber-600 font-bold">72 Published</span>
+            <span className="text-amber-600 font-bold">
+              {formatNumber(courses.published)} Published
+            </span>
             <span className="text-slate-300">•</span>
-            <span className="text-slate-400">14 Drafts</span>
+            <span className="text-slate-400">{formatNumber(courses.drafts)} Drafts</span>
           </div>
         </div>
 
@@ -225,13 +235,17 @@ export default function AdminDashboard() {
               <Layers className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            1,284
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(resources.total)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
-            <span className="text-emerald-600 font-bold">Syllabus / Notes</span>
+            <span className="text-emerald-600 font-bold">
+              {Object.keys(resources.byType || {}).length} Types
+            </span>
             <span className="text-slate-300">•</span>
-            <span className="text-slate-400">PDF & Video</span>
+            <span className="text-slate-400">
+              {formatNumber(courses.completedEnrollments)} Completions
+            </span>
           </div>
         </div>
 
@@ -245,13 +259,17 @@ export default function AdminDashboard() {
               <Activity className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            342
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(tests.total)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
-            <span className="text-rose-600 font-bold">Daily & Placement</span>
+            <span className="text-rose-600 font-bold">
+              {formatNumber(tests.dailyTests)} Daily
+            </span>
             <span className="text-slate-300">•</span>
-            <span className="text-slate-400">Proctored</span>
+            <span className="text-slate-400">
+              {formatNumber(tests.codingProblems)} Problems
+            </span>
           </div>
         </div>
 
@@ -265,13 +283,15 @@ export default function AdminDashboard() {
               <Award className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            1,827
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(certificates.issued)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
             <span className="text-sky-600 font-bold">Issued</span>
             <span className="text-slate-300">•</span>
-            <span className="text-slate-400">QR Verified</span>
+            <span className="text-slate-400">
+              {formatNumber(certificates.revoked)} Revoked
+            </span>
           </div>
         </div>
 
@@ -285,12 +305,20 @@ export default function AdminDashboard() {
               <Globe className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            4,892
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(visitors.today)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
-            <span className="text-indigo-600 font-bold">+14.2%</span>
-            <span className="text-slate-400">from yesterday</span>
+            {Number(visitors.growthPercent) >= 0 ? (
+              <span className="text-indigo-600 font-bold">
+                +{formatNumber(visitors.growthPercent)}%
+              </span>
+            ) : (
+              <span className="text-rose-600 font-bold">
+                {formatNumber(visitors.growthPercent)}%
+              </span>
+            )}
+            <span className="text-slate-400">vs {formatNumber(visitors.yesterday)} yesterday</span>
           </div>
         </div>
 
@@ -304,12 +332,20 @@ export default function AdminDashboard() {
               <Zap className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
-            318
+          <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
+            {formatNumber(activeUsers.count)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+            {activeUsers.count > 0 ? (
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping inline-block" />
+            ) : (
+              <span className="w-2 h-2 rounded-full bg-slate-300 inline-block" />
+            )}
             <span className="text-emerald-600 font-bold">Live on Portal</span>
+            <span className="text-slate-300">•</span>
+            <span className="text-slate-400">
+              {formatNumber(activeUsers.students)} students
+            </span>
           </div>
         </div>
       </div>
@@ -348,7 +384,7 @@ export default function AdminDashboard() {
 
           <div className="h-72 w-full pt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={STUDENT_ACTIVITY_TRENDS}>
+              <AreaChart data={activityTrend}>
                 <defs>
                   <linearGradient id="loginGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#0062A8" stopOpacity={0.3} />
@@ -361,7 +397,7 @@ export default function AdminDashboard() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="date" stroke="#94a3b8" tick={{ fontSize: 11 }} />
-                <YAxis stroke="#94a3b8" tick={{ fontSize: 11 }} />
+                <YAxis stroke="#94a3b8" tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#ffffff",
@@ -372,32 +408,38 @@ export default function AdminDashboard() {
                     fontSize: "12px",
                   }}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="logins"
-                  stroke="#0062A8"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#loginGrad)"
-                  name="Student Logins"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="courseActive"
-                  stroke="#10b981"
-                  strokeWidth={2}
-                  fillOpacity={1}
-                  fill="url(#courseGrad)"
-                  name="Course Progression"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="testAttempts"
-                  stroke="#8b5cf6"
-                  strokeWidth={2}
-                  fillOpacity={0}
-                  name="Daily Test Attempts"
-                />
+                {activityMetric !== "tests" && (
+                  <Area
+                    type="monotone"
+                    dataKey="logins"
+                    stroke="#0062A8"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#loginGrad)"
+                    name="Student Logins"
+                  />
+                )}
+                {activityMetric === "all" && (
+                  <Area
+                    type="monotone"
+                    dataKey="courseActive"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    fillOpacity={1}
+                    fill="url(#courseGrad)"
+                    name="Course Progression"
+                  />
+                )}
+                {activityMetric !== "logins" && (
+                  <Area
+                    type="monotone"
+                    dataKey="testAttempts"
+                    stroke="#8b5cf6"
+                    strokeWidth={2}
+                    fillOpacity={0}
+                    name="Daily Test Attempts"
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -411,32 +453,50 @@ export default function AdminDashboard() {
                 <Building2 className="w-4 h-4 text-purple-600" />
                 Department Distribution
               </h2>
-              <span className="text-[10px] font-mono text-slate-500 uppercase">7 Branches</span>
+              <span className="text-[10px] font-mono text-slate-500 uppercase">
+                {summary?.branchCount ?? branches.length} Branches
+              </span>
             </div>
             <p className="text-xs text-slate-500 mb-4">
               Active student cohort distribution across engineering disciplines.
             </p>
           </div>
 
-          <div className="space-y-2.5">
-            {DEPT_BAR_DATA.map((dept) => {
-              const maxVal = 420;
-              const pct = Math.round((dept.students / maxVal) * 100);
-              return (
-                <div key={dept.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-slate-700">{dept.name}</span>
-                    <span className="text-slate-900 font-mono font-bold">{dept.students} students</span>
+          {branches.length === 0 ? (
+            <p className="text-xs text-slate-400 py-6 text-center">
+              No student cohorts yet.
+            </p>
+          ) : (
+            <div className="space-y-2.5">
+              {branches.map((dept) => {
+                // Bars are scaled against the largest branch rather than a fixed
+                // ceiling, so a new intake never overflows the row.
+                const pct = largestBranch > 0 ? Math.round((dept.students / largestBranch) * 100) : 0;
+                return (
+                  <div key={dept.code} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-slate-700">{dept.code}</span>
+                      <span className="text-slate-900 font-mono font-bold">
+                        {formatNumber(dept.students)} students
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="h-2 rounded-full transition-all duration-500"
+                        style={{ width: `${pct}%`, backgroundColor: dept.color }}
+                      />
+                    </div>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                    <div
-                      className="h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${pct}%`, backgroundColor: dept.color }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          )}
+
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px]">
+            <span className="text-slate-500 font-semibold">Total students</span>
+            <span className="text-slate-900 font-mono font-bold">
+              {formatNumber(summary?.departmentTotal)}
+            </span>
           </div>
         </div>
       </div>
@@ -465,20 +525,28 @@ export default function AdminDashboard() {
           </div>
 
           <div className="space-y-4 pt-2">
-            {COURSE_COMPLETION_RATES.map((c) => (
-              <div key={c.name} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-800">{c.name}</span>
-                  <span className="font-mono font-bold text-[#0062A8]">{c.rate}% Completed</span>
+            {courseCompletion.length === 0 ? (
+              <p className="text-xs text-slate-400 py-6 text-center">
+                No courses published yet.
+              </p>
+            ) : (
+              courseCompletion.map((c) => (
+                <div key={c.courseId || c.name} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs gap-3">
+                    <span className="font-bold text-slate-800 truncate">{c.name}</span>
+                    <span className="font-mono font-bold text-[#0062A8] whitespace-nowrap">
+                      {c.rate}% · {formatNumber(c.enrollments)} enrolled
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className={`${c.color} h-2.5 rounded-full transition-all duration-700`}
+                      style={{ width: `${c.rate}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className={`${c.color} h-2.5 rounded-full transition-all duration-700`}
-                    style={{ width: `${c.rate}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -504,26 +572,35 @@ export default function AdminDashboard() {
           </div>
 
           <div className="divide-y divide-slate-100 space-y-0.5">
-            {RECENT_ACTIVITIES.map((act, idx) => (
-              <div key={idx} className="py-3 flex items-start justify-between gap-3">
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-xs text-slate-900 truncate">
-                      {act.title}
-                    </span>
-                    <span
-                      className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold border ${act.badgeColor}`}
-                    >
-                      {act.badge}
-                    </span>
+            {recentActivities.length === 0 ? (
+              <p className="text-xs text-slate-400 py-6 text-center">
+                No recent activity recorded.
+              </p>
+            ) : (
+              recentActivities.map((act, idx) => (
+                <div
+                  key={act.id || idx}
+                  className="py-3 flex items-start justify-between gap-3"
+                >
+                  <div className="space-y-0.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-slate-900 truncate">
+                        {act.title}
+                      </span>
+                      <span
+                        className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold border ${act.badgeColor}`}
+                      >
+                        {act.badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 truncate">{act.user}</p>
                   </div>
-                  <p className="text-[11px] text-slate-500 truncate">{act.user}</p>
+                  <span className="text-[10px] text-slate-400 whitespace-nowrap font-mono">
+                    {timeAgo(act.timestamp || act.time)}
+                  </span>
                 </div>
-                <span className="text-[10px] text-slate-400 whitespace-nowrap font-mono">
-                  {act.time}
-                </span>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>

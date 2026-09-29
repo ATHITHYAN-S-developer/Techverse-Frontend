@@ -11,7 +11,7 @@ export default function VcetBanner() {
     <div
       style={{
         background: "#ffffff",
-        borderBottom: "1px solid #E2E8F0",
+        borderBottom: "1px solid #C9C9C9",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

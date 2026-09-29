@@ -15,12 +15,20 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   getBackendHost();
 
+const OFFLINE_FLAG = "techverse_offline_session";
+
 export async function apiRequest(endpoint, options = {}) {
-  const token =
-    localStorage.getItem("techverse_token") ||
-    sessionStorage.getItem("techverse_token") ||
-    localStorage.getItem("vcetTechHubToken") ||
-    sessionStorage.getItem("vcetTechHubToken");
+  // An offline mock session has no real JWT. Sending a placeholder would make
+  // the backend answer INVALID_TOKEN, which the 401 handler treats as a reason
+  // to destroy the session. Omit the header instead.
+  const isOfflineSession = localStorage.getItem(OFFLINE_FLAG) === "1";
+
+  const token = isOfflineSession
+    ? null
+    : localStorage.getItem("techverse_token") ||
+      sessionStorage.getItem("techverse_token") ||
+      localStorage.getItem("vcetTechHubToken") ||
+      sessionStorage.getItem("vcetTechHubToken");
 
   const headers = {
     ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
@@ -49,6 +57,7 @@ export async function apiRequest(endpoint, options = {}) {
         localStorage.removeItem("vcetTechHubSession");
         sessionStorage.removeItem("vcetTechHubToken");
         sessionStorage.removeItem("vcetTechHubSession");
+        localStorage.removeItem(OFFLINE_FLAG);
       }
       const error = new Error(
         errorData.message || `Request failed with HTTP status ${response.status}`

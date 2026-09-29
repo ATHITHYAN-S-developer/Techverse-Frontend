@@ -11,12 +11,12 @@ function getGreeting() {
 
 export default function ResourceHeader({ departments, resources }) {
   return (
-    <section className="relative bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white py-10 sm:py-14 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs select-none">
+    <section className="relative bg-[linear-gradient(115deg,#003B66_0%,#005391_38%,#0062A9_72%,#1B79C1_100%)] text-white py-10 sm:py-14 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs select-none">
       {/* Decorative ambient gradient rings */}
       <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-25">
         <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full border border-white/20" />
         <div className="absolute right-[-40px] top-1/4 h-80 w-80 rounded-full border border-white/20" />
-        <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-blue-400/10 blur-2xl" />
+        <div className="absolute -bottom-16 left-1/3 h-64 w-64 rounded-full bg-white/10 blur-2xl" />
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10">
@@ -25,13 +25,13 @@ export default function ResourceHeader({ departments, resources }) {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="flex items-center gap-2 text-[11px] sm:text-xs font-medium text-slate-200 mb-3"
+          className="flex items-center gap-2 text-[11px] sm:text-xs font-medium text-white/75 mb-3"
         >
           <span className="hover:text-white transition-colors cursor-pointer">Home</span>
-          <ChevronRight size={13} className="text-slate-300/80" />
+          <ChevronRight size={13} className="text-profile-ink/40/80" />
           <span className="hover:text-white transition-colors cursor-pointer">Departments</span>
-          <ChevronRight size={13} className="text-slate-300/80" />
-          <span className="text-[#B9E0FF] font-semibold">E-Resources</span>
+          <ChevronRight size={13} className="text-profile-ink/40/80" />
+          <span className="text-white/90 font-semibold">E-Resources</span>
         </motion.div>
 
         <motion.div
@@ -52,11 +52,11 @@ export default function ResourceHeader({ departments, resources }) {
               </span>
             </div>
 
-            <h1 className="text-[26px] sm:text-[30px] lg:text-[38px] font-extrabold leading-tight tracking-tight">
+            <h1 className="font-serif text-[26px] sm:text-[30px] lg:text-[38px] font-extrabold leading-tight tracking-tight">
               {getGreeting()}! Your Academic Hub
             </h1>
 
-            <p className="mt-3 text-[13px] sm:text-sm font-normal text-sky-100/90 leading-relaxed max-w-xl">
+            <p className="mt-3 text-[13px] sm:text-sm font-normal text-white/85 leading-relaxed max-w-xl">
               Browse lecture notes, question banks, lab manuals & free software for every
               department, every semester.
             </p>
@@ -66,7 +66,7 @@ export default function ResourceHeader({ departments, resources }) {
           <div className="flex items-center gap-3 shrink-0">
             <div className="hidden sm:flex flex-col items-center rounded-2xl bg-white/5 border border-white/15 backdrop-blur-sm px-5 py-3">
               <span className="text-lg font-black text-white">{resources}</span>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-sky-200">Resources</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">Resources</span>
             </div>
             <div className="flex items-center gap-2 rounded-2xl bg-[#15B981]/15 border border-[#15B981]/40 px-4 py-3 backdrop-blur-sm">
               <Sparkles size={14} className="text-emerald-300" />

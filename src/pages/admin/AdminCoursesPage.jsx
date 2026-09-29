@@ -26,6 +26,7 @@ import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
 import { api } from "../../services/api";
 import { courseService, getCourseImageUrl } from "../../services/courseService";
+import { departmentService } from "../../services/departmentService";
 
 export default function AdminCoursesPage() {
   const { showSuccess, showError } = useToast();
@@ -36,6 +37,8 @@ export default function AdminCoursesPage() {
 
   const [courses, setCourses] = useState([]);
   const [facultyList, setFacultyList] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [selectedDeptFilter, setSelectedDeptFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
@@ -52,7 +55,7 @@ export default function AdminCoursesPage() {
     level: "Beginner to Intermediate",
     duration: "30 Days",
     passingPercentage: 50,
-    instructor: "Dr. K. Sathish Kumar (CSE)",
+    instructor: "",
     assignedFacultyId: "",
     assignedFacultyName: "",
     thumbnailUrl: "",
@@ -63,6 +66,7 @@ export default function AdminCoursesPage() {
     loadCourses();
     if (!isFaculty) {
       loadFacultyList();
+      loadDepartments();
     }
   }, [isFaculty]);
 
@@ -80,6 +84,15 @@ export default function AdminCoursesPage() {
     }
   };
 
+  const loadDepartments = async () => {
+    try {
+      const list = await departmentService.getDepartments({ all: true });
+      setDepartments(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.debug("Error loading departments:", err);
+    }
+  };
+
   const loadFacultyList = async () => {
     try {
       const res = await api.get("/admin/users?role=teacher&limit=100");
@@ -89,6 +102,18 @@ export default function AdminCoursesPage() {
       console.debug("Error loading faculty list:", err);
     }
   };
+
+  const filteredFacultyList = selectedDeptFilter
+    ? facultyList.filter((fac) => {
+        const deptId = fac.departmentId?._id || fac.departmentId;
+        const deptCode = fac.departmentId?.code || fac.department;
+        return (
+          String(deptId) === String(selectedDeptFilter) ||
+          String(deptCode) === String(selectedDeptFilter) ||
+          (typeof selectedDeptFilter === "string" && fac.departmentId?.name?.toLowerCase().includes(selectedDeptFilter.toLowerCase()))
+        );
+      })
+    : facultyList;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -106,6 +131,7 @@ export default function AdminCoursesPage() {
     setEditingCourse(null);
     setImageFile(null);
     setImagePreview(null);
+    setSelectedDeptFilter("");
     setFormData({
       title: "",
       category: "Programming",
@@ -125,6 +151,13 @@ export default function AdminCoursesPage() {
     setEditingCourse(course);
     setImageFile(null);
     setImagePreview(getCourseImageUrl(course.thumbnailUrl, course.thumbnail));
+    const facId = course.assignedFacultyId?._id || course.assignedFacultyId || "";
+    const matchedFaculty = facultyList.find((f) => String(f._id || f.id) === String(facId));
+    if (matchedFaculty?.departmentId?._id || matchedFaculty?.departmentId) {
+      setSelectedDeptFilter(matchedFaculty.departmentId._id || matchedFaculty.departmentId);
+    } else {
+      setSelectedDeptFilter("");
+    }
     setFormData({
       title: course.title || "",
       category: course.category || "Programming",
@@ -132,8 +165,8 @@ export default function AdminCoursesPage() {
       duration: course.duration || "30 Days",
       passingPercentage: course.passingPercentage || course.passingScore || 50,
       instructor: course.instructor || course.instructorName || "Faculty Coordinator",
-      assignedFacultyId: course.assignedFacultyId?._id || course.assignedFacultyId || "",
-      assignedFacultyName: course.assignedFacultyName || "",
+      assignedFacultyId: facId,
+      assignedFacultyName: course.assignedFacultyName || matchedFaculty?.name || "",
       thumbnailUrl: course.thumbnailUrl || "",
       description: course.description || "",
     });
@@ -552,34 +585,55 @@ export default function AdminCoursesPage() {
               </div>
 
               {!isFaculty ? (
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1">
-                    Assign Faculty * <span className="text-[10px] text-amber-600 font-medium">(Compulsory course owner)</span>
-                  </label>
-                  <select
-                    required
-                    value={formData.assignedFacultyId}
-                    onChange={(e) => {
-                      const selectedId = e.target.value;
-                      const fac = facultyList.find((f) => String(f._id || f.id) === String(selectedId));
-                      setFormData((prev) => ({
-                        ...prev,
-                        assignedFacultyId: selectedId,
-                        assignedFacultyName: fac ? fac.name : "",
-                        instructor: fac
-                          ? `${fac.name}${fac.departmentId?.name ? ` (${fac.departmentId.name})` : fac.staffId ? ` (${fac.staffId})` : ""}`
-                          : prev.instructor,
-                      }));
-                    }}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">-- Select Faculty Member (Compulsory) --</option>
-                    {facultyList.map((fac) => (
-                      <option key={fac._id || fac.id} value={fac._id || fac.id}>
-                        {fac.name} {fac.departmentId?.name ? `(${fac.departmentId.name})` : fac.staffId ? `[${fac.staffId}]` : `(${fac.email})`}
-                      </option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Filter by Department
+                    </label>
+                    <select
+                      value={selectedDeptFilter}
+                      onChange={(e) => setSelectedDeptFilter(e.target.value)}
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- All Departments --</option>
+                      {departments.map((dept) => (
+                        <option key={dept._id || dept.id || dept.code} value={dept._id || dept.id || dept.code}>
+                          {dept.name} {dept.code ? `(${dept.code})` : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-slate-700 font-bold mb-1">
+                      Assign Faculty * <span className="text-[10px] text-amber-600 font-medium">(Course Owner)</span>
+                    </label>
+                    <select
+                      required
+                      value={formData.assignedFacultyId}
+                      onChange={(e) => {
+                        const selectedId = e.target.value;
+                        const fac = facultyList.find((f) => String(f._id || f.id) === String(selectedId));
+                        const deptLabel = fac?.departmentId?.name || fac?.departmentId?.code || fac?.department;
+                        setFormData((prev) => ({
+                          ...prev,
+                          assignedFacultyId: selectedId,
+                          assignedFacultyName: fac ? fac.name : "",
+                          instructor: fac
+                            ? `${fac.name}${deptLabel ? ` (${deptLabel})` : fac.staffId ? ` (${fac.staffId})` : ""}`
+                            : prev.instructor,
+                        }));
+                      }}
+                      className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">-- Select Faculty Member --</option>
+                      {filteredFacultyList.map((fac) => (
+                        <option key={fac._id || fac.id} value={fac._id || fac.id}>
+                          {fac.name} {fac.departmentId?.name ? `(${fac.departmentId.name})` : fac.department ? `(${fac.department})` : fac.staffId ? `[${fac.staffId}]` : `(${fac.email})`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               ) : (
                 editingCourse && formData.assignedFacultyName && (
@@ -592,17 +646,6 @@ export default function AdminCoursesPage() {
                   </div>
                 )
               )}
-
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">Instructor Name & Department</label>
-                <input
-                  type="text"
-                  value={formData.instructor}
-                  onChange={(e) => setFormData({ ...formData, instructor: e.target.value })}
-                  placeholder="Dr. K. Sathish Kumar (CSE)"
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
 
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
                 <button

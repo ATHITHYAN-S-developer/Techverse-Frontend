@@ -1,58 +1,76 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Sparkles, ArrowUpRight, Star, FileText } from "lucide-react";
+import { Sparkles, ArrowUpRight, Star, FileText, Download, Building2, Tag } from "lucide-react";
 
 export default function FeaturedResource({ resource, deptCode, onOpen }) {
   if (!resource) return null;
 
   return (
-    <section className="mt-6 px-5 sm:px-0" aria-label="Featured resource">
-      <div className="hidden mb-3">
-        <span>spacer</span>
-      </div>
+    <section className="mt-4 mb-6" aria-label="Featured resource">
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white shadow-xl shadow-blue-900/20"
+        transition={{ duration: 0.5, ease: "easeOut" }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0B2347] via-[#0D3866] to-[#0A2540] text-white border border-blue-900/60 shadow-xl shadow-blue-950/20"
       >
-        <div className="absolute -right-10 -top-14 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-[#10B981]/20 blur-3xl" />
+        {/* Background decorative elements */}
+        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-2xl bg-blue-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-64 w-64 rounded-2xl bg-emerald-500/10 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:linear-gradient(to_right,white_1px,transparent_1px),linear-gradient(to_bottom,white_1px,transparent_1px)] [background-size:24px_24px]" />
 
-        <div className="relative px-5 py-6 sm:px-8 sm:py-8">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 backdrop-blur px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
-              <Sparkles size={12} className="text-amber-300" />
+        <div className="relative p-6 sm:p-8">
+          {/* Header Badges */}
+          <div className="flex items-center gap-2.5 mb-4 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500/20 border border-amber-400/30 px-3 py-1 text-[11px] font-extrabold uppercase tracking-wider text-amber-300 backdrop-blur-sm">
+              <Sparkles size={13} className="text-amber-300" />
               Featured Resource
             </span>
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-blue-100">
-              <Star size={11} className="fill-amber-300 text-amber-300" />
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-white/10 border border-white/15 px-2.5 py-1 text-[11px] font-semibold text-white/90">
+              <Star size={12} className="fill-amber-300 text-amber-300" />
               Most Downloaded
             </span>
             {deptCode && (
-              <span className="hidden sm:inline-flex rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-semibold text-blue-100">
+              <span className="inline-flex items-center gap-1 rounded-lg bg-blue-500/20 border border-blue-400/30 px-2.5 py-1 text-[11px] font-bold text-blue-200">
+                <Building2 size={12} />
                 {deptCode}
+              </span>
+            )}
+            {resource.semester && (
+              <span className="inline-flex items-center rounded-lg bg-white/10 px-2.5 py-1 text-[11px] font-medium text-white/80">
+                Semester {resource.semester}
               </span>
             )}
           </div>
 
-          <div className="flex items-start justify-between gap-4">
-            <div className="max-w-2xl">
-              <h2 className="text-lg sm:text-2xl font-extrabold leading-snug tracking-tight">
+          {/* Content & Action */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="max-w-3xl space-y-2">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-extrabold leading-snug tracking-tight text-white">
                 {resource.title}
               </h2>
-              <p className="mt-2 text-xs sm:text-sm text-blue-100/90 leading-relaxed line-clamp-2">
-                {resource.description}
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed line-clamp-2">
+                {resource.description || "Comprehensive academic lecture notes and curriculum materials prepared for VCET engineering scholars."}
               </p>
+              {resource.tags && (
+                <div className="flex items-center gap-1.5 pt-1 text-[11px] text-blue-200/80">
+                  <Tag size={12} />
+                  <span>{Array.isArray(resource.tags) ? resource.tags.join(" • ") : resource.tags}</span>
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => onOpen(resource)}
-              className="shrink-0 inline-flex items-center gap-2 rounded-xl bg-white text-[#0B4A8F] px-4 py-2.5 text-[13px] font-bold shadow-lg transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98]"
-            >
-              <FileText size={15} />
-              Open
-              <ArrowUpRight size={14} />
-            </button>
+
+            <div className="flex items-center gap-3 shrink-0">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => onOpen(resource)}
+                className="inline-flex items-center gap-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white px-5 py-3 text-sm font-extrabold shadow-lg shadow-blue-500/30 transition-all duration-200"
+              >
+                <FileText size={16} />
+                <span>Open Material</span>
+                <ArrowUpRight size={15} />
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.div>

@@ -22,20 +22,20 @@ export default function ResourceSidebar({
 }) {
   return (
     <aside
-      className={`fixed inset-y-0 left-0 z-50 w-[274px] bg-white border-r border-slate-200 shadow-xl lg:shadow-none lg:static lg:sticky lg:top-[64px] lg:h-[calc(100vh-64px)] lg:overflow-y-auto lg:shrink-0 transition-transform duration-300 ease-out ${
+      className={`fixed inset-y-0 left-0 z-50 w-[274px] bg-white border-r border-profile-rule shadow-xl lg:shadow-none lg:static lg:sticky lg:top-[64px] lg:h-[calc(100vh-64px)] lg:overflow-y-auto lg:shrink-0 transition-transform duration-300 ease-out ${
         open ? "translate-x-0" : "-translate-x-full"
       } lg:translate-x-0`}
       role="navigation"
       aria-label="E-Resources sidebar"
     >
       <div className="flex items-center justify-between px-5 py-4 lg:pt-6">
-        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+        <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-profile-ink/60">
           E-Resources
         </p>
         <button
           onClick={onClose}
           aria-label="Close E-Resources sidebar"
-          className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-[#0B4A8F] hover:bg-slate-100 transition-colors"
+          className="lg:hidden p-1.5 rounded-lg text-profile-ink/60 hover:text-profile-main hover:bg-profile-alt transition-colors"
         >
           <X size={18} />
         </button>
@@ -51,14 +51,14 @@ export default function ResourceSidebar({
               onClick={() => onNav(item.key)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors duration-150 relative ${
                 active
-                  ? "bg-[#EFF6FF] text-[#0B4A8F]"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-[#0B4A8F]"
+                  ? "bg-profile-light text-profile-main"
+                  : "text-profile-ink/80 hover:bg-profile-alt hover:text-profile-main"
               }`}
             >
               {active && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r bg-[#0B4A8F]" />
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r bg-profile-main" />
               )}
-              <Icon size={17} className={active ? "text-[#0B4A8F]" : "text-slate-400"} />
+              <Icon size={17} className={active ? "text-profile-main" : "text-profile-ink/60"} />
               <span className="truncate">{item.label}</span>
             </button>
           );
@@ -66,7 +66,7 @@ export default function ResourceSidebar({
       </nav>
 
       <div className="px-5 pt-6 pb-2">
-        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+        <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-profile-ink/60">
           <GraduationCap size={13} />
           Departments
         </div>
@@ -77,8 +77,8 @@ export default function ResourceSidebar({
           onClick={() => onDeptChange("all")}
           className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[13px] font-medium transition-colors duration-150 ${
             selectedDeptId === "all"
-              ? "bg-[#EFF6FF] text-[#0B4A8F]"
-              : "text-slate-600 hover:bg-slate-50 hover:text-[#0B4A8F]"
+              ? "bg-profile-light text-profile-main"
+              : "text-profile-ink/80 hover:bg-profile-alt hover:text-profile-main"
           }`}
         >
           <span className="truncate">All Departments</span>
@@ -91,8 +91,8 @@ export default function ResourceSidebar({
               onClick={() => onDeptChange(dept.id)}
               className={`w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-[13px] font-medium transition-colors duration-150 ${
                 active
-                  ? "bg-[#EFF6FF] text-[#0B4A8F]"
-                  : "text-slate-600 hover:bg-slate-50 hover:text-[#0B4A8F]"
+                  ? "bg-profile-light text-profile-main"
+                  : "text-profile-ink/80 hover:bg-profile-alt hover:text-profile-main"
               }`}
             >
               <span className="truncate">{dept.name}</span>
@@ -102,11 +102,11 @@ export default function ResourceSidebar({
       </nav>
 
       <div className="px-5 pb-6 lg:pb-8">
-        <div className="rounded-xl bg-[#F8FAFC] border border-slate-100 px-4 py-3">
-          <p className="text-[11px] font-medium text-slate-400">Total materials</p>
-          <p className="text-lg font-extrabold text-[#0B4A8F]">
+        <div className="rounded-xl bg-profile-alt border border-profile-rule/40 px-4 py-3">
+          <p className="text-[11px] font-medium text-profile-ink/60">Total materials</p>
+          <p className="text-lg font-extrabold text-profile-main">
             {resourceCount}
-            <span className="text-xs font-semibold text-slate-400 ml-1">resources</span>
+            <span className="text-xs font-semibold text-profile-ink/60 ml-1">resources</span>
           </p>
         </div>
       </div>

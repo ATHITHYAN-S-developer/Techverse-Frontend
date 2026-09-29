@@ -4,6 +4,7 @@ const AUTH_KEY = "techverse_user";
 const TOKEN_KEY = "techverse_token";
 const LEGACY_AUTH_KEY = "vcetTechHubSession";
 const LEGACY_TOKEN_KEY = "vcetTechHubToken";
+const OFFLINE_FLAG = "techverse_offline_session";
 
 export function isAuthenticated() {
   return Boolean(getCurrentUser());
@@ -72,7 +73,7 @@ export async function login(credentialsOrIdentifier, passwordParam, keepSignedIn
     throw new Error(
       `Please enter your ${
         userRole === "student"
-          ? "Register Number and Password"
+          ? "Register Number and Date of Birth"
           : userRole === "faculty" || userRole === "teacher"
           ? "Staff ID and Password"
           : "Admin Username and Password"
@@ -115,6 +116,9 @@ export async function login(credentialsOrIdentifier, passwordParam, keepSignedIn
         // Legacy compatibility sync
         localStorage.setItem(LEGACY_TOKEN_KEY, token);
         localStorage.setItem(LEGACY_AUTH_KEY, JSON.stringify(user));
+
+        // A real token supersedes any earlier offline session.
+        localStorage.removeItem(OFFLINE_FLAG);
 
         if (!remember) {
           sessionStorage.setItem(TOKEN_KEY, token);
@@ -187,14 +191,25 @@ export async function login(credentialsOrIdentifier, passwordParam, keepSignedIn
   sessionStorage.removeItem(LEGACY_AUTH_KEY);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
   sessionStorage.removeItem(LEGACY_TOKEN_KEY);
+  localStorage.removeItem(OFFLINE_FLAG);
 
   const storage = remember ? localStorage : sessionStorage;
   storage.setItem(AUTH_KEY, JSON.stringify(user));
-  storage.setItem(TOKEN_KEY, "mock_jwt_token_sample");
   storage.setItem(LEGACY_AUTH_KEY, JSON.stringify(user));
-  storage.setItem(LEGACY_TOKEN_KEY, "mock_jwt_token_sample");
+
+  // Flag this as an offline session rather than storing a placeholder token.
+  // "mock_jwt_token_sample" is not a valid JWT, so the backend rejected every
+  // protected call with INVALID_TOKEN and the 401 handler wiped the session,
+  // logging the user straight back out. With the flag set, api.js omits the
+  // Authorization header and protected endpoints fail as AUTH_TOKEN_MISSING,
+  // which is non-destructive and leaves public feeds working.
+  localStorage.setItem(OFFLINE_FLAG, "1");
 
   return user;
+}
+
+export function isOfflineSession() {
+  return localStorage.getItem(OFFLINE_FLAG) === "1";
 }
 
 export function logout() {
@@ -206,4 +221,5 @@ export function logout() {
   sessionStorage.removeItem(LEGACY_AUTH_KEY);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
   sessionStorage.removeItem(LEGACY_TOKEN_KEY);
+  localStorage.removeItem(OFFLINE_FLAG);
 }

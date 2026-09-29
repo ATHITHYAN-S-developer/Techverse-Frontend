@@ -161,12 +161,12 @@ export default function Navbar() {
                 {/* Streak Badge for Students */}
                 {role === "student" && (
                   <Link
-                    to="/points"
+                    to="/profile"
                     className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors"
-                    title={`${streak} Day Streak • ${points} Points`}
+                    title={`${streak?.currentStreak || 0} Day Streak • ${points?.totalPoints || 0} Points`}
                   >
                     <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span>{streak}d</span>
+                    <span>{streak?.currentStreak || 0}d</span>
                   </Link>
                 )}
 

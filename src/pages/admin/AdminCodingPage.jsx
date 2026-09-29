@@ -365,16 +365,6 @@ export default function AdminCodingPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            to="/coding"
-            target="_blank"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer"
-          >
-            <Eye className="w-4 h-4 text-slate-500" />
-            <span>Preview Student Arena</span>
-            <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
-          </Link>
-
           <button
             onClick={handleOpenAddTest}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs transition-all cursor-pointer shadow-sm"

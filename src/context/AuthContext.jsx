@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { getCurrentUser, login as authLogin, logout as authLogout } from "../services/authService";
+import api from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -25,11 +26,11 @@ const DEFAULT_NOTIFICATIONS = [
   {
     id: "notif-3",
     title: "Daily Practice Test Ready",
-    message: "Today's assessment on Data Structures & Algorithms is available. Maintain your 7-day streak!",
+    message: "Today's assessment on Data Structures & Algorithms is available.",
     type: "test",
     time: "5 hours ago",
     read: false,
-    link: "/tests/dsa-day-3",
+    link: "/tests",
   },
   {
     id: "notif-4",
@@ -42,16 +43,52 @@ const DEFAULT_NOTIFICATIONS = [
   },
 ];
 
+const EMPTY_GAMIFICATION = {
+  streak: { currentStreak: 0, longestStreak: 0, lastActiveDate: null, freezeCount: 0 },
+  points: { totalPoints: 0, level: 1, rank: 1 },
+};
+
+/** Accepts the server's object shape or a legacy localStorage number. */
+function normaliseGamification(source) {
+  if (!source) return EMPTY_GAMIFICATION;
+
+  const rawStreak = source.streak ?? EMPTY_GAMIFICATION.streak;
+  const rawPoints = source.points ?? EMPTY_GAMIFICATION.points;
+
+  const currentStreak = Number(
+    typeof rawStreak === "object" ? rawStreak.currentStreak : rawStreak
+  ) || 0;
+  const longestStreak = Number(
+    typeof rawStreak === "object" ? rawStreak.longestStreak : rawStreak
+  ) || 0;
+  const totalPoints = Number(
+    typeof rawPoints === "object" ? rawPoints.totalPoints : rawPoints
+  ) || 0;
+
+  return {
+    streak: {
+      currentStreak,
+      longestStreak,
+      lastActiveDate: typeof rawStreak === "object" ? rawStreak.lastActiveDate ?? null : null,
+      freezeCount: typeof rawStreak === "object" ? rawStreak.freezeCount || 0 : 0,
+    },
+    points: {
+      totalPoints,
+      level:
+        typeof rawPoints === "object" && rawPoints.level
+          ? rawPoints.level
+          : Math.floor(totalPoints / 300) + 1,
+      rank: typeof rawPoints === "object" ? rawPoints.rank || 1 : 1,
+    },
+  };
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getCurrentUser());
-  const [points, setPoints] = useState(() => {
-    const saved = localStorage.getItem("techverse_user_points");
-    return saved ? parseInt(saved, 10) : 820;
-  });
-  const [streak, setStreak] = useState(() => {
-    const saved = localStorage.getItem("techverse_user_streak");
-    return saved ? parseInt(saved, 10) : 7;
-  });
+  const [gamification, setGamification] = useState(() =>
+    normaliseGamification(getCurrentUser())
+  );
+  const [gamificationLoading, setGamificationLoading] = useState(false);
   const [bookmarks, setBookmarks] = useState(() => {
     try {
       const saved = localStorage.getItem("techverse_user_bookmarks");
@@ -69,15 +106,6 @@ export function AuthProvider({ children }) {
     }
   });
 
-  // Sync state to local storage
-  useEffect(() => {
-    localStorage.setItem("techverse_user_points", points.toString());
-  }, [points]);
-
-  useEffect(() => {
-    localStorage.setItem("techverse_user_streak", streak.toString());
-  }, [streak]);
-
   useEffect(() => {
     localStorage.setItem("techverse_user_bookmarks", JSON.stringify(bookmarks));
   }, [bookmarks]);
@@ -86,15 +114,50 @@ export function AuthProvider({ children }) {
     localStorage.setItem("techverse_user_notifications", JSON.stringify(notifications));
   }, [notifications]);
 
+  /**
+   * The server is the single source of truth for streak and points. Re-read it
+   * after any action that can award either, rather than mutating local state.
+   */
+  const refreshGamification = useCallback(async () => {
+    try {
+      const res = await api.get("/users/streak");
+      const streak = res?.streak || res?.data?.streak;
+      const points = res?.points || res?.data?.points;
+      if (streak || points) {
+        setGamification(normaliseGamification({ streak, points }));
+        return true;
+      }
+    } catch {
+      // Offline or unauthenticated: fall back to whatever the user object holds.
+    } finally {
+      setGamificationLoading(false);
+    }
+    return false;
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      setGamificationLoading(true);
+      refreshGamification();
+    } else {
+      setGamification(EMPTY_GAMIFICATION);
+      setGamificationLoading(false);
+    }
+  }, [user, refreshGamification]);
+
   const login = async (credentials, passwordOrDob, keepSignedIn = true, role = "student") => {
     const authenticatedUser = await authLogin(credentials, passwordOrDob, keepSignedIn, role);
     setUser(authenticatedUser);
+    setGamification(normaliseGamification(authenticatedUser));
+    setGamificationLoading(true);
     return authenticatedUser;
   };
 
   const logout = () => {
     authLogout();
     setUser(null);
+    setGamification(EMPTY_GAMIFICATION);
+    setGamificationLoading(false);
   };
 
   const updateProfile = (updates) => {
@@ -108,16 +171,14 @@ export function AuthProvider({ children }) {
     });
   };
 
-  const addPoints = useCallback((amount, reason = "Daily Activity") => {
-    setPoints((prev) => {
-      const next = prev + amount;
-      return next;
-    });
-  }, []);
-
-  const incrementStreak = useCallback(() => {
-    setStreak((prev) => prev + 1);
-  }, []);
+  /**
+   * Kept for API compatibility. Points are awarded server-side as part of the
+   * test/coding submission, so this just re-reads the authoritative values
+   * instead of incrementing a local counter that used to drift from the DB.
+   */
+  const addPoints = useCallback(() => {
+    return refreshGamification();
+  }, [refreshGamification]);
 
   const toggleBookmark = useCallback((item) => {
     setBookmarks((prev) => {
@@ -147,31 +208,29 @@ export function AuthProvider({ children }) {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        role: user?.role || "guest",
-        isAuthenticated: Boolean(user),
-        login,
-        logout,
-        updateProfile,
-        points,
-        streak,
-        addPoints,
-        incrementStreak,
-        bookmarks,
-        toggleBookmark,
-        isBookmarked,
-        notifications,
-        unreadCount,
-        markNotificationRead,
-        markAllNotificationsRead,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = {
+    user,
+    role: user?.role || "guest",
+    isAuthenticated: Boolean(user),
+    login,
+    logout,
+    updateProfile,
+    gamification,
+    gamificationLoading,
+    streak: gamification.streak,
+    points: gamification.points,
+    refreshGamification,
+    addPoints,
+    bookmarks,
+    toggleBookmark,
+    isBookmarked,
+    notifications,
+    unreadCount,
+    markNotificationRead,
+    markAllNotificationsRead,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
