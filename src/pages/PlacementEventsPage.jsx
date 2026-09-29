@@ -15,10 +15,7 @@ import {
   Megaphone,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   Headphones,
-  Award,
-  Laptop,
   CheckCircle2,
   PhoneCall,
   Mail,
@@ -97,6 +94,13 @@ function formatDateString(raw) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }).toUpperCase();
 }
 
+function formatShortDate(raw) {
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return String(raw).toUpperCase();
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" }).toUpperCase();
+}
+
 function relativeLabel(event) {
   const ev = eventDateString(event);
   if (!ev) return "DATE TO BE ANNOUNCED";
@@ -113,7 +117,14 @@ function relativeLabel(event) {
 }
 
 const AUTO_PLAY_INTERVAL = 3500;
-const HERO_SLIDE_COUNT = 5;
+/**
+ * Drives handed to the fullscreen hero. Everything left over feeds the grid
+ * below, which lays out by count: a full group of 5 becomes the bento (2
+ * stacked | 1 tall | 2 stacked) and a 1-4 remainder becomes a single screen.
+ * Kept at 3 so the bento stays reachable once the page has 8+ live drives;
+ * at 5 the grid would need 10 before its centre tall card ever appeared.
+ */
+const HERO_SLIDE_COUNT = 3;
 const POSTED_BY = "Career Development Cell";
 
 function compareUploadOrder(a, b) {
@@ -161,7 +172,7 @@ export default function PlacementEventsPage() {
     };
   }, []);
 
-  const { slides, orderedEvents } = useMemo(() => {
+  const { slides, orderedEvents, gridEvents } = useMemo(() => {
     const ordered = events
       .filter((e) => !isPastEvent(e))
       .sort(compareUploadOrder);
@@ -169,6 +180,9 @@ export default function PlacementEventsPage() {
     return {
       slides: ordered.slice(0, HERO_SLIDE_COUNT),
       orderedEvents: ordered,
+      // Everything the slideshow did not show. The section below renders only
+      // these, so the hero's drives are never repeated underneath it.
+      gridEvents: ordered.slice(HERO_SLIDE_COUNT),
     };
   }, [events]);
 
@@ -202,6 +216,23 @@ export default function PlacementEventsPage() {
       document.body.style.overflow = previousOverflow;
       document.body.style.paddingRight = previousPadding;
     };
+  }, [selected, showHelpModal]);
+
+  // Escape dismisses whichever modal is open. Without it the only ways out are
+  // the backdrop, the X and the Close button — the hero's "View More" opens the
+  // dialog from the keyboard/mouse by habit, so Escape is the natural exit.
+  useEffect(() => {
+    if (!selected && !showHelpModal) return;
+
+    const onKeyDown = (e) => {
+      if (e.key !== "Escape") return;
+      // The detail modal stacks above the helpdesk, so close it first.
+      if (selected) setSelected(null);
+      else setShowHelpModal(false);
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
   }, [selected, showHelpModal]);
 
   return (
@@ -280,11 +311,10 @@ export default function PlacementEventsPage() {
             />
           )}
 
-          {/* ---- SAMSUNG STYLE CATEGORIZED BENTO SHOWCASE (SCROLL DOWN) ---- */}
-          <PlacementBentoShowcase
-            events={orderedEvents}
+          {/* ---- EVERYTHING BELOW THE SLIDESHOW, ADAPTED TO HOW MANY ARE LEFT ---- */}
+          <PlacementGrid
+            events={gridEvents}
             onSelectEvent={(event) => setSelected(event)}
-            onOpenHelp={() => setShowHelpModal(true)}
           />
         </>
       )}
@@ -554,138 +584,128 @@ function HeroSlide({ event, active, onViewMore }) {
 }
 
 /* ============================================================================
- * SAMSUNG-STYLE CATEGORIZED BENTO SHOWCASE (SCROLLED CONTENT)
+ * ADAPTIVE GRID — everything that did not fit in the slideshow
+ * ============================================================================
+ * The slideshow owns the 5 newest uploads, so this section renders only the
+ * remainder. The remainder's size picks the layout:
+ *   1 → one full-bleed card
+ *   2 → two equal columns
+ *   3 → three equal columns
+ *   4 → 2x2 grid
+ *   5 → the bento (2 stacked | 1 tall | 2 stacked)
+ *   6+ → bento, then slide right for the rest as full-width cards
  * ========================================================================== */
 
-function PlacementBentoShowcase({ events, onSelectEvent, onOpenHelp }) {
-  const [pageIndex, setPageIndex] = useState(0);
+/** Cards in one bento page. */
+const BENTO_PAGE_SIZE = 5;
 
-  // Total pages of 5 items per bento layout
-  const pageSize = 5;
-  const totalPages = Math.max(1, Math.ceil(events.length / pageSize));
-  const currentPage = Math.min(pageIndex, totalPages - 1);
+/**
+ * Build the list of pages shown below the slideshow.
+ *
+ * Full groups of 5 become bento pages. A trailing partial group of 1-4 items
+ * becomes one "rest" page that is laid out by count, using the same rules as a
+ * short list: 1 → full-screen slide, 2 → split into two, 3 → three across,
+ * 4 → 2x2. Partial groups are never squeezed into an incomplete bento, which
+ * would leave empty columns.
+ */
+function buildGridPages(events) {
+  const pages = [];
+  for (let i = 0; i < events.length; i += BENTO_PAGE_SIZE) {
+    const chunk = events.slice(i, i + BENTO_PAGE_SIZE);
+    pages.push({ type: chunk.length === BENTO_PAGE_SIZE ? "bento" : "rest", items: chunk });
+  }
+  return pages;
+}
 
-  // Get current 5 items (pad with recycled items if < 5 so layout is always pristine)
-  const currentChunk = useMemo(() => {
-    const start = currentPage * pageSize;
-    let items = events.slice(start, start + pageSize);
-    if (items.length < pageSize && events.length > 0) {
-      // Pad from beginning of array to maintain 5 cards
-      let padIndex = 0;
-      while (items.length < pageSize && padIndex < events.length) {
-        items.push(events[padIndex % events.length]);
-        padIndex++;
-      }
-    }
-    return items;
-  }, [events, currentPage]);
+function PlacementGrid({ events, onSelectEvent }) {
+  const [page, setPage] = useState(0);
 
-  const handlePrev = () => {
-    setPageIndex((prev) => (prev > 0 ? prev - 1 : totalPages - 1));
-  };
+  const total = events.length;
 
-  const handleNext = () => {
-    setPageIndex((prev) => (prev < totalPages - 1 ? prev + 1 : 0));
-  };
+  const pages = useMemo(() => buildGridPages(events), [events]);
+  const totalPages = pages.length;
+  const safePage = Math.min(page, totalPages - 1);
 
-  // Extract 5 items for the slots
-  const card0 = currentChunk[0] || events[0]; // Left Top
-  const card1 = currentChunk[1] || events[1] || events[0]; // Left Bottom
-  const card2 = currentChunk[2] || events[2] || events[0]; // Center Hero (Tall)
-  const card3 = currentChunk[3] || events[3] || events[0]; // Right Top (Dark card)
-  const card4 = currentChunk[4] || events[4] || events[0]; // Right Bottom
+  // Clamp back to a valid page whenever the list shrinks (e.g. an expired drive
+  // retires) so the view never lands on an empty page.
+  useEffect(() => {
+    if (page > safePage) setPage(safePage);
+  }, [page, safePage]);
+
+  if (total === 0) return null;
+
+  const goPrev = () => setPage((p) => (p > 0 ? p - 1 : totalPages - 1));
+  const goNext = () => setPage((p) => (p < totalPages - 1 ? p + 1 : 0));
+
+  // ---- 1 to 4 items: a single screen, layout chosen by count, no arrows ----
+  if (total < BENTO_PAGE_SIZE) {
+    // A lone item is full-bleed, matching the remainder-page treatment.
+    const fullBleed = total === 1;
+
+    return (
+      <section
+        className={`w-full bg-[#FFFFFF] ${fullBleed ? "pb-0 px-0" : "pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10"}`}
+      >
+        <div className={fullBleed ? "w-full" : "max-w-[1400px] mx-auto"}>
+          <div key={total} className="bento-fade-in">
+            <EqualRowGrid events={events} onSelect={onSelectEvent} />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // ---- 5 or more: page through bento screens and remainder rows ----
+  const current = pages[safePage];
+
+  // A single leftover renders as a full-bleed slide; 2-4 share a padded row.
+  const isFullBleed = current?.type === "rest" && current.items.length === 1;
 
   return (
-    <section className="w-full bg-[#FFFFFF] pt-0 pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10 relative">
-      <div className="max-w-[1400px] mx-auto">
-        {/* -------------------------------------------------------------- */}
-        {/* SAMSUNG BENTO 5-CARD SHOWCASE CONTAINER                       */}
-        {/* -------------------------------------------------------------- */}
-        <div className="relative group/bento">
-          {/* CAROUSEL CONTROLS: LEFT & RIGHT FLOATING BUTTONS */}
+    <section
+      className={`w-full bg-[#FFFFFF] relative ${
+        isFullBleed ? "pb-0 px-0" : "pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10"
+      }`}
+    >
+      <div className={isFullBleed ? "w-full" : "max-w-[1400px] mx-auto"}>
+        <div className="relative group/grid">
+          {/* Arrows sit inside the padded area so a full-bleed slide still
+              has somewhere to put them. */}
           <button
-            onClick={handlePrev}
+            onClick={goPrev}
             aria-label="Previous drives"
-            className="absolute -left-2 sm:-left-4 lg:-left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+            className={`absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10 ${
+              isFullBleed ? "left-2 sm:left-6" : "left-0 lg:-left-6"
+            }`}
           >
             <ChevronLeft size={24} className="stroke-[2.5]" />
           </button>
-
           <button
-            onClick={handleNext}
+            onClick={goNext}
             aria-label="Next drives"
-            className="absolute -right-2 sm:-right-4 lg:-right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+            className={`absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10 ${
+              isFullBleed ? "right-2 sm:right-6" : "right-0 lg:-right-6"
+            }`}
           >
             <ChevronRight size={24} className="stroke-[2.5]" />
           </button>
 
-          {/* GRID LAYOUT: 3 COLUMNS (Left 2 stacked, Center 1 Tall, Right 2 stacked) */}
-          <div
-            key={currentPage}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch bento-fade-in"
-          >
-            {/* ------------------------------------------------------------ */}
-            {/* LEFT COLUMN: 2 STACKED CARDS (lg:col-span-3 or 4)           */}
-            {/* ------------------------------------------------------------ */}
-            <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
-              {/* TOP LEFT CARD (Grey / Studio tone) */}
-              <BentoCardSmall
-                event={card0}
-                tone="silver"
-                fallbackIcon={<Sparkles size={36} className="text-slate-400" />}
-                onClick={() => onSelectEvent(card0)}
-              />
-
-              {/* BOTTOM LEFT CARD (Clean White) */}
-              <BentoCardSmall
-                event={card1}
-                tone="white"
-                fallbackIcon={<Award size={36} className="text-blue-500/50" />}
-                onClick={() => onSelectEvent(card1)}
-              />
-            </div>
-
-            {/* ------------------------------------------------------------ */}
-            {/* CENTER COLUMN: 1 TALL FEATURED HERO CARD (lg:col-span-6)     */}
-            {/* ------------------------------------------------------------ */}
-            <div className="lg:col-span-6 flex">
-              <BentoCardTall
-                event={card2}
-                onClick={() => onSelectEvent(card2)}
-              />
-            </div>
-
-            {/* ------------------------------------------------------------ */}
-            {/* RIGHT COLUMN: 2 STACKED CARDS (lg:col-span-3 or 4)          */}
-            {/* ------------------------------------------------------------ */}
-            <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
-              {/* TOP RIGHT CARD (Dark Navy Contrast, Samsung Laptop style) */}
-              <BentoCardSmall
-                event={card3}
-                tone="dark"
-                fallbackIcon={<Laptop size={36} className="text-cyan-400/60" />}
-                onClick={() => onSelectEvent(card3)}
-              />
-
-              {/* BOTTOM RIGHT CARD (Clean White / Silver) */}
-              <BentoCardSmall
-                event={card4}
-                tone="white"
-                fallbackIcon={<Briefcase size={36} className="text-indigo-500/50" />}
-                onClick={() => onSelectEvent(card4)}
-              />
-            </div>
+          <div key={safePage} className="bento-fade-in">
+            {current?.type === "rest" ? (
+              <EqualRowGrid events={current.items} onSelect={onSelectEvent} />
+            ) : (
+              <PlacementBentoGrid events={current.items} onSelect={onSelectEvent} />
+            )}
           </div>
 
-          {/* PAGE DOTS INDICATOR */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              {Array.from({ length: totalPages }).map((_, i) => (
+            <div className={`flex items-center justify-center gap-2 ${isFullBleed ? "mt-6 px-4" : "mt-8"}`}>
+              {pages.map((p, i) => (
                 <button
                   key={i}
-                  onClick={() => setPageIndex(i)}
+                  onClick={() => setPage(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === currentPage ? "w-8 bg-[#0F172A]" : "w-2 bg-slate-300 hover:bg-slate-400"
+                    i === safePage ? "w-8 bg-[#0F172A]" : "w-2 bg-slate-300 hover:bg-slate-400"
                   }`}
                   aria-label={`Go to page ${i + 1}`}
                 />
@@ -699,14 +719,250 @@ function PlacementBentoShowcase({ events, onSelectEvent, onOpenHelp }) {
 }
 
 /* ============================================================================
+ * EQUAL-COLUMN GRID — used for 1 to 4 leftover items
+ * 1 → full bleed · 2 → two across · 3 → three across · 4 → 2x2
+ * ========================================================================== */
+
+function EqualRowGrid({ events, onSelect }) {
+  const count = events.length;
+
+  const columns = {
+    1: "grid-cols-1",
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-1 sm:grid-cols-2",
+  }[count] || "grid-cols-1";
+
+  // A lone item gets the full-screen slide, matching the tail treatment.
+  if (count === 1) {
+    return <FullScreenDrive event={events[0]} onClick={() => onSelect(events[0])} />;
+  }
+
+  return (
+    <div className={`grid ${columns} gap-5 sm:gap-6 items-stretch`}>
+      {events.map((event, i) => (
+        <EqualDriveCard key={event.id || event._id || i} event={event} onClick={() => onSelect(event)} />
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================================
+ * EQUAL CARD — one cell of the 2 / 3 / 4-up row
+ * ========================================================================== */
+
+function EqualDriveCard({ event, onClick }) {
+  if (!event) return null;
+
+  const dateStr = eventDateString(event);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group relative flex flex-col overflow-hidden rounded-[28px] bg-[#EBEFF4] border border-slate-200/80 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:shadow-2xl min-h-[300px] sm:min-h-[340px]"
+    >
+      {/* Poster fills the card, copy sits over a bottom scrim */}
+      {event.poster ? (
+        <img
+          src={event.poster}
+          alt={event.title}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+      ) : (
+        <div className="absolute inset-0 placement-hero-gradient flex items-center justify-center">
+          <Briefcase size={120} strokeWidth={0.75} className="text-white/[0.09]" />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/15" />
+
+      {/* Badges */}
+      <div className="relative z-10 flex items-start justify-between gap-2 p-5">
+        <span
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider backdrop-blur-md ${
+            event.poster
+              ? "bg-black/60 text-white border border-white/15"
+              : "bg-white/20 text-white border border-white/20"
+          }`}
+        >
+          <Briefcase size={10} />
+          {event.badge || "Campus Drive"}
+        </span>
+        {dateStr && (
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider backdrop-blur-md">
+            <CalendarDays size={9} /> {formatShortDate(dateStr)}
+          </span>
+        )}
+      </div>
+
+      {/* Copy */}
+      <div className="relative z-10 mt-auto p-5 sm:p-6">
+        <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white/75">
+          <Flame size={11} /> {relativeLabel(event)}
+        </span>
+        <h3 className="mt-2 text-lg sm:text-xl font-extrabold text-white leading-tight tracking-tight line-clamp-2 group-hover:text-white/90 transition-colors">
+          {event.title}
+        </h3>
+        <p className="mt-1.5 text-xs font-semibold text-white/70 line-clamp-1">
+          {event.department || "All Eligible Branches"}
+        </p>
+        <span className="mt-4 inline-flex items-center gap-1.5 text-xs font-bold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-3.5 py-1.5 rounded-full">
+          View Details
+          <ArrowRight size={13} className="transition-transform group-hover:translate-x-0.5" />
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
+ * FULL-SCREEN SLIDE — the tail item, shown alone once the bento fills up
+ * ========================================================================== */
+
+function FullScreenDrive({ event, onClick }) {
+  if (!event) return null;
+
+  const dateStr = eventDateString(event);
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      className="group relative w-full h-[clamp(360px,62vh,560px)] overflow-hidden bg-[#071E3D] cursor-pointer"
+    >
+      {event.poster ? (
+        <img
+          src={event.poster}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover placement-hero-zoom"
+        />
+      ) : (
+        <div className="absolute inset-0 placement-hero-gradient flex items-center justify-center">
+          <Briefcase size={220} strokeWidth={0.5} className="text-white/[0.07]" />
+        </div>
+      )}
+
+      {/* Legibility scrims, same as the hero above */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/15 to-transparent" />
+
+      <div className="absolute inset-0 flex items-end z-20">
+        <div className="w-full max-w-6xl mx-auto px-6 sm:px-10 lg:px-16 pb-20 sm:pb-24 placement-hero-copy">
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500 text-white text-[11px] font-black uppercase tracking-wider">
+              <Flame size={13} />
+              More Drives
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider border bg-blue-50 text-[#0062A8] border-blue-200/80 backdrop-blur-sm">
+              <Briefcase size={12} />
+              {event.badge || "Campus Drive"}
+            </span>
+            {dateStr && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold text-white bg-white/10 border border-white/15 backdrop-blur-sm">
+                <CalendarDays size={11} /> Event: {formatDateString(dateStr)}
+              </span>
+            )}
+            {event.time && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold text-white bg-white/10 border border-white/15 backdrop-blur-sm">
+                <Clock size={11} /> {event.time}
+              </span>
+            )}
+          </div>
+
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-[1.08] tracking-tight max-w-4xl drop-shadow-[0_2px_18px_rgba(0,0,0,0.55)]">
+            {event.title}
+          </h2>
+
+          <p className="mt-4 text-sm sm:text-base text-white/80 leading-relaxed max-w-2xl line-clamp-2">
+            {event.description || "No further details available."}
+          </p>
+
+          <div className="mt-6 flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-white/80">
+            {event.department && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <Building2 size={13} /> {event.department}
+              </span>
+            )}
+            <span className="inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
+              <Users2 size={13} /> Posted by {POSTED_BY}
+            </span>
+            {event.venue && (
+              <span className="inline-flex items-center gap-1.5 font-semibold text-white bg-white/10 border border-white/15 backdrop-blur-sm px-2.5 py-1 rounded-md">
+                <MapPin size={13} /> {event.venue}
+              </span>
+            )}
+          </div>
+
+          <span className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-white text-[#0F172A] font-bold text-xs sm:text-sm shadow-lg">
+            View More
+            <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+          </span>
+        </div>
+      </div>
+
+      {/* Fade into the page background at the very bottom */}
+      <div
+        aria-hidden="true"
+        className="absolute bottom-0 inset-x-0 h-24 z-10 pointer-events-none bg-gradient-to-b from-transparent to-white"
+      />
+    </div>
+  );
+}
+
+/* ============================================================================
+ * BENTO GRID — 5 items: 2 stacked | 1 tall | 2 stacked
+ * ========================================================================== */
+
+function PlacementBentoGrid({ events, onSelect }) {
+  const [card0, card1, card2, card3, card4] = events;
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
+      {/* LEFT COLUMN: 2 STACKED CARDS */}
+      <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
+        <BentoCardSmall event={card0} tone="silver" onClick={() => onSelect(card0)} />
+        <BentoCardSmall event={card1} tone="white" onClick={() => onSelect(card1)} />
+      </div>
+
+      {/* CENTER COLUMN: 1 TALL FEATURED CARD */}
+      <div className="lg:col-span-6 flex">
+        <BentoCardTall event={card2} onClick={() => onSelect(card2)} />
+      </div>
+
+      {/* RIGHT COLUMN: 2 STACKED CARDS */}
+      <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
+        <BentoCardSmall event={card3} tone="dark" onClick={() => onSelect(card3)} />
+        <BentoCardSmall event={card4} tone="white" onClick={() => onSelect(card4)} />
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================================
  * SMALL BENTO CARD (Left & Right stacked items)
  * ========================================================================== */
 
-function BentoCardSmall({ event, tone = "white", fallbackIcon, onClick }) {
+function BentoCardSmall({ event, tone = "white", onClick }) {
   if (!event) return null;
 
   const isDark = tone === "dark";
   const isSilver = tone === "silver";
+  const dateStr = eventDateString(event);
 
   const containerClasses = isDark
     ? "bg-gradient-to-br from-[#0B1528] via-[#0F1E38] to-[#162744] text-white border border-slate-800"
@@ -743,23 +999,33 @@ function BentoCardSmall({ event, tone = "white", fallbackIcon, onClick }) {
                 : "bg-black/[0.03] border border-black/5"
             }`}
           >
-            {fallbackIcon}
+            <Briefcase
+              size={36}
+              strokeWidth={1.25}
+              className={isDark ? "text-cyan-300/60" : "text-slate-400"}
+            />
           </div>
         )}
 
-        {/* Small subtle badge at top-left of image */}
-        {event.badge && (
-          <div className="absolute top-2 left-2">
-            <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md ${
-                isDark
-                  ? "bg-white/20 text-white border border-white/20"
-                  : "bg-black/60 text-white border border-black/10"
-              }`}
-            >
-              {event.badge}
-            </span>
-          </div>
+        {/* Category badge at top-left of the preview */}
+        <div className="absolute top-2 left-2">
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider backdrop-blur-md ${
+              isDark
+                ? "bg-white/20 text-white border border-white/20"
+                : "bg-black/60 text-white border border-black/10"
+            }`}
+          >
+            <Briefcase size={10} />
+            {event.badge || "Campus Drive"}
+          </span>
+        </div>
+
+        {/* Date chip at top-right of the preview */}
+        {dateStr && (
+          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider backdrop-blur-md">
+            <CalendarDays size={9} /> {formatShortDate(dateStr)}
+          </span>
         )}
       </div>
 
@@ -815,10 +1081,12 @@ function BentoCardTall({ event, onClick }) {
         </span>
       </div>
 
-      {/* Center Showcase Visual Preview */}
-      <div className="relative flex-1 my-4 flex items-center justify-center overflow-hidden">
+      {/* Center Showcase Visual Preview — the poster fills the whole card,
+          with no max-width/max-height cap of its own, so it scales with the
+          center column instead of floating small inside it. */}
+      <div className="relative flex-1 my-4 flex overflow-hidden rounded-2xl">
         {event.poster ? (
-          <div className="w-full max-w-sm h-full max-h-[290px] sm:max-h-[320px] rounded-2xl overflow-hidden shadow-xl border border-slate-300/60 bg-white group-hover:scale-105 transition-transform duration-500">
+          <div className="w-full h-full overflow-hidden shadow-xl border border-slate-300/60 bg-white group-hover:scale-105 transition-transform duration-500">
             <img
               src={event.poster}
               alt={event.title}
@@ -826,7 +1094,7 @@ function BentoCardTall({ event, onClick }) {
             />
           </div>
         ) : (
-          <div className="w-full max-w-sm h-64 rounded-2xl bg-gradient-to-br from-[#0A2540] to-[#0062A8] text-white p-6 flex flex-col items-center justify-center text-center shadow-xl group-hover:scale-105 transition-transform duration-500">
+          <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[#0A2540] to-[#0062A8] text-white p-6 flex flex-col items-center justify-center text-center shadow-xl group-hover:scale-105 transition-transform duration-500">
             <Briefcase size={54} strokeWidth={1.5} className="text-cyan-300 mb-3" />
             <h4 className="font-extrabold text-lg text-white line-clamp-2">{event.title}</h4>
             <p className="text-xs text-white/80 mt-1">{event.department || "All Eligible Branches"}</p>
