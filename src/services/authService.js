@@ -40,8 +40,11 @@ export function getAuthToken() {
  * Unified Login Function
  * Sends request to backend REST API: POST /api/auth/login
  * Falls back gracefully to local session if backend server is not running.
+ *
+ * Students post their date of birth in a `dateOfBirth` field; faculty and admin
+ * post a `password`. The backend reads the field that matches the role.
  */
-export async function login(credentialsOrIdentifier, passwordParam, keepSignedIn = true, role = "student") {
+export async function login(credentialsOrIdentifier, secretParam, keepSignedIn = true, role = "student") {
   let identity = "";
   let secret = "";
   let remember = keepSignedIn;
@@ -56,20 +59,24 @@ export async function login(credentialsOrIdentifier, passwordParam, keepSignedIn
       credentialsOrIdentifier.username ||
       credentialsOrIdentifier.email ||
       "";
-    secret = credentialsOrIdentifier.password || credentialsOrIdentifier.dob || "";
+    secret =
+      credentialsOrIdentifier.dateOfBirth ||
+      credentialsOrIdentifier.dob ||
+      credentialsOrIdentifier.password ||
+      "";
     remember = credentialsOrIdentifier.rememberMe ?? credentialsOrIdentifier.keepSignedIn ?? true;
     userRole = credentialsOrIdentifier.role || role || "student";
   } else {
     identity = String(credentialsOrIdentifier || "").trim();
-    secret = String(passwordParam || "").trim();
+    secret = String(secretParam || "").trim();
   }
 
   // Normalize role from "faculty" to "teacher" for backend compatibility
   const normalizedRole = userRole === "faculty" ? "teacher" : userRole;
   const cleanIdentity = identity.trim();
-  const cleanPassword = secret.trim();
+  const cleanSecret = secret.trim();
 
-  if (!cleanIdentity || !cleanPassword) {
+  if (!cleanIdentity || !cleanSecret) {
     throw new Error(
       `Please enter your ${
         userRole === "student"
@@ -81,6 +88,13 @@ export async function login(credentialsOrIdentifier, passwordParam, keepSignedIn
     );
   }
 
+  // A student's credential is a date of birth, so it is sent under its own name
+  // rather than being smuggled through a `password` field the backend ignores.
+  const body =
+    normalizedRole === "student"
+      ? { role: normalizedRole, identifier: cleanIdentity, dateOfBirth: cleanSecret }
+      : { role: normalizedRole, identifier: cleanIdentity, password: cleanSecret };
+
   // 1. Try real Express Backend API
   try {
     const response = await fetch(`${API_BASE_URL}/auth/login`, {
@@ -88,11 +102,7 @@ export async function login(credentialsOrIdentifier, passwordParam, keepSignedIn
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        role: normalizedRole,
-        identifier: cleanIdentity,
-        password: cleanPassword,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (response.ok) {

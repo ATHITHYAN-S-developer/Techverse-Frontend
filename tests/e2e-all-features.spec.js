@@ -23,9 +23,9 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
     await page.goto("/login");
     await expect(page.getByText("Welcome Back")).toBeVisible();
 
-    // Fill Student Credentials
+    // Fill Student Credentials (register number + date of birth, ISO for the date input)
     await page.locator('input[name="studentReg"]').fill("732924CSE001");
-    await page.locator('input[name="studentDob"]').fill("student123");
+    await page.locator('input[name="studentDob"]').fill("2007-09-20");
     await page.locator('button[type="submit"]').click();
 
     // Verify Redirect to Student Dashboard (BUG #001 Regression Check)

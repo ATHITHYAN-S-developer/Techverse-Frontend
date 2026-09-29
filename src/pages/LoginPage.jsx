@@ -6,6 +6,7 @@ import {
   BookOpen,
   ShieldCheck,
   IdCard,
+  CalendarDays,
   Lock,
   Mail,
   Eye,
@@ -34,7 +35,6 @@ export default function LoginPage() {
   // Student Form Fields
   const [studentReg, setStudentReg] = useState("");
   const [studentDob, setStudentDob] = useState("");
-  const [showStudentPassword, setShowStudentPassword] = useState(false);
 
   // Faculty Form Fields
   const [facultyEmail, setFacultyEmail] = useState("");
@@ -70,17 +70,23 @@ export default function LoginPage() {
     setTimeout(() => setIsShaking(false), 500);
   };
 
-  // Helper to auto-format DOB input with slashes (e.g., 20092007 -> 20/09/2007)
-  const formatDobInput = (val) => {
-    // If the user is backspacing over a slash, allow deletion smoothly
-    const digits = val.replace(/\D/g, "").slice(0, 8);
-    if (digits.length <= 2) {
-      return digits;
-    }
-    if (digits.length <= 4) {
-      return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    }
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+  // A native date input hands back yyyy-mm-dd, which the backend's
+  // matchesDateOfBirth reads as ISO order. `todayIso` bounds the picker so a
+  // student cannot select a birthday that has not happened yet.
+  const toIsoDate = (date) =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+  const todayIso = toIsoDate(new Date());
+
+  const isValidIsoDate = (val) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return false;
+    const [year, month, day] = val.split("-").map(Number);
+    const probe = new Date(Date.UTC(year, month - 1, day));
+    return (
+      probe.getUTCFullYear() === year &&
+      probe.getUTCMonth() === month - 1 &&
+      probe.getUTCDate() === day
+    );
   };
 
   const handleRoleChange = (role) => {
@@ -95,12 +101,7 @@ export default function LoginPage() {
 
     if (activeRole === "student") {
       const cleanReg = studentReg.trim().toUpperCase();
-      let cleanDob = studentDob.trim();
-
-      // If user typed 8 digits without slashes, automatically convert to DD/MM/YYYY
-      if (/^\d{8}$/.test(cleanDob)) {
-        cleanDob = `${cleanDob.slice(0, 2)}/${cleanDob.slice(2, 4)}/${cleanDob.slice(4, 8)}`;
-      }
+      const cleanDob = studentDob.trim();
 
       const regPattern = /^[0-9]{2,6}[A-Z]{2,5}[0-9]{2,4}$/;
       const newErrors = {};
@@ -113,8 +114,10 @@ export default function LoginPage() {
 
       if (!cleanDob) {
         newErrors.studentDob = "Date of birth is required";
-      } else if (!/^\d{1,2}[/\-.]\d{1,2}[/\-.]\d{4}$/.test(cleanDob)) {
-        newErrors.studentDob = "Enter your date of birth as DD/MM/YYYY (e.g. 20/09/2007)";
+      } else if (!isValidIsoDate(cleanDob)) {
+        newErrors.studentDob = "Select a valid date of birth from the calendar";
+      } else if (cleanDob > todayIso) {
+        newErrors.studentDob = "Date of birth cannot be in the future";
       }
 
       if (Object.keys(newErrors).length > 0) {
@@ -128,7 +131,7 @@ export default function LoginPage() {
         await contextLogin({
           role: "student",
           identifier: cleanReg,
-          password: cleanDob,
+          dateOfBirth: cleanDob,
           rememberMe,
         });
         setStatus("success");
@@ -399,21 +402,18 @@ export default function LoginPage() {
                   )}
                 </motion.div>
 
-                {/* Password / Date of Birth */}
+                {/* Date of Birth */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.05 }}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label
-                      htmlFor="studentDob"
-                      className="block text-xs font-bold uppercase tracking-wider text-[#0062A8]"
-                    >
-                      DATE OF BIRTH
-                    </label>
-                    <span className="text-[11px] text-[#0062A8] font-medium">e.g. 15/08/2006</span>
-                  </div>
+                  <label
+                    htmlFor="studentDob"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
+                  >
+                    DATE OF BIRTH
+                  </label>
                   <motion.div
                     animate={errors.studentDob ? shakeAnimation : {}}
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
@@ -422,7 +422,7 @@ export default function LoginPage() {
                         : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
                     }`}
                   >
-                    <Lock
+                    <CalendarDays
                       size={19}
                       className={`transition-colors shrink-0 ${
                         errors.studentDob ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
@@ -431,27 +431,17 @@ export default function LoginPage() {
                     <input
                       id="studentDob"
                       name="studentDob"
-                      type={showStudentPassword ? "text" : "password"}
+                      type="date"
                       autoComplete="bday"
-                      inputMode="numeric"
-                      maxLength={10}
+                      min="1900-01-01"
+                      max={todayIso}
                       value={studentDob}
                       onChange={(e) => {
-                        const formatted = formatDobInput(e.target.value);
-                        setStudentDob(formatted);
+                        setStudentDob(e.target.value);
                         if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
                       }}
-                      placeholder="DD/MM/YYYY"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]/60"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8]"
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowStudentPassword(!showStudentPassword)}
-                      className="text-slate-500 hover:text-slate-700 focus:outline-none p-0.5 rounded cursor-pointer"
-                      tabIndex={-1}
-                    >
-                      {showStudentPassword ? <EyeOff size={17} /> : <Eye size={17} />}
-                    </button>
                   </motion.div>
                   {errors.studentDob && (
                     <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">

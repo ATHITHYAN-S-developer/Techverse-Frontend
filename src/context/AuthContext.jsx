@@ -145,8 +145,8 @@ export function AuthProvider({ children }) {
     }
   }, [user, refreshGamification]);
 
-  const login = async (credentials, passwordOrDob, keepSignedIn = true, role = "student") => {
-    const authenticatedUser = await authLogin(credentials, passwordOrDob, keepSignedIn, role);
+  const login = async (credentials, secret, keepSignedIn = true, role = "student") => {
+    const authenticatedUser = await authLogin(credentials, secret, keepSignedIn, role);
     setUser(authenticatedUser);
     setGamification(normaliseGamification(authenticatedUser));
     setGamificationLoading(true);
