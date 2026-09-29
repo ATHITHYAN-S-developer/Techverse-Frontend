@@ -259,6 +259,20 @@ export default function AnnouncementsPage() {
     };
   }, [selected]);
 
+  // Escape dismisses the open detail modal. Without it the only ways out are
+  // the backdrop, the X and the Close button — the hero's "View More" opens the
+  // dialog from the keyboard/mouse by habit, so Escape is the natural exit.
+  useEffect(() => {
+    if (!selected) return;
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [selected]);
+
   // Auto-retire expired posts — anything whose event date has already passed is
   // removed from this page entirely rather than lingering in the list below.
   const liveAnnouncements = useMemo(
@@ -1071,14 +1085,16 @@ function AnnouncementCardTall({ item, onClick }) {
         </span>
       </div>
 
-      {/* Center Showcase Visual Preview */}
-      <div className="relative flex-1 my-4 flex items-center justify-center overflow-hidden">
+      {/* Center Showcase Visual Preview — the poster fills the whole card,
+          with no max-width/max-height cap of its own, so it scales with the
+          center column instead of floating small inside it. */}
+      <div className="relative flex-1 my-4 flex overflow-hidden rounded-2xl">
         {poster ? (
-          <div className="w-full max-w-sm h-full max-h-[290px] sm:max-h-[320px] rounded-2xl overflow-hidden shadow-xl border border-slate-300/60 bg-white group-hover:scale-105 transition-transform duration-500">
+          <div className="w-full h-full overflow-hidden shadow-xl border border-slate-300/60 bg-white group-hover:scale-105 transition-transform duration-500">
             <img src={poster} alt={item.title} className="w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="w-full max-w-sm h-64 rounded-2xl hero-gradient text-white p-6 flex flex-col items-center justify-center text-center shadow-xl group-hover:scale-105 transition-transform duration-500">
+          <div className="w-full h-full rounded-2xl hero-gradient text-white p-6 flex flex-col items-center justify-center text-center shadow-xl group-hover:scale-105 transition-transform duration-500">
             <Icon size={54} strokeWidth={1.5} className="text-cyan-300 mb-3" />
             <h4 className="font-extrabold text-lg text-white line-clamp-2">{item.title}</h4>
             <p className="text-xs text-white/80 mt-1">{deptLabel(item)}</p>
