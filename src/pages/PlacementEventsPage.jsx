@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Calendar,
   CalendarDays,
@@ -33,8 +33,15 @@ function resolvePoster(item) {
   const raw = item.poster || item.imageUrl || item.image || "";
   if (!raw) return "";
   if (raw.startsWith("data:") || /^https?:\/\//i.test(raw)) return raw;
-  const origin = API_BASE_URL.replace(/\/api\/?$/, "");
-  return `${origin}${raw.startsWith("/") ? raw : `/uploads/announcements/${raw}`}`;
+
+  // Uploaded posters are served by the backend, which is the only server that
+  // mounts /uploads — so those need its origin. Any other root-relative path
+  // (e.g. /images/... from frontend/public) is a bundled asset that Vite serves
+  // at the site root, and prefixing it with the API origin 404s. Left relative
+  // it resolves correctly in dev and in the built bundle the backend serves.
+  if (!raw.startsWith("/")) return `/uploads/announcements/${raw}`;
+  if (raw.startsWith("/uploads/")) return `${API_BASE_URL.replace(/\/api\/?$/, "")}${raw}`;
+  return raw;
 }
 
 function placementEventToCard(e) {
@@ -118,13 +125,14 @@ function relativeLabel(event) {
 
 const AUTO_PLAY_INTERVAL = 3500;
 /**
- * Drives handed to the fullscreen hero. Everything left over feeds the grid
- * below, which lays out by count: a full group of 5 becomes the bento (2
- * stacked | 1 tall | 2 stacked) and a 1-4 remainder becomes a single screen.
- * Kept at 3 so the bento stays reachable once the page has 8+ live drives;
- * at 5 the grid would need 10 before its centre tall card ever appeared.
+ * Drives handed to the fullscreen hero: always the 5 newest uploads. Everything
+ * else feeds the grid below, which is a pure function of how many are left —
+ * a full group of 5 becomes the bento (2 stacked | 1 tall | 2 stacked) and a
+ * trailing 1-4 group splits the screen into as many equal columns as it has
+ * cards. Because the split is `slice(HERO_SLIDE_COUNT)`, a new upload lands in
+ * the hero and pushes the hero's 5th drive down into the grid on its own.
  */
-const HERO_SLIDE_COUNT = 3;
+const HERO_SLIDE_COUNT = 5;
 const POSTED_BY = "Career Development Cell";
 
 function compareUploadOrder(a, b) {
@@ -587,150 +595,191 @@ function HeroSlide({ event, active, onViewMore }) {
  * ADAPTIVE GRID — everything that did not fit in the slideshow
  * ============================================================================
  * The slideshow owns the 5 newest uploads, so this section renders only the
- * remainder. The remainder's size picks the layout:
- *   1 → one full-bleed card
+ * remainder, in upload order. Screens hold up to 5 cards each: a full group of
+ * 5 becomes the bento (2 stacked | 1 tall | 2 stacked) — the same grid the
+ * announcements page uses — and a trailing group of 1-4 splits the screen into
+ * as many equal columns as it has cards, so:
+ *   1 → one full-bleed slide
  *   2 → two equal columns
  *   3 → three equal columns
- *   4 → 2x2 grid
- *   5 → the bento (2 stacked | 1 tall | 2 stacked)
- *   6+ → bento, then slide right for the rest as full-width cards
+ *   4 → four equal columns
+ * Six leftovers therefore show 5 in the bento and the 6th on the next screen,
+ * reached by swiping the section sideways. Screens are laid out in a horizontal
+ * scroll track, so every extra group of cards is one swipe to the right, never
+ * another section stacked down the page.
  * ========================================================================== */
 
 /** Cards in one bento page. */
 const BENTO_PAGE_SIZE = 5;
 
 /**
- * Build the list of pages shown below the slideshow.
+ * One screen's height. Fixed at the same breakpoint the layouts stop stacking,
+ * so the track never changes height while it is scrolled. Below `lg` the cards
+ * wrap onto more rows, so the height is left to them instead.
+ */
+const GRID_PAGE_HEIGHT = "min-h-[320px] lg:min-h-0 lg:h-[clamp(540px,74vh,780px)]";
+
+/**
+ * Build the screens shown below the slideshow, preserving upload order.
  *
- * Full groups of 5 become bento pages. A trailing partial group of 1-4 items
- * becomes one "rest" page that is laid out by count, using the same rules as a
- * short list: 1 → full-screen slide, 2 → split into two, 3 → three across,
- * 4 → 2x2. Partial groups are never squeezed into an incomplete bento, which
- * would leave empty columns.
+ * Full groups of 5 become bento screens. A trailing partial group of 1-4 items
+ * becomes one "split" screen that divides the width by its own count. Partial
+ * groups are never squeezed into an incomplete bento, which would leave empty
+ * columns — they split instead, so no card ever gets a half-empty cell.
  */
 function buildGridPages(events) {
   const pages = [];
   for (let i = 0; i < events.length; i += BENTO_PAGE_SIZE) {
     const chunk = events.slice(i, i + BENTO_PAGE_SIZE);
-    pages.push({ type: chunk.length === BENTO_PAGE_SIZE ? "bento" : "rest", items: chunk });
+    pages.push({ type: chunk.length === BENTO_PAGE_SIZE ? "bento" : "split", items: chunk });
   }
   return pages;
 }
 
 function PlacementGrid({ events, onSelectEvent }) {
+  const trackRef = useRef(null);
   const [page, setPage] = useState(0);
 
   const total = events.length;
-
   const pages = useMemo(() => buildGridPages(events), [events]);
   const totalPages = pages.length;
-  const safePage = Math.min(page, totalPages - 1);
 
-  // Clamp back to a valid page whenever the list shrinks (e.g. an expired drive
-  // retires) so the view never lands on an empty page.
+  // A fresh upload reshuffles the list, so open on the first screen — that is
+  // where the drive pushed out of the slideshow now sits.
   useEffect(() => {
-    if (page > safePage) setPage(safePage);
-  }, [page, safePage]);
+    const el = trackRef.current;
+    if (!el || el.scrollLeft === 0) return;
+    setPage(0);
+    el.scrollTo({ left: 0, behavior: "auto" });
+  }, [events]);
+
+  // Trackpad drags, touch swipes and the arrow buttons all end at the same
+  // scroll offset, so the active screen is read back off the track instead of
+  // being tracked separately and allowed to drift out of sync with it.
+  const handleScroll = () => {
+    const el = trackRef.current;
+    if (!el || el.clientWidth === 0) return;
+    const next = Math.round(el.scrollLeft / el.clientWidth);
+    setPage((prev) => (prev === next ? prev : next));
+  };
+
+  const goTo = (index) => {
+    const el = trackRef.current;
+    if (!el) return;
+    el.scrollTo({ left: index * el.clientWidth, behavior: "smooth" });
+  };
+
+  const goPrev = () => goTo(page > 0 ? page - 1 : totalPages - 1);
+  const goNext = () => goTo(page < totalPages - 1 ? page + 1 : 0);
+
+  // Keep the dots on a screen that still exists when the list shrinks (e.g. an
+  // expired drive retires).
+  useEffect(() => {
+    if (page > totalPages - 1) setPage(Math.max(0, totalPages - 1));
+  }, [page, totalPages]);
 
   if (total === 0) return null;
 
-  const goPrev = () => setPage((p) => (p > 0 ? p - 1 : totalPages - 1));
-  const goNext = () => setPage((p) => (p < totalPages - 1 ? p + 1 : 0));
-
-  // ---- 1 to 4 items: a single screen, layout chosen by count, no arrows ----
-  if (total < BENTO_PAGE_SIZE) {
-    // A lone item is full-bleed, matching the remainder-page treatment.
-    const fullBleed = total === 1;
-
-    return (
-      <section
-        className={`w-full bg-[#FFFFFF] ${fullBleed ? "pb-0 px-0" : "pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10"}`}
-      >
-        <div className={fullBleed ? "w-full" : "max-w-[1400px] mx-auto"}>
-          <div key={total} className="bento-fade-in">
-            <EqualRowGrid events={events} onSelect={onSelectEvent} />
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  // ---- 5 or more: page through bento screens and remainder rows ----
-  const current = pages[safePage];
-
-  // A single leftover renders as a full-bleed slide; 2-4 share a padded row.
-  const isFullBleed = current?.type === "rest" && current.items.length === 1;
-
   return (
-    <section
-      className={`w-full bg-[#FFFFFF] relative ${
-        isFullBleed ? "pb-0 px-0" : "pb-14 sm:pb-16 px-4 sm:px-6 lg:px-10"
-      }`}
-    >
-      <div className={isFullBleed ? "w-full" : "max-w-[1400px] mx-auto"}>
-        <div className="relative group/grid">
-          {/* Arrows sit inside the padded area so a full-bleed slide still
-              has somewhere to put them. */}
-          <button
-            onClick={goPrev}
-            aria-label="Previous drives"
-            className={`absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10 ${
-              isFullBleed ? "left-2 sm:left-6" : "left-0 lg:-left-6"
-            }`}
-          >
-            <ChevronLeft size={24} className="stroke-[2.5]" />
-          </button>
-          <button
-            onClick={goNext}
-            aria-label="Next drives"
-            className={`absolute top-1/2 -translate-y-1/2 z-30 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10 ${
-              isFullBleed ? "right-2 sm:right-6" : "right-0 lg:-right-6"
-            }`}
-          >
-            <ChevronRight size={24} className="stroke-[2.5]" />
-          </button>
+    <section className="w-full bg-[#FFFFFF] relative pb-14 sm:pb-16">
+      <div className="relative group/grid">
+        <div
+          ref={trackRef}
+          onScroll={handleScroll}
+          onKeyDown={(e) => {
+            if (totalPages < 2) return;
+            if (e.key === "ArrowLeft") {
+              e.preventDefault();
+              goPrev();
+            } else if (e.key === "ArrowRight") {
+              e.preventDefault();
+              goNext();
+            }
+          }}
+          tabIndex={0}
+          role="group"
+          aria-label="More placement drives, scroll sideways for the next group"
+          className="flex items-start overflow-x-auto snap-x snap-mandatory scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {pages.map((p, i) => {
+            // A lone card runs edge to edge, matching the tail treatment.
+            const fullBleed = p.items.length === 1;
 
-          <div key={safePage} className="bento-fade-in">
-            {current?.type === "rest" ? (
-              <EqualRowGrid events={current.items} onSelect={onSelectEvent} />
-            ) : (
-              <PlacementBentoGrid events={current.items} onSelect={onSelectEvent} />
-            )}
-          </div>
+            return (
+              <div
+                key={i}
+                className={`w-full shrink-0 snap-center ${GRID_PAGE_HEIGHT} ${
+                  fullBleed ? "" : "px-4 sm:px-6 lg:px-10"
+                }`}
+              >
+                <div
+                  className={`bento-fade-in h-full ${fullBleed ? "w-full" : "w-full max-w-[1400px] mx-auto"}`}
+                >
+                  {p.type === "bento" ? (
+                    <PlacementBentoGrid events={p.items} onSelect={onSelectEvent} />
+                  ) : (
+                    <EqualRowGrid events={p.items} onSelect={onSelectEvent} />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
-          {totalPages > 1 && (
-            <div className={`flex items-center justify-center gap-2 ${isFullBleed ? "mt-6 px-4" : "mt-8"}`}>
-              {pages.map((p, i) => (
+        {totalPages > 1 && (
+          <>
+            {/* Arrows sit outside the track so the scroller never clips them,
+                and beside the content on every screen — padded or full-bleed. */}
+            <button
+              onClick={goPrev}
+              aria-label="Previous drives"
+              className="absolute top-1/2 -translate-y-1/2 z-30 left-3 sm:left-6 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+            >
+              <ChevronLeft size={24} className="stroke-[2.5]" />
+            </button>
+            <button
+              onClick={goNext}
+              aria-label="Next drives"
+              className="absolute top-1/2 -translate-y-1/2 z-30 right-3 sm:right-6 w-11 h-11 sm:w-13 sm:h-13 rounded-full bg-[#1A1A1A]/80 hover:bg-[#1A1A1A] text-white flex items-center justify-center backdrop-blur-md shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer border border-white/10"
+            >
+              <ChevronRight size={24} className="stroke-[2.5]" />
+            </button>
+
+            <div className="mt-8 px-4 flex items-center justify-center gap-2">
+              {pages.map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setPage(i)}
+                  onClick={() => goTo(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === safePage ? "w-8 bg-[#0F172A]" : "w-2 bg-slate-300 hover:bg-slate-400"
+                    i === page ? "w-8 bg-[#0F172A]" : "w-2 bg-slate-300 hover:bg-slate-400"
                   }`}
-                  aria-label={`Go to page ${i + 1}`}
+                  aria-label={`Go to group ${i + 1}`}
                 />
               ))}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
     </section>
   );
 }
 
 /* ============================================================================
- * EQUAL-COLUMN GRID — used for 1 to 4 leftover items
- * 1 → full bleed · 2 → two across · 3 → three across · 4 → 2x2
+ * EQUAL-COLUMN GRID — used for a trailing 1 to 4 items
+ * 1 → full bleed · 2 → split in 2 · 3 → split in 3 · 4 → split in 4
  * ========================================================================== */
 
 function EqualRowGrid({ events, onSelect }) {
   const count = events.length;
 
+  // The screen is divided by the number of cards it holds, so three leftovers
+  // show three side by side and four show four. Below `lg` they fall back to
+  // whatever still fits legibly on a phone.
   const columns = {
     1: "grid-cols-1",
-    2: "grid-cols-1 sm:grid-cols-2",
-    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-1 sm:grid-cols-2",
+    2: "grid-cols-1 lg:grid-cols-2",
+    3: "grid-cols-1 lg:grid-cols-3",
+    4: "grid-cols-2 lg:grid-cols-4",
   }[count] || "grid-cols-1";
 
   // A lone item gets the full-screen slide, matching the tail treatment.
@@ -739,7 +788,7 @@ function EqualRowGrid({ events, onSelect }) {
   }
 
   return (
-    <div className={`grid ${columns} gap-5 sm:gap-6 items-stretch`}>
+    <div className={`grid ${columns} gap-5 sm:gap-6 items-stretch h-full`}>
       {events.map((event, i) => (
         <EqualDriveCard key={event.id || event._id || i} event={event} onClick={() => onSelect(event)} />
       ))}
@@ -767,7 +816,7 @@ function EqualDriveCard({ event, onClick }) {
           onClick();
         }
       }}
-      className="group relative flex flex-col overflow-hidden rounded-[28px] bg-[#EBEFF4] border border-slate-200/80 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:shadow-2xl min-h-[300px] sm:min-h-[340px]"
+      className="group relative flex flex-col h-full min-h-[300px] sm:min-h-[340px] lg:min-h-0 overflow-hidden rounded-[28px] bg-[#EBEFF4] border border-slate-200/80 cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:shadow-2xl"
     >
       {/* Poster fills the card, copy sits over a bottom scrim */}
       {event.poster ? (
@@ -842,7 +891,7 @@ function FullScreenDrive({ event, onClick }) {
           onClick();
         }
       }}
-      className="group relative w-full h-[clamp(360px,62vh,560px)] overflow-hidden bg-[#071E3D] cursor-pointer"
+      className="group relative w-full h-full min-h-[340px] overflow-hidden bg-[#071E3D] cursor-pointer"
     >
       {event.poster ? (
         <img
@@ -932,7 +981,7 @@ function PlacementBentoGrid({ events, onSelect }) {
   const [card0, card1, card2, card3, card4] = events;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch">
+    <div       className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 sm:gap-6 items-stretch h-full">
       {/* LEFT COLUMN: 2 STACKED CARDS */}
       <div className="lg:col-span-3 flex flex-col gap-5 sm:gap-6">
         <BentoCardSmall event={card0} tone="silver" onClick={() => onSelect(card0)} />
@@ -981,7 +1030,7 @@ function BentoCardSmall({ event, tone = "white", onClick }) {
           onClick();
         }
       }}
-      className={`group relative flex-1 min-h-[220px] sm:min-h-[240px] rounded-[26px] p-5 sm:p-6 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${containerClasses}`}
+      className={`group relative flex-1 min-h-[220px] sm:min-h-[240px] lg:min-h-0 rounded-[26px] p-5 sm:p-6 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl ${containerClasses}`}
     >
       {/* Top Graphic / Preview Area */}
       <div className="relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden flex items-center justify-center">
@@ -1068,7 +1117,7 @@ function BentoCardTall({ event, onClick }) {
           onClick();
         }
       }}
-      className="group relative w-full h-full min-h-[460px] sm:min-h-[500px] lg:min-h-[510px] rounded-[32px] bg-[#EBEFF4] border border-slate-200/80 p-6 sm:p-8 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:shadow-2xl"
+      className="group relative w-full h-full min-h-[460px] sm:min-h-[500px] lg:min-h-0 rounded-[32px] bg-[#EBEFF4] border border-slate-200/80 p-6 sm:p-8 flex flex-col justify-between overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.015] hover:shadow-2xl"
     >
       {/* Top Badge */}
       <div className="flex items-center justify-between z-10">
