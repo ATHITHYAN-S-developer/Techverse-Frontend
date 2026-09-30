@@ -198,6 +198,14 @@ export default function StudentLayout() {
                 </span>
               </span>
             </Link>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg text-profile-ink/40 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 shrink-0"
+              title="Sign Out"
+              aria-label="Sign out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </header>
@@ -252,7 +260,7 @@ export default function StudentLayout() {
                   <NavLinks onNavigate={closeSidebar} />
                 </div>
               </div>
-              <div className="px-5 py-6 border-t border-profile-rule">
+              <div className="px-5 py-6 border-t border-profile-rule space-y-3">
                 <Link
                   to="/"
                   onClick={closeSidebar}
@@ -261,6 +269,13 @@ export default function StudentLayout() {
                   VCET Homepage
                   <ExternalLink className="w-3 h-3 opacity-50" />
                 </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-xs text-profile-ink/70 hover:text-rose-700 transition-colors"
+                >
+                  <LogOut className="w-3 h-3" />
+                  Sign Out
+                </button>
               </div>
             </div>
           </div>
