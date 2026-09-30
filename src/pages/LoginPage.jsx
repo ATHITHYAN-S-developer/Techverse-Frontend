@@ -432,7 +432,13 @@ export default function LoginPage() {
                       id="studentDob"
                       name="studentDob"
                       type="date"
-                      autoComplete="bday"
+                      // The DOB is the student's password-equivalent secret, so it
+                      // has to carry a credential token. `bday` is an address-book
+                      // token, which left the form with no password field and Chrome
+                      // therefore never offered to save or autofill it. Chrome assigns
+                      // the stored "yyyy-mm-dd" straight onto the date input, which is
+                      // exactly the ISO shape isValidIsoDate and matchesDateOfBirth read.
+                      autoComplete="current-password"
                       min="1900-01-01"
                       max={todayIso}
                       value={studentDob}
