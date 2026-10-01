@@ -19,6 +19,15 @@ import { useToast } from "../context/ToastContext";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import certTemplateImg from "../assets/certificate-template.png";
 
+const MODULE_APPRECIATION_TYPE = "module_appreciation";
+
+function isCourseCompletionCertificate(cert) {
+  if (!cert) return false;
+  if (cert.type === MODULE_APPRECIATION_TYPE) return false;
+  if (cert.moduleTitle) return false;
+  return true;
+}
+
 export default function CertificatesPage() {
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
@@ -38,7 +47,8 @@ export default function CertificatesPage() {
     try {
       setLoading(true);
       const data = await certificateService.getStudentCertificates();
-      setCertificates(Array.isArray(data) ? data : []);
+      const list = Array.isArray(data) ? data : [];
+      setCertificates(list.filter(isCourseCompletionCertificate));
     } catch (err) {
       console.error(err);
     } finally {
@@ -85,7 +95,7 @@ export default function CertificatesPage() {
           My Earned Course Certificates
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          All certificates issued by Velalar College of Engineering and Technology feature unique cryptographic verification hashes and institutional accreditation credentials.
+          Final course completion certificates issued by Velalar College of Engineering and Technology, each with a unique cryptographic verification hash and institutional accreditation.
         </p>
       </div>
 
@@ -100,10 +110,10 @@ export default function CertificatesPage() {
             <Award className="w-7 h-7" />
           </div>
           <h3 className="text-base font-extrabold text-slate-800">
-            No Certificates Earned Yet
+            No Course Completion Certificates Yet
           </h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            Complete your enrolled technical modules (Video + Coding/MCQs) to achieve 100% course completion and automatically unlock your verified certificate.
+            Finish every module of an enrolled course to reach 100% completion and your final course completion certificate will be issued here automatically. Per-module appreciation certificates are shown inside each module.
           </p>
         </div>
       ) : (
