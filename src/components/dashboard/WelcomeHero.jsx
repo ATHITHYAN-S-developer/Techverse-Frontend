@@ -29,7 +29,7 @@ function studentIdentity(user) {
   return [branch, year, section].filter(Boolean).join(" · ") || "VCET Student";
 }
 
-export default function WelcomeHero({ user, streak, dailyTest }) {
+export default function WelcomeHero({ user, streak }) {
   const reduceMotion = useReducedMotion();
 
   const firstName = user?.name?.split(" ")[0] || "Student";
@@ -117,25 +117,11 @@ export default function WelcomeHero({ user, streak, dailyTest }) {
                   . One activity today keeps it alive.
                 </>
               ) : (
-                "Complete any test, module or coding challenge today to start a learning streak."
+                "Complete a module quiz or coding challenge today to start a learning streak."
               )}
             </motion.p>
 
             <motion.div variants={fadeUp} className="mt-7 flex flex-wrap items-center gap-3">
-              <Link
-                to={dailyTest ? `/tests/${dailyTest._id || dailyTest.id}` : "/tests"}
-                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full bg-white px-5 py-2.5 text-xs font-semibold text-profile-ink transition-shadow hover:shadow-[0_10px_30px_-8px_rgba(255,255,255,0.5)]"
-              >
-                {/* Sheen sweep on hover */}
-                <span
-                  aria-hidden="true"
-                  className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/70 to-transparent transition-transform duration-700 group-hover:translate-x-full"
-                />
-                <Flame className="relative h-3.5 w-3.5 fill-profile-main text-profile-main" />
-                <span className="relative">{dailyTest ? "Take today's test" : "Explore tests"}</span>
-                <ArrowRight className="relative h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
-
               <Link
                 to="/courses"
                 className="group inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10"

@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   XCircle,
   Flame,
-  Star,
   ArrowRight,
   ArrowLeft,
   RotateCcw,
@@ -20,7 +19,7 @@ import {
   Lock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
-import { testService } from "../services/testService";
+import { courseAssessmentService } from "../services/courseAssessmentService";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import { useExamMode } from "../hooks/useExamMode";
@@ -28,10 +27,10 @@ import ExamRulesModal from "../components/exam/ExamRulesModal";
 import ViolationWarningModal from "../components/exam/ViolationWarningModal";
 import ExamModeHeader from "../components/exam/ExamModeHeader";
 
-export default function DailyTestPage() {
-  const { testId } = useParams();
+export default function CourseAssessmentPage() {
+  const { courseId, assessmentId } = useParams();
   const navigate = useNavigate();
-  const { user, refreshGamification, streak } = useAuth();
+  const { refreshStreak, streak } = useAuth();
   const { showSuccess, showError, showInfo } = useToast();
 
   const [test, setTest] = useState(null);
@@ -55,17 +54,7 @@ export default function DailyTestPage() {
   useEffect(() => {
     async function load() {
       try {
-        let t = null;
-        if (testId) {
-          t = await testService.getTestById(testId);
-        } else {
-          const todayRes = await testService.getTodayTest();
-          t = todayRes?.test;
-          if (!t) {
-            const all = await testService.getAllTests();
-            t = all && all.length > 0 ? all[0] : null;
-          }
-        }
+        const t = await courseAssessmentService.getCourseAssessmentById(courseId, assessmentId);
         if (t) {
           setTest(t);
           const durationSecs = ((t.durationMinutes || (t.timeLimitSeconds ? t.timeLimitSeconds / 60 : 15)) || 15) * 60;
@@ -78,7 +67,7 @@ export default function DailyTestPage() {
       }
     }
     load();
-  }, [testId]);
+  }, [courseId, assessmentId]);
 
   // Handle final submission (manual, timer, or violation-triggered)
   const handleSubmit = useCallback(
@@ -89,10 +78,10 @@ export default function DailyTestPage() {
 
       let evaluation = null;
       try {
-        evaluation = await testService.submitTestAttempt(
+        evaluation = await courseAssessmentService.submitCourseAssessment(
+          courseId,
           test._id || test.id,
           selectedAnswersRef.current,
-          user,
           {
             violations: violationsList,
             submissionType,
@@ -130,7 +119,6 @@ export default function DailyTestPage() {
         evaluation = {
           percentage,
           passed,
-          pointsAwarded: passed ? (test.pointsReward || 10) : 0,
           correctCount: score,
           totalCount: questionsList.length,
           violationsCount: violationsList.length,
@@ -142,20 +130,18 @@ export default function DailyTestPage() {
       if (evaluation) {
         setResult(evaluation);
 
-        // The server already awarded points and advanced the streak as part of
-        // the submission; re-read them rather than counting locally.
-        await refreshGamification();
+        await refreshStreak();
 
         if (evaluation.passed) {
           confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-          showSuccess(`🎉 Passed with ${evaluation.percentage}%! Points +${evaluation.pointsAwarded}`);
+          showSuccess(`🎉 Passed with ${evaluation.percentage}%!`);
         } else {
           showInfo(`Test submitted. Your score: ${evaluation.percentage}%`);
         }
       }
       setIsSubmitting(false);
     },
-    [submitted, isSubmitting, test, user, timeSpent, refreshGamification, showSuccess, showInfo]
+    [submitted, isSubmitting, test, courseId, timeSpent, refreshStreak, showSuccess, showInfo]
   );
 
   // Hook for Exam Mode (Fullscreen, Tab Switch, Clipboard, Auto-submit)
@@ -174,7 +160,7 @@ export default function DailyTestPage() {
     onAutoSubmit: (recordedViolations, type) => handleSubmit(recordedViolations, type),
     onViolationRecorded: async (type, details, count) => {
       if (test) {
-        await testService.reportViolation(test._id || test.id, type, details, count);
+        await courseAssessmentService.reportViolation(courseId, test._id || test.id, type, details, count);
       }
     },
     enableAntiCopy: test?.antiCopy !== false,
@@ -268,10 +254,10 @@ export default function DailyTestPage() {
               <ArrowRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => navigate("/tests")}
+              onClick={() => navigate(`/courses/${courseId}`)}
               className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold text-xs transition cursor-pointer"
             >
-              View Daily Tests
+              Back to Course
             </button>
           </div>
         </div>
@@ -308,7 +294,7 @@ export default function DailyTestPage() {
           </div>
 
           {/* Test Meta Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="p-4 rounded-2xl bg-[#f0f9ff] border border-sky-100 text-center">
               <span className="text-[11px] font-bold text-slate-400 uppercase block">Questions</span>
               <span className="text-xl font-black text-slate-900">{questions.length} MCQs</span>
@@ -320,10 +306,6 @@ export default function DailyTestPage() {
             <div className="p-4 rounded-2xl bg-[#f0f9ff] border border-sky-100 text-center">
               <span className="text-[11px] font-bold text-slate-400 uppercase block">Passing Mark</span>
               <span className="text-xl font-black text-slate-900">{test.passingPercentage || 60}%</span>
-            </div>
-            <div className="p-4 rounded-2xl bg-[#f0f9ff] border border-sky-100 text-center">
-              <span className="text-[11px] font-bold text-slate-400 uppercase block">Rewards</span>
-              <span className="text-xl font-black text-sky-600">+{test.pointsReward || 10} Pts</span>
             </div>
           </div>
 
@@ -341,7 +323,7 @@ export default function DailyTestPage() {
           {/* Start Button */}
           <div className="flex items-center justify-between pt-4">
             <Link
-              to="/daily-test"
+              to={`/courses/${courseId}`}
               className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-sky-50 hover:text-sky-700 transition-colors"
             >
               ← Back to Tests
@@ -560,7 +542,7 @@ export default function DailyTestPage() {
             </div>
 
             {/* Score Metrics (White & Ice Blue Cards) */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-2xl bg-white border-2 border-sky-100 hover:border-sky-200 transition-all text-center shadow-xs">
                 <span className="text-[11px] font-bold text-slate-500 uppercase block">Score</span>
                 <span className="text-2xl font-black text-sky-600">{result?.percentage || 0}%</span>
@@ -572,10 +554,6 @@ export default function DailyTestPage() {
                 </span>
               </div>
               <div className="p-4 rounded-2xl bg-white border-2 border-sky-100 hover:border-sky-200 transition-all text-center shadow-xs">
-                <span className="text-[11px] font-bold text-slate-500 uppercase block">Points Awarded</span>
-                <span className="text-2xl font-black text-sky-600">+{result?.pointsAwarded || 0}</span>
-              </div>
-              <div className="p-4 rounded-2xl bg-white border-2 border-sky-100 hover:border-sky-200 transition-all text-center shadow-xs">
                 <span className="text-[11px] font-bold text-slate-500 uppercase block">Violations</span>
                 <span className={`text-2xl font-black ${result?.violationsCount > 0 ? "text-rose-600" : "text-slate-700"}`}>
                   {result?.violationsCount || 0}
@@ -583,11 +561,11 @@ export default function DailyTestPage() {
               </div>
             </div>
 
-            {/* Detailed Solutions & Explanations */}
+            {/* Answer Status Review */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black uppercase tracking-wider text-sky-800">
-                  Detailed Solutions & Explanations
+                  Answer Status Review
                 </h3>
                 <span className="text-xs text-slate-500 font-semibold">
                   {questions.length} Questions Reviewed
@@ -601,7 +579,6 @@ export default function DailyTestPage() {
                     item.selectedAnswer !== null && item.selectedAnswer !== undefined && item.options?.[item.selectedAnswer]
                       ? item.options[item.selectedAnswer]
                       : "Not Answered";
-                  const correctText = item.options?.[item.correctAnswer] || item.correctAnswer || "Option A";
 
                   return (
                     <div
@@ -645,22 +622,6 @@ export default function DailyTestPage() {
                             {selectedText}
                           </span>
                         </div>
-
-                        {!isCorrect && (
-                          <div className="text-xs text-slate-700 flex items-center gap-2">
-                            <span className="font-bold text-slate-500 text-[11px]">Correct Answer:</span>
-                            <span className="font-bold text-emerald-600">
-                              {correctText}
-                            </span>
-                          </div>
-                        )}
-
-                        {item.explanation && (
-                          <div className="mt-2.5 p-3 rounded-xl bg-sky-50/50 border border-sky-100 text-xs text-slate-600 leading-relaxed flex items-start gap-2">
-                            <span className="text-amber-500">💡</span>
-                            <span>{item.explanation}</span>
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
@@ -671,10 +632,10 @@ export default function DailyTestPage() {
             {/* Post-Test Actions (White & Ice Blue Buttons) */}
             <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-sky-100">
               <Link
-                to="/tests"
+                to={`/courses/${courseId}`}
                 className="px-6 py-3 rounded-xl font-bold text-xs bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 transition-colors shadow-xs"
               >
-                ← Back to Daily Tests
+                ← Back to Course
               </Link>
               <Link
                 to="/dashboard"

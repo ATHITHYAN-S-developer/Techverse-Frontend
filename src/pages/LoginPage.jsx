@@ -19,11 +19,13 @@ import {
   Sparkles,
   UserCheck,
   EyeIcon,
+  Layers,
 } from "lucide-react";
 import { getCurrentUser, isAuthenticated } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import loginIllustration from "../assets/login-illustration.jpg";
 import campusBg from "../assets/college/campus-aerial-bw.jpg";
+import techverseLogoImg from "../assets/techverse-logo.png";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -57,7 +59,7 @@ export default function LoginPage() {
       const u = getCurrentUser();
       if (u?.role === "admin") {
         navigate("/admin/dashboard", { replace: true });
-      } else if (u?.role === "faculty" || u?.role === "teacher") {
+      } else if (u?.role === "faculty" || u?.role === "teacher" || u?.role === "hod") {
         navigate("/faculty/dashboard", { replace: true });
       } else {
         navigate("/dashboard", { replace: true });
@@ -141,13 +143,13 @@ export default function LoginPage() {
         setServerError(err.message || "Failed to sign in as student.");
         triggerShake();
       }
-    } else if (activeRole === "faculty") {
+    } else if (activeRole === "faculty" || activeRole === "hod") {
       const cleanEmail = facultyEmail.trim();
       const cleanPass = facultyPassword.trim();
       const newErrors = {};
 
       if (!cleanEmail) {
-        newErrors.facultyEmail = "Staff Email / Faculty ID is required";
+        newErrors.facultyEmail = `${activeRole === "hod" ? "HOD" : "Faculty"} Staff Email / ID is required`;
       }
       if (!cleanPass) {
         newErrors.facultyPassword = "Password is required";
@@ -162,7 +164,7 @@ export default function LoginPage() {
       setStatus("loading");
       try {
         await contextLogin({
-          role: "teacher",
+          role: activeRole,
           identifier: cleanEmail,
           password: cleanPass,
           rememberMe,
@@ -171,7 +173,7 @@ export default function LoginPage() {
         setTimeout(() => navigate("/faculty/dashboard"), 400);
       } catch (err) {
         setStatus("idle");
-        setServerError(err.message || "Failed to sign in as faculty.");
+        setServerError(err.message || `Failed to sign in as ${activeRole}.`);
         triggerShake();
       }
     } else if (activeRole === "admin") {
@@ -219,9 +221,15 @@ export default function LoginPage() {
     },
     {
       id: "faculty",
-      label: "Teachers",
+      label: "Faculty",
       icon: BookOpen,
       badge: "FACULTY WORKSPACE",
+    },
+    {
+      id: "hod",
+      label: "HOD",
+      icon: Layers,
+      badge: "HOD PORTAL",
     },
     {
       id: "admin",
@@ -283,17 +291,11 @@ export default function LoginPage() {
         {/* Header: Logo & Back Link */}
         <motion.div variants={itemVariants} className="relative z-10 flex items-center justify-between mb-6 md:mb-4">
           <Link to="/" className="inline-flex items-center gap-2.5 select-none group">
-            <div className="h-10 w-10 rounded-xl bg-[#0062A8] text-white flex items-center justify-center font-black text-lg shadow-xs shadow-[#0062A8]/20 transition-transform group-hover:scale-105">
-              <Sparkles size={19} />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-extrabold tracking-tight text-[#0062A8] leading-tight">
-                Tech<span className="text-[#0062A8]">Verse</span>
-              </span>
-              <span className="text-[10px] font-bold text-gray-600 tracking-wider uppercase">
-                VCET TECH HUB
-              </span>
-            </div>
+            <img
+              src={techverseLogoImg}
+              alt="TechVerse Logo"
+              className="h-11 sm:h-12 w-auto max-w-[220px] object-contain transition-transform group-hover:scale-105"
+            />
           </Link>
 
           <Link
@@ -321,10 +323,10 @@ export default function LoginPage() {
             </p>
           </motion.div>
 
-          {/* 3-Role Tab Switcher (Students / Teachers / Admin) */}
+          {/* 4-Role Tab Switcher (Students / Faculty / HOD / Admin) */}
           <motion.div
             variants={itemVariants}
-            className="grid grid-cols-3 gap-2 p-1.5 bg-gray-100/90 rounded-2xl mb-6 border border-gray-200/60"
+            className="grid grid-cols-4 gap-1.5 p-1.5 bg-gray-100/90 rounded-2xl mb-6 border border-gray-200/60"
           >
             {roles.map((role) => {
               const Icon = role.icon;
@@ -459,8 +461,8 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* 2. FACULTY / TEACHER LOGIN FORM */}
-            {activeRole === "faculty" && (
+            {/* 2. FACULTY & HOD LOGIN FORM */}
+            {(activeRole === "faculty" || activeRole === "hod") && (
               <>
                 {/* Staff Email / ID */}
                 <motion.div
@@ -472,7 +474,7 @@ export default function LoginPage() {
                     htmlFor="facultyEmail"
                     className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
-                    FACULTY EMAIL / STAFF ID
+                    {activeRole === "hod" ? "HOD EMAIL / STAFF ID" : "FACULTY EMAIL / STAFF ID"}
                   </label>
                   <motion.div
                     animate={errors.facultyEmail ? shakeAnimation : {}}
@@ -498,7 +500,7 @@ export default function LoginPage() {
                         setFacultyEmail(e.target.value);
                         if (errors.facultyEmail) setErrors((prev) => ({ ...prev, facultyEmail: "" }));
                       }}
-                      placeholder="faculty.cse@vcet.ac.in"
+                      placeholder={activeRole === "hod" ? "sendhilkumar@vcet.ac.in or VCET-FAC-CSE-104" : "sangeetha@vcet.ac.in or VCET-FAC-AIDS-201"}
                       className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8]"
                     />
                   </motion.div>
@@ -520,7 +522,7 @@ export default function LoginPage() {
                     htmlFor="facultyPassword"
                     className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
-                    FACULTY PASSWORD
+                    {activeRole === "hod" ? "HOD PASSWORD" : "FACULTY PASSWORD"}
                   </label>
                   <motion.div
                     animate={errors.facultyPassword ? shakeAnimation : {}}
@@ -693,6 +695,8 @@ export default function LoginPage() {
                     ? "Student Auth"
                     : activeRole === "faculty"
                     ? "Faculty Auth"
+                    : activeRole === "hod"
+                    ? "HOD Auth"
                     : "Admin Auth"}
                 </span>
               </div>
@@ -749,6 +753,8 @@ export default function LoginPage() {
                         ? "SIGN IN AS STUDENT"
                         : activeRole === "faculty"
                         ? "SIGN IN AS FACULTY"
+                        : activeRole === "hod"
+                        ? "SIGN IN AS HOD"
                         : "SIGN IN AS ADMINISTRATOR"}
                     </span>
                     <ArrowRight size={16} />

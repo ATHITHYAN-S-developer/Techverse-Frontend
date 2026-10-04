@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Users, Search, Filter, Flame, Star, Award, CheckCircle, Mail } from "lucide-react";
+import { Users, Search, Filter, Flame, Award, CheckCircle, Mail } from "lucide-react";
 import api from "../../services/api";
 
 export default function FacultyStudentsPage() {
@@ -24,7 +24,6 @@ export default function FacultyStudentsPage() {
               year: s.year || "III Year",
               section: s.section || (idx % 2 === 0 ? "A" : "B"),
               streak: s.streak || 0,
-              points: s.points || 0,
               coursesCompleted: s.coursesCompleted || 0,
               email: s.email || "",
               cgpa: s.cgpa || (8.2 + (idx * 0.15) % 1.5).toFixed(2),
@@ -57,7 +56,7 @@ export default function FacultyStudentsPage() {
           Department Student Directory & Learning Progress
         </h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          Monitor student course completions, daily test streaks, and points across CSE classes.
+          Monitor student course completions and learning streaks across CSE classes.
         </p>
       </div>
 
@@ -92,7 +91,7 @@ export default function FacultyStudentsPage() {
               <tr>
                 <th className="px-5 py-3.5">Student</th>
                 <th className="px-4 py-3.5">Class / Section</th>
-                <th className="px-4 py-3.5">Streak & Points</th>
+                <th className="px-4 py-3.5">Learning Streak</th>
                 <th className="px-4 py-3.5">Tests Completed</th>
                 <th className="px-4 py-3.5">Certificates</th>
                 <th className="px-4 py-3.5">Academic CGPA</th>
@@ -118,9 +117,6 @@ export default function FacultyStudentsPage() {
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold text-[11px]">
                         <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> {s.streak}d
-                      </span>
-                      <span className="inline-flex items-center gap-1 text-slate-700 font-bold text-xs">
-                        <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> {s.points}
                       </span>
                     </div>
                   </td>

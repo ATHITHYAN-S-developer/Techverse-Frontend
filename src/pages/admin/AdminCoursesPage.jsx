@@ -31,9 +31,9 @@ import { departmentService } from "../../services/departmentService";
 export default function AdminCoursesPage() {
   const { showSuccess, showError } = useToast();
   const { user } = useAuth();
-  const location = useLocation();
-  const isFaculty = location.pathname.startsWith("/faculty") || user?.role === "teacher";
-  const moduleManagerBaseUrl = isFaculty ? "/faculty/modules" : "/admin/modules";
+  const canCreateCourse = user?.role === "admin" || user?.role === "hod";
+  const isFacultyOnly = !canCreateCourse;
+  const moduleManagerBaseUrl = user?.role === "admin" ? "/admin/modules" : "/faculty/modules";
 
   const [courses, setCourses] = useState([]);
   const [facultyList, setFacultyList] = useState([]);
@@ -64,16 +64,16 @@ export default function AdminCoursesPage() {
 
   useEffect(() => {
     loadCourses();
-    if (!isFaculty) {
+    if (canCreateCourse) {
       loadFacultyList();
       loadDepartments();
     }
-  }, [isFaculty]);
+  }, [canCreateCourse]);
 
   const loadCourses = async () => {
     setLoading(true);
     try {
-      const data = isFaculty
+      const data = isFacultyOnly
         ? await courseService.getMyCourses()
         : await courseService.getAllCourses();
       setCourses(data);
@@ -95,7 +95,7 @@ export default function AdminCoursesPage() {
 
   const loadFacultyList = async () => {
     try {
-      const res = await api.get("/admin/users?role=teacher&limit=100");
+      const res = await api.get("/admin/users?role=faculty&limit=100");
       const users = res?.users || res?.data?.users || [];
       setFacultyList(Array.isArray(users) ? users : []);
     } catch (err) {
@@ -251,12 +251,18 @@ export default function AdminCoursesPage() {
               <BookOpen className="w-5 h-5" />
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-              {isFaculty ? "My Courses & Curriculum" : "Technical Course Catalog Management"}
+              {isFacultyOnly
+                ? "My Assigned Courses & Curriculum"
+                : user?.role === "hod"
+                ? "Department Course Catalog & Faculty Assignment"
+                : "Technical Course Catalog Management"}
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            {isFaculty
-              ? "Manage syllabus modules, video lectures, and assessments for courses assigned to you."
+            {isFacultyOnly
+              ? "Add and manage syllabus modules, video lectures, and assessments for courses assigned to you by the HOD."
+              : user?.role === "hod"
+              ? "Create department courses and assign which faculty members will add and manage the modules."
               : "Configure courses with real cover uploads, passing benchmarks, faculty assignment, and syllabus modules stored in MongoDB."}
           </p>
         </div>
@@ -269,17 +275,19 @@ export default function AdminCoursesPage() {
           >
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button
-            onClick={handleOpenAddModal}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create New Course</span>
-          </button>
+          {canCreateCourse && (
+            <button
+              onClick={handleOpenAddModal}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Create New Course</span>
+            </button>
+          )}
         </div>
       </div>
 
-      {!isFaculty && courses.length > 0 && (
+      {canCreateCourse && courses.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">
             Filter:
@@ -424,21 +432,25 @@ export default function AdminCoursesPage() {
                       <span>Modules</span>
                     </Link>
 
-                    <button
-                      onClick={() => handleOpenEditModal(course)}
-                      className="p-1.5 rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 hover:border-blue-300 transition-colors"
-                      title="Edit Course Details"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
+                    {canCreateCourse && (
+                      <>
+                        <button
+                          onClick={() => handleOpenEditModal(course)}
+                          className="p-1.5 rounded-xl bg-white hover:bg-blue-50 text-blue-600 border border-slate-200 hover:border-blue-300 transition-colors"
+                          title="Edit Course Details & Reassign Faculty"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
 
-                    <button
-                      onClick={() => handleDelete(course._id || course.id)}
-                      className="p-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-300 transition-colors"
-                      title="Delete Course from MongoDB"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                        <button
+                          onClick={() => handleDelete(course._id || course.id)}
+                          className="p-1.5 rounded-xl bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 hover:border-rose-300 transition-colors"
+                          title="Delete Course from MongoDB"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -584,7 +596,7 @@ export default function AdminCoursesPage() {
                 </div>
               </div>
 
-              {!isFaculty ? (
+              {canCreateCourse ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">
@@ -606,7 +618,7 @@ export default function AdminCoursesPage() {
 
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">
-                      Assign Faculty * <span className="text-[10px] text-amber-600 font-medium">(Course Owner)</span>
+                      Assign Faculty * <span className="text-[10px] text-amber-600 font-medium">(Will add & manage modules)</span>
                     </label>
                     <select
                       required

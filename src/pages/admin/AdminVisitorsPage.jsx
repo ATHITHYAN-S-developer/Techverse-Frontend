@@ -43,7 +43,6 @@ const DEVICE_BREAKDOWN = [
 const TOP_PAGES = [
   { path: "/dashboard", name: "Student Learning Dashboard", views: "14,280", unique: "2,410" },
   { path: "/courses/python-masterclass", name: "Python Programming Course", views: "9,850", unique: "1,890" },
-  { path: "/tests/daily", name: "Daily Proctored Technical MCQ", views: "8,420", unique: "1,650" },
   { path: "/departments/cse", name: "Department of CSE Repository", views: "6,910", unique: "1,240" },
   { path: "/coding", name: "Placement Coding Arena", views: "5,340", unique: "980" }
 ];

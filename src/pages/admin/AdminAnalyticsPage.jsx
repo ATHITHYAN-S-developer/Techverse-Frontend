@@ -38,22 +38,22 @@ export default function AdminAnalyticsPage() {
   const [deptData, setDeptData] = useState([]);
   const [courseStats, setCourseStats] = useState([]);
   const [visitorTrends, setVisitorTrends] = useState([]);
-  const [testAttempts, setTestAttempts] = useState([]);
+  const [assessmentAttempts, setAssessmentAttempts] = useState([]);
   const [violationsData, setViolationsData] = useState(null);
 
   useEffect(() => {
     async function load() {
-      const [d, c, v, t, viol] = await Promise.all([
+      const [d, c, v, assessments, viol] = await Promise.all([
         analyticsService.getDepartmentDistribution(),
         analyticsService.getCourseEnrollmentStats(),
         analyticsService.getVisitorTrends(),
-        analyticsService.getMonthlyTestAttempts(),
+        analyticsService.getCourseAssessmentAttempts(),
         analyticsService.getViolationsAnalytics(),
       ]);
       setDeptData(d);
       setCourseStats(c);
       setVisitorTrends(v);
-      setTestAttempts(t);
+      setAssessmentAttempts(assessments);
       setViolationsData(viol);
     }
     load();
@@ -247,18 +247,18 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-        {/* Daily Test Attempts Trend */}
+        {/* Course assessment attempts */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-xs">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Activity className="w-4 h-4 text-amber-500" /> Daily Practice Tests Activity
+              <Activity className="w-4 h-4 text-amber-500" /> Course Assessment Activity
             </h3>
             <span className="text-xs text-slate-500">Monthly Run Rate</span>
           </div>
 
           <div className="h-64 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={testAttempts} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={assessmentAttempts} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="week" stroke="#94a3b8" fontSize={11} />
                 <YAxis stroke="#94a3b8" fontSize={11} />

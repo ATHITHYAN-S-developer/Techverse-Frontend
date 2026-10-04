@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -60,13 +60,19 @@ export default function AdminCourseModulesPage() {
   // Main Module Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingModule, setEditingModule] = useState(null);
+  const modalBodyRef = useRef(null);
+
+  // Sub-item editing states (to allow editing existing videos, coding challenges, MCQs)
+  const [editingVideoIdx, setEditingVideoIdx] = useState(null);
+  const [editingCodingIdx, setEditingCodingIdx] = useState(null);
+  const [editingMCQIdx, setEditingMCQIdx] = useState(null);
 
   // Module Form Data
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    estimatedMinutes: 45,
-    hasVideo: true, // ALWAYS true (mandatory)
+    hasVideo: false,
+    isVideoMandatory: false,
     hasCoding: false,
     hasMCQ: false,
     videos: [],
@@ -160,8 +166,8 @@ export default function AdminCourseModulesPage() {
     setFormData({
       title: `Module ${modules.length + 1}: `,
       description: "",
-      estimatedMinutes: 45,
-      hasVideo: true,
+      hasVideo: false,
+      isVideoMandatory: false,
       hasCoding: false,
       hasMCQ: false,
       videos: [],
@@ -169,7 +175,14 @@ export default function AdminCourseModulesPage() {
       mcqs: [],
     });
     setActiveTab("videos");
+    setEditingVideoIdx(null);
+    setEditingCodingIdx(null);
+    setEditingMCQIdx(null);
+    setVideoForm({ title: "", youtubeUrl: "", duration: "20 mins", description: "" });
     setModalOpen(true);
+    setTimeout(() => {
+      modalBodyRef.current?.scrollTo({ top: 0, behavior: "instant" });
+    }, 50);
   };
 
   const handleOpenEdit = (mod) => {
@@ -187,19 +200,36 @@ export default function AdminCourseModulesPage() {
       });
     }
 
+    const hasVid = mod.hasVideo !== undefined ? Boolean(mod.hasVideo) : initialVideos.length > 0;
+    const isVidMandatory = Boolean(mod.isVideoMandatory);
+    const hasCod = Boolean(mod.hasCoding || (mod.codingProblems && mod.codingProblems.length > 0));
+    const hasM = Boolean(mod.hasMCQ || (mod.mcqs && mod.mcqs.length > 0));
+
     setFormData({
       title: mod.title || "",
       description: mod.description || "",
-      estimatedMinutes: mod.estimatedMinutes || 45,
-      hasVideo: true,
-      hasCoding: Boolean(mod.hasCoding || (mod.codingProblems && mod.codingProblems.length > 0)),
-      hasMCQ: Boolean(mod.hasMCQ || (mod.mcqs && mod.mcqs.length > 0)),
+      hasVideo: hasVid,
+      isVideoMandatory: isVidMandatory,
+      hasCoding: hasCod,
+      hasMCQ: hasM,
       videos: initialVideos,
       codingProblems: mod.codingProblems ? [...mod.codingProblems] : [],
       mcqs: mod.mcqs ? [...mod.mcqs] : [],
     });
-    setActiveTab("videos");
+
+    if (hasVid) setActiveTab("videos");
+    else if (hasCod) setActiveTab("coding");
+    else if (hasM) setActiveTab("mcq");
+    else setActiveTab("videos");
+
+    setEditingVideoIdx(null);
+    setEditingCodingIdx(null);
+    setEditingMCQIdx(null);
+    setVideoForm({ title: "", youtubeUrl: "", duration: "20 mins", description: "" });
     setModalOpen(true);
+    setTimeout(() => {
+      modalBodyRef.current?.scrollTo({ top: 0, behavior: "instant" });
+    }, 50);
   };
 
   // ----------------------------------------------------
@@ -211,28 +241,66 @@ export default function AdminCourseModulesPage() {
       return;
     }
     const videoId = extractYouTubeId(videoForm.youtubeUrl.trim());
-    const newVideo = {
+    const videoData = {
       title: videoForm.title.trim(),
       youtubeUrl: videoForm.youtubeUrl.trim(),
       youtubeVideoId: videoId,
       duration: videoForm.duration.trim() || "20 mins",
       description: videoForm.description.trim(),
-      order: formData.videos.length + 1,
     };
-    setFormData((prev) => ({
-      ...prev,
-      videos: [...prev.videos, newVideo],
-    }));
+
+    if (editingVideoIdx !== null) {
+      setFormData((prev) => {
+        const updated = [...prev.videos];
+        updated[editingVideoIdx] = {
+          ...updated[editingVideoIdx],
+          ...videoData,
+        };
+        return { ...prev, videos: updated };
+      });
+      setEditingVideoIdx(null);
+      showSuccess("Video updated.");
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        videos: [...prev.videos, { ...videoData, order: prev.videos.length + 1 }],
+      }));
+      showSuccess("Video added to module playlist.");
+    }
+
     setVideoForm({
       title: "",
       youtubeUrl: "",
       duration: "20 mins",
       description: "",
     });
-    showSuccess("Video added to module playlist.");
+  };
+
+  const handleStartEditVideo = (index) => {
+    const v = formData.videos[index];
+    setVideoForm({
+      title: v.title || "",
+      youtubeUrl: v.youtubeUrl || "",
+      duration: v.duration || "20 mins",
+      description: v.description || "",
+    });
+    setEditingVideoIdx(index);
+  };
+
+  const handleCancelEditVideo = () => {
+    setVideoForm({
+      title: "",
+      youtubeUrl: "",
+      duration: "20 mins",
+      description: "",
+    });
+    setEditingVideoIdx(null);
   };
 
   const handleRemoveVideo = (index) => {
+    if (editingVideoIdx === index) {
+      handleCancelEditVideo();
+    }
     setFormData((prev) => ({
       ...prev,
       videos: prev.videos.filter((_, i) => i !== index),
@@ -247,7 +315,7 @@ export default function AdminCourseModulesPage() {
       showError("Please enter Problem Title and Description");
       return;
     }
-    const newProblem = {
+    const problemData = {
       title: codingForm.title.trim(),
       description: codingForm.description.trim(),
       difficulty: codingForm.difficulty,
@@ -263,10 +331,26 @@ export default function AdminCourseModulesPage() {
         },
       ],
     };
-    setFormData((prev) => ({
-      ...prev,
-      codingProblems: [...prev.codingProblems, newProblem],
-    }));
+
+    if (editingCodingIdx !== null) {
+      setFormData((prev) => {
+        const updated = [...prev.codingProblems];
+        updated[editingCodingIdx] = {
+          ...updated[editingCodingIdx],
+          ...problemData,
+        };
+        return { ...prev, codingProblems: updated };
+      });
+      setEditingCodingIdx(null);
+      showSuccess("Coding problem updated.");
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        codingProblems: [...prev.codingProblems, problemData],
+      }));
+      showSuccess("Coding problem added.");
+    }
+
     setCodingForm({
       title: "",
       description: "",
@@ -278,10 +362,43 @@ export default function AdminCourseModulesPage() {
       sampleInput: "",
       sampleOutput: "",
     });
-    showSuccess("Coding problem added.");
+  };
+
+  const handleStartEditCoding = (index) => {
+    const cp = formData.codingProblems[index];
+    setCodingForm({
+      title: cp.title || "",
+      description: cp.description || "",
+      difficulty: cp.difficulty || "Medium",
+      constraints: cp.constraints || "1 <= N <= 10^5\nTime Limit: 2.0s",
+      inputFormat: cp.inputFormat || "First line contains N.",
+      outputFormat: cp.outputFormat || "Print output.",
+      starterCode: cp.starterCode || "function solution(input) {\n  // Write solution here\n  return input;\n}",
+      sampleInput: cp.testCases?.[0]?.input || "",
+      sampleOutput: cp.testCases?.[0]?.output || "",
+    });
+    setEditingCodingIdx(index);
+  };
+
+  const handleCancelEditCoding = () => {
+    setCodingForm({
+      title: "",
+      description: "",
+      difficulty: "Medium",
+      constraints: "1 <= N <= 10^5\nTime Limit: 2.0s",
+      inputFormat: "First line contains N.",
+      outputFormat: "Print output.",
+      starterCode: "function solution(input) {\n  // Write solution here\n  return input;\n}",
+      sampleInput: "",
+      sampleOutput: "",
+    });
+    setEditingCodingIdx(null);
   };
 
   const handleRemoveCodingProblem = (index) => {
+    if (editingCodingIdx === index) {
+      handleCancelEditCoding();
+    }
     setFormData((prev) => ({
       ...prev,
       codingProblems: prev.codingProblems.filter((_, i) => i !== index),
@@ -306,17 +423,33 @@ export default function AdminCourseModulesPage() {
       mcqForm.optionC.trim() || "None of the above",
       mcqForm.optionD.trim() || "All of the above",
     ];
-    const newMCQ = {
+    const mcqData = {
       question: mcqForm.question.trim(),
       options,
       correctAnswer: Number(mcqForm.correctAnswer) || 0,
       explanation: mcqForm.explanation.trim(),
       marks: Number(mcqForm.marks) || 1,
     };
-    setFormData((prev) => ({
-      ...prev,
-      mcqs: [...prev.mcqs, newMCQ],
-    }));
+
+    if (editingMCQIdx !== null) {
+      setFormData((prev) => {
+        const updated = [...prev.mcqs];
+        updated[editingMCQIdx] = {
+          ...updated[editingMCQIdx],
+          ...mcqData,
+        };
+        return { ...prev, mcqs: updated };
+      });
+      setEditingMCQIdx(null);
+      showSuccess("MCQ question updated.");
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        mcqs: [...prev.mcqs, mcqData],
+      }));
+      showSuccess("MCQ question added.");
+    }
+
     setMcqForm({
       question: "",
       optionA: "",
@@ -327,10 +460,41 @@ export default function AdminCourseModulesPage() {
       explanation: "",
       marks: 1,
     });
-    showSuccess("MCQ question added.");
+  };
+
+  const handleStartEditMCQ = (index) => {
+    const q = formData.mcqs[index];
+    setMcqForm({
+      question: q.question || "",
+      optionA: q.options?.[0] || "",
+      optionB: q.options?.[1] || "",
+      optionC: q.options?.[2] || "",
+      optionD: q.options?.[3] || "",
+      correctAnswer: q.correctAnswer ?? 0,
+      explanation: q.explanation || "",
+      marks: q.marks || 1,
+    });
+    setEditingMCQIdx(index);
+  };
+
+  const handleCancelEditMCQ = () => {
+    setMcqForm({
+      question: "",
+      optionA: "",
+      optionB: "",
+      optionC: "",
+      optionD: "",
+      correctAnswer: 0,
+      explanation: "",
+      marks: 1,
+    });
+    setEditingMCQIdx(null);
   };
 
   const handleRemoveMCQ = (index) => {
+    if (editingMCQIdx === index) {
+      handleCancelEditMCQ();
+    }
     setFormData((prev) => ({
       ...prev,
       mcqs: prev.mcqs.filter((_, i) => i !== index),
@@ -349,19 +513,25 @@ export default function AdminCourseModulesPage() {
       return;
     }
 
-    // 2. Video validation (MANDATORY)
-    if (formData.videos.length === 0) {
-      showError(`❌ Module "${formData.title}" must contain at least one video.`);
+    // 2. Content selection validation
+    if (!formData.hasVideo && !formData.hasCoding && !formData.hasMCQ) {
+      showError("❌ Please select at least one content option (Video, Coding, or MCQ).");
       return;
     }
 
-    // 3. Coding validation (if enabled)
+    // 3. Video validation (if enabled)
+    if (formData.hasVideo && formData.videos.length === 0) {
+      showError(`❌ Video is enabled: please add at least one video below or uncheck Video.`);
+      return;
+    }
+
+    // 4. Coding validation (if enabled)
     if (formData.hasCoding && formData.codingProblems.length === 0) {
       showError(`❌ Coding is enabled: please add at least one coding problem or uncheck Coding.`);
       return;
     }
 
-    // 4. MCQ validation (if enabled)
+    // 5. MCQ validation (if enabled)
     if (formData.hasMCQ && formData.mcqs.length === 0) {
       showError(`❌ MCQ is enabled: please add at least one MCQ question or uncheck MCQ.`);
       return;
@@ -373,14 +543,14 @@ export default function AdminCourseModulesPage() {
         courseId: selectedCourseId,
         title: formData.title.trim(),
         description: formData.description.trim(),
-        estimatedMinutes: formData.estimatedMinutes,
-        hasVideo: true,
+        hasVideo: Boolean(formData.hasVideo),
+        isVideoMandatory: Boolean(formData.hasVideo && formData.isVideoMandatory),
         hasCoding: Boolean(formData.hasCoding),
         hasMCQ: Boolean(formData.hasMCQ),
-        videos: formData.videos,
+        videos: formData.hasVideo ? formData.videos : [],
         codingProblems: formData.hasCoding ? formData.codingProblems : [],
         mcqs: formData.hasMCQ ? formData.mcqs : [],
-        videoUrl: formData.videos[0]?.youtubeUrl || "",
+        videoUrl: formData.hasVideo && formData.videos[0]?.youtubeUrl ? formData.videos[0].youtubeUrl : "",
         content: formData.description,
       };
 
@@ -429,7 +599,7 @@ export default function AdminCourseModulesPage() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-500">
-            Define learning modules. Video is mandatory. Coding and MCQ assessments are optional.
+            Define learning modules. Add video lectures, interactive coding problems, and MCQs.
           </p>
         </div>
 
@@ -498,10 +668,10 @@ export default function AdminCourseModulesPage() {
             </div>
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-blue-800 block">
-                MANDATORY CONTENT RULE
+                MODULAR CONTENT RULE
               </span>
               <p className="text-xs text-blue-950 font-medium mt-0.5">
-                Every module MUST contain at least one Video. Coding & MCQs are optional.
+                Customize each module with Videos, Coding challenges, and MCQs as needed.
               </p>
             </div>
           </div>
@@ -515,7 +685,7 @@ export default function AdminCourseModulesPage() {
                 STUDENT COMPLETION RULE
               </span>
               <p className="text-xs text-emerald-950 font-medium mt-0.5">
-                Students must finish Video + enabled Coding/MCQ to achieve 100% completion.
+                Students must finish active Videos + enabled Coding/MCQ to achieve 100% completion.
               </p>
             </div>
           </div>
@@ -538,7 +708,7 @@ export default function AdminCourseModulesPage() {
               No Modules Created Yet
             </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Start structuring this course curriculum by clicking "Add Module". Remember that at least one video is mandatory.
+              Start structuring this course curriculum by clicking "Add Module".
             </p>
             <button
               onClick={handleOpenAdd}
@@ -568,9 +738,6 @@ export default function AdminCourseModulesPage() {
                         <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
                           {mod.title}
                         </h4>
-                        <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
-                          {mod.estimatedMinutes || 45} mins
-                        </span>
                       </div>
                       <p className="text-xs text-slate-500 line-clamp-1">
                         {mod.description || "No description provided."}
@@ -578,11 +745,26 @@ export default function AdminCourseModulesPage() {
 
                       {/* Content Badges */}
                       <div className="flex flex-wrap items-center gap-2 pt-1">
-                        {/* Video Badge (Always Present) */}
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-[#0B4A8F] border border-blue-200/70">
-                          <Video className="w-3.5 h-3.5" />
-                          <span>{videoCount} Video{videoCount > 1 ? "s" : ""} (Required)</span>
-                        </span>
+                        {/* Video Badge */}
+                        {mod.hasVideo ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-[#0B4A8F] border border-blue-200/70">
+                            <Video className="w-3.5 h-3.5" />
+                            <span>{videoCount} Video{videoCount > 1 ? "s" : ""}</span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                                mod.isVideoMandatory
+                                  ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                  : "bg-blue-100/70 text-[#0B4A8F]"
+                              }`}
+                            >
+                              {mod.isVideoMandatory ? "Mandatory" : "Optional"}
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200/50">
+                            Video Disabled
+                          </span>
+                        )}
 
                         {/* Coding Badge */}
                         {mod.hasCoding ? (
@@ -664,10 +846,10 @@ export default function AdminCourseModulesPage() {
             </div>
 
             {/* Modal Body (Scrollable) */}
-            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+            <div ref={modalBodyRef} className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
               {/* Basic Module Details */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="sm:col-span-2 space-y-1.5">
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">
                     Module Title <span className="text-rose-500">*</span>
                   </label>
@@ -682,20 +864,6 @@ export default function AdminCourseModulesPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-700">
-                    Estimated Time (Minutes)
-                  </label>
-                  <input
-                    type="number"
-                    min="5"
-                    max="600"
-                    value={formData.estimatedMinutes}
-                    onChange={(e) => setFormData({ ...formData, estimatedMinutes: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/20"
-                  />
-                </div>
-
-                <div className="sm:col-span-3 space-y-1.5">
                   <label className="text-xs font-bold text-slate-700">
                     Module Description
                   </label>
@@ -722,26 +890,72 @@ export default function AdminCourseModulesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                  {/* Option 1: VIDEO (MANDATORY & LOCKED) */}
-                  <div className="p-4 rounded-xl bg-blue-50/80 border-2 border-blue-300 flex items-start gap-3">
-                    <input
-                      type="checkbox"
-                      checked={true}
-                      disabled={true}
-                      className="mt-1 w-4 h-4 text-[#0B4A8F] rounded border-blue-400 cursor-not-allowed"
-                    />
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <Video className="w-4 h-4 text-[#0B4A8F]" />
-                        <span className="text-xs font-extrabold text-blue-900">Video</span>
+                  {/* Option 1: VIDEO (WITH MANDATORY / OPTIONAL BUTTON) */}
+                  <div
+                    onClick={() => {
+                      const nextHasVideo = !formData.hasVideo;
+                      setFormData({ ...formData, hasVideo: nextHasVideo });
+                      if (nextHasVideo) setActiveTab("videos");
+                    }}
+                    className={`p-4 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between select-none ${
+                      formData.hasVideo
+                        ? "bg-blue-50/80 border-blue-400"
+                        : "bg-white border-slate-200 hover:border-blue-300"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={formData.hasVideo}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setFormData({ ...formData, hasVideo: checked });
+                          if (checked) setActiveTab("videos");
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                        className="mt-1 w-4 h-4 text-[#0B4A8F] rounded border-slate-300 cursor-pointer"
+                      />
+                      <div className="space-y-0.5 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <Video className="w-4 h-4 text-[#0B4A8F]" />
+                          <span className="text-xs font-extrabold text-slate-900">Video</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          Lecture videos & playlists.
+                        </p>
                       </div>
-                      <span className="text-[10px] font-bold text-blue-700 block uppercase tracking-wider">
-                        REQUIRED / MANDATORY
-                      </span>
-                      <p className="text-[11px] text-blue-900/80">
-                        At least 1 lecture video is required.
-                      </p>
                     </div>
+
+                    {formData.hasVideo ? (
+                      <div
+                        className="mt-3 pt-2.5 border-t border-blue-200/80 flex items-center justify-between gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Requirement:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              isVideoMandatory: !prev.isVideoMandatory,
+                            }));
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-sm ${
+                            formData.isVideoMandatory
+                              ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/25 ring-2 ring-amber-300"
+                              : "bg-white hover:bg-blue-50 text-blue-800 border border-blue-300"
+                          }`}
+                          title="Click to toggle whether students must complete the video before assessment"
+                        >
+                          <span className={`w-1.5 h-1.5 rounded-full ${formData.isVideoMandatory ? "bg-white animate-pulse" : "bg-blue-600"}`} />
+                          {formData.isVideoMandatory ? "Video Mandatory" : "Video Optional"}
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider mt-2">
+                        OPTIONAL (DISABLED)
+                      </span>
+                    )}
                   </div>
 
                   {/* Option 2: CODING (OPTIONAL) */}
@@ -812,21 +1026,23 @@ export default function AdminCourseModulesPage() {
 
               {/* Sub-Builder Tabs */}
               <div className="border-b border-slate-200 flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("videos")}
-                  className={`pb-3 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
-                    activeTab === "videos"
-                      ? "border-[#0B4A8F] text-[#0B4A8F]"
-                      : "border-transparent text-slate-500 hover:text-slate-800"
-                  }`}
-                >
-                  <Video className="w-4 h-4" />
-                  <span>Module Videos</span>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0B4A8F]">
-                    {formData.videos.length} (Mandatory)
-                  </span>
-                </button>
+                {formData.hasVideo && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("videos")}
+                    className={`pb-3 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
+                      activeTab === "videos"
+                        ? "border-[#0B4A8F] text-[#0B4A8F]"
+                        : "border-transparent text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Video className="w-4 h-4" />
+                    <span>Module Videos</span>
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0B4A8F]">
+                      {formData.videos.length}
+                    </span>
+                  </button>
+                )}
 
                 {formData.hasCoding && (
                   <button
@@ -866,32 +1082,56 @@ export default function AdminCourseModulesPage() {
               </div>
 
               {/* ---------------------------------------------------------------
-                  TAB 1: VIDEO BUILDER (MANDATORY)
+                  TAB 1: VIDEO BUILDER (OPTIONAL)
                   --------------------------------------------------------------- */}
-              {activeTab === "videos" && (
+              {activeTab === "videos" && formData.hasVideo && (
                 <div className="space-y-4">
                   {formData.videos.length === 0 && (
-                    <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center gap-2 text-xs font-bold text-rose-700">
-                      <AlertTriangle className="w-4 h-4 shrink-0 text-rose-600" />
-                      <span>❌ Module must contain at least one video. Please add a video below.</span>
+                    <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center gap-2 text-xs font-semibold text-blue-900">
+                      <Video className="w-4 h-4 shrink-0 text-[#0B4A8F]" />
+                      <span>No videos added yet. Add lecture videos to this module below.</span>
                     </div>
                   )}
 
                   {/* List of Added Videos */}
                   {formData.videos.length > 0 && (
                     <div className="space-y-2">
-                      <span className="text-xs font-bold text-slate-700 block">
-                        Added Module Videos ({formData.videos.length})
-                      </span>
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-xs font-bold text-slate-700 block">
+                          Added Module Videos ({formData.videos.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              isVideoMandatory: !prev.isVideoMandatory,
+                            }));
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                            formData.isVideoMandatory
+                              ? "bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20 ring-2 ring-amber-300"
+                              : "bg-white hover:bg-slate-100 text-slate-700 border border-slate-300"
+                          }`}
+                          title="Toggle whether students must complete videos to unlock the module test"
+                        >
+                          <span className={`w-2 h-2 rounded-full ${formData.isVideoMandatory ? "bg-white animate-pulse" : "bg-slate-400"}`} />
+                          <span>Video Mandatory: <strong>{formData.isVideoMandatory ? "MANDATORY" : "OPTIONAL"}</strong></span>
+                        </button>
+                      </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {formData.videos.map((vid, vIdx) => (
                           <div
                             key={vIdx}
-                            className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-2"
+                            className={`p-3 rounded-xl border transition-all flex items-start justify-between gap-2 ${
+                              editingVideoIdx === vIdx
+                                ? "bg-blue-50/80 border-blue-400 ring-2 ring-blue-200"
+                                : "bg-slate-50 border-slate-200"
+                            }`}
                           >
                             <div className="space-y-1 min-w-0">
                               <span className="text-[10px] font-bold text-[#0B4A8F] uppercase tracking-wider block">
-                                Video {vIdx + 1} • {vid.duration}
+                                Video {vIdx + 1} • {vid.duration || "20 mins"}
                               </span>
                               <h5 className="text-xs font-extrabold text-slate-900 truncate">
                                 {vid.title}
@@ -906,24 +1146,44 @@ export default function AdminCourseModulesPage() {
                                 {vid.youtubeUrl}
                               </a>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveVideo(vIdx)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditVideo(vIdx)}
+                                className="p-1.5 text-slate-400 hover:text-[#0B4A8F] rounded-lg hover:bg-blue-50 transition-colors"
+                                title="Edit Video Details"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveVideo(vIdx)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                                title="Delete Video"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Inline Add Video Form */}
+                  {/* Inline Add/Edit Video Form */}
                   <div className="p-4 rounded-2xl border border-slate-200 bg-white space-y-3">
                     <h5 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
-                      <Plus className="w-4 h-4 text-[#0B4A8F]" />
-                      <span>Add Lecture Video to Playlist</span>
+                      {editingVideoIdx !== null ? (
+                        <>
+                          <Edit className="w-4 h-4 text-[#0B4A8F]" />
+                          <span>Edit Lecture Video #{editingVideoIdx + 1}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus className="w-4 h-4 text-[#0B4A8F]" />
+                          <span>Add Lecture Video to Playlist</span>
+                        </>
+                      )}
                     </h5>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -972,14 +1232,25 @@ export default function AdminCourseModulesPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleAddVideo}
-                      className="px-4 py-2 bg-[#0B4A8F] hover:bg-[#084282] text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>+ Add Video</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddVideo}
+                        className="px-4 py-2 bg-[#0B4A8F] hover:bg-[#084282] text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {editingVideoIdx !== null ? <Save className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                        <span>{editingVideoIdx !== null ? "Update Video" : "+ Add Video"}</span>
+                      </button>
+                      {editingVideoIdx !== null && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditVideo}
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1006,7 +1277,11 @@ export default function AdminCourseModulesPage() {
                         {formData.codingProblems.map((cp, cIdx) => (
                           <div
                             key={cIdx}
-                            className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-2"
+                            className={`p-3 rounded-xl border transition-all flex items-start justify-between gap-2 ${
+                              editingCodingIdx === cIdx
+                                ? "bg-purple-50/80 border-purple-400 ring-2 ring-purple-200"
+                                : "bg-slate-50 border-slate-200"
+                            }`}
                           >
                             <div className="space-y-1 min-w-0">
                               <div className="flex items-center gap-2">
@@ -1024,24 +1299,44 @@ export default function AdminCourseModulesPage() {
                                 {cp.description}
                               </p>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveCodingProblem(cIdx)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditCoding(cIdx)}
+                                className="p-1.5 text-slate-400 hover:text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
+                                title="Edit Coding Problem"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveCodingProblem(cIdx)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                                title="Delete Coding Problem"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Inline Add Coding Problem Form */}
+                  {/* Inline Add/Edit Coding Problem Form */}
                   <div className="p-4 rounded-2xl border border-purple-200 bg-purple-50/30 space-y-3">
                     <h5 className="text-xs font-extrabold text-purple-900 flex items-center gap-1.5">
-                      <Code2 className="w-4 h-4 text-purple-700" />
-                      <span>Add Coding Challenge</span>
+                      {editingCodingIdx !== null ? (
+                        <>
+                          <Edit className="w-4 h-4 text-purple-700" />
+                          <span>Edit Coding Challenge #{editingCodingIdx + 1}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Code2 className="w-4 h-4 text-purple-700" />
+                          <span>Add Coding Challenge</span>
+                        </>
+                      )}
                     </h5>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1103,14 +1398,25 @@ export default function AdminCourseModulesPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleAddCodingProblem}
-                      className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>+ Add Coding Problem</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddCodingProblem}
+                        className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {editingCodingIdx !== null ? <Save className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                        <span>{editingCodingIdx !== null ? "Update Challenge" : "+ Add Coding Problem"}</span>
+                      </button>
+                      {editingCodingIdx !== null && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditCoding}
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1137,7 +1443,11 @@ export default function AdminCourseModulesPage() {
                         {formData.mcqs.map((q, qIdx) => (
                           <div
                             key={qIdx}
-                            className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-3"
+                            className={`p-3.5 rounded-xl border transition-all flex items-start justify-between gap-3 ${
+                              editingMCQIdx === qIdx
+                                ? "bg-emerald-50/80 border-emerald-400 ring-2 ring-emerald-200"
+                                : "bg-slate-50 border-slate-200"
+                            }`}
                           >
                             <div className="space-y-1.5 min-w-0">
                               <div className="flex items-center gap-2">
@@ -1164,24 +1474,44 @@ export default function AdminCourseModulesPage() {
                                 ))}
                               </div>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveMCQ(qIdx)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => handleStartEditMCQ(qIdx)}
+                                className="p-1.5 text-slate-400 hover:text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors"
+                                title="Edit Question"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveMCQ(qIdx)}
+                                className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors"
+                                title="Delete Question"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Inline Add MCQ Form */}
+                  {/* Inline Add/Edit MCQ Form */}
                   <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50/30 space-y-3">
                     <h5 className="text-xs font-extrabold text-emerald-900 flex items-center gap-1.5">
-                      <HelpCircle className="w-4 h-4 text-emerald-700" />
-                      <span>Add Multiple Choice Question</span>
+                      {editingMCQIdx !== null ? (
+                        <>
+                          <Edit className="w-4 h-4 text-emerald-700" />
+                          <span>Edit MCQ Question #{editingMCQIdx + 1}</span>
+                        </>
+                      ) : (
+                        <>
+                          <HelpCircle className="w-4 h-4 text-emerald-700" />
+                          <span>Add Multiple Choice Question</span>
+                        </>
+                      )}
                     </h5>
 
                     <div className="space-y-3">
@@ -1270,14 +1600,25 @@ export default function AdminCourseModulesPage() {
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleAddMCQ}
-                      className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      <span>+ Add MCQ Question</span>
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddMCQ}
+                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        {editingMCQIdx !== null ? <Save className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+                        <span>{editingMCQIdx !== null ? "Update Question" : "+ Add MCQ Question"}</span>
+                      </button>
+                      {editingMCQIdx !== null && (
+                        <button
+                          type="button"
+                          onClick={handleCancelEditMCQ}
+                          className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1286,10 +1627,12 @@ export default function AdminCourseModulesPage() {
             {/* Modal Footer Controls (Pinned Cleanly at the Bottom) */}
             <div className="p-4 sm:px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/90 shrink-0">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
-                <span className="inline-flex items-center gap-1 text-[#0B4A8F]">
-                  <Video className="w-3.5 h-3.5" />
-                  {formData.videos.length} Video{formData.videos.length === 1 ? "" : "s"}
-                </span>
+                {formData.hasVideo && (
+                  <span className="inline-flex items-center gap-1 text-[#0B4A8F]">
+                    <Video className="w-3.5 h-3.5" />
+                    {formData.videos.length} Video{formData.videos.length === 1 ? "" : "s"} ({formData.isVideoMandatory ? "Mandatory" : "Optional"})
+                  </span>
+                )}
                 {formData.hasCoding && (
                   <span className="inline-flex items-center gap-1 text-purple-700">
                     • <Code2 className="w-3.5 h-3.5" />

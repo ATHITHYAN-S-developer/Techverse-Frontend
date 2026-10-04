@@ -33,10 +33,11 @@ export default function FacultyResourcesPage() {
   const ownDeptCode = user?.department?.toUpperCase?.() || "";
   const currentUserId = String(user?._id || user?.id || "");
 
-  const canModifyResource = (res) =>
-    user?.role === "admin" ||
-    res.uploadedBy?._id === currentUserId ||
-    res.uploadedBy === currentUserId;
+  const canModifyResource = (res) => {
+    if (user?.role === "admin" || user?.role === "teacher" || user?.role === "faculty") return true;
+    const uId = typeof res.uploadedBy === "object" ? res.uploadedBy?._id : res.uploadedBy;
+    return String(uId || "") === currentUserId;
+  };
 
   const [resources, setResources] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");

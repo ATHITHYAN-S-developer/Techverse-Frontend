@@ -31,6 +31,7 @@ export default function FacultyAnnouncementsPage() {
     priority: "Normal",
     content: "",
     expiryDate: "",
+    expiryTime: "23:59",
     isPinned: false
   });
   const [imageFile, setImageFile] = useState(null);
@@ -57,6 +58,7 @@ export default function FacultyAnnouncementsPage() {
       priority: "Normal",
       content: "",
       expiryDate: "",
+      expiryTime: "23:59",
       isPinned: false
     });
     setImageFile(null);
@@ -66,12 +68,26 @@ export default function FacultyAnnouncementsPage() {
 
   const handleOpenEdit = (item) => {
     setEditingItem(item);
+    let itemDate = "";
+    let itemTime = "23:59";
+    if (item.expiryDate) {
+      const dateObj = new Date(item.expiryDate);
+      if (!Number.isNaN(dateObj.getTime())) {
+        itemDate = dateObj.toISOString().slice(0, 10);
+        const hours = String(dateObj.getHours()).padStart(2, "0");
+        const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+        itemTime = `${hours}:${minutes}`;
+      } else {
+        itemDate = String(item.expiryDate).slice(0, 10);
+      }
+    }
     setFormData({
       title: item.title,
       category: item.category,
       priority: item.priority || "Normal",
-      content: item.content,
-      expiryDate: item.expiryDate ? String(item.expiryDate).slice(0, 10) : "",
+      content: item.content || item.description || "",
+      expiryDate: itemDate,
+      expiryTime: itemTime,
       isPinned: Boolean(item.isPinned)
     });
     setImageFile(null);
@@ -92,21 +108,49 @@ export default function FacultyAnnouncementsPage() {
     }
 
     try {
-      const payload = { ...formData, department: "CSE Department" };
-      if (imageFile) payload.imageUrl = imagePreview; // base64 or URL
-      if (editingItem) {
-        await announcementService.update(editingItem.id, payload);
-        showSuccess("Circular updated successfully ✓");
+      const combinedExpiry = formData.expiryTime
+        ? new Date(`${formData.expiryDate}T${formData.expiryTime}:00`).toISOString()
+        : new Date(`${formData.expiryDate}T23:59:59`).toISOString();
+
+      const payload = {
+        ...formData,
+        expiryDate: combinedExpiry,
+        department: "CSE Department",
+      };
+
+      if (imageFile) {
+        const formPayload = new FormData();
+        Object.keys(payload).forEach((k) => {
+          if (payload[k] !== null && payload[k] !== undefined) {
+            formPayload.append(k, payload[k]);
+          }
+        });
+        formPayload.append("image", imageFile);
+        formPayload.append("file", imageFile);
+
+        if (editingItem) {
+          await announcementService.update(editingItem._id || editingItem.id, formPayload);
+          showSuccess("Circular updated successfully ✓");
+        } else {
+          await announcementService.create(formPayload);
+          showSuccess("Department circular published ✓");
+        }
       } else {
-        await announcementService.create(payload, user);
-        showSuccess("Department circular published ✓");
+        if (editingItem) {
+          await announcementService.update(editingItem._id || editingItem.id, payload);
+          showSuccess("Circular updated successfully ✓");
+        } else {
+          await announcementService.create(payload);
+          showSuccess("Department circular published ✓");
+        }
       }
       setModalOpen(false);
       setImageFile(null);
       setImagePreview(null);
       loadData();
-    } catch {
-      showError("Failed to save circular");
+    } catch (err) {
+      console.error("Save circular error:", err);
+      showError(err.message || "Failed to save circular");
     }
   };
 

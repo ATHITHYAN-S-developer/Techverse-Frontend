@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="cursorGrad" x1="10%" y1="10%" x2="80%" y2="85%">
+      <stop offset="0%" stop-color="#2282FA"/>
+      <stop offset="50%" stop-color="#3B6BF8"/>
+      <stop offset="100%" stop-color="#7B47F0"/>
+    </linearGradient>
+    <filter id="cursorShadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="2" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <path d="M78 52 C 67 42, 49 48, 48 64 L 14 402 C 12 418, 30 429, 43 419 L 152 334 C 158 329, 167 329, 173 334 L 274 416 C 287 427, 307 419, 309 402 L 348 64 C 350 48, 333 38, 320 46 Z" fill="url(#cursorGrad)" filter="url(#cursorShadow)" stroke="#FFFFFF" stroke-width="14" stroke-linejoin="round"/>
+</svg>

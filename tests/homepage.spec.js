@@ -35,6 +35,21 @@ test.describe("Homepage", () => {
     await expect(empowerLogo).toBeVisible();
   });
 
+  test("does not render the About or certificate showcase on the homepage", async ({ page }) => {
+    await page.goto("/");
+
+    await expect(page.getByText("About The Platform", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("Verifiable VCET Academic Credentials", { exact: true })).toHaveCount(0);
+  });
+
+  test("daily test routes are no longer available", async ({ page }) => {
+    await page.goto("/tests");
+    await expect(page).toHaveURL(/\/$/);
+
+    await page.goto("/admin/tests");
+    await expect(page).toHaveURL(/\/$/);
+  });
+
   test("all four CTA buttons are visible and clickable and navigate to the right pages", async ({
     page,
   }) => {

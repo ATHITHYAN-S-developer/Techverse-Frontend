@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
-import { Flame, Star, BookOpen, Award } from "lucide-react";
+import { Flame, BookOpen, Award } from "lucide-react";
 import { fadeUp, staggerParent, useCountUp, useInViewOnce } from "./motion";
 
 const METRICS = [
@@ -13,15 +13,6 @@ const METRICS = [
     accent: "text-profile-main",
     fill: "fill-profile-main",
     unit: (n) => (n === 1 ? "day" : "days"),
-  },
-  {
-    key: "points",
-    label: "Total Points",
-    icon: Star,
-    to: "/profile",
-    accent: "text-profile-main",
-    fill: "fill-profile-main",
-    unit: () => "pts",
   },
   {
     key: "courses",
@@ -44,16 +35,14 @@ const METRICS = [
 ];
 
 /**
- * Four metrics as one divided row separated by hairline rules, rather than four
- * independently bordered cards. Values read from the authenticated student's
- * real streak/points plus the fetched course and certificate counts.
+ * Three metrics as one divided row separated by hairline rules. Values read
+ * from the authenticated student's streak plus fetched course/certificate counts.
  *
  * Values roll up when the strip scrolls into view rather than on mount, so a
  * student who lands mid-page does not watch numbers count past off-screen.
  */
 export default function MetricStrip({
   streak,
-  points,
   activeCourses,
   certificatesCount,
   loading,
@@ -62,15 +51,11 @@ export default function MetricStrip({
   const reduceMotion = useReducedMotion();
   const [ref, inView] = useInViewOnce();
 
-  // Streak and points resolve independently of the course/certificate fetches,
-  // so gating them on the same flag showed a placeholder dash long after the
-  // real streak was already known.
-  const gamificationPending = gamificationLoading ?? loading;
+  const streakPending = gamificationLoading ?? loading;
 
   // `null` means "still loading" and renders an em dash rather than a fake 0.
   const targets = {
-    streak: gamificationPending ? null : (streak?.currentStreak ?? 0),
-    points: gamificationPending ? null : (points?.totalPoints ?? 0),
+    streak: streakPending ? null : (streak?.currentStreak ?? 0),
     courses: loading ? null : activeCourses,
     certificates: loading ? null : certificatesCount,
   };
@@ -79,7 +64,7 @@ export default function MetricStrip({
     <motion.section
       ref={ref}
       aria-label="Key metrics"
-      className="grid grid-cols-2 border-t border-b border-profile-rule lg:grid-cols-4"
+      className="grid grid-cols-1 border-t border-b border-profile-rule sm:grid-cols-3"
       variants={staggerParent(0.07)}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
@@ -106,10 +91,8 @@ function MetricCell({ metric, value, index, reduceMotion, inView }) {
       <Link
         to={metric.to}
         className={`group relative block overflow-hidden px-5 py-6 transition-colors duration-300 hover:bg-profile-alt ${
-          index % 2 === 1 ? "border-l border-profile-rule" : ""
-        } ${index >= 2 ? "border-t border-profile-rule lg:border-t-0" : ""} ${
-          index === 2 ? "lg:border-l lg:border-profile-rule" : ""
-        }`}
+          index > 0 ? "border-t border-profile-rule sm:border-t-0 sm:border-l" : ""
+        } ${index > 0 ? "sm:border-profile-rule" : ""}`}
       >
         {/* Accent rail that wipes across on hover. */}
         <span

@@ -7,7 +7,6 @@ import api from "../../services/api";
  */
 export function useDashboardData() {
   const [courses, setCourses] = useState([]);
-  const [dailyTest, setDailyTest] = useState(null);
   const [announcements, setAnnouncements] = useState([]);
   const [certificatesCount, setCertificatesCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -15,9 +14,8 @@ export function useDashboardData() {
   const load = useCallback(async () => {
     setLoading(true);
 
-    const [coursesRes, testRes, annRes, certRes] = await Promise.allSettled([
+    const [coursesRes, annRes, certRes] = await Promise.allSettled([
       api.get("/courses"),
-      api.get("/tests/today"),
       api.get("/announcements?limit=3"),
       api.get("/certificates/my"),
     ]);
@@ -27,28 +25,6 @@ export function useDashboardData() {
       setCourses(Array.isArray(res) ? res : res?.courses || res?.data || []);
     } else {
       setCourses([]);
-    }
-
-    if (testRes.status === "fulfilled") {
-      const res = testRes.value;
-      const test = res?.test || res?.data?.test;
-      if (test) {
-        setDailyTest(test);
-      } else {
-        // /tests/today can legitimately be empty on days with no scheduled
-        // test, so fall back to the most recent published one.
-        try {
-          const listRes = await api.get("/tests");
-          const list = Array.isArray(listRes)
-            ? listRes
-            : listRes?.tests || listRes?.data || [];
-          setDailyTest(list[0] || null);
-        } catch {
-          setDailyTest(null);
-        }
-      }
-    } else {
-      setDailyTest(null);
     }
 
     if (annRes.status === "fulfilled") {
@@ -78,7 +54,7 @@ export function useDashboardData() {
     load();
   }, [load]);
 
-  return { courses, dailyTest, announcements, certificatesCount, loading, reload: load };
+  return { courses, announcements, certificatesCount, loading, reload: load };
 }
 
 export function greetingForNow() {

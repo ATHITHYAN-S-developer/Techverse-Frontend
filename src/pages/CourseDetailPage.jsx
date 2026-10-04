@@ -8,7 +8,6 @@ import {
   Lock,
   PlayCircle,
   ArrowRight,
-  Star,
   Users,
   ChevronRight,
   ArrowLeft,
@@ -22,7 +21,7 @@ import {
   Edit,
 } from "lucide-react";
 import { courseService } from "../services/courseService";
-import { testService } from "../services/testService";
+import { courseAssessmentService } from "../services/courseAssessmentService";
 import { useAuth } from "../context/AuthContext";
 
 
@@ -44,16 +43,8 @@ export default function CourseDetailPage() {
         const data = await courseService.getCourseById(courseId);
         setCourse(data);
 
-        // Fetch tests to match the 10-question assessment for this course
-        const tests = await testService.getAllTests();
-        const courseIdStr = data.id || data._id;
-        const foundTest = tests.find(
-          (t) =>
-            String(t.courseId?._id || t.courseId) === String(courseIdStr) ||
-            t.category === data.category ||
-            t.title.toLowerCase().includes(data.title.toLowerCase().split(" ")[0])
-        );
-        setCourseTest(foundTest || (tests.length > 0 ? tests[0] : null));
+        const assessment = await courseAssessmentService.getCourseAssessmentForCourse(data.slug || courseId);
+        setCourseTest(assessment);
       } catch (err) {
         console.error("Error loading course details:", err);
       } finally {
@@ -208,10 +199,6 @@ export default function CourseDetailPage() {
               {course.category}
             </span>
             <span className="text-xs font-semibold text-slate-500">{course.level || "Beginner to Intermediate"}</span>
-            <span className="text-slate-300">•</span>
-            <span className="flex items-center gap-1 text-xs font-bold text-amber-600">
-              <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {course.rating || 4.9}
-            </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">
@@ -432,81 +419,7 @@ export default function CourseDetailPage() {
           </div>
         )}
       </div>
-
-      {/* =========================================================================
-          OFFICIAL 10-QUESTION COURSE ASSESSMENT CARD
-          ========================================================================= */}
-      {(() => {
-        const isAllModulesPassed = totalMods > 0 && completedCount >= totalMods;
-
-        return (
-          <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-lg border border-blue-800/80 space-y-5 relative overflow-hidden">
-            <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/40 text-blue-300 text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Official 10-Question Course Assessment</span>
-                </div>
-                <h2 className="text-xl sm:text-2xl font-black text-white">
-                  Take 10-Question Assessment: {course.title}
-                </h2>
-                <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-                  {isAllModulesPassed
-                    ? "You have completed all module knowledge tests! Take the official 10-question multiple-choice proctored assessment to evaluate domain mastery and earn institutional certification."
-                    : `Prerequisite: Complete and pass all ${totalMods} module knowledge tests in this course to unlock the final certification assessment (${completedCount}/${totalMods} completed).`}
-                </p>
-
-                <div className="pt-2 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-300">
-                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
-                    📝 10 MCQs
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
-                    ⏱️ 10 Mins Timer
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl border border-white/10">
-                    🎯 60% Benchmark
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-emerald-500/20 text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-500/30">
-                    🏆 +50 Points Reward
-                  </span>
-                </div>
-              </div>
-
-              <div className="shrink-0 self-start sm:self-center">
-                {isAllModulesPassed ? (
-                  courseTest ? (
-                    <Link
-                      to={`/tests/${courseTest._id || courseTest.id}`}
-                      className="px-6 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-xl flex items-center gap-2 transition-all cursor-pointer hover:scale-105 active:scale-95"
-                    >
-                      <span>Start 10-Q Assessment</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/tests"
-                      className="px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs uppercase tracking-wider rounded-2xl shadow-xl flex items-center gap-2 transition-all cursor-pointer"
-                    >
-                      <span>Start Assessment</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  )
-                ) : (
-                  <Link
-                    to={`/courses/${courseSlug}/module/${firstIncompleteModule?.id || firstIncompleteModule?._id || 1}`}
-                    className="px-6 py-3.5 bg-slate-800/90 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-xs uppercase tracking-wider rounded-2xl border border-slate-700 shadow-md flex items-center gap-2 transition-all cursor-pointer"
-                  >
-                    <Lock className="w-4 h-4 text-amber-400" />
-                    <span>Complete All Module Tests First ({completedCount}/${totalMods})</span>
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })()}
     </div>
   );
 }
+

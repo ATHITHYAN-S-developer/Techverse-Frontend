@@ -23,7 +23,7 @@ import PlacementEventsPage from "./pages/PlacementEventsPage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLearningPage from "./pages/CourseLearningPage";
-import DailyTestPage from "./pages/DailyTestPage";
+import CourseAssessmentPage from "./pages/CourseAssessmentPage";
 import CertificatesPage from "./pages/CertificatesPage";
 import VerifyCertificatePage from "./pages/VerifyCertificatePage";
 import CodingPage from "./pages/CodingPage";
@@ -35,7 +35,6 @@ import AptitudePage from "./pages/AptitudePage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import LoginPage from "./pages/LoginPage";
 import BookmarksPage from "./pages/BookmarksPage";
-import ProfilePage from "./pages/ProfilePage";
 
 // Role-Specific Dashboards
 import DashboardPage from "./pages/DashboardPage";
@@ -54,13 +53,12 @@ import AdminClassesPage from "./pages/admin/AdminClassesPage";
 import AdminSubjectsPage from "./pages/admin/AdminSubjectsPage";
 import AdminResourcesPage from "./pages/admin/AdminResourcesPage";
 import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
+import AdminPlacementPage from "./pages/admin/AdminPlacementPage";
 import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
 import AdminCourseModulesPage from "./pages/admin/AdminCourseModulesPage";
-import AdminTestsPage from "./pages/admin/AdminTestsPage";
 import AdminCodingPage from "./pages/admin/AdminCodingPage";
 import AdminViolationsPage from "./pages/admin/AdminViolationsPage";
 import AdminCertificatesPage from "./pages/admin/AdminCertificatesPage";
-import AdminPointsPage from "./pages/admin/AdminPointsPage";
 import AdminLeaderboardPage from "./pages/admin/AdminLeaderboardPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import AdminVisitorsPage from "./pages/admin/AdminVisitorsPage";
@@ -78,7 +76,7 @@ function RequireAuth({ children, allowedRoles }) {
   if (allowedRoles && !allowedRoles.includes(user?.role)) {
     // If user doesn't have required role, redirect to appropriate home dashboard
     if (user?.role === "admin") return <Navigate to="/admin/dashboard" replace />;
-    if (user?.role === "faculty" || user?.role === "teacher") return <Navigate to="/faculty/dashboard" replace />;
+    if (user?.role === "faculty" || user?.role === "teacher" || user?.role === "hod") return <Navigate to="/faculty/dashboard" replace />;
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -114,26 +112,25 @@ export default function App() {
             {/* 2. Student Learning & Gamification Portal */}
             <Route
               element={
-                <RequireAuth allowedRoles={["student", "faculty", "admin"]}>
+                <RequireAuth allowedRoles={["student", "faculty", "hod", "admin"]}>
                   <StudentLayout />
                 </RequireAuth>
               }
             >
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/courses/:courseId/module/:moduleId" element={<CourseLearningPage />} />
-              <Route path="/tests" element={<DailyTestPage />} />
-              <Route path="/tests/:testId" element={<DailyTestPage />} />
+              <Route path="/courses/:courseId/assessment/:assessmentId" element={<CourseAssessmentPage />} />
               <Route path="/certificates" element={<CertificatesPage />} />
               <Route path="/coding" element={<CodingPage />} />
               <Route path="/bookmarks" element={<BookmarksPage />} />
-              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile" element={<Navigate to="/dashboard#profile" replace />} />
             </Route>
 
             {/* 3. Faculty Management Portal */}
             <Route
               path="/faculty"
               element={
-                <RequireAuth allowedRoles={["faculty", "teacher", "admin"]}>
+                <RequireAuth allowedRoles={["faculty", "teacher", "hod", "admin"]}>
                   <FacultyLayout />
                 </RequireAuth>
               }
@@ -161,6 +158,7 @@ export default function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="announcements" element={<AdminAnnouncementsPage />} />
+              <Route path="placement" element={<AdminPlacementPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="faculty" element={<AdminFacultyPage />} />
               <Route path="departments" element={<AdminDepartmentsPage />} />
@@ -169,11 +167,9 @@ export default function App() {
               <Route path="resources" element={<AdminResourcesPage />} />
               <Route path="courses" element={<AdminCoursesPage />} />
               <Route path="modules" element={<AdminCourseModulesPage />} />
-              <Route path="tests" element={<AdminTestsPage />} />
               <Route path="coding" element={<AdminCodingPage />} />
               <Route path="violations" element={<AdminViolationsPage />} />
               <Route path="certificates" element={<AdminCertificatesPage />} />
-              <Route path="points" element={<AdminPointsPage />} />
               <Route path="leaderboard" element={<AdminLeaderboardPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="visitors" element={<AdminVisitorsPage />} />

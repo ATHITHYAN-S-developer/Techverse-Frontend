@@ -1,27 +1,46 @@
-import React, { useState } from "react";
-import { Flame, Star, Save } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Flame, Save } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 
-export default function ProfilePage() {
-  const { user, role, streak, points, updateProfile } = useAuth();
-  const { showSuccess } = useToast();
+export default function ProfilePage({ embedded = false }) {
+  const { user, role, streak, updateProfile } = useAuth();
+  const { showSuccess, showError } = useToast();
 
   const [phone, setPhone] = useState("+91 98421 54320");
   const [bio, setBio] = useState("Aspiring Software Engineer passionate about Cloud Systems, Python, and Full-Stack Development.");
+  const [email, setEmail] = useState(user?.email || "");
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = (e) => {
+  useEffect(() => {
+    setEmail(user?.email || "");
+  }, [user?.email]);
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    updateProfile({ phone, bio });
-    showSuccess("Profile information updated successfully ✓");
+    setSaving(true);
+    try {
+      await updateProfile({
+        phone,
+        bio,
+        ...(role === "student" ? { email: email.trim() } : {}),
+      });
+      showSuccess("Profile information updated successfully ✓");
+    } catch (error) {
+      showError(error.message || "Could not update profile information.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const roleLabel =
     role === "admin"
       ? "Institutional Administrator"
-      : role === "faculty"
-        ? "Faculty Member"
-        : "Enrolled Student";
+      : role === "hod"
+        ? "Head of the Department (HOD)"
+        : role === "faculty" || role === "teacher"
+          ? "Faculty Member"
+          : "Enrolled Student";
 
   const labelCls =
     "block font-body text-xs font-medium text-profile-ink/55";
@@ -31,7 +50,10 @@ export default function ProfilePage() {
     "group inline-flex items-center gap-2 border border-profile-main bg-profile-main px-6 py-2.5 font-body text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-transparent hover:text-profile-main";
 
   return (
-    <div className="min-h-full bg-profile-paper font-body text-profile-ink">
+    <section
+      id={embedded ? "profile" : undefined}
+      className={`bg-profile-paper font-body text-profile-ink ${embedded ? "scroll-mt-20 border-t border-profile-rule" : "min-h-full"}`}
+    >
       <div className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10 sm:py-16">
         <header className="flex flex-col gap-9 border-b border-profile-rule pb-10 sm:flex-row sm:items-end sm:justify-between sm:pb-12">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
@@ -48,7 +70,7 @@ export default function ProfilePage() {
               </h1>
               <p className="mt-2.5 font-body text-xs text-profile-ink/55">
                 <span className="font-mono tabular-nums">
-                  {user?.registerNumber || user?.facultyId || user?.adminId || "732924CSE001"}
+                  {user?.registerNumber || user?.staffId || user?.facultyId || user?.adminId || "732924CSE001"}
                 </span>
                 {" · "}
                 {user?.department || "Computer Science & Engineering"}
@@ -68,19 +90,6 @@ export default function ProfilePage() {
                     {streak?.currentStreak || 0}
                   </span>
                   <span className="text-xs text-profile-ink/45">days</span>
-                </span>
-              </div>
-              <span aria-hidden="true" className="h-10 w-px bg-profile-rule" />
-              <div>
-                <span className="block font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-profile-ink/40">
-                  Points
-                </span>
-                <span className="mt-1 flex items-baseline gap-1.5">
-                  <Star className="h-4 w-4 self-center text-profile-main" />
-                  <span className="font-serif text-2xl font-medium tabular-nums text-profile-ink">
-                    {points?.totalPoints || 0}
-                  </span>
-                  <span className="text-xs text-profile-ink/45">pts</span>
                 </span>
               </div>
             </div>
@@ -113,13 +122,13 @@ export default function ProfilePage() {
 
               <div>
                 <label htmlFor="profile-reg" className={labelCls}>
-                  {role === "faculty" ? "Faculty Staff ID" : "Register / Roll Number"}
+                  {role === "faculty" || role === "teacher" || role === "hod" ? "Faculty Staff ID" : "Register / Roll Number"}
                 </label>
                 <input
                   id="profile-reg"
                   type="text"
                   disabled
-                  value={user?.registerNumber || user?.facultyId || "732924CSE001"}
+                  value={user?.registerNumber || user?.staffId || user?.facultyId || "732924CSE001"}
                   className={`${underlineBase} font-mono tabular-nums text-profile-ink/60`}
                 />
               </div>
@@ -144,9 +153,11 @@ export default function ProfilePage() {
                 <input
                   id="profile-email"
                   type="email"
-                  disabled
-                  value={user?.email || "student@vcet.ac.in"}
-                  className={`${underlineBase} font-mono tabular-nums text-profile-ink/60`}
+                  required={role === "student"}
+                  disabled={role !== "student"}
+                  value={role === "student" ? email : user?.email || ""}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`${underlineBase} font-mono tabular-nums ${role === "student" ? "text-profile-ink" : "cursor-not-allowed text-profile-ink/60"}`}
                 />
               </div>
             </div>
@@ -187,17 +198,17 @@ export default function ProfilePage() {
             </div>
 
             <div className="mt-10 flex justify-end">
-              <button type="submit" className={saveButtonCls}>
+              <button type="submit" disabled={saving} className={`${saveButtonCls} disabled:cursor-wait disabled:opacity-60`}>
                 <Save
                   className="h-4 w-4 transition-colors group-hover:text-profile-main"
                   aria-hidden="true"
                 />
-                <span>Save Profile Updates</span>
+                <span>{saving ? "Saving..." : "Save Profile Updates"}</span>
               </button>
             </div>
           </section>
         </form>
       </div>
-    </div>
+    </section>
   );
 }

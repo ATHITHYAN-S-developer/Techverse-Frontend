@@ -65,11 +65,11 @@ export const analyticsService = {
     }));
   },
 
-  /** Daily test attempts with average score, from the analytics overview. */
-  async getMonthlyTestAttempts() {
+  /** Course-final assessment attempts with average score. */
+  async getCourseAssessmentAttempts() {
     const res = await api.get("/analytics/overview?days=14");
     const payload = res.data || res;
-    return payload.testTrends || [];
+    return payload.courseAssessmentTrends || [];
   },
 
   /** Live session counts for the "Active Users" tile. */

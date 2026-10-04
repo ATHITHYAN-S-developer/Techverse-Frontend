@@ -17,8 +17,8 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
     await expect(page.getByText("Python Programming Masterclass").first()).toBeVisible({ timeout: 5000 });
   });
 
-  // 2. STUDENT PORTAL (Login, Dashboard, Tests, Profile, Certificates)
-  test("Student Portal: Login, Dashboard, Tests, and Profile", async ({ page }) => {
+  // 2. STUDENT PORTAL (Login, Dashboard, Profile, Certificates)
+  test("Student Portal: Login, Dashboard, Tests, and Profile", async ({ page }, testInfo) => {
     // Navigate to Login
     await page.goto("/login");
     await expect(page.getByText("Welcome Back")).toBeVisible();
@@ -31,30 +31,34 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
     // Verify Redirect to Student Dashboard (BUG #001 Regression Check)
     await expect(page).toHaveURL(/.*dashboard/, { timeout: 8000 });
     await expect(page.getByText("Current Streak")).toBeVisible();
-    await expect(page.getByText("Total Points")).toBeVisible();
     await expect(page.locator("body")).not.toBeEmpty();
 
-    // The streak and points figures must be real numbers, not placeholders.
-    // Previously the context seeded 7/820 from localStorage, so these labels
-    // rendered even with the whole gamification pipeline broken.
+    // The streak figure must be a real number, not a placeholder.
     const metricValue = (label) =>
       page.locator('section[aria-label="Key metrics"] a', { hasText: label }).locator("p").first();
 
     await expect(metricValue("Current Streak")).toHaveText(/^\d+$/);
-    await expect(metricValue("Total Points")).toHaveText(/^\d+$/);
+    await expect(page.getByText("Total Points", { exact: true })).toHaveCount(0);
 
-    // Verify Daily Tests Page (BUG #008 Regression Check)
+    // Daily test routes are no longer part of the product.
     await page.goto("/tests");
-    await expect(page.locator("body")).not.toBeEmpty();
+    await expect(page).toHaveURL(/\/$/);
 
     // The leaderboard was removed; the route should no longer exist.
     await page.goto("/leaderboard");
     await expect(page).not.toHaveURL(/.*leaderboard/);
 
-    // Verify Profile Page (streak and points live here now)
+    // Profile now lives on the combined dashboard page.
     await page.goto("/profile");
-    await expect(page.getByText("Streak", { exact: true })).toBeVisible();
-    await expect(page.getByText("Points", { exact: true })).toBeVisible();
+    await expect(page).toHaveURL(/dashboard#profile$/);
+    await expect(page.locator("#profile-email")).toBeEnabled();
+    await expect(page.locator("#profile").getByText("Streak", { exact: true })).toBeVisible();
+    await expect(page.locator("#profile").getByText("Points", { exact: true })).toHaveCount(0);
+    if (testInfo.project.name === "desktop") {
+      await expect(
+        page.getByRole("navigation").getByRole("link", { name: "Dashboard" })
+      ).toBeInViewport();
+    }
 
     // Verify Certificates Page
     await page.goto("/certificates");
@@ -88,6 +92,20 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
   });
 
   // 4. ADMIN CONTROL CENTER
+  test("Admin rewards navigation is removed and leaderboard uses streaks", async ({ page }) => {
+    await page.goto("/login");
+    await page.getByRole("button", { name: "Admin" }).click();
+    await page.locator('input[name="adminUsername"]').fill("admin");
+    await page.locator('input[name="adminPassword"]').fill("admin123");
+    await page.locator('button[type="submit"]').click();
+
+    await expect(page).toHaveURL(/.*admin/, { timeout: 8000 });
+    await expect(page.getByRole("link", { name: /points/i })).toHaveCount(0);
+    await page.goto("/admin/leaderboard");
+    await expect(page.getByText("Current Streak", { exact: true })).toBeVisible();
+    await expect(page.getByText("Total Points", { exact: true })).toHaveCount(0);
+  });
+
   test("Admin Portal: Students, Faculty Directory & Certificates", async ({ page }) => {
     // Navigate to Login and switch to Admin tab
     await page.goto("/login");
@@ -101,6 +119,11 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
     // Verify Admin Dashboard
     await expect(page).toHaveURL(/.*admin/, { timeout: 8000 });
     await expect(page.locator("body")).not.toBeEmpty();
+    await expect(page.getByRole("link", { name: /points/i })).toHaveCount(0);
+
+    await page.goto("/admin/leaderboard");
+    await expect(page.getByText("Current Streak", { exact: true })).toBeVisible();
+    await expect(page.getByText("Total Points", { exact: true })).toHaveCount(0);
 
     // Verify Admin Students Page (BUG #002 Regression Check)
     await page.goto("/admin/students");

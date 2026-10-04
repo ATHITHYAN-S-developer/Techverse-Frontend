@@ -53,7 +53,6 @@ export default function AdminCodingPage() {
     inputFormat: "Standard Input (stdin)",
     outputFormat: "Standard Output (stdout)",
     constraints: "1 <= N <= 10^5",
-    points: 25,
     starterCode: {
       python: "import sys\n\ndef solution():\n    lines = sys.stdin.read().strip().split('\\n')\n    # Write your solution here\n\nif __name__ == '__main__':\n    solution()",
       javascript: "const fs = require('fs');\nconst input = fs.readFileSync(0, 'utf-8').trim().split('\\n');\n// Write your solution here\n",
@@ -80,8 +79,6 @@ export default function AdminCodingPage() {
     category: "Placement",
     difficulty: "Medium",
     timeLimit: 45,
-    pointsReward: 50,
-    bonusPoints: 25,
     fullscreenRequired: true,
     antiCopy: true,
     antiPaste: true,
@@ -136,7 +133,6 @@ export default function AdminCodingPage() {
       inputFormat: "Standard Input (stdin)",
       outputFormat: "Standard Output (stdout)",
       constraints: "1 <= N <= 10^5",
-      points: 25,
       starterCode: {
         python: "import sys\n\ndef solution():\n    lines = sys.stdin.read().strip().split('\\n')\n    # Write your solution here\n\nif __name__ == '__main__':\n    solution()",
         javascript: "const fs = require('fs');\nconst input = fs.readFileSync(0, 'utf-8').trim().split('\\n');\n// Write your solution here\n",
@@ -166,7 +162,6 @@ export default function AdminCodingPage() {
       inputFormat: prob.inputFormat || "",
       outputFormat: prob.outputFormat || "",
       constraints: Array.isArray(prob.constraints) ? prob.constraints.join("\n") : prob.constraints || "",
-      points: prob.points || 25,
       starterCode: prob.starterCode || {
         python: "",
         javascript: "",
@@ -230,8 +225,6 @@ export default function AdminCodingPage() {
       category: "Placement",
       difficulty: "Medium",
       timeLimit: 45,
-      pointsReward: 50,
-      bonusPoints: 25,
       fullscreenRequired: true,
       antiCopy: true,
       antiPaste: true,
@@ -473,7 +466,6 @@ export default function AdminCodingPage() {
                 <th className="px-5 py-3.5">Problem Details</th>
                 <th className="px-4 py-3.5">Difficulty</th>
                 <th className="px-4 py-3.5">Tags / Company</th>
-                <th className="px-4 py-3.5">Points</th>
                 <th className="px-4 py-3.5">Verification Suites</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
@@ -495,9 +487,6 @@ export default function AdminCodingPage() {
                           </span>
                         ))}
                       </div>
-                    </td>
-                    <td className="px-4 py-4 font-bold text-[#0062A8]">
-                      +{p.points || 25} XP
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2 text-[11px]">
@@ -600,15 +589,6 @@ export default function AdminCodingPage() {
                     value={problemForm.tags}
                     onChange={(e) => setProblemForm({ ...problemForm, tags: e.target.value })}
                     placeholder="e.g. Arrays, Sliding Window, Zoho, Amazon"
-                    className="w-full px-3.5 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 font-bold mb-1">Award XP Points</label>
-                  <input
-                    type="number"
-                    value={problemForm.points}
-                    onChange={(e) => setProblemForm({ ...problemForm, points: Number(e.target.value) })}
                     className="w-full px-3.5 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
                   />
                 </div>

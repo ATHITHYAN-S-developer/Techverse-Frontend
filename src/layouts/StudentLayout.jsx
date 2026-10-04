@@ -6,12 +6,11 @@ import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";import
   Search,
   ExternalLink,
   Flame,
-  Star,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "../components/NotificationBell";
 import GlobalSearchModal from "../components/GlobalSearchModal";
-import vcetLogoImg from "../assets/vcet-logo.png";
+import techverseLogoImg from "../assets/techverse-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
 import VcetBanner from "../components/VcetBanner";
 
@@ -26,7 +25,6 @@ const STUDENT_NAV = [
       { name: "Dashboard", href: "/dashboard" },
       { name: "My Courses", href: "/courses" },
       { name: "Academic Resources", href: "/departments" },
-      { name: "Daily Tests", href: "/tests" },
     ],
   },
   {
@@ -45,7 +43,7 @@ const STUDENT_NAV = [
   },
   {
     label: "Account",
-    items: [{ name: "Student Profile", href: "/profile" }],
+    items: [{ name: "Profile & Account", href: "/dashboard#profile" }],
   },
 ];
 
@@ -98,7 +96,7 @@ function NavLinks({ onNavigate }) {
 }
 
 export default function StudentLayout() {
-  const { user, logout, streak, points } = useAuth();
+  const { user, logout, streak } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -135,7 +133,7 @@ export default function StudentLayout() {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="min-h-screen bg-profile-paper text-profile-ink selection:bg-profile-main selection:text-white font-sans flex flex-col">
+    <div className="h-screen overflow-hidden bg-profile-paper text-profile-ink selection:bg-profile-main selection:text-white font-sans flex flex-col">
       <ScrollToTop />
 
       {/* Topbar */}
@@ -150,15 +148,14 @@ export default function StudentLayout() {
               <Menu className="w-5 h-5" />
             </button>
 
-            <Link to="/" className="flex items-center gap-2.5 min-w-0">
-              <img src={vcetLogoImg} alt="VCET" className="h-9 w-9 object-contain" />
-              <span className="flex flex-col min-w-0">
-                <span className="font-display text-[15px] font-semibold tracking-tight text-profile-ink leading-none">
-                  VCET <span className="text-profile-main">TechVerse</span>
-                </span>
-                <span className="mt-1 text-[10px] font-medium uppercase tracking-[0.16em] text-profile-ink/45">
-                  Student Learning Portal
-                </span>
+            <Link to="/" className="flex items-center gap-2.5 min-w-0 group">
+              <img
+                src={techverseLogoImg}
+                alt="TechVerse"
+                className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
+              />
+              <span className="hidden md:inline-block text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold border border-slate-200 uppercase tracking-wider">
+                Student Portal
               </span>
             </Link>
           </div>
@@ -166,26 +163,20 @@ export default function StudentLayout() {
           {/* Gamification + identity */}
           <div className="flex items-center gap-4 sm:gap-6">
             <Link
-              to="/profile"
+              to="/dashboard#profile"
               className="hidden sm:flex items-baseline gap-2 text-xs hover:opacity-70 transition-opacity"
-              title="Daily streak and reward points"
+              title="Current learning streak"
             >
               <span className="inline-flex items-center gap-1.5 font-display font-semibold text-profile-main tabular-nums">
                 <Flame className="w-3.5 h-3.5 fill-profile-main" />
                 {streak?.currentStreak || 0}
                 <span className="font-sans font-normal text-profile-ink/45">day streak</span>
               </span>
-              <span className="w-px h-3 bg-profile-rule" aria-hidden="true" />
-              <span className="inline-flex items-center gap-1.5 font-display font-semibold text-profile-ink tabular-nums">
-                <Star className="w-3.5 h-3.5 fill-profile-main text-profile-main" />
-                {points?.totalPoints || 0}
-                <span className="font-sans font-normal text-profile-ink/45">pts</span>
-              </span>
             </Link>
 
             <NotificationBell />
 
-            <Link to="/profile" className="flex items-center gap-2.5 group min-w-0">
+            <Link to="/dashboard#profile" className="flex items-center gap-2.5 group min-w-0">
               <span className="w-8 h-8 rounded-full bg-profile-main text-white font-display text-xs font-semibold flex items-center justify-center shrink-0">
                 {user?.name?.charAt(0) || "S"}
               </span>
@@ -212,9 +203,9 @@ export default function StudentLayout() {
 
       <VcetBanner />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* Desktop sidebar */}
-        <aside className="hidden lg:flex w-56 shrink-0 flex-col justify-between border-r border-profile-rule bg-profile-paper overflow-y-auto">
+        <aside className="hidden lg:flex h-full min-h-0 w-56 shrink-0 flex-col justify-between border-r border-profile-rule bg-profile-paper overflow-y-auto">
           <div className="px-4 py-8">
             <NavLinks />
           </div>
@@ -282,7 +273,7 @@ export default function StudentLayout() {
         )}
 
         {/* Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="min-h-0 flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>

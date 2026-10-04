@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "../components/NotificationBell";
-import vcetLogoImg from "../assets/vcet-logo.png";
+import techverseLogoImg from "../assets/techverse-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
 
 import VcetBanner from "../components/VcetBanner";
@@ -26,12 +26,12 @@ const FACULTY_NAV = [
   { name: "Faculty Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
   { name: "Manage Courses", href: "/faculty/courses", icon: BookOpen },
   { name: "Course Modules & Syllabus", href: "/faculty/modules", icon: Layers },
-  { name: "Coding Arena & Tests", href: "/faculty/coding", icon: Code2 },
+  { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
   { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
   { name: "Manage Subjects", href: "/faculty/subjects", icon: BookOpen },
   { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
   { name: "Student Directory", href: "/faculty/students", icon: Users },
-  { name: "Faculty Profile", href: "/profile", icon: User }
+  { name: "Profile & Account", href: "/dashboard#profile", icon: User }
 ];
 
 export default function FacultyLayout() {
@@ -64,16 +64,15 @@ export default function FacultyLayout() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <Link to="/" className="flex items-center gap-2">
-            <img src={vcetLogoImg} alt="VCET" className="h-8 w-8 object-contain" />
-            <div className="flex flex-col">
-              <span className="text-base font-black text-slate-900 leading-none">
-                VCET <span className="text-[#0B4A8F]">TechVerse</span>
-              </span>
-              <span className="text-[10px] font-semibold text-[#0062A8] uppercase tracking-wider">
-                Faculty & Educator Hub
-              </span>
-            </div>
+          <Link to="/" className="flex items-center gap-2 group">
+            <img
+              src={techverseLogoImg}
+              alt="TechVerse"
+              className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
+            />
+            <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#0062A8] font-bold border border-blue-200 uppercase tracking-wider">
+              {user?.role === "hod" ? "HOD Portal" : user?.role === "admin" ? "Admin Hub" : "Faculty Hub"}
+            </span>
           </Link>
         </div>
 
@@ -98,7 +97,7 @@ export default function FacultyLayout() {
           <NotificationBell />
 
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-            <Link to="/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Link to="/dashboard#profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-[#0B4A8F] text-white font-bold text-xs flex items-center justify-center shadow-sm">
                 {user?.name?.charAt(0) || "F"}
               </div>

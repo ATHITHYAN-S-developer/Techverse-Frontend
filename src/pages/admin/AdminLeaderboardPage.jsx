@@ -7,7 +7,6 @@ import {
   Award,
   Crown,
   Medal,
-  Star,
   GraduationCap,
   Sparkles,
   RefreshCw
@@ -21,11 +20,8 @@ const INITIAL_LEADERBOARD = [
     regNo: "732924CSE001",
     department: "CSE",
     year: "II Year",
-    points: 2450,
     streak: 28,
-    testsCompleted: 42,
     coursesCompleted: 4,
-    badge: "Grandmaster",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
   },
   {
@@ -34,11 +30,8 @@ const INITIAL_LEADERBOARD = [
     regNo: "732922ADS018",
     department: "AI&DS",
     year: "III Year",
-    points: 2210,
     streak: 21,
-    testsCompleted: 38,
     coursesCompleted: 3,
-    badge: "Master",
     avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80"
   },
   {
@@ -47,11 +40,8 @@ const INITIAL_LEADERBOARD = [
     regNo: "732922CSE042",
     department: "CSE",
     year: "III Year",
-    points: 1980,
     streak: 15,
-    testsCompleted: 35,
     coursesCompleted: 3,
-    badge: "Expert",
     avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80"
   },
   {
@@ -60,11 +50,8 @@ const INITIAL_LEADERBOARD = [
     regNo: "732921IT054",
     department: "IT",
     year: "IV Year",
-    points: 1820,
     streak: 12,
-    testsCompleted: 31,
     coursesCompleted: 2,
-    badge: "Specialist",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
   },
   {
@@ -73,11 +60,8 @@ const INITIAL_LEADERBOARD = [
     regNo: "732923ECE088",
     department: "ECE",
     year: "II Year",
-    points: 1690,
     streak: 14,
-    testsCompleted: 29,
     coursesCompleted: 2,
-    badge: "Specialist",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
   },
   {
@@ -86,20 +70,22 @@ const INITIAL_LEADERBOARD = [
     regNo: "732923MECH025",
     department: "MECH",
     year: "II Year",
-    points: 1420,
     streak: 8,
-    testsCompleted: 22,
     coursesCompleted: 1,
-    badge: "Apprentice",
     avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80"
   }
 ];
 
 const DEPARTMENTS = ["All Departments", "CSE", "AI&DS", "ECE", "IT", "EEE", "MECH", "CIVIL"];
 
+const rankByStreak = (entries) =>
+  [...entries]
+    .sort((a, b) => b.streak - a.streak)
+    .map((entry, index) => ({ ...entry, rank: index + 1 }));
+
 export default function AdminLeaderboardPage() {
   const { showSuccess } = useToast();
-  const [leaderboard, setLeaderboard] = useState(INITIAL_LEADERBOARD);
+  const [leaderboard, setLeaderboard] = useState(() => rankByStreak(INITIAL_LEADERBOARD));
   const [searchTerm, setSearchTerm] = useState("");
   const [deptFilter, setDeptFilter] = useState("All Departments");
 
@@ -150,12 +136,15 @@ export default function AdminLeaderboardPage() {
             Institutional Hall of Fame & Leaderboard
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Real-time rankings based on daily test mastery, coding problem submissions, course completions, and active streaks.
+            Student rankings by current learning streak, with course completions for context.
           </p>
         </div>
 
         <button
-          onClick={() => showSuccess("Leaderboard scores recalculated from live test attempts ✓")}
+          onClick={() => {
+            setLeaderboard((current) => rankByStreak(current));
+            showSuccess("Leaderboard reordered by active streak.");
+          }}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-all border border-slate-200 self-start sm:self-auto"
         >
           <RefreshCw className="w-4 h-4 text-[#0062A8]" />
@@ -188,9 +177,6 @@ export default function AdminLeaderboardPage() {
             </p>
 
             <div className="mt-3 flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-amber-50 text-amber-700 font-black text-sm border border-amber-200">
-                {item.points.toLocaleString()} XP
-              </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200">
                 <Flame className="w-3.5 h-3.5" />
                 {item.streak}d Streak
@@ -237,10 +223,8 @@ export default function AdminLeaderboardPage() {
                 <th className="px-5 py-3.5">Rank</th>
                 <th className="px-4 py-3.5">Student</th>
                 <th className="px-4 py-3.5">Department & Year</th>
-                <th className="px-4 py-3.5">Daily Streak</th>
-                <th className="px-4 py-3.5">Tests Completed</th>
+                <th className="px-4 py-3.5">Current Streak</th>
                 <th className="px-4 py-3.5">Courses</th>
-                <th className="px-4 py-3.5 text-right">Total Points</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -266,13 +250,7 @@ export default function AdminLeaderboardPage() {
                       {s.streak} Days
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 font-mono text-slate-600">{s.testsCompleted} tests</td>
                   <td className="px-4 py-3.5 font-mono text-slate-600">{s.coursesCompleted} completed</td>
-                  <td className="px-4 py-3.5 text-right">
-                    <span className="font-black text-sm text-amber-600 font-mono">
-                      {s.points.toLocaleString()} XP
-                    </span>
-                  </td>
                 </tr>
               ))}
             </tbody>

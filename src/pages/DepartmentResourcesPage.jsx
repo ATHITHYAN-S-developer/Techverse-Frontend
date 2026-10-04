@@ -426,27 +426,13 @@ export default function DepartmentResourcesPage() {
           <ErrorState onRetry={handleRetry} />
         ) : (
           <div>
-            {/* When category is 'all' and no active search query: Show Featured Resource & Popular Subjects */}
+            {/* Keep the featured resource, but omit the default subjects showcase. */}
             {category === "all" && !q && effectiveDeptId === "all" && selectedSemester === "all" && (
-              <>
-                <FeaturedResource
-                  resource={featuredResource}
-                  deptCode={featuredResource ? resourceDeptCode(featuredResource) : ""}
-                  onOpen={openResource}
-                />
-
-                {subjectRows.length > 0 && (
-                  <SubjectExplorer
-                    title="Popular Subjects"
-                    subtitle="Most-accessed semester courses across departments"
-                    subjects={subjectRows.slice(0, 6)}
-                    onSelect={(subject) => {
-                      setSelectedSubjectId(subject.id);
-                      setCategory("notes");
-                    }}
-                  />
-                )}
-              </>
+              <FeaturedResource
+                resource={featuredResource}
+                deptCode={featuredResource ? resourceDeptCode(featuredResource) : ""}
+                onOpen={openResource}
+              />
             )}
 
             {/* When category is 'subjects': Render Subject Explorer */}
@@ -463,7 +449,7 @@ export default function DepartmentResourcesPage() {
             )}
 
             {/* Render Filtered Resource Feed for All, Notes, Question Bank, Software, Downloads, or whenever searched/filtered */}
-            {(category !== "subjects" || q !== "" || effectiveDeptId !== "all" || selectedSemester !== "all") && (
+            {(category !== "all" || q !== "" || effectiveDeptId !== "all" || selectedSemester !== "all") && (
               <ResourceLibrary
                 title={
                   category === "all"

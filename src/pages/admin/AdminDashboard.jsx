@@ -93,7 +93,7 @@ export default function AdminDashboard() {
   const teachers = kpis.teachers || {};
   const courses = kpis.courses || {};
   const resources = kpis.resources || {};
-  const tests = kpis.tests || {};
+  const coding = kpis.coding || {};
   const certificates = kpis.certificates || {};
   const visitors = kpis.visitors || {};
   const activeUsers = kpis.activeUsers || {};
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
     date: point.date,
     logins: Number(point.logins) || 0,
     courseActive: Number(point.courseActive) || 0,
-    testAttempts: Number(point.testAttempts) || 0,
+    assessmentAttempts: Number(point.assessmentAttempts) || 0,
     downloads: Number(point.downloads) || 0,
   }));
 
@@ -130,7 +130,7 @@ export default function AdminDashboard() {
             Administrative Overview
           </h1>
           <p className="text-blue-100 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-            Real-time analysis of student engagement, faculty resources, self-paced courses, proctored daily tests, and security audit logs.
+            Real-time analysis of student engagement, faculty resources, course assessments, and security audit logs.
           </p>
         </div>
 
@@ -142,10 +142,10 @@ export default function AdminDashboard() {
             Manage Students
           </Link>
           <Link
-            to="/admin/tests"
+            to="/admin/courses"
             className="px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/30 text-white font-bold text-xs transition-all text-center"
           >
-            Create Assessment
+            Manage Courses
           </Link>
         </div>
       </div>
@@ -249,26 +249,22 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tests */}
+        {/* Coding problems */}
         <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs hover:border-slate-300 transition-all">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              Tests
+              Coding Problems
             </span>
             <div className="p-2 rounded-xl bg-rose-50 text-rose-600">
               <Activity className="w-4 h-4" />
             </div>
           </div>
           <div className={`text-2xl sm:text-3xl font-black text-slate-900 mt-2 ${summary ? "" : SKELETON}`}>
-            {formatNumber(tests.total)}
+            {formatNumber(coding.problems)}
           </div>
           <div className="flex items-center gap-1.5 mt-2 text-[11px]">
             <span className="text-rose-600 font-bold">
-              {formatNumber(tests.dailyTests)} Daily
-            </span>
-            <span className="text-slate-300">•</span>
-            <span className="text-slate-400">
-              {formatNumber(tests.codingProblems)} Problems
+              {formatNumber(coding.tests)} Coding Tests
             </span>
           </div>
         </div>
@@ -433,11 +429,11 @@ export default function AdminDashboard() {
                 {activityMetric !== "logins" && (
                   <Area
                     type="monotone"
-                    dataKey="testAttempts"
+                    dataKey="assessmentAttempts"
                     stroke="#8b5cf6"
                     strokeWidth={2}
                     fillOpacity={0}
-                    name="Daily Test Attempts"
+                    name="Course Assessment Attempts"
                   />
                 )}
               </AreaChart>

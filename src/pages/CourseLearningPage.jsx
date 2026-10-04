@@ -24,6 +24,8 @@ import {
   Lock,
   Printer,
   CheckCheck,
+  AlertTriangle,
+  ExternalLink,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { courseService } from "../services/courseService";
@@ -41,6 +43,10 @@ function getYouTubeVideoId(url) {
     return trimmed;
   }
   try {
+    if (trimmed.includes("youtube.com/shorts/")) {
+      const match = trimmed.match(/shorts\/([a-zA-Z0-9_-]{11})/);
+      if (match) return match[1];
+    }
     if (trimmed.includes("youtube.com/embed/")) {
       const match = trimmed.match(/embed\/([a-zA-Z0-9_-]{11})/);
       if (match) return match[1];
@@ -78,6 +84,7 @@ function TrackedYouTubePlayer({
   const [currentSeconds, setCurrentSeconds] = useState(0);
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [apiReady, setApiReady] = useState(false);
+  const [embedError, setEmbedError] = useState("");
 
   // Initialize YouTube IFrame API
   useEffect(() => {
@@ -100,6 +107,7 @@ function TrackedYouTubePlayer({
     if (!apiReady || !containerRef.current || !videoId) return;
 
     let isDestroyed = false;
+    setEmbedError("");
 
     try {
       playerRef.current = new window.YT.Player(containerRef.current, {
@@ -123,6 +131,19 @@ function TrackedYouTubePlayer({
               setIsPlaying(true);
             } else {
               setIsPlaying(false);
+            }
+          },
+          onError: (event) => {
+            if (isDestroyed) return;
+            console.warn("YouTube Player error event:", event.data);
+            if (event.data === 101 || event.data === 150) {
+              setEmbedError("This video cannot be played inside an embedded player because the YouTube creator or music copyright owner has disabled third-party website embedding (Error 101/150).");
+            } else if (event.data === 100) {
+              setEmbedError("This YouTube video was deleted or marked private by its creator.");
+            } else if (event.data === 2) {
+              setEmbedError("Invalid YouTube video ID parameter.");
+            } else {
+              setEmbedError("Unable to play video in embedded mode.");
             }
           },
         },
@@ -224,6 +245,32 @@ function TrackedYouTubePlayer({
           )}
         </div>
       </div>
+
+      {embedError && (
+        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs space-y-2">
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-bold text-amber-950 text-sm">YouTube Blocked In-App Playback</p>
+              <p className="text-amber-900 leading-relaxed">{embedError}</p>
+              <p className="text-slate-600 text-[11px] pt-1">
+                Tip for Faculty: Use an educational lecture or tutorial video with <strong>"Allow embedding"</strong> enabled in YouTube Studio, or standard courses (e.g., NPTEL, FreeCodeCamp, university lectures).
+              </p>
+            </div>
+          </div>
+          <div className="pt-1 flex items-center gap-2">
+            <a
+              href={`https://www.youtube.com/watch?v=${videoId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-bold text-xs transition"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Watch on YouTube</span>
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -257,7 +304,25 @@ export default function CourseLearningPage() {
   const [testResult, setTestResult] = useState(null);
   const [certificate, setCertificate] = useState(null);
   const [showCertificateModal, setShowCertificateModal] = useState(false);
+  const [isCourseCompletedModal, setIsCourseCompletedModal] = useState(false);
+  const [redirectCountdown, setRedirectCountdown] = useState(null);
   const [testStartTime, setTestStartTime] = useState(null);
+
+  // Clear countdown timer when modal closes
+  useEffect(() => {
+    let timer = null;
+    if (showCertificateModal && isCourseCompletedModal && redirectCountdown !== null && redirectCountdown > 0) {
+      timer = setTimeout(() => {
+        setRedirectCountdown((prev) => (prev > 1 ? prev - 1 : 0));
+      }, 1000);
+    } else if (showCertificateModal && isCourseCompletedModal && redirectCountdown === 0) {
+      setShowCertificateModal(false);
+      navigate("/certificates");
+    }
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [showCertificateModal, isCourseCompletedModal, redirectCountdown, navigate]);
 
   // Fetch Course and Progression Data
   const loadModuleAndProgression = useCallback(async () => {
@@ -298,8 +363,9 @@ export default function CourseLearningPage() {
           setProgression(progRes);
           setWatchPercentage(progRes.watchPercentage || (isCourseDone ? 100 : 0));
           setUniqueWatchedSeconds(progRes.uniqueWatchedSeconds || 0);
-          setVideoRequirementMet(isCourseDone || Boolean(progRes.videoRequirementMet));
-          setTestUnlocked(isCourseDone || Boolean(progRes.testUnlocked));
+          const isVidMandatory = Boolean(activeMod.hasVideo && activeMod.isVideoMandatory);
+          setVideoRequirementMet(isCourseDone || !isVidMandatory || Boolean(progRes.videoRequirementMet));
+          setTestUnlocked(isCourseDone || !isVidMandatory || Boolean(progRes.testUnlocked));
           setIsModuleLocked(isCourseDone ? false : !progRes.isUnlocked);
 
           if (progRes.testScore !== null && progRes.testScore !== undefined) {
@@ -313,10 +379,11 @@ export default function CourseLearningPage() {
             setCertificate(progRes.certificate);
           }
         } else {
+          const isVidMandatory = Boolean(activeMod.hasVideo && activeMod.isVideoMandatory);
           setWatchPercentage(isCourseDone ? 100 : 0);
           setUniqueWatchedSeconds(0);
-          setVideoRequirementMet(isCourseDone);
-          setTestUnlocked(isCourseDone);
+          setVideoRequirementMet(isCourseDone || !isVidMandatory);
+          setTestUnlocked(isCourseDone || !isVidMandatory);
           setIsModuleLocked(isCourseDone ? false : (activeMod.moduleNumber > 1));
         }
       }
@@ -384,16 +451,41 @@ export default function CourseLearningPage() {
 
       if (result.passed) {
         confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
+          particleCount: 160,
+          spread: 80,
+          origin: { y: 0.5 },
         });
 
-        showSuccess(`Congratulations! You passed with ${result.scorePercentage}%.`);
+        // Check if completing this module finishes the entire course
+        const otherModulesCompleted = allModulesMap
+          .filter((m) => String(m._id) !== String(currentModule._id))
+          .every((m) => m.completed || m.testPassed);
+        const isCourseNowDone = otherModulesCompleted || Boolean(result.courseCertificate);
 
-        if (result.certificate) {
-          setCertificate(result.certificate);
+        if (isCourseNowDone) {
+          setIsCourseCompletedModal(true);
+          setRedirectCountdown(4);
+          setCertificate(
+            result.courseCertificate ||
+            result.certificate || {
+              studentName: user?.name,
+              registerNumber: user?.registerNumber,
+              courseName: course?.title,
+              score: result.scorePercentage,
+              certificateNumber: `VCET-CERT-${String(course?._id || "2026").slice(-6).toUpperCase()}`,
+              grade: result.scorePercentage >= 85 ? "Distinction" : "First Class",
+            }
+          );
           setShowCertificateModal(true);
+          showSuccess(`🏆 Course Completed! Automatically redirecting to your certificate in 4s...`);
+        } else {
+          setIsCourseCompletedModal(false);
+          setRedirectCountdown(null);
+          if (result.certificate) {
+            setCertificate(result.certificate);
+            setShowCertificateModal(true);
+          }
+          showSuccess(`Congratulations! Module passed with ${result.scorePercentage}%.`);
         }
 
         loadModuleAndProgression();
@@ -709,7 +801,7 @@ export default function CourseLearningPage() {
                   {/* Question Review Breakdown */}
                   {testResult.questions && testResult.questions.length > 0 && (
                     <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-[#444445]">Answer Breakdown & Explanations</h4>
+                      <h4 className="text-sm font-bold text-[#444445]">Answer Status Review</h4>
                       {testResult.questions.map((q, qIdx) => (
                         <div
                           key={qIdx}
@@ -731,27 +823,24 @@ export default function CourseLearningPage() {
                           </div>
 
                           <div className="space-y-1.5 text-xs font-medium">
-                            {q.options?.map((opt, optIdx) => (
-                              <div
-                                key={optIdx}
-                                className={`p-2.5 rounded-xl border ${
-                                  optIdx === q.correctAnswer
-                                    ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold"
-                                    : Number(q.selectedAnswer) === optIdx
-                                    ? "bg-red-50 border-red-300 text-red-800"
-                                    : "bg-white border-[#C9C9C9] text-[#444445]"
-                                }`}
-                              >
-                                {opt} {optIdx === q.correctAnswer && " (Correct Answer)"}
-                              </div>
-                            ))}
+                            {q.options?.map((opt, optIdx) => {
+                              const isSelected = Number(q.selectedAnswer) === optIdx;
+                              return (
+                                <div
+                                  key={optIdx}
+                                  className={`p-2.5 rounded-xl border ${
+                                    isSelected
+                                      ? q.isCorrect
+                                        ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold"
+                                        : "bg-red-50 border-red-300 text-red-800 font-semibold"
+                                      : "bg-white border-[#C9C9C9] text-[#444445]"
+                                  }`}
+                                >
+                                  {opt} {isSelected && (q.isCorrect ? " (Your Answer - Correct)" : " (Your Answer - Incorrect)")}
+                                </div>
+                              );
+                            })}
                           </div>
-
-                          {q.explanation && (
-                            <p className="text-xs text-[#444445] bg-slate-50 p-3 rounded-xl border border-[#C9C9C9]">
-                              <strong className="text-[#444445]">Explanation:</strong> {q.explanation}
-                            </p>
-                          )}
                         </div>
                       ))}
                     </div>
@@ -921,78 +1010,158 @@ export default function CourseLearningPage() {
         </aside>
       </div>
 
-      {/* 3. Appreciation Certificate Modal */}
-      {showCertificateModal && certificate && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="max-w-2xl w-full bg-white border border-[#C9C9C9] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative text-center">
+      {/* 3. Certificate & Course Completion Celebration Modal */}
+      {showCertificateModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="max-w-2xl w-full bg-[#FFFFFF] border border-[#D9E2EC] rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative text-center">
             <button
-              onClick={() => setShowCertificateModal(false)}
-              className="absolute top-5 right-5 p-2 rounded-xl bg-white hover:bg-slate-50 text-[#444445] transition border border-[#C9C9C9]"
+              onClick={() => {
+                setShowCertificateModal(false);
+                setRedirectCountdown(null);
+              }}
+              className="absolute top-5 right-5 p-2 rounded-xl bg-[#FFFFFF] hover:bg-[#F5F8FB] text-[#444445] transition border border-[#D9E2EC] cursor-pointer"
+              title="Close modal"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="w-16 h-16 rounded-2xl bg-[#0062A8]/10 text-[#0062A8] border border-[#0062A8]/20 flex items-center justify-center mx-auto">
-              <Award className="w-8 h-8" />
-            </div>
+            {isCourseCompletedModal ? (
+              /* COURSE COMPLETED FULL CELEBRATION */
+              <>
+                <div className="w-20 h-20 rounded-3xl bg-[#0062A8]/10 text-[#0062A8] border border-[#0062A8]/30 flex items-center justify-center mx-auto shadow-inner">
+                  <Award className="w-10 h-10 text-[#0062A8]" />
+                </div>
 
-            <div>
-              <span className="text-xs uppercase font-bold tracking-widest text-[#0062A8]">
-                Official Credential Issued
-              </span>
-              <h2 className="text-2xl font-bold text-[#444445] mt-1">
-                Certificate of Appreciation
-              </h2>
-              <p className="text-xs text-[#444445] mt-1">
-                Velalar College of Engineering and Technology (Autonomous)
-              </p>
-            </div>
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#16A34A]/10 text-[#16A34A] border border-[#16A34A]/30 text-xs font-bold uppercase tracking-wider mb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-[#16A34A]" />
+                    <span>Course Fully Completed • 100% Mastery</span>
+                  </div>
+                  <h2 className="text-2xl sm:text-3xl font-black text-[#444445]">
+                    Congratulations! 🏆
+                  </h2>
+                  <p className="text-xs sm:text-sm text-[#444445] font-medium max-w-lg mx-auto">
+                    You have successfully completed all modules in <strong className="text-[#0062A8]">{course?.title}</strong>. Your official verified institutional certificate has been issued!
+                  </p>
+                </div>
 
-            <div className="p-5 rounded-2xl bg-white border border-[#C9C9C9] text-left text-xs space-y-3 font-mono">
-              <div className="flex justify-between border-b border-[#C9C9C9] pb-2">
-                <span className="text-[#444445]">Student Name:</span>
-                <span className="text-[#444445] font-bold">{certificate.studentName || user?.name}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#C9C9C9] pb-2">
-                <span className="text-[#444445]">Register Number:</span>
-                <span className="text-[#444445] font-bold">{certificate.registerNumber || user?.registerNumber}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#C9C9C9] pb-2">
-                <span className="text-[#444445]">Module Completed:</span>
-                <span className="text-[#444445] font-bold">{currentModule?.title}</span>
-              </div>
-              <div className="flex justify-between border-b border-[#C9C9C9] pb-2">
-                <span className="text-[#444445]">Assessment Score:</span>
-                <span className="text-[#0062A8] font-bold">{certificate.score || testResult?.scorePercentage}% ({certificate.grade || "Distinction"})</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[#444445]">Certificate ID:</span>
-                <span className="text-[#0062A8] font-bold">{certificate.certificateNumber}</span>
-              </div>
-            </div>
+                <div className="p-5 rounded-2xl bg-[#F5F8FB] border border-[#D9E2EC] text-left text-xs space-y-3 font-mono">
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Student Name:</span>
+                    <span className="text-[#444445] font-bold">{certificate?.studentName || user?.name}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Register Number:</span>
+                    <span className="text-[#444445] font-bold">{certificate?.registerNumber || user?.registerNumber}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Course Title:</span>
+                    <span className="text-[#444445] font-bold">{course?.title}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Credential Type:</span>
+                    <span className="text-[#16A34A] font-bold">Official Course Completion Certificate</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#444445]">Status:</span>
+                    <span className="text-[#0062A8] font-bold">Verified & Authenticated (VCET)</span>
+                  </div>
+                </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-              <button
-                onClick={() => handleDownloadCertificate(certificate)}
-                className="px-6 py-3 rounded-xl bg-[#0062A8] hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download PDF Certificate</span>
-              </button>
+                {redirectCountdown !== null && redirectCountdown > 0 && (
+                  <p className="text-xs font-semibold text-[#0077C8] animate-pulse">
+                    ⏱️ Automatically opening your certificate portfolio in {redirectCountdown}s...
+                  </p>
+                )}
 
-              {nextModule && (
-                <button
-                  onClick={() => {
-                    setShowCertificateModal(false);
-                    navigate(`/courses/${courseId}/module/${nextModule._id || nextModule.moduleNumber}`);
-                  }}
-                  className="px-6 py-3 rounded-xl bg-white hover:bg-slate-50 text-[#444445] border border-[#C9C9C9] font-bold text-xs transition cursor-pointer flex items-center gap-2"
-                >
-                  <span>Proceed to Module {nextModule.moduleNumber}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              )}
-            </div>
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowCertificateModal(false);
+                      setRedirectCountdown(null);
+                      navigate("/certificates");
+                    }}
+                    className="px-6 py-3.5 rounded-xl bg-[#0062A8] hover:bg-[#0077C8] text-[#FFFFFF] font-extrabold text-xs tracking-wider transition-all shadow-md flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>View Certificate in My Portfolio</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => handleDownloadCertificate(certificate)}
+                    className="px-6 py-3.5 rounded-xl bg-[#FFFFFF] hover:bg-[#F5F8FB] text-[#0062A8] border border-[#0062A8] font-bold text-xs transition cursor-pointer flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4 text-[#0062A8]" />
+                    <span>Download PDF</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* MODULE LEVEL APPRECIATION */
+              <>
+                <div className="w-16 h-16 rounded-2xl bg-[#0062A8]/10 text-[#0062A8] border border-[#0062A8]/20 flex items-center justify-center mx-auto">
+                  <Award className="w-8 h-8" />
+                </div>
+
+                <div>
+                  <span className="text-xs uppercase font-bold tracking-widest text-[#0062A8]">
+                    Module Milestone Reached
+                  </span>
+                  <h2 className="text-2xl font-bold text-[#444445] mt-1">
+                    Module {currentModNumber} Completed!
+                  </h2>
+                  <p className="text-xs text-[#444445] mt-1">
+                    Velalar College of Engineering and Technology (Autonomous)
+                  </p>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-[#F5F8FB] border border-[#D9E2EC] text-left text-xs space-y-3 font-mono">
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Student Name:</span>
+                    <span className="text-[#444445] font-bold">{certificate?.studentName || user?.name}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Register Number:</span>
+                    <span className="text-[#444445] font-bold">{certificate?.registerNumber || user?.registerNumber}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Module Completed:</span>
+                    <span className="text-[#444445] font-bold">{currentModule?.title}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-[#D9E2EC] pb-2">
+                    <span className="text-[#444445]">Assessment Score:</span>
+                    <span className="text-[#0062A8] font-bold">{certificate?.score || testResult?.scorePercentage}% ({certificate?.grade || "Distinction"})</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#444445]">Certificate ID:</span>
+                    <span className="text-[#0062A8] font-bold">{certificate?.certificateNumber}</span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={() => handleDownloadCertificate(certificate)}
+                    className="px-6 py-3 rounded-xl bg-[#0062A8] hover:bg-[#0077C8] text-[#FFFFFF] font-bold text-xs transition cursor-pointer flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Download PDF Certificate</span>
+                  </button>
+
+                  {nextModule && (
+                    <button
+                      onClick={() => {
+                        setShowCertificateModal(false);
+                        navigate(`/courses/${courseId}/module/${nextModule._id || nextModule.moduleNumber}`);
+                      }}
+                      className="px-6 py-3 rounded-xl bg-[#FFFFFF] hover:bg-[#F5F8FB] text-[#444445] border border-[#D9E2EC] font-bold text-xs transition cursor-pointer flex items-center gap-2"
+                    >
+                      <span>Proceed to Module {nextModule.moduleNumber}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

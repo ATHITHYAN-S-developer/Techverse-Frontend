@@ -18,9 +18,9 @@ techverse_db
 ├── 🎓 courses           → Self-paced skill courses (Python, Java, Cloud, AI/ML)
 ├── 📖 course_modules    → Step-by-step video & reading modules per course
 ├── 📈 enrollments       → Student course progress, streaks, and completion state
-├── 📝 daily_tests       → Module-wise daily tests & quizzes
+├── 📝 course_assessments → Course-final assessments (stored in legacy `dailytests` collection)
 ├── 🧪 test_attempts     → Student test scores, answers, and pass/fail logs
-├── ⭐ points            → Gamified points (streaks, daily tests, bonuses)
+├── ⭐ points            → Legacy reward history (archived; no active API or writer)
 ├── 📜 certificates      → Auto-generated verifiable completion certificates
 ├── 👀 visitors          → Aggregated campus visitor & telemetry statistics
 └── 📝 audit_logs        → Administrative action history & security audit trail
@@ -277,7 +277,7 @@ Individual chapters and lessons within each course.
 
 ## 9. 📈 `enrollments` Collection
 
-Tracks each student's course progress, active streak, points accumulated, and completion state.
+Tracks each student's course progress, active streak, and completion state.
 
 ```json
 {
@@ -291,7 +291,6 @@ Tracks each student's course progress, active streak, points accumulated, and co
   "status": "in_progress",
   "currentStreak": 7,
   "longestStreak": 12,
-  "totalPoints": 420,
   "startedAt": "2026-09-01T10:00:00Z",
   "lastActivityAt": "2026-09-13T10:00:00Z",
   "completedAt": null
@@ -300,33 +299,30 @@ Tracks each student's course progress, active streak, points accumulated, and co
 
 ---
 
-## 10. 📝 `daily_tests` Collection
+## 10. 📝 Course-Final Assessments
 
-Quizzes and module-end tests linked to each course day/module.
+Final assessments linked to a course. Module quizzes are stored on course modules and are a separate feature. The assessment question `points` field is an academic mark weight for grading, not a reward balance. Assessment records retain the existing MongoDB `dailytests` collection name for compatibility; the standalone daily-test feature and `/api/tests` routes have been removed.
 
 ```json
 {
-  "_id": "python-day-01-test",
+  "_id": "python-final-assessment",
   "courseId": "course_python",
-  "moduleId": "python-module-01",
-  "day": 1,
-  "title": "Python Basics Daily Quiz",
+  "title": "Python Programming Masterclass — Course Assessment",
   "questions": [
     {
       "question": "Which keyword is used to define a function in Python?",
       "options": ["function", "def", "func", "define"],
       "correctAnswer": 1,
-      "points": 2
+      "marks": 2
     },
     {
       "question": "What is the output of type([]) in Python?",
       "options": ["<class 'array'>", "<class 'list'>", "<class 'tuple'>", "<class 'set'>"],
       "correctAnswer": 1,
-      "points": 2
+      "marks": 2
     }
   ],
   "passingPercentage": 60,
-  "bonusPoints": 10,
   "isPublished": true,
   "createdAt": "2026-09-13T10:00:00Z"
 }
@@ -336,19 +332,18 @@ Quizzes and module-end tests linked to each course day/module.
 
 ## 11. 🧪 `test_attempts` Collection
 
-Stores student test submissions, grading results, points awarded, and timestamps.
+Stores course-final assessment submissions, grading results, and timestamps.
 
 ```json
 {
   "_id": "attempt_001",
   "studentId": "student_001",
-  "testId": "python-day-01-test",
+  "testId": "python-final-assessment",
   "courseId": "course_python",
   "score": 8,
   "totalMarks": 10,
   "percentage": 80,
   "passed": true,
-  "pointsEarned": 10,
   "attemptNumber": 1,
   "attemptedAt": "2026-09-13T18:00:00Z"
 }
@@ -356,31 +351,21 @@ Stores student test submissions, grading results, points awarded, and timestamps
 
 ---
 
-## 12. ⭐ `points` Collection
+## 12. ⭐ Archived Reward Ledger
 
-Gamified reward system tracking student engagement, test passes, and daily streaks.
+The application no longer awards or displays reward points. Historical ledger documents remain in the MongoDB `points` collection for archival preservation only; they are not exposed through the API or updated by application services. The `points` value on an assessment question is a question mark weight used for academic grading, not a reward balance.
 
 ```json
 {
   "_id": "point_001",
   "studentId": "student_001",
   "courseId": "course_python",
-  "type": "daily_test",
+  "type": "course_assessment",
   "points": 10,
-  "description": "Passed Python Day 1 Assessment",
+  "description": "Historical record; retained for archival purposes",
   "createdAt": "2026-09-13T18:00:00Z"
 }
 ```
-
-### Point Allocation Matrix
-| Activity | Points Awarded |
-| :--- | :--- |
-| Daily Test Passed | `+10 Points` |
-| 7-Day Active Streak | `+50 Points` |
-| 14-Day Active Streak | `+100 Points` |
-| 30-Day Active Streak | `+250 Points` |
-| Perfect Score (100%) | `+25 Bonus Points` |
-| Full Course Completion | `+500 Points` |
 
 ---
 
@@ -469,7 +454,7 @@ Comprehensive audit trail for admin tracking of all system modifications.
 | **Publish / Manage Announcements** | ✅ | ✅ *(Own Posts)* | ❌ |
 | **Create Courses & Modules** | ✅ | ✅ *(Assigned Courses)* | ❌ |
 | **Enroll in Courses & Learn** | ✅ | ❌ | ✅ |
-| **Take Daily Tests & Earn Points** | ❌ | ❌ | ✅ |
+| **Take Course-Final Assessments** | ❌ | ❌ | ✅ |
 | **Earn Verifiable Certificates** | ❌ | ❌ | ✅ |
 | **View Visitor Analytics** | ✅ | ❌ | ❌ |
 | **View Admin Audit Logs** | ✅ | ❌ | ❌ |
@@ -487,8 +472,8 @@ Comprehensive audit trail for admin tracking of all system modifications.
           👑 ADMIN         👨‍🏫 TEACHER       👨‍🎓 STUDENT
              │                │                │
         Full Control     Department CRUD    Read/Download
-             │          (Own Department)    Take Tests
-             │                │             Earn Points
+             │          (Own Department)    Complete Learning
+             │                │             Build Streaks
              └───────────────┬┴────────────────┘
                              │
                     🏛️ COLLEGE SYSTEM
@@ -516,9 +501,8 @@ backend/
 │   ├── Course.js
 │   ├── CourseModule.js
 │   ├── Enrollment.js
-│   ├── DailyTest.js
+│   ├── CourseAssessment.js
 │   ├── TestAttempt.js
-│   ├── Point.js
 │   ├── Certificate.js
 │   ├── Visitor.js
 │   └── AuditLog.js
@@ -531,7 +515,7 @@ backend/
 │   ├── resources.js
 │   ├── announcements.js
 │   ├── courses.js
-│   ├── tests.js
+│   ├── courseAssessments.js
 │   ├── certificates.js
 │   └── analytics.js
 │

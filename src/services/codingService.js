@@ -364,7 +364,6 @@ export const codingService = {
         totalCases: 4,
         score: 100,
         isAccepted: true,
-        pointsAwarded: 35,
         executionTime: 0.012,
         memory: 15.6,
         violationsCount: violations.length,

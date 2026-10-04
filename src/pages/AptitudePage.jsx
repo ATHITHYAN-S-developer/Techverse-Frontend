@@ -61,13 +61,6 @@ export default function AptitudePage() {
           </p>
         </div>
 
-        <Link
-          to="/tests/aptitude-speed-math"
-          className="px-5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-md transition-all shrink-0 flex items-center gap-2"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>Speed Math Test (+10 Pts)</span>
-        </Link>
       </div>
 
       {/* 2. Switcher Tabs */}

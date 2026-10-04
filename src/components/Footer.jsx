@@ -18,6 +18,7 @@ import {
   NAV_LINKS,
 } from "../config/site";
 import { recordAndGetVisitorCount } from "../services/visitorService";
+import techverseLogoImg from "../assets/techverse-logo.png";
 import vcetLogoImg from "../assets/vcet-empower-blue.png";
 import jubileeLogoImg from "../assets/25-years-white.png";
 
@@ -64,26 +65,12 @@ export default function Footer() {
           {/* Column 1: Brand & College Emblem */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 flex items-center justify-center shrink-0">
-                {!vcetLogoError ? (
-                  <img
-                    src={vcetLogoImg}
-                    alt="VCET Logo"
-                    className="h-10 w-auto max-w-[140px] object-contain drop-shadow-sm"
-                    onError={() => setVcetLogoError(true)}
-                  />
-                ) : (
-                  <FaGraduationCap className="w-7 h-7 text-[#0062A8]" />
-                )}
-              </div>
-
-              <div>
-                <span className="text-lg font-black tracking-tight text-white block">
-                  {SITE_NAME}
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-[#C9C9C9]">
-                  VCET • Autonomous
-                </span>
+              <div className="bg-white/95 backdrop-blur-xs rounded-xl p-2 shadow-xs border border-white/20 inline-block">
+                <img
+                  src={techverseLogoImg}
+                  alt="TechVerse Logo"
+                  className="h-9 sm:h-10 w-auto max-w-[180px] object-contain"
+                />
               </div>
             </div>
 

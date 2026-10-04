@@ -75,7 +75,6 @@ function toStudentView(user) {
       coursesCompleted: 0,
       testsAttempted: 0,
       averageScore: 0,
-      points: user.points?.totalPoints || 0,
       streak: user.streak?.currentStreak || 0,
       certificates: 0,
     },
@@ -228,7 +227,6 @@ export default function AdminStudentsPage() {
           coursesCompleted: 0,
           testsAttempted: 0,
           averageScore: "N/A",
-          points: 100,
           streak: 1,
           certificates: 0
         },
@@ -582,10 +580,6 @@ export default function AdminStudentsPage() {
                   <p className="text-base font-bold text-amber-600 mt-0.5">{profileStudent.stats.averageScore}</p>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
-                  <span className="text-[10px] text-slate-500">Points (XP)</span>
-                  <p className="text-base font-bold text-amber-600 mt-0.5">{profileStudent.stats.points}</p>
-                </div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
                   <span className="text-[10px] text-slate-500">Active Streak</span>
                   <p className="text-base font-bold text-rose-600 mt-0.5 flex items-center justify-center gap-1">
                     <Flame className="w-3.5 h-3.5" /> {profileStudent.stats.streak}d
@@ -757,15 +751,7 @@ export default function AdminStudentsPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-slate-700 font-bold mb-1">Profile Photo URL</label>
-                <input
-                  type="url"
-                  value={formData.avatar}
-                  onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
-                />
-              </div>
+
 
               <div className="flex justify-end gap-2 pt-4 border-t border-slate-200">
                 <button

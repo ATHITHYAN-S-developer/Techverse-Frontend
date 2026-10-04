@@ -71,8 +71,8 @@ export async function login(credentialsOrIdentifier, secretParam, keepSignedIn =
     secret = String(secretParam || "").trim();
   }
 
-  // Normalize role from "faculty" to "teacher" for backend compatibility
-  const normalizedRole = userRole === "faculty" ? "teacher" : userRole;
+  // Support student, faculty, hod, admin
+  const normalizedRole = userRole;
   const cleanIdentity = identity.trim();
   const cleanSecret = secret.trim();
 
@@ -82,7 +82,9 @@ export async function login(credentialsOrIdentifier, secretParam, keepSignedIn =
         userRole === "student"
           ? "Register Number and Date of Birth"
           : userRole === "faculty" || userRole === "teacher"
-          ? "Staff ID and Password"
+          ? "Faculty Staff ID and Password"
+          : userRole === "hod"
+          ? "HOD Staff ID and Password"
           : "Admin Username and Password"
       }.`
     );
@@ -166,7 +168,6 @@ export async function login(credentialsOrIdentifier, secretParam, keepSignedIn =
       name: `Student (${reg})`,
       departmentId: "cse",
       classId: "cse_3a",
-      points: { totalPoints: 1240, level: 4 },
       streak: { currentStreak: 12, longestStreak: 15 },
       title: "VCET Engineering Scholar",
     };

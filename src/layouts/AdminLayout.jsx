@@ -30,9 +30,11 @@ import {
   Command,
   ChevronRight,
   Puzzle,
+  Briefcase,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import NotificationBell from "../components/NotificationBell";
+import techverseLogoImg from "../assets/techverse-logo.png";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
 
@@ -44,6 +46,7 @@ const ADMIN_NAV_TREE = [
     items: [
       { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, badge: "Live" },
       { name: "Announcements", href: "/admin/announcements", icon: Megaphone },
+      { name: "Placement & Careers", href: "/admin/placement", icon: Briefcase, badge: "Drives" },
     ],
   },
   {
@@ -72,7 +75,6 @@ const ADMIN_NAV_TREE = [
   {
     category: "ASSESSMENT",
     items: [
-      { name: "Tests & MCQs", href: "/admin/tests", icon: Activity },
       { name: "Coding Arena", href: "/admin/coding", icon: Code2 },
       { name: "Test Violations", href: "/admin/violations", icon: ShieldAlert, alert: true },
     ],
@@ -81,7 +83,6 @@ const ADMIN_NAV_TREE = [
     category: "ACHIEVEMENT",
     items: [
       { name: "Certificates", href: "/admin/certificates", icon: Award },
-      { name: "Points & Streaks", href: "/admin/points", icon: Flame },
       { name: "Leaderboard", href: "/admin/leaderboard", icon: FileCheck2 },
     ],
   },
@@ -140,11 +141,9 @@ export default function AdminLayout() {
     { title: "Academic Resources", category: "ACADEMIC", link: "/admin/resources" },
     { title: "Self-Paced Courses", category: "CONTENT", link: "/admin/courses" },
     { title: "Course Modules Builder", category: "CONTENT", link: "/admin/modules" },
-    { title: "Daily Practice Tests", category: "ASSESSMENT", link: "/admin/tests" },
     { title: "Coding Arena Problems", category: "ASSESSMENT", link: "/admin/coding" },
     { title: "Exam Violation Telemetry", category: "ASSESSMENT", link: "/admin/violations" },
     { title: "Issued Certificates", category: "ACHIEVEMENT", link: "/admin/certificates" },
-    { title: "Points & Streak Config", category: "ACHIEVEMENT", link: "/admin/points" },
     { title: "Institutional Leaderboard", category: "ACHIEVEMENT", link: "/admin/leaderboard" },
     { title: "Telemetry & Analytics", category: "ANALYTICS", link: "/admin/analytics" },
     { title: "Visitor Trends", category: "ANALYTICS", link: "/admin/visitors" },
@@ -176,19 +175,15 @@ export default function AdminLayout() {
             <Menu className="w-5 h-5" />
           </button>
 
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src={vcetLogoImg} alt="VCET" className="h-8 w-8 object-contain" />
-            <div className="flex flex-col">
-              <span className="font-black text-sm tracking-tight text-slate-900 flex items-center gap-1.5">
-                Tech<span className="text-[#0062A8]">Verse</span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#0062A8] font-extrabold border border-blue-200">
-                  ADMIN
-                </span>
-              </span>
-              <span className="text-[10px] text-slate-500 font-medium hidden sm:inline">
-                Velalar College of Engineering & Technology
-              </span>
-            </div>
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <img
+              src={techverseLogoImg}
+              alt="TechVerse"
+              className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
+            />
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#0062A8] font-extrabold border border-blue-200 uppercase tracking-wider">
+              ADMIN
+            </span>
           </Link>
         </div>
 

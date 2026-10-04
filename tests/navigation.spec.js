@@ -6,6 +6,13 @@ import {
 } from "./helpers";
 
 test.describe("Navigation", () => {
+  test("departments page omits popular subjects and the unfiltered resource feed", async ({ page }) => {
+    await page.goto("/departments");
+
+    await expect(page.getByText("Popular Subjects", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("All Academic Resources", { exact: true })).toHaveCount(0);
+  });
+
   for (const link of FOOTER_QUICK_LINKS) {
     test(`Quick Links /${link.label} navigates to the correct destination`, async ({ page }) => {
       await page.goto("/");

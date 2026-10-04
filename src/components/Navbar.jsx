@@ -22,8 +22,8 @@ import {
   Flame,
   Users
 } from "lucide-react";
+import techverseLogoImg from "../assets/techverse-logo.png";
 import vcetLogoImg from "../assets/vcet-logo.png";
-import vcetWideLogo from "../assets/vcet-wide-logo.png";
 import { useAuth } from "../context/AuthContext";
 
 const NAV_LINKS = [
@@ -47,7 +47,7 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [logoError, setLogoError] = useState(false);
-  const { user, role, isAuthenticated, logout, streak, points } = useAuth();
+  const { user, role, isAuthenticated, logout, streak } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -64,7 +64,7 @@ export default function Navbar() {
 
   const getDashboardPath = () => {
     if (role === "admin") return "/admin/dashboard";
-    if (role === "faculty" || role === "teacher") return "/faculty/dashboard";
+    if (role === "faculty" || role === "teacher" || role === "hod") return "/faculty/dashboard";
     return "/dashboard";
   };
 
@@ -79,37 +79,15 @@ export default function Navbar() {
           {/* 1. Left: Compact VCET Brand Wordmark */}
           <Link
             to="/"
-            className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F] rounded-lg"
+            className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F] rounded-lg group"
             title="VCET TechVerse"
           >
-            {!logoError ? (
-              <img
-                src={vcetLogoImg}
-                alt="VCET Shield"
-                className="h-8.5 w-8.5 object-contain"
-                onError={() => setLogoError(true)}
-              />
-            ) : (
-              <img
-                src={vcetWideLogo}
-                alt="VCET"
-                className="h-8 max-w-[160px] object-contain"
-              />
-            )}
-
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="text-base sm:text-lg font-black tracking-tight text-slate-900 leading-none">
-                  VCET
-                </span>
-                <span className="text-xs font-bold text-[#0B4A8F] uppercase tracking-wider">
-                  TechVerse
-                </span>
-              </div>
-              <span className="text-[10px] font-medium text-slate-500 hidden sm:block leading-none mt-0.5">
-                Autonomous
-              </span>
-            </div>
+            <img
+              src={techverseLogoImg}
+              alt="TechVerse - Prestige Learning Initiative"
+              className="h-10 sm:h-11 w-auto max-w-[200px] sm:max-w-[240px] object-contain transition-transform group-hover:scale-[1.02]"
+              onError={() => setLogoError(true)}
+            />
           </Link>
 
           {/* 2. Center: Text-Forward Navigation with Shared Underline Slider */}
@@ -161,9 +139,9 @@ export default function Navbar() {
                 {/* Streak Badge for Students */}
                 {role === "student" && (
                   <Link
-                    to="/profile"
+                    to="/dashboard#profile"
                     className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors"
-                    title={`${streak?.currentStreak || 0} Day Streak • ${points?.totalPoints || 0} Points`}
+                    title={`${streak?.currentStreak || 0} Day Streak`}
                   >
                     <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
                     <span>{streak?.currentStreak || 0}d</span>

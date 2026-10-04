@@ -42,13 +42,13 @@ export default function About() {
             </div>
 
             {/* Dual Logo representation */}
-            <div className="flex items-center gap-4 p-3 bg-[#F4F4F4] rounded-2xl border border-[#C9C9C9]/60 w-fit">
-              <div className="w-12 h-12 rounded-xl bg-white p-1.5 flex items-center justify-center shadow-xs">
+            <div className="flex items-center gap-3.5 p-2.5 bg-[#F4F4F4] rounded-2xl border border-[#C9C9C9]/60 w-fit">
+              <div className="h-12 px-3 rounded-xl bg-white flex items-center justify-center shadow-xs">
                 {!vcetLogoError ? (
                   <img
                     src={vcetLogoImg}
                     alt="VCET College Logo"
-                    className="w-full h-full object-contain"
+                    className="h-8 w-auto object-contain"
                     onError={() => setVcetLogoError(true)}
                   />
                 ) : (
@@ -58,16 +58,16 @@ export default function About() {
 
               <div className="w-[1px] h-6 bg-[#C9C9C9]" />
 
-              <div className="w-12 h-12 rounded-xl bg-[#0062A8] p-1.5 flex items-center justify-center text-white shadow-xs">
+              <div className="h-12 px-3 rounded-xl bg-white flex items-center justify-center shadow-xs">
                 {!logoError ? (
                   <img
                     src={logoImg}
-                    alt="Tech Hub Logo"
-                    className="w-full h-full object-contain"
+                    alt="TechVerse Logo"
+                    className="h-8 w-auto max-w-[160px] object-contain"
                     onError={() => setLogoError(true)}
                   />
                 ) : (
-                  <FiCompass className="w-6 h-6 text-white" />
+                  <FiCompass className="w-6 h-6 text-[#0062A8]" />
                 )}
               </div>
             </div>

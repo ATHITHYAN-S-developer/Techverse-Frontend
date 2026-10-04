@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, BookOpen, Award, Star, ArrowRight, Bookmark, Sparkles } from "lucide-react";
+import { Clock, BookOpen, Award, ArrowRight, Bookmark, Sparkles } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getCourseImageUrl } from "../services/courseService";
@@ -52,11 +52,8 @@ export default function CourseCard({ course }) {
           <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-amber-400 text-amber-400" : ""}`} />
         </button>
 
-        {/* Rating & Modules */}
-        <div className="absolute bottom-2.5 left-3 right-3 flex items-center justify-between text-white text-xs font-medium">
-          <span className="flex items-center gap-1 bg-slate-900/40 px-2 py-0.5 rounded backdrop-blur-xs">
-            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" /> {course.rating || 4.9}
-          </span>
+        {/* Modules count */}
+        <div className="absolute bottom-2.5 right-3 text-white text-xs font-medium">
           <span className="bg-slate-900/40 px-2 py-0.5 rounded backdrop-blur-xs">
             {course.totalModules || course.modulesCount || course.modules?.length || 0} Modules
           </span>
