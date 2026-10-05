@@ -136,9 +136,12 @@ export function AuthProvider({ children }) {
 
   const updateProfile = async (updates) => {
     let serverUser = {};
-    if (updates.email !== undefined && user?.role === "student") {
-      const response = await api.put("/auth/profile", { email: updates.email });
+    try {
+      const response = await api.put("/auth/profile", updates);
       serverUser = response.user || response.data?.user || {};
+    } catch (err) {
+      console.error("Failed to update profile on server:", err);
+      throw err;
     }
 
     setUser((prev) => {

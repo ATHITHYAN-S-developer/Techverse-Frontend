@@ -81,10 +81,8 @@ export async function login(credentialsOrIdentifier, secretParam, keepSignedIn =
       `Please enter your ${
         userRole === "student"
           ? "Register Number and Date of Birth"
-          : userRole === "faculty" || userRole === "teacher"
-          ? "Faculty Staff ID and Password"
-          : userRole === "hod"
-          ? "HOD Staff ID and Password"
+          : userRole === "faculty" || userRole === "teacher" || userRole === "hod"
+          ? "Faculty / HOD Staff ID and Password"
           : "Admin Username and Password"
       }.`
     );
@@ -171,16 +169,18 @@ export async function login(credentialsOrIdentifier, secretParam, keepSignedIn =
       streak: { currentStreak: 12, longestStreak: 15 },
       title: "VCET Engineering Scholar",
     };
-  } else if (normalizedRole === "teacher") {
+  } else if (normalizedRole === "teacher" || normalizedRole === "faculty" || normalizedRole === "hod") {
     const staff = cleanIdentity.toUpperCase();
+    const isHod = cleanIdentity.toLowerCase().includes("hod") || staff.includes("104") || cleanIdentity.toLowerCase().includes("sendhil");
     user = {
       ...user,
+      role: isHod ? "hod" : "faculty",
       staffId: staff,
-      email: `${cleanIdentity.toLowerCase()}@vcet.ac.in`,
-      name: "Dr. K. S. Sendhilkumar",
+      email: cleanIdentity.includes("@") ? cleanIdentity.toLowerCase() : `${cleanIdentity.toLowerCase()}@vcet.ac.in`,
+      name: isHod ? "Dr. K. S. Sendhilkumar" : "Dr. M. Sangeetha",
       departmentId: "cse",
-      designation: "Associate Professor & HOD i/c",
-      title: "Faculty / Educator",
+      designation: isHod ? "Associate Professor & HOD i/c" : "Assistant Professor (Sr. Gr)",
+      title: isHod ? "Head of the Department (HOD)" : "Faculty / Educator",
     };
   } else if (normalizedRole === "admin") {
     user = {

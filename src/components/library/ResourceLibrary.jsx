@@ -11,24 +11,35 @@ function GridCard({ resource, onOpen }) {
   const size = formatBytes(resource.fileSize || resource.size);
   const time = formatRelativeTime(resource.createdAt);
 
+  const urlLower = String(resource?.fileUrl || resource?.externalUrl || resource?.downloadUrl || "").toLowerCase();
+  const typeLower = (resource?.type || "").toLowerCase();
+  const titleLower = (resource?.title || "").toLowerCase();
+  const isSoftware =
+    typeLower === "software" ||
+    /\.(exe|msi|dmg|pkg|deb|rpm|zip|rar|7z|tar|gz|apk|whl)$/i.test(urlLower) ||
+    titleLower.includes("software") ||
+    titleLower.includes("blender") ||
+    titleLower.includes("python");
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -3 }}
-      className="flex flex-col justify-between p-4.5 rounded-xl border border-slate-200/80 bg-white hover:border-blue-300 hover:shadow-lg hover:shadow-blue-500/5 transition-all duration-200 group"
+      whileHover={{ y: -4 }}
+      onClick={() => onOpen(resource)}
+      className="flex flex-col justify-between p-5 rounded-2xl border border-slate-200/90 bg-white hover:border-blue-400 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-200 group cursor-pointer"
     >
       <div>
         <div className="flex items-start justify-between gap-2 mb-3">
           <span
             className="w-10 h-10 rounded-xl flex items-center justify-center text-[10px] font-black tracking-wider border shadow-xs"
             style={{
-              backgroundColor: badge.bg,
-              color: badge.color,
-              borderColor: `${badge.color}30`
+              backgroundColor: isSoftware ? "#ECFDF5" : badge.bg,
+              color: isSoftware ? "#059669" : badge.color,
+              borderColor: isSoftware ? "#A7F3D0" : `${badge.color}30`
             }}
           >
-            {badge.label}
+            {isSoftware ? "APP" : badge.label}
           </span>
           <div className="flex items-center gap-1.5">
             {resource.departmentCode && (
@@ -36,29 +47,26 @@ function GridCard({ resource, onOpen }) {
                 {resource.departmentCode}
               </span>
             )}
-            {resource.semester && (
+            {resource.unit ? (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
-                S{resource.semester}
+                Unit {resource.unit}
               </span>
-            )}
+            ) : null}
           </div>
         </div>
 
-        <h3
-          onClick={() => onOpen(resource)}
-          className="text-[13px] font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 cursor-pointer leading-snug"
-        >
+        <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2 leading-snug">
           {resource.title}
         </h3>
 
         {resource.description && (
-          <p className="text-[11px] text-slate-500 line-clamp-2 mt-1.5 leading-relaxed">
+          <p className="text-xs text-slate-500 line-clamp-2 mt-2 leading-relaxed">
             {resource.description}
           </p>
         )}
       </div>
 
-      <div className="pt-4 mt-3 border-t border-slate-100 flex items-center justify-between">
+      <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
         <div className="flex items-center gap-2 text-[10px] font-medium text-slate-400">
           {size && <span>{size}</span>}
           {typeof resource.downloadsCount === "number" && resource.downloadsCount > 0 && (
@@ -68,14 +76,17 @@ function GridCard({ resource, onOpen }) {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => onOpen(resource)}
-          className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 group-hover:text-blue-700 transition-colors"
-        >
-          <span>Open</span>
-          <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-        </button>
+        {isSoftware ? (
+          <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-600 group-hover:text-white transition-colors shadow-xs">
+            <Download size={13} />
+            <span>Download</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-50 text-blue-700 group-hover:bg-blue-600 group-hover:text-white transition-colors shadow-xs">
+            <span>View</span>
+            <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </span>
+        )}
       </div>
     </motion.div>
   );

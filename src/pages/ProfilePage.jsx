@@ -1,20 +1,59 @@
 import React, { useEffect, useState } from "react";
-import { Flame, Save } from "lucide-react";
+import { Flame, Save, KeyRound, Eye, EyeOff, X, Lock, ShieldCheck } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import api from "../services/api";
 
 export default function ProfilePage({ embedded = false }) {
   const { user, role, streak, updateProfile } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const [phone, setPhone] = useState("+91 98421 54320");
-  const [bio, setBio] = useState("Aspiring Software Engineer passionate about Cloud Systems, Python, and Full-Stack Development.");
+  const isFaculty = role === "faculty" || role === "teacher" || role === "hod" || window.location.pathname.startsWith("/faculty");
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  const [phone, setPhone] = useState(user?.phone || user?.contactPhone || "+91 98421 54320");
+  const [bio, setBio] = useState(user?.bio || "Aspiring Software Engineer passionate about Cloud Systems, Python, and Full-Stack Development.");
   const [email, setEmail] = useState(user?.email || "");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setEmail(user?.email || "");
-  }, [user?.email]);
+    if (user?.email) setEmail(user.email);
+    if (user?.phone || user?.contactPhone) setPhone(user.phone || user.contactPhone);
+    if (user?.bio) setBio(user.bio);
+  }, [user]);
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!newPassword || newPassword.length < 4) {
+      showError("Password must be at least 4 characters long.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showError("New password and confirmation do not match.");
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const identifier = user?.staffId || user?.email || user?.username;
+      await api.post("/auth/faculty-reset-password", {
+        identifier,
+        newPassword,
+      });
+      showSuccess("Faculty password has been reset successfully ✓");
+      setResetModalOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      showError(err.response?.data?.message || err.message || "Failed to reset password.");
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -23,7 +62,7 @@ export default function ProfilePage({ embedded = false }) {
       await updateProfile({
         phone,
         bio,
-        ...(role === "student" ? { email: email.trim() } : {}),
+        email: email.trim(),
       });
       showSuccess("Profile information updated successfully ✓");
     } catch (error) {
@@ -153,11 +192,11 @@ export default function ProfilePage({ embedded = false }) {
                 <input
                   id="profile-email"
                   type="email"
-                  required={role === "student"}
-                  disabled={role !== "student"}
-                  value={role === "student" ? email : user?.email || ""}
+                  required
+                  value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`${underlineBase} font-mono tabular-nums ${role === "student" ? "text-profile-ink" : "cursor-not-allowed text-profile-ink/60"}`}
+                  placeholder="name@vcet.ac.in"
+                  className={`${underlineBase} font-mono tabular-nums text-profile-ink`}
                 />
               </div>
             </div>
@@ -197,7 +236,18 @@ export default function ProfilePage({ embedded = false }) {
               </div>
             </div>
 
-            <div className="mt-10 flex justify-end">
+            <div className="mt-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              {isFaculty ? (
+                <button
+                  type="button"
+                  onClick={() => setResetModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-5 py-2.5 font-body text-xs font-bold uppercase tracking-wider transition-all rounded-lg shadow-sm cursor-pointer self-start sm:self-auto"
+                >
+                  <KeyRound className="h-4 w-4 text-[#0062A8]" />
+                  <span>Reset Password</span>
+                </button>
+              ) : <div />}
+
               <button type="submit" disabled={saving} className={`${saveButtonCls} disabled:cursor-wait disabled:opacity-60`}>
                 <Save
                   className="h-4 w-4 transition-colors group-hover:text-profile-main"
@@ -209,6 +259,91 @@ export default function ProfilePage({ embedded = false }) {
           </section>
         </form>
       </div>
+
+      {/* Password Reset Modal for Faculty Only */}
+      {resetModalOpen && isFaculty && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-blue-50 text-[#0062A8]">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-slate-900">Reset Faculty Password</h3>
+                  <p className="text-xs text-slate-400">
+                    {user?.name} · {user?.staffId || user?.email}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResetModalOpen(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password (min. 4 characters)"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Confirm New Password
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter new password"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="pt-2 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setResetModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={resetting}
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-[#0062A8] hover:bg-[#004f88] text-white shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {resetting ? "Resetting..." : "Confirm & Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

@@ -384,7 +384,7 @@ export default function FacultyResourcesPage() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Or External Link (for videos / websites)</label>
+                <label className="font-bold text-slate-700 block mb-1">Or External Link (for videos / websites) (optional)</label>
                 <input
                   type="text"
                   value={formData.externalUrl}
@@ -395,7 +395,7 @@ export default function FacultyResourcesPage() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Description</label>
+                <label className="font-bold text-slate-700 block mb-1">Description (optional)</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -406,7 +406,7 @@ export default function FacultyResourcesPage() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Tags (comma separated)</label>
+                <label className="font-bold text-slate-700 block mb-1">Tags (comma separated) (optional)</label>
                 <input
                   type="text"
                   value={formData.tags}

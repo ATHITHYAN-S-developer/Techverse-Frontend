@@ -89,8 +89,6 @@ export default function UnifiedFilterBar({
   selectedDeptId,
   onDeptChange,
   departments = [],
-  selectedSemester,
-  onSemesterChange,
   searchQuery,
   onSearchChange,
   sortBy,
@@ -103,12 +101,10 @@ export default function UnifiedFilterBar({
 }) {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [deptOpen, setDeptOpen] = useState(false);
-  const [semesterOpen, setSemesterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
   const categoryRef = useRef(null);
   const deptRef = useRef(null);
-  const semRef = useRef(null);
   const sortRef = useRef(null);
 
   // Close dropdowns on outside click
@@ -116,7 +112,6 @@ export default function UnifiedFilterBar({
     function handleClickOutside(e) {
       if (categoryRef.current && !categoryRef.current.contains(e.target)) setCategoryOpen(false);
       if (deptRef.current && !deptRef.current.contains(e.target)) setDeptOpen(false);
-      if (semRef.current && !semRef.current.contains(e.target)) setSemesterOpen(false);
       if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -130,12 +125,9 @@ export default function UnifiedFilterBar({
     (d) => String(d.id) === String(selectedDeptId) || String(d.code).toLowerCase() === String(selectedDeptId).toLowerCase()
   );
 
-  const semesters = ["1", "2", "3", "4", "5", "6", "7", "8"];
-
   const hasActiveFilters =
     category !== "all" ||
     selectedDeptId !== "all" ||
-    selectedSemester !== "all" ||
     searchQuery.trim() !== "";
 
   return (
@@ -151,7 +143,6 @@ export default function UnifiedFilterBar({
               onClick={() => {
                 setCategoryOpen(!categoryOpen);
                 setDeptOpen(false);
-                setSemesterOpen(false);
                 setSortOpen(false);
               }}
               className="w-full h-12 flex items-center justify-between gap-3 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -269,7 +260,6 @@ export default function UnifiedFilterBar({
               onClick={() => {
                 setDeptOpen(!deptOpen);
                 setCategoryOpen(false);
-                setSemesterOpen(false);
                 setSortOpen(false);
               }}
               className="w-full h-12 flex items-center justify-between gap-3 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -376,84 +366,6 @@ export default function UnifiedFilterBar({
             </AnimatePresence>
           </div>
 
-          {/* 3. SEMESTER SELECTOR */}
-          <div className="relative w-full sm:w-[150px]" ref={semRef}>
-            <button
-              type="button"
-              onClick={() => {
-                setSemesterOpen(!semesterOpen);
-                setCategoryOpen(false);
-                setDeptOpen(false);
-                setSortOpen(false);
-              }}
-              className="w-full h-12 flex items-center justify-between gap-2 px-3 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 bg-amber-50 text-amber-600">
-                  <Calendar size={14} strokeWidth={2.2} />
-                </span>
-                <div className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none mb-0.5">
-                    Semester
-                  </span>
-                  <span className="block text-[12px] font-bold text-slate-800 truncate">
-                    {selectedSemester === "all" ? "All Semesters" : `Sem ${selectedSemester}`}
-                  </span>
-                </div>
-              </div>
-              <ChevronDown
-                size={14}
-                className={`text-slate-400 shrink-0 transition-transform duration-200 ${
-                  semesterOpen ? "rotate-180 text-blue-600" : ""
-                }`}
-              />
-            </button>
-
-            <AnimatePresence>
-              {semesterOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 4, scale: 0.98 }}
-                  transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute left-0 top-full mt-2 w-[180px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-2xl shadow-slate-900/15 z-50"
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      onSemesterChange("all");
-                      setSemesterOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between p-2 rounded-lg text-[12px] font-bold text-left ${
-                      selectedSemester === "all" ? "bg-slate-100 text-blue-700" : "hover:bg-slate-50 text-slate-700"
-                    }`}
-                  >
-                    All Semesters
-                    {selectedSemester === "all" && <Check size={13} className="text-blue-600" />}
-                  </button>
-                  <div className="grid grid-cols-2 gap-1 mt-1 pt-1 border-t border-slate-100">
-                    {semesters.map((sem) => (
-                      <button
-                        key={sem}
-                        type="button"
-                        onClick={() => {
-                          onSemesterChange(sem);
-                          setSemesterOpen(false);
-                        }}
-                        className={`p-1.5 rounded-md text-[12px] font-bold text-center transition-colors ${
-                          selectedSemester === sem
-                            ? "bg-blue-600 text-white"
-                            : "bg-slate-50 hover:bg-slate-100 text-slate-700"
-                        }`}
-                      >
-                        Sem {sem}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
 
           {/* 4. SEARCH INPUT */}
           <div className="relative flex-1 min-w-[200px]">
@@ -612,19 +524,6 @@ export default function UnifiedFilterBar({
               </span>
             )}
 
-            {selectedSemester !== "all" && (
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                <Calendar size={12} />
-                Semester {selectedSemester}
-                <button
-                  type="button"
-                  onClick={() => onSemesterChange("all")}
-                  className="hover:opacity-75 ml-0.5"
-                >
-                  <X size={12} />
-                </button>
-              </span>
-            )}
 
             {searchQuery.trim() !== "" && (
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-slate-100 text-slate-700 border border-slate-300">

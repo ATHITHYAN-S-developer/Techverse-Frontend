@@ -185,7 +185,7 @@ export default function StudentLayout() {
                   {user?.name || "Student"}
                 </span>
                 <span className="text-[10px] font-medium text-profile-ink/45 tabular-nums">
-                  {user?.registerNumber || "732924CSE001"}
+                  {user?.registerNumber || user?.email || "Student"}
                 </span>
               </span>
             </Link>

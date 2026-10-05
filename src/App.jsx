@@ -43,6 +43,7 @@ import FacultyResourcesPage from "./pages/faculty/FacultyResourcesPage";
 import FacultySubjectsPage from "./pages/faculty/FacultySubjectsPage";
 import FacultyAnnouncementsPage from "./pages/faculty/FacultyAnnouncementsPage";
 import FacultyStudentsPage from "./pages/faculty/FacultyStudentsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 // Admin Control Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -109,10 +110,10 @@ export default function App() {
               <Route path="/login" element={<LoginPage />} />
             </Route>
 
-            {/* 2. Student Learning & Gamification Portal */}
+            {/* 2. Student Learning & Gamification Portal (Restricted to Students Only) */}
             <Route
               element={
-                <RequireAuth allowedRoles={["student", "faculty", "hod", "admin"]}>
+                <RequireAuth allowedRoles={["student"]}>
                   <StudentLayout />
                 </RequireAuth>
               }
@@ -141,9 +142,10 @@ export default function App() {
               <Route path="modules" element={<AdminCourseModulesPage />} />
               <Route path="coding" element={<AdminCodingPage />} />
               <Route path="resources" element={<FacultyResourcesPage />} />
-              <Route path="subjects" element={<FacultySubjectsPage />} />
+              <Route path="subjects" element={<Navigate to="/faculty/dashboard" replace />} />
               <Route path="announcements" element={<FacultyAnnouncementsPage />} />
               <Route path="students" element={<FacultyStudentsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
             </Route>
 
             {/* 4. Institutional Admin Control Center */}

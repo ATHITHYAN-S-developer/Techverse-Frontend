@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FileText,
@@ -14,13 +14,14 @@ import {
   AlertCircle,
   RefreshCw,
   Building2,
+  GraduationCap,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { apiRequest } from "../../services/api";
 
-// â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Helpers ────────────────────────────────────────────────────────
 function timeAgo(dateStr) {
-  if (!dateStr) return "â€”";
+  if (!dateStr) return "—";
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return "Just now";
@@ -51,6 +52,7 @@ function StatCard({ title, value, subtitle, icon: Icon, trend, trendPositive, co
     emerald: { bg: "bg-emerald-50", text: "text-emerald-700", ring: "ring-emerald-200" },
     amber: { bg: "bg-amber-50", text: "text-amber-700", ring: "ring-amber-200" },
     purple: { bg: "bg-purple-50", text: "text-purple-700", ring: "ring-purple-200" },
+    indigo: { bg: "bg-indigo-50", text: "text-indigo-700", ring: "ring-indigo-200" },
   };
   const c = colors[color] || colors.blue;
   return (
@@ -64,12 +66,12 @@ function StatCard({ title, value, subtitle, icon: Icon, trend, trendPositive, co
       {loading ? (
         <div className="h-8 w-20 bg-slate-100 animate-pulse rounded-lg" />
       ) : (
-        <div className="text-2xl font-black text-slate-900">{value ?? "â€”"}</div>
+        <div className="text-2xl font-black text-slate-900">{value ?? "—"}</div>
       )}
       <div className="text-xs text-slate-500 truncate">{subtitle}</div>
       {trend && (
         <div className={`text-[11px] font-semibold ${trendPositive ? "text-emerald-600" : "text-rose-500"}`}>
-          {trendPositive ? "â–²" : "â–¼"} {trend}
+          {trendPositive ? "▲" : "▼"} {trend}
         </div>
       )}
     </div>
@@ -81,6 +83,7 @@ export default function FacultyDashboard() {
 
   const [subjects, setSubjects] = useState([]);
   const [studentCount, setStudentCount] = useState(null);
+  const [facultyCount, setFacultyCount] = useState(null);
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -121,7 +124,15 @@ export default function FacultyDashboard() {
           studentsRes?.pagination?.total ??
           (Array.isArray(studentsRes?.users) ? studentsRes.users.length : null);
 
-        // 3. All resources (we filter by uploader client-side)
+        // 3. Faculty count for this department (includes faculty & HOD)
+        const facultyRes = await apiRequest(
+          `/users?role=faculty${deptId ? `&departmentId=${deptId}` : ""}&limit=1`
+        );
+        const totalFaculty =
+          facultyRes?.pagination?.total ??
+          (Array.isArray(facultyRes?.users) ? facultyRes.users.length : null);
+
+        // 4. All resources (we filter by uploader client-side)
         const resRes = await apiRequest(`/resources?all=true&limit=100`);
         const allResources = Array.isArray(resRes)
           ? resRes
@@ -137,6 +148,7 @@ export default function FacultyDashboard() {
         if (alive) {
           setSubjects(mySubjects);
           setStudentCount(total);
+          setFacultyCount(totalFaculty);
           setResources(myResources);
         }
       } catch (err) {
@@ -169,16 +181,24 @@ export default function FacultyDashboard() {
       {/* 1. Welcome Banner */}
       <div className="bg-gradient-to-r from-[#0B4A8F] via-[#0062A8] to-slate-800 text-white rounded-3xl p-6 sm:p-8 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-sky-100 mb-3 border border-white/20">
-            <ShieldCheck className="w-3.5 h-3.5 text-sky-200" />
-            <span>{deptLabel}</span>
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md text-xs font-semibold text-sky-100 border border-white/20">
+              <ShieldCheck className="w-3.5 h-3.5 text-sky-200" />
+              <span>{deptLabel}</span>
+            </div>
+            {facultyCount !== null && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-medium text-sky-100 border border-white/15">
+                <GraduationCap className="w-3.5 h-3.5 text-sky-300" />
+                <span>{facultyCount} Department Faculty</span>
+              </div>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
             Welcome, {user?.name || "Faculty"}
           </h1>
           <p className="text-sky-100 text-sm mt-1 max-w-xl">
             {user?.designation || "Assistant Professor"}
-            {user?.staffId ? ` â€¢ Staff ID: ${user.staffId}` : user?.email ? ` â€¢ ${user.email}` : ""}
+            {user?.staffId ? ` • Staff ID: ${user.staffId}` : user?.email ? ` • ${user.email}` : ""}
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0">
@@ -213,11 +233,11 @@ export default function FacultyDashboard() {
       )}
 
       {/* 2. Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
           title="Resources Uploaded"
           value={resources.length}
-          subtitle={`${deptLabel} Notes, QBs & More`}
+          subtitle={`${deptLabel} Notes & QBs`}
           icon={FileText}
           color="blue"
           loading={loading}
@@ -235,8 +255,16 @@ export default function FacultyDashboard() {
           loading={loading}
         />
         <StatCard
+          title="Department Faculty"
+          value={facultyCount ?? "—"}
+          subtitle={`${deptLabel} teaching faculty`}
+          icon={GraduationCap}
+          color="indigo"
+          loading={loading}
+        />
+        <StatCard
           title="Department Students"
-          value={studentCount ?? "â€”"}
+          value={studentCount ?? "—"}
           subtitle={`${deptLabel} roster`}
           icon={Users}
           color="amber"
@@ -261,8 +289,8 @@ export default function FacultyDashboard() {
             <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-[#0062A8]" /> Your Assigned Subjects
             </h2>
-            <Link to="/faculty/subjects" className="text-xs font-semibold text-[#0062A8] hover:underline">
-              Manage Subjects â†’
+            <Link to="/faculty/resources" className="text-xs font-semibold text-[#0062A8] hover:underline">
+              Upload Notes & Resources →
             </Link>
           </div>
 
@@ -305,7 +333,7 @@ export default function FacultyDashboard() {
                       <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
                         <Building2 className="w-3 h-3" />
                         {subj.departmentId?.name || subj.departmentId?.code || deptLabel}
-                        {subj.credits ? ` â€¢ ${subj.credits} Credits` : ""}
+                        {subj.credits ? ` • ${subj.credits} Credits` : ""}
                       </p>
                     </div>
                     <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
@@ -368,7 +396,7 @@ export default function FacultyDashboard() {
                 to="/faculty/resources"
                 className="inline-block mt-3 text-[11px] font-bold text-[#0062A8] hover:underline"
               >
-                Upload your first resource â†’
+                Upload your first resource →
               </Link>
             </div>
           ) : (
@@ -407,7 +435,7 @@ export default function FacultyDashboard() {
             to="/faculty/students"
             className="block text-center w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors"
           >
-            View Student Roster â†’
+            View Student Roster →
           </Link>
         </div>
       </div>

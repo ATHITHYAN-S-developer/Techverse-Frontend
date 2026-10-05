@@ -1,29 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronRight,
-  Sparkles,
-  BookOpen,
-  FileText,
-  ClipboardList,
-  Monitor,
-  Download,
-  Building2,
-  GraduationCap,
-  Layers,
-  Search,
-  SlidersHorizontal
-} from "lucide-react";
+
 import { departmentService } from "../services/departmentService";
 import { resourceService, resolveResourceUrl } from "../services/resourceService";
-import { apiRequest } from "../services/api";
 import { DEPARTMENTS_DATA } from "../data/departments";
 import { useAuth } from "../context/AuthContext";
 import UnifiedFilterBar, { CATEGORIES } from "../components/library/UnifiedFilterBar";
-import FeaturedResource from "../components/library/FeaturedResource";
-import DepartmentExplorer from "../components/library/DepartmentExplorer";
-import SubjectExplorer from "../components/library/SubjectExplorer";
 import ResourceLibrary from "../components/library/ResourceLibrary";
 import ResourceSkeleton from "../components/library/ResourceSkeleton";
 import ErrorState from "../components/departments/ErrorState";
@@ -35,16 +18,14 @@ export default function DepartmentResourcesPage() {
 
   const [category, setCategory] = useState("all");
   const [selectedDeptId, setSelectedDeptId] = useState(routeDeptId || "all");
-  const [selectedSemester, setSelectedSemester] = useState("all");
   const [selectedSubjectId, setSelectedSubjectId] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("latest");
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("grid");
 
   const [departments, setDepartments] = useState([]);
   const [resources, setResources] = useState([]);
-  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -65,10 +46,9 @@ export default function DepartmentResourcesPage() {
       );
 
       try {
-        const [deptList, resList, subjList] = await Promise.allSettled([
+        const [deptList, resList] = await Promise.allSettled([
           departmentService.getDepartments(),
           resourceService.getAllResources(),
-          apiRequest("/subjects")
         ]);
 
         if (cancelled) return;
@@ -91,12 +71,6 @@ export default function DepartmentResourcesPage() {
           setResources(list);
         } else {
           setLoadError(true);
-        }
-
-        if (subjList.status === "fulfilled") {
-          const list =
-            subjList.value?.subjects || subjList.value?.data || (Array.isArray(subjList.value) ? subjList.value : []);
-          setSubjects(Array.isArray(list) ? list : []);
         }
       } catch (err) {
         if (!cancelled) setLoadError(true);
@@ -189,11 +163,6 @@ export default function DepartmentResourcesPage() {
         resourceDeptCode(r).toLowerCase() === effectiveDeptId.toLowerCase();
       if (!matchDept) return false;
 
-      const semMatch =
-        selectedSemester === "all" ||
-        String(r.semester || "") === String(selectedSemester).replace("Semester ", "");
-      if (!semMatch) return false;
-
       const typeMatch = selectedType === "all" || (r.type || "") === selectedType;
       if (!typeMatch) return false;
 
@@ -217,80 +186,11 @@ export default function DepartmentResourcesPage() {
       );
     }
     return list;
-  }, [resources, category, effectiveDeptId, selectedSemester, selectedType, selectedSubjectId, sortBy, q]);
-
-  const featuredResource = useMemo(() => {
-    if (!resources.length) return null;
-    const candidates = resources
-      .filter((r) => !isSoftware(r) && (r.fileUrl || r.externalUrl || r.downloadUrl))
-      .sort((a, b) => (b.downloadsCount || 0) - (a.downloadsCount || 0));
-    return candidates[0] || resources[0];
-  }, [resources]);
-
-  const deptStats = useMemo(() => {
-    const map = new Map();
-    departments.forEach((d) => map.set(d.id, { total: 0, notes: 0, question_bank: 0, software: 0 }));
-    resources.forEach((r) => {
-      const rid = resourceDeptId(r);
-      const code = resourceDeptCode(r).toLowerCase();
-      const key = departments.find(
-        (d) =>
-          String(d.id) === String(rid) ||
-          String(d.code).toLowerCase() === code ||
-          String(d.code).toLowerCase() === String(rid).toLowerCase()
-      );
-      if (!key) return;
-      const s = map.get(key.id);
-      if (!s) return;
-      s.total += 1;
-      if (isSoftware(r)) s.software += 1;
-      else if (r.type === "question_bank" || r.type === "previous_paper") s.question_bank += 1;
-      else s.notes += 1;
-    });
-    return map;
-  }, [resources, departments]);
-
-  const explorerDepartments = useMemo(
-    () =>
-      departments
-        .map((d) => ({
-          ...d,
-          count: deptStats.get(d.id)?.total || (d.stats?.resources || 0),
-          counts: deptStats.get(d.id)
-        }))
-        .sort((a, b) => b.count - a.count),
-    [departments, deptStats]
-  );
-
-  const subjectRows = useMemo(() => {
-    const rows = subjects
-      .map((s) => {
-        const count = resources.filter(
-          (r) => (r.subjectId?._id || r.subjectId) === s._id || (r.subjectId?.code || r.subjectCode) === s.code
-        ).length;
-        const dept = departments.find(
-          (d) =>
-            String(d.id) === String(s.departmentId?._id || s.departmentId) ||
-            String(d.code).toLowerCase() === String(s.departmentId?.code || s.departmentId || "").toLowerCase()
-        );
-        return {
-          id: s._id,
-          name: s.name,
-          code: s.code,
-          departmentName: dept?.name || s.departmentName || "",
-          subjectCount: count,
-          semester: s.semester
-        };
-      })
-      .filter((row) => (effectiveDeptId === "all" ? true : row.departmentName.toLowerCase().includes(effectiveDeptId.toLowerCase()) || row.subjectCount > 0))
-      .sort((a, b) => b.subjectCount - a.subjectCount);
-    return rows.length ? rows : [];
-  }, [subjects, resources, departments, effectiveDeptId]);
+  }, [resources, category, effectiveDeptId, selectedType, selectedSubjectId, sortBy, q]);
 
   const handleResetFilters = () => {
     setCategory("all");
     setSelectedDeptId(routeDeptId || "all");
-    setSelectedSemester("all");
     setSelectedSubjectId("all");
     setSelectedType("all");
     setSearchQuery("");
@@ -298,8 +198,35 @@ export default function DepartmentResourcesPage() {
   };
 
   const openResource = (r) => {
-    const url = resolveResourceUrl(r.fileUrl || r.externalUrl || r.downloadUrl);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
+    const rawUrl = r.fileUrl || r.downloadUrl || r.externalUrl;
+    if (!rawUrl) return;
+    const url = resolveResourceUrl(rawUrl);
+
+    if (r._id || r.id) {
+      resourceService.trackDownload(r._id || r.id).catch(() => {});
+    }
+
+    const type = (r.type || "").toLowerCase();
+    const urlLower = url.toLowerCase();
+    const titleLower = (r.title || "").toLowerCase();
+
+    const isSw =
+      type === "software" ||
+      /\.(exe|msi|dmg|pkg|deb|rpm|zip|rar|7z|tar|gz|apk|whl)$/i.test(urlLower) ||
+      titleLower.includes("software") ||
+      titleLower.includes("blender") ||
+      titleLower.includes("python");
+
+    if (isSw) {
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", r.originalName || r.title || "download");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
   };
 
   const handleRetry = () => {
@@ -318,18 +245,6 @@ export default function DepartmentResourcesPage() {
         <div className="pointer-events-none absolute -bottom-32 left-1/4 h-80 w-80 rounded-2xl bg-emerald-500/10 blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto">
-          {/* Breadcrumb Navigation */}
-          <nav
-            className="flex items-center gap-2 text-xs font-semibold text-blue-200/70 mb-6"
-            aria-label="Breadcrumb"
-          >
-            <span className="hover:text-white cursor-pointer transition-colors">Home</span>
-            <ChevronRight size={13} className="text-blue-400/50" />
-            <span className="hover:text-white cursor-pointer transition-colors">Academic Hub</span>
-            <ChevronRight size={13} className="text-blue-400/50" />
-            <span className="text-blue-300 font-bold">E-Resources</span>
-          </nav>
-
           <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
             <div className="max-w-2xl">
               {/* Badge */}
@@ -362,7 +277,7 @@ export default function DepartmentResourcesPage() {
               </FadeInUp>
             </div>
 
-            {/* Quick Metrics Statistics */}
+            {/* Quick Metrics Statistics (Only Total Items & Branches) */}
             <FadeInUp delay={0.3} className="flex items-center gap-3 flex-wrap">
               <div className="flex flex-col px-4.5 py-3 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md">
                 <span className="text-2xl font-black text-white">{resources.length}</span>
@@ -376,12 +291,6 @@ export default function DepartmentResourcesPage() {
                   Branches
                 </span>
               </div>
-              <div className="flex flex-col px-4.5 py-3 rounded-xl bg-purple-500/15 border border-purple-400/30 backdrop-blur-md">
-                <span className="text-2xl font-black text-purple-200">{subjects.length}</span>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-200">
-                  Courses
-                </span>
-              </div>
             </FadeInUp>
           </div>
         </div>
@@ -389,16 +298,6 @@ export default function DepartmentResourcesPage() {
 
       {/* 2. MAIN WORKSPACE CONTAINER */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* Department Quick Filter Grid */}
-        <DepartmentExplorer
-          departments={explorerDepartments}
-          selectedDeptId={effectiveDeptId}
-          onSelect={(id) => {
-            setSelectedDeptId(id);
-          }}
-        />
-
         {/* Unified Single Filter Dropdown Toolbar */}
         <UnifiedFilterBar
           category={category}
@@ -406,8 +305,6 @@ export default function DepartmentResourcesPage() {
           selectedDeptId={selectedDeptId}
           onDeptChange={(d) => setSelectedDeptId(d)}
           departments={departments}
-          selectedSemester={selectedSemester}
-          onSemesterChange={(sem) => setSelectedSemester(sem)}
           searchQuery={searchQuery}
           onSearchChange={(q) => setSearchQuery(q)}
           sortBy={sortBy}
@@ -425,52 +322,25 @@ export default function DepartmentResourcesPage() {
         ) : loadError ? (
           <ErrorState onRetry={handleRetry} />
         ) : (
-          <div>
-            {/* Keep the featured resource, but omit the default subjects showcase. */}
-            {category === "all" && !q && effectiveDeptId === "all" && selectedSemester === "all" && (
-              <FeaturedResource
-                resource={featuredResource}
-                deptCode={featuredResource ? resourceDeptCode(featuredResource) : ""}
-                onOpen={openResource}
-              />
-            )}
-
-            {/* When category is 'subjects': Render Subject Explorer */}
-            {category === "subjects" && (
-              <SubjectExplorer
-                title="Curriculum Subjects & Syllabi"
-                subtitle="Organized courses with lecture notes and semester units"
-                subjects={subjectRows}
-                onSelect={(subject) => {
-                  setSelectedSubjectId(subject.id);
-                  setCategory("notes");
-                }}
-              />
-            )}
-
-            {/* Render Filtered Resource Feed for All, Notes, Question Bank, Software, Downloads, or whenever searched/filtered */}
-            {(category !== "all" || q !== "" || effectiveDeptId !== "all" || selectedSemester !== "all") && (
-              <ResourceLibrary
-                title={
-                  category === "all"
-                    ? "All Academic Resources"
-                    : activeCategoryMeta.label
-                }
-                subtitle={
-                  effectiveDeptId !== "all"
-                    ? `Showing resources for ${deptCodeById[effectiveDeptId] || effectiveDeptId}`
-                    : activeCategoryMeta.description
-                }
-                count={filteredResources.length}
-                viewMode={viewMode}
-                items={filteredResources}
-                onOpen={openResource}
-                onReset={handleResetFilters}
-                emptyMessage={`No ${activeCategoryMeta.label.toLowerCase()} found matching the current filters.`}
-                loading={loading}
-              />
-            )}
-          </div>
+          <ResourceLibrary
+            title={
+              category === "all"
+                ? "Academic Resources"
+                : activeCategoryMeta.label
+            }
+            subtitle={
+              effectiveDeptId !== "all"
+                ? `Showing resources for ${deptCodeById[effectiveDeptId] || effectiveDeptId}`
+                : activeCategoryMeta.description
+            }
+            count={filteredResources.length}
+            viewMode={viewMode}
+            items={filteredResources}
+            onOpen={openResource}
+            onReset={handleResetFilters}
+            emptyMessage={`No ${activeCategoryMeta.label.toLowerCase()} found matching the current filters.`}
+            loading={loading}
+          />
         )}
       </main>
     </div>

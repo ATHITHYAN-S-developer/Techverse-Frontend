@@ -31,8 +31,9 @@ import { departmentService } from "../../services/departmentService";
 export default function AdminCoursesPage() {
   const { showSuccess, showError } = useToast();
   const { user } = useAuth();
+  const isFaculty = user?.role === "faculty" || user?.role === "teacher" || window.location.pathname.startsWith("/faculty");
   const canCreateCourse = user?.role === "admin" || user?.role === "hod";
-  const isFacultyOnly = !canCreateCourse;
+  const isFacultyOnly = isFaculty || !canCreateCourse;
   const moduleManagerBaseUrl = user?.role === "admin" ? "/admin/modules" : "/faculty/modules";
 
   const [courses, setCourses] = useState([]);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Users, Search, Filter, Flame, Award, CheckCircle, Mail } from "lucide-react";
+import { Users, Search, Filter, Flame } from "lucide-react";
 import api from "../../services/api";
 
 export default function FacultyStudentsPage() {
@@ -92,9 +92,6 @@ export default function FacultyStudentsPage() {
                 <th className="px-5 py-3.5">Student</th>
                 <th className="px-4 py-3.5">Class / Section</th>
                 <th className="px-4 py-3.5">Learning Streak</th>
-                <th className="px-4 py-3.5">Tests Completed</th>
-                <th className="px-4 py-3.5">Certificates</th>
-                <th className="px-4 py-3.5">Academic CGPA</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -102,7 +99,13 @@ export default function FacultyStudentsPage() {
                 <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <img src={s.avatar} alt={s.name} className="w-9 h-9 rounded-full object-cover" />
+                      {s.avatar ? (
+                        <img src={s.avatar} alt={s.name} className="w-9 h-9 rounded-full object-cover" />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                          {(s.name?.[0] || "S").toUpperCase()}
+                        </div>
+                      )}
                       <div>
                         <div className="font-bold text-slate-900 text-sm">{s.name}</div>
                         <div className="text-slate-400 font-mono text-[11px]">{s.regNo}</div>
@@ -115,21 +118,10 @@ export default function FacultyStudentsPage() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-bold text-[11px]">
-                        <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" /> {s.streak}d
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200/60">
+                        <Flame className="w-4 h-4 text-amber-500 fill-amber-500" /> {s.streak} Days
                       </span>
                     </div>
-                  </td>
-                  <td className="px-4 py-4 font-semibold text-slate-700">
-                    {s.testsCompleted} Tests
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold text-[11px]">
-                      {s.certificatesEarned} Minted
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 font-bold text-slate-900">
-                    {s.cgpa} CGPA
                   </td>
                 </tr>
               ))}

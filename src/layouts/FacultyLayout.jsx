@@ -28,10 +28,9 @@ const FACULTY_NAV = [
   { name: "Course Modules & Syllabus", href: "/faculty/modules", icon: Layers },
   { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
   { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
-  { name: "Manage Subjects", href: "/faculty/subjects", icon: BookOpen },
   { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
   { name: "Student Directory", href: "/faculty/students", icon: Users },
-  { name: "Profile & Account", href: "/dashboard#profile", icon: User }
+  { name: "Profile & Account", href: "/faculty/profile", icon: User }
 ];
 
 export default function FacultyLayout() {
@@ -97,7 +96,7 @@ export default function FacultyLayout() {
           <NotificationBell />
 
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-            <Link to="/dashboard#profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Link to="/faculty/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <div className="w-8 h-8 rounded-full bg-[#0B4A8F] text-white font-bold text-xs flex items-center justify-center shadow-sm">
                 {user?.name?.charAt(0) || "F"}
               </div>

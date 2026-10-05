@@ -8,33 +8,41 @@ export default function ResourceListItem({ resource, deptCode, onOpen }) {
   const size = formatBytes(resource.fileSize || resource.size);
   const time = formatRelativeTime(resource.createdAt);
 
+  const urlLower = String(resource?.fileUrl || resource?.externalUrl || resource?.downloadUrl || "").toLowerCase();
+  const typeLower = (resource?.type || "").toLowerCase();
+  const titleLower = (resource?.title || "").toLowerCase();
+  const isSoftware =
+    typeLower === "software" ||
+    /\.(exe|msi|dmg|pkg|deb|rpm|zip|rar|7z|tar|gz|apk|whl)$/i.test(urlLower) ||
+    titleLower.includes("software") ||
+    titleLower.includes("blender") ||
+    titleLower.includes("python");
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ backgroundColor: "rgba(248, 250, 252, 0.9)" }}
-      className="w-full flex items-center justify-between gap-4 p-4 border-b border-slate-100 last:border-b-0 transition-colors group"
+      onClick={() => onOpen(resource)}
+      className="w-full flex items-center justify-between gap-4 p-4 border-b border-slate-100 last:border-b-0 transition-colors group cursor-pointer"
     >
       <div className="flex items-start gap-3.5 min-w-0 flex-1">
         {/* File Type Badge */}
         <span
           className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center text-[11px] font-black tracking-wider border shadow-xs"
           style={{
-            backgroundColor: badge.bg,
-            color: badge.color,
-            borderColor: `${badge.color}30`
+            backgroundColor: isSoftware ? "#ECFDF5" : badge.bg,
+            color: isSoftware ? "#059669" : badge.color,
+            borderColor: isSoftware ? "#A7F3D0" : `${badge.color}30`
           }}
         >
-          {badge.label}
+          {isSoftware ? "APP" : badge.label}
         </span>
 
         {/* Resource Details */}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3
-              onClick={() => onOpen(resource)}
-              className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors cursor-pointer truncate"
-            >
+            <h3 className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
               {resource.title}
             </h3>
             {deptCode && (
@@ -42,11 +50,11 @@ export default function ResourceListItem({ resource, deptCode, onOpen }) {
                 {deptCode}
               </span>
             )}
-            {resource.semester && (
+            {resource.unit ? (
               <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
-                Sem {resource.semester}
+                Unit {resource.unit}
               </span>
-            )}
+            ) : null}
           </div>
 
           {resource.description && (
@@ -75,14 +83,17 @@ export default function ResourceListItem({ resource, deptCode, onOpen }) {
 
       {/* Action Button */}
       <div className="shrink-0 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => onOpen(resource)}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-blue-600 text-slate-700 hover:text-white text-xs font-bold transition-all duration-200 shadow-xs group/btn"
-        >
-          <span>Open</span>
-          <ArrowUpRight size={13} className="group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
-        </button>
+        {isSoftware ? (
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 group-hover:bg-emerald-600 text-emerald-700 group-hover:text-white text-xs font-bold transition-all duration-200 shadow-xs">
+            <Download size={13} />
+            <span>Download</span>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 group-hover:bg-blue-600 text-slate-700 group-hover:text-white text-xs font-bold transition-all duration-200 shadow-xs">
+            <span>View</span>
+            <ArrowUpRight size={13} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+          </span>
+        )}
       </div>
     </motion.div>
   );
