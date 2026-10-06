@@ -8,7 +8,6 @@ import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";import
   Flame,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import NotificationBell from "../components/NotificationBell";
 import GlobalSearchModal from "../components/GlobalSearchModal";
 import techverseLogoImg from "../assets/techverse-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
@@ -173,8 +172,6 @@ export default function StudentLayout() {
                 <span className="font-sans font-normal text-profile-ink/45">day streak</span>
               </span>
             </Link>
-
-            <NotificationBell />
 
             <Link to="/dashboard#profile" className="flex items-center gap-2.5 group min-w-0">
               <span className="w-8 h-8 rounded-full bg-profile-main text-white font-display text-xs font-semibold flex items-center justify-center shrink-0">

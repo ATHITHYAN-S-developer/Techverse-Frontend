@@ -33,7 +33,6 @@ import {
   Briefcase,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import NotificationBell from "../components/NotificationBell";
 import techverseLogoImg from "../assets/techverse-logo.png";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
@@ -226,8 +225,6 @@ export default function AdminLayout() {
           >
             <Search className="w-4 h-4" />
           </button>
-
-          <NotificationBell />
 
           <Link
             to="/"

@@ -14,9 +14,7 @@ import {
   ShieldCheck,
   BookOpen,
   Code2
-} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
-import NotificationBell from "../components/NotificationBell";
 import techverseLogoImg from "../assets/techverse-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
 
@@ -151,8 +149,6 @@ export default function FacultyLayout() {
             <PlusCircle className="w-3.5 h-3.5" />
             <span>Upload Notes</span>
           </Link>
-
-          <NotificationBell />
 
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
             <Link to="/faculty/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">

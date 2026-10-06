@@ -154,8 +154,8 @@ export default function Navbar() {
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-[#0B4A8F] hover:bg-[#0062A8] shadow-sm transition-all"
                 >
                   <User size={13} />
-                  <span className="max-w-[90px] truncate hidden sm:inline">
-                    {role === "admin" ? "Admin Hub" : role === "faculty" ? "Faculty" : user?.name?.split(" ")[0] || "Dashboard"}
+                  <span className="max-w-[130px] truncate hidden sm:inline">
+                    {role === "admin" ? "Admin Hub" : role === "faculty" ? "Faculty" : user?.name || "Dashboard"}
                   </span>
                   <span className="sm:hidden">Hub</span>
                 </Link>

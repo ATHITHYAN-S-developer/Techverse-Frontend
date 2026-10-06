@@ -32,7 +32,7 @@ function studentIdentity(user) {
 export default function WelcomeHero({ user, streak }) {
   const reduceMotion = useReducedMotion();
 
-  const firstName = user?.name?.split(" ")[0] || "Student";
+  const studentName = (user?.name || "").trim().replace(/\s+/g, " ") || "Student";
   const currentStreak = streak?.currentStreak || 0;
   const longest = streak?.longestStreak || 0;
 
@@ -90,14 +90,14 @@ export default function WelcomeHero({ user, streak }) {
 
             <motion.h1
               variants={fadeUp}
-              className="mt-5 font-serif text-[2rem] font-semibold leading-[1.1] tracking-tight text-white sm:text-[2.75rem]"
+              className="mt-5 font-serif text-[2.1rem] sm:text-[2.85rem] font-bold leading-[1.15] tracking-tight text-white"
             >
               {greetingForNow()},{" "}
               <motion.span
                 variants={fadeUp}
-                className="inline-block bg-gradient-to-r from-[#8FC8F2] to-white bg-clip-text font-semibold text-transparent"
+                className="block sm:inline font-extrabold text-white tracking-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
               >
-                {firstName}.
+                {studentName}
               </motion.span>
             </motion.h1>
 
