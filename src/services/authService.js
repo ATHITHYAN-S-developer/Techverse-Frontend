@@ -178,8 +178,9 @@ export async function login(credentialsOrIdentifier, secretParam, keepSignedIn =
       staffId: staff,
       email: cleanIdentity.includes("@") ? cleanIdentity.toLowerCase() : `${cleanIdentity.toLowerCase()}@vcet.ac.in`,
       name: isHod ? "Dr. K. S. Sendhilkumar" : "Dr. M. Sangeetha",
-      departmentId: "cse",
-      designation: isHod ? "Associate Professor & HOD i/c" : "Assistant Professor (Sr. Gr)",
+      departmentId: { _id: "cse", code: "CSE", name: "Computer Science & Engineering" },
+      department: "CSE",
+      designation: isHod ? "Head of the Department (HOD)" : "Assistant Professor (Sr. Gr)",
       title: isHod ? "Head of the Department (HOD)" : "Faculty / Educator",
     };
   } else if (normalizedRole === "admin") {

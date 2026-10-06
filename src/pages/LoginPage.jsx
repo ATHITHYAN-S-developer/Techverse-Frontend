@@ -8,7 +8,6 @@ import {
   IdCard,
   CalendarDays,
   Lock,
-  Mail,
   Eye,
   EyeOff,
   ArrowLeft,
@@ -19,12 +18,9 @@ import {
   Sparkles,
   UserCheck,
   EyeIcon,
-  KeyRound,
-  X,
 } from "lucide-react";
 import { getCurrentUser, isAuthenticated } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
-import { apiRequest } from "../services/api";
 import loginIllustration from "../assets/login-illustration.jpg";
 import campusBg from "../assets/college/campus-aerial-bw.jpg";
 import techverseLogoImg from "../assets/techverse-logo.png";
@@ -55,65 +51,6 @@ export default function LoginPage() {
   const [status, setStatus] = useState("idle"); // "idle" | "loading" | "success"
   const [serverError, setServerError] = useState("");
   const [isShaking, setIsShaking] = useState(false);
-
-  // Faculty Password Reset Modal State (Only for Faculty)
-  const [resetModalOpen, setResetModalOpen] = useState(false);
-  const [resetIdentifier, setResetIdentifier] = useState("");
-  const [resetNewPassword, setResetNewPassword] = useState("");
-  const [resetConfirmPassword, setResetConfirmPassword] = useState("");
-  const [showResetNewPassword, setShowResetNewPassword] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetError, setResetError] = useState("");
-  const [resetSuccess, setResetSuccess] = useState("");
-
-  const handleFacultyResetPassword = async (e) => {
-    e.preventDefault();
-    setResetError("");
-    setResetSuccess("");
-
-    const cleanId = resetIdentifier.trim();
-    const cleanPass = resetNewPassword.trim();
-    const cleanConfirm = resetConfirmPassword.trim();
-
-    if (!cleanId) {
-      setResetError("Faculty / HOD Staff ID or institutional Email is required.");
-      return;
-    }
-    if (!cleanPass) {
-      setResetError("Please enter a new password.");
-      return;
-    }
-    if (cleanPass.length < 4) {
-      setResetError("Password must be at least 4 characters long.");
-      return;
-    }
-    if (cleanPass !== cleanConfirm) {
-      setResetError("New passwords do not match.");
-      return;
-    }
-
-    setResetLoading(true);
-    try {
-      const res = await apiRequest("/auth/faculty-reset-password", {
-        method: "POST",
-        body: JSON.stringify({ identifier: cleanId, newPassword: cleanPass }),
-      });
-      setResetSuccess(res.message || "Password successfully reset!");
-      setFacultyEmail(cleanId);
-      setFacultyPassword(cleanPass);
-      setTimeout(() => {
-        setResetModalOpen(false);
-        setResetError("");
-        setResetSuccess("");
-        setResetNewPassword("");
-        setResetConfirmPassword("");
-      }, 1500);
-    } catch (err) {
-      setResetError(err.message || "Failed to reset password. Please check your Staff ID.");
-    } finally {
-      setResetLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -210,7 +147,7 @@ export default function LoginPage() {
       const newErrors = {};
 
       if (!cleanEmail) {
-        newErrors.facultyEmail = "Faculty / HOD Staff Email or ID is required";
+        newErrors.facultyEmail = "Faculty ID is required";
       }
       if (!cleanPass) {
         newErrors.facultyPassword = "Password is required";
@@ -231,10 +168,17 @@ export default function LoginPage() {
           rememberMe,
         });
         setStatus("success");
-        setTimeout(() => navigate("/faculty/dashboard"), 400);
+        // Redirect based on actual user role returned from server
+        const loggedInUser = JSON.parse(
+          localStorage.getItem("techverse_user") ||
+          sessionStorage.getItem("techverse_user") ||
+          "{}"
+        );
+        const dest = loggedInUser?.role === "hod" ? "/faculty/dashboard" : "/faculty/dashboard";
+        setTimeout(() => navigate(dest), 400);
       } catch (err) {
         setStatus("idle");
-        setServerError(err.message || "Failed to sign in as faculty/HOD.");
+        setServerError(err.message || "Failed to sign in as faculty.");
         triggerShake();
       }
     } else if (activeRole === "admin") {
@@ -284,7 +228,7 @@ export default function LoginPage() {
       id: "faculty",
       label: "Faculty",
       icon: BookOpen,
-      badge: "FACULTY & HOD WORKSPACE",
+      badge: "FACULTY WORKSPACE",
     },
     {
       id: "admin",
@@ -516,7 +460,7 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* 2. FACULTY & HOD LOGIN FORM */}
+            {/* 2. FACULTY LOGIN FORM */}
             {activeRole === "faculty" && (
               <>
                 {/* Staff Email / ID */}
@@ -529,7 +473,7 @@ export default function LoginPage() {
                     htmlFor="facultyEmail"
                     className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
                   >
-                    FACULTY / HOD EMAIL OR STAFF ID
+                    FACULTY ID
                   </label>
                   <motion.div
                     animate={errors.facultyEmail ? shakeAnimation : {}}
@@ -539,23 +483,23 @@ export default function LoginPage() {
                         : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
                     }`}
                   >
-                    <Mail
-                      size={19}
-                      className={`transition-colors shrink-0 ${
-                        errors.facultyEmail ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
-                      }`}
-                    />
-                    <input
-                      id="facultyEmail"
-                      name="facultyEmail"
-                      type="text"
-                      autoComplete="username"
-                      value={facultyEmail}
+<IdCard
+                    size={19}
+                    className={`transition-colors shrink-0 ${
+                      errors.facultyEmail ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
+                    }`}
+                  />
+                  <input
+                    id="facultyEmail"
+                    name="facultyEmail"
+                    type="text"
+                    autoComplete="username"
+                    value={facultyEmail}
                       onChange={(e) => {
                         setFacultyEmail(e.target.value);
                         if (errors.facultyEmail) setErrors((prev) => ({ ...prev, facultyEmail: "" }));
                       }}
-                      placeholder="sendhilkumar@vcet.ac.in or VCET-FAC-CSE-104 or sangeetha@vcet.ac.in"
+                      placeholder="VCET-FAC-CSE-104"
                       className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8]/60"
                     />
                   </motion.div>
@@ -573,26 +517,12 @@ export default function LoginPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: 0.05 }}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label
-                      htmlFor="facultyPassword"
-                      className="block text-xs font-bold uppercase tracking-wider text-[#0062A8]"
-                    >
-                      FACULTY / HOD PASSWORD
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setResetIdentifier(facultyEmail || "");
-                        setResetModalOpen(true);
-                        setResetError("");
-                        setResetSuccess("");
-                      }}
-                      className="text-xs font-semibold text-[#0062A8] hover:text-[#0B4A8F] hover:underline cursor-pointer"
-                    >
-                      Reset Password?
-                    </button>
-                  </div>
+                  <label
+                    htmlFor="facultyPassword"
+                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8]"
+                  >
+                    FACULTY PASSWORD
+                  </label>
                   <motion.div
                     animate={errors.facultyPassword ? shakeAnimation : {}}
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
@@ -634,22 +564,6 @@ export default function LoginPage() {
                       <span>{errors.facultyPassword}</span>
                     </p>
                   )}
-                  {/* Dedicated Faculty Password Reset Button */}
-                  <div className="flex justify-end pt-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setResetIdentifier(facultyEmail || "");
-                        setResetModalOpen(true);
-                        setResetError("");
-                        setResetSuccess("");
-                      }}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0062A8] hover:text-[#0B4A8F] bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/60 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                    >
-                      <KeyRound size={13} className="text-[#0062A8]" />
-                      <span>Reset Password</span>
-                    </button>
-                  </div>
                 </motion.div>
               </>
             )}
@@ -779,7 +693,7 @@ export default function LoginPage() {
                   {activeRole === "student"
                     ? "Student Auth"
                     : activeRole === "faculty"
-                    ? "Faculty / HOD Auth"
+                    ? "Faculty Auth"
                     : "Admin Auth"}
                 </span>
               </div>
@@ -835,7 +749,7 @@ export default function LoginPage() {
                       {activeRole === "student"
                         ? "SIGN IN AS STUDENT"
                         : activeRole === "faculty"
-                        ? "SIGN IN AS FACULTY / HOD"
+                        ? "SIGN IN AS FACULTY"
                         : "SIGN IN AS ADMINISTRATOR"}
                     </span>
                     <ArrowRight size={16} />
@@ -916,138 +830,6 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
-
-      {/* Faculty Password Reset Modal (Only for Faculty) */}
-      <AnimatePresence>
-        {resetModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-slate-200 relative overflow-hidden"
-            >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-blue-50 text-[#0062A8] border border-blue-200/60">
-                    <KeyRound size={18} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900">Reset Faculty Password</h3>
-                    <p className="text-xs text-slate-500">Update your faculty / HOD account credentials</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setResetModalOpen(false);
-                    setResetError("");
-                    setResetSuccess("");
-                  }}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-                >
-                  <X size={18} />
-                </button>
-              </div>
-
-              {resetSuccess ? (
-                <div className="py-5 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
-                    <Check size={24} className="stroke-[3]" />
-                  </div>
-                  <h4 className="font-bold text-slate-900 text-sm">{resetSuccess}</h4>
-                  <p className="text-xs text-slate-500">You can now sign in with your updated credentials.</p>
-                </div>
-              ) : (
-                <form onSubmit={handleFacultyResetPassword} className="space-y-3.5">
-                  {resetError && (
-                    <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-700 flex items-center gap-2">
-                      <AlertCircle size={15} className="shrink-0 text-red-500" />
-                      <span>{resetError}</span>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                      Faculty / HOD Staff ID or Email
-                    </label>
-                    <input
-                      type="text"
-                      value={resetIdentifier}
-                      onChange={(e) => setResetIdentifier(e.target.value)}
-                      placeholder="VCET-FAC-CSE-104 or email"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0062A8] focus:ring-2 focus:ring-[#0062A8]/20"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                      New Password
-                    </label>
-                    <div className="flex items-center rounded-xl border border-slate-300 px-3.5 py-2.5 focus-within:border-[#0062A8] focus-within:ring-2 focus-within:ring-[#0062A8]/20">
-                      <input
-                        type={showResetNewPassword ? "text" : "password"}
-                        value={resetNewPassword}
-                        onChange={(e) => setResetNewPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="w-full text-sm font-semibold text-slate-800 placeholder:text-slate-400 outline-none bg-transparent"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowResetNewPassword((prev) => !prev)}
-                        className="text-slate-400 hover:text-slate-600 pl-2 cursor-pointer"
-                      >
-                        {showResetNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
-                      Confirm New Password
-                    </label>
-                    <input
-                      type="password"
-                      value={resetConfirmPassword}
-                      onChange={(e) => setResetConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-[#0062A8] focus:ring-2 focus:ring-[#0062A8]/20"
-                      required
-                    />
-                  </div>
-
-                  <div className="pt-2 flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setResetModalOpen(false)}
-                      className="w-1/2 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-bold text-xs transition-colors cursor-pointer"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={resetLoading}
-                      className="w-1/2 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00508a] text-white font-bold text-xs shadow-md transition-colors flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
-                    >
-                      {resetLoading ? (
-                        <>
-                          <Loader2 size={14} className="animate-spin" />
-                          <span>Updating...</span>
-                        </>
-                      ) : (
-                        <span>Save Password</span>
-                      )}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

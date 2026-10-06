@@ -181,6 +181,11 @@ export const courseService = {
     return res?.course || res?.data?.course || res?.data || res;
   },
 
+  async togglePublishStatus(courseId, isPublished) {
+    const res = await api.patch(`/courses/${courseId}/publish-status`, { isPublished });
+    return res?.course || res?.data?.course || res?.data || res;
+  },
+
   async deleteCourse(courseId) {
     await api.delete(`/courses/${courseId}`);
     return true;

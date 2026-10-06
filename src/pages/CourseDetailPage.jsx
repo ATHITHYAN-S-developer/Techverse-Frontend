@@ -36,6 +36,7 @@ export default function CourseDetailPage() {
   const [course, setCourse] = useState(null);
   const [courseTest, setCourseTest] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [errorInfo, setErrorInfo] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -47,6 +48,10 @@ export default function CourseDetailPage() {
         setCourseTest(assessment);
       } catch (err) {
         console.error("Error loading course details:", err);
+        const status = err?.response?.status;
+        const msg = err?.response?.data?.message || err?.message;
+        const code = err?.response?.data?.code;
+        setErrorInfo({ status, message: msg, code });
       } finally {
         setLoading(false);
       }
@@ -58,6 +63,30 @@ export default function CourseDetailPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-[#0062A8] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (errorInfo?.code === "DEPARTMENT_RESTRICTED" || errorInfo?.status === 403) {
+    return (
+      <div className="max-w-xl mx-auto py-20 px-4 text-center space-y-5">
+        <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-200 shadow-sm">
+          <Lock className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-slate-800">Department Restricted Course</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">
+            {errorInfo.message || "This course is exclusively reserved for students of its designated department. It is not accessible to other departments."}
+          </p>
+        </div>
+        <div>
+          <Link
+            to="/courses"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0062A8] text-white rounded-xl text-xs font-bold hover:bg-[#004f88] transition shadow-sm cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" /> Browse Available Courses
+          </Link>
+        </div>
       </div>
     );
   }

@@ -122,6 +122,18 @@ export default function AdminLayout() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Lock body scroll on mobile when sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
+
   const handleLogout = () => {
     logout();
     navigate("/login");
@@ -255,21 +267,43 @@ export default function AdminLayout() {
 
       {/* 2. BODY: FIXED SIDEBAR + MAIN CONTENT AREA */}
       <div className="flex flex-1 relative">
-        {/* Mobile Backdrop */}
+        {/* Mobile Backdrop Overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 lg:hidden"
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 lg:hidden transition-opacity"
             onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
           />
         )}
 
-        {/* FIXED SIDEBAR - Pristine White */}
+        {/* SIDEBAR - Responsive Mobile Drawer & Desktop Fixed Sidebar */}
         <aside
-          className={`fixed top-[53px] bottom-0 left-0 w-64 bg-white border-r border-slate-200 z-50 transition-transform duration-200 lg:translate-x-0 overflow-y-auto flex flex-col justify-between shadow-xs ${
+          className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] sm:w-80 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:top-[53px] lg:bottom-0 lg:left-0 lg:w-64 lg:z-30 flex flex-col justify-between shadow-2xl lg:shadow-none overflow-hidden ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="p-3 space-y-4">
+          {/* Mobile Drawer Header */}
+          <div className="lg:hidden flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/90 shrink-0">
+            <div className="flex items-center gap-2">
+              <img
+                src={techverseLogoImg}
+                alt="TechVerse"
+                className="h-7 w-auto object-contain"
+              />
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#0062A8] font-bold uppercase tracking-wider">
+                Admin Control
+              </span>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer"
+              aria-label="Close navigation"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="p-3 space-y-4 overflow-y-auto flex-1">
             {ADMIN_NAV_TREE.map((sec, sIdx) => (
               <div key={sIdx} className="space-y-1">
                 <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase px-3 block">
@@ -313,7 +347,7 @@ export default function AdminLayout() {
           </div>
 
           {/* Bottom Sidebar Institutional Badge */}
-          <div className="p-3 border-t border-slate-100 bg-slate-50/70">
+          <div className="p-3 border-t border-slate-100 bg-slate-50/70 shrink-0">
             <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2.5 shadow-xs">
               <Shield className="w-4 h-4 text-[#0062A8] shrink-0" />
               <div className="min-w-0">

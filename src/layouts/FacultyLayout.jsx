@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -22,22 +22,81 @@ import ScrollToTop from "../components/ScrollToTop";
 
 import VcetBanner from "../components/VcetBanner";
 
-const FACULTY_NAV = [
-  { name: "Faculty Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
-  { name: "Manage Courses", href: "/faculty/courses", icon: BookOpen },
-  { name: "Course Modules & Syllabus", href: "/faculty/modules", icon: Layers },
-  { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
-  { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
-  { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
-  { name: "Student Directory", href: "/faculty/students", icon: Users },
-  { name: "Profile & Account", href: "/faculty/profile", icon: User }
-];
+const getFacultyNav = (isHod) => {
+  if (isHod) {
+    return [
+      { name: "HOD Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
+      { name: "Create & Manage Courses", href: "/faculty/courses", icon: BookOpen },
+      { name: "All Course Modules", href: "/faculty/modules", icon: Layers },
+      { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
+      { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
+      { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
+      { name: "Student Directory", href: "/faculty/students", icon: Users },
+      { name: "Profile & Account", href: "/faculty/profile", icon: User }
+    ];
+  }
+
+  // Regular Faculty Navigation: cannot create courses, manages assigned courses and modules only
+  return [
+    { name: "Faculty Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
+    { name: "My Assigned Courses", href: "/faculty/courses", icon: BookOpen },
+    { name: "Course Modules & Syllabus", href: "/faculty/modules", icon: Layers },
+    { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
+    { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
+    { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
+    { name: "Student Directory", href: "/faculty/students", icon: Users },
+    { name: "Profile & Account", href: "/faculty/profile", icon: User }
+  ];
+};
 
 export default function FacultyLayout() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const staffId = String(user?.staffId || user?.facultyId || "").toUpperCase();
+
+  const isHod =
+    staffId.includes("104") ||
+    staffId.includes("HOD") ||
+    user?.role === "hod" ||
+    user?.title?.toLowerCase().includes("hod") ||
+    user?.title?.toLowerCase().includes("head of the department") ||
+    user?.designation?.toLowerCase().includes("hod") ||
+    user?.designation?.toLowerCase().includes("head of the department") ||
+    user?.isHod === true;
+
+  const facultyNav = getFacultyNav(isHod);
+
+  const deptCode =
+    user?.departmentId?.code ||
+    user?.departmentCode ||
+    (staffId.includes("CSE") ? "CSE" : staffId.includes("AIDS") ? "AI&DS" : staffId.includes("IT") ? "IT" : null);
+
+  const deptName =
+    user?.departmentId?.name ||
+    user?.departmentName ||
+    user?.department ||
+    (deptCode === "CSE" ? "Computer Science & Engineering" : null) ||
+    (deptCode === "AI&DS" ? "Artificial Intelligence & Data Science" : null) ||
+    (deptCode === "IT" ? "Information Technology" : null) ||
+    (deptCode ? `Department of ${deptCode}` : "Velalar College of Engineering and Technology");
+
+  const displayDeptBadge = isHod
+    ? `Head of the Department • ${deptCode || deptName}`
+    : (deptName.startsWith("Department of") ? deptName : `Department of ${deptName}`);
+
+  // Lock body scroll on mobile when sidebar is open
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [sidebarOpen]);
 
   const handleLogout = () => {
     logout();
@@ -69,17 +128,17 @@ export default function FacultyLayout() {
               alt="TechVerse"
               className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
             />
-            <span className="hidden sm:inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#0062A8] font-bold border border-blue-200 uppercase tracking-wider">
-              {user?.role === "hod" ? "HOD Portal" : user?.role === "admin" ? "Admin Hub" : "Faculty Hub"}
+            <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#0062A8] font-bold border border-blue-200 uppercase tracking-wider">
+              {isHod ? "HOD Portal" : user?.role === "admin" ? "Admin Hub" : "Faculty Hub"}
             </span>
           </Link>
         </div>
 
-        {/* Topbar Center: Department Badge */}
+        {/* Topbar Center: Dynamic Department Badge */}
         <div className="hidden md:flex items-center">
           <span className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5 text-[#0062A8]" />
-            Department of Computer Science & Engineering
+            {displayDeptBadge}
           </span>
         </div>
 
@@ -105,7 +164,7 @@ export default function FacultyLayout() {
                   {user?.name || "Prof. S. R. Murugesan"}
                 </span>
                 <span className="text-[10px] font-medium text-slate-500">
-                  {user?.facultyId || "VCET-FAC-CSE-104"}
+                  {user?.staffId || user?.facultyId || (isHod ? "VCET-FAC-CSE-104" : "VCET-FACULTY")}
                 </span>
               </div>
             </Link>
@@ -124,25 +183,48 @@ export default function FacultyLayout() {
       <VcetBanner />
 
       {/* 2. Main Body with Sidebar + Dynamic Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Backdrop Overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* Sidebar Navigation */}
         <aside
-          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:inset-auto flex flex-col justify-between ${
-            sidebarOpen ? "translate-x-0 pt-14 lg:pt-0" : "-translate-x-full"
+          className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:w-64 lg:z-auto flex flex-col justify-between shadow-2xl lg:shadow-none ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          {/* Mobile Sidebar Close Button */}
-          <div className="lg:hidden flex justify-end p-3 border-b border-slate-100">
-            <button onClick={() => setSidebarOpen(false)} className="p-1 text-slate-500">
+          {/* Mobile Drawer Header */}
+          <div className="lg:hidden flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/80">
+            <div className="flex items-center gap-2">
+              <img
+                src={techverseLogoImg}
+                alt="TechVerse"
+                className="h-7 w-auto object-contain"
+              />
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#0062A8] font-bold uppercase tracking-wider">
+                {isHod ? "HOD Portal" : "Faculty Portal"}
+              </span>
+            </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors"
+              aria-label="Close navigation"
+            >
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <div className="p-3 space-y-1 overflow-y-auto">
+          <div className="p-3 space-y-1 overflow-y-auto flex-1">
             <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Faculty Management
+              {isHod ? "HOD Management" : "Faculty Management"}
             </div>
-            {FACULTY_NAV.map((item) => {
+            {facultyNav.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
 
@@ -168,6 +250,7 @@ export default function FacultyLayout() {
           <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2">
             <Link
               to="/"
+              onClick={() => setSidebarOpen(false)}
               className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:text-[#0062A8] rounded-lg hover:bg-white"
             >
               <span>Main Portal</span>

@@ -29,6 +29,9 @@ import {
   Award,
   ArrowLeft,
   User,
+  EyeOff,
+  Globe,
+  Lock,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { courseService } from "../../services/courseService";
@@ -49,13 +52,21 @@ export default function AdminCourseModulesPage() {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const paramCourseId = searchParams.get("courseId") || "";
-  const isFaculty = window.location.pathname.startsWith("/faculty") || user?.role === "teacher";
+  const isHod =
+    user?.role === "hod" ||
+    (user?.staffId && (user.staffId.includes("104") || user.staffId.toUpperCase().includes("HOD"))) ||
+    (user?.designation && (user.designation.includes("HOD") || user.designation.includes("Head of the Department")));
+  const isFacultyOnly = !isHod && user?.role !== "admin";
 
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState(paramCourseId);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
+  const selectedCourse =
+    courses.find((c) => String(c._id || c.id || c.slug) === String(selectedCourseId)) || null;
 
   // Main Module Modal State
   const [modalOpen, setModalOpen] = useState(false);
@@ -116,10 +127,20 @@ export default function AdminCourseModulesPage() {
     marks: 1,
   });
 
-  // Load courses and initial modules on mount
+  // Load courses whenever user session is available
   useEffect(() => {
     loadCourses();
-  }, []);
+  }, [user]);
+
+  // Keep selectedCourseId synced with paramCourseId when courses are populated
+  useEffect(() => {
+    if (paramCourseId && courses.length > 0) {
+      const match = courses.find((c) => String(c._id || c.id || c.slug) === String(paramCourseId));
+      if (match) {
+        setSelectedCourseId(match._id || match.id);
+      }
+    }
+  }, [paramCourseId, courses]);
 
   useEffect(() => {
     if (selectedCourseId) {
@@ -127,18 +148,44 @@ export default function AdminCourseModulesPage() {
     }
   }, [selectedCourseId]);
 
+  const handleTogglePublish = async () => {
+    if (!selectedCourse) return;
+    setPublishing(true);
+    try {
+      const newStatus = !selectedCourse.isPublished;
+      await courseService.togglePublishStatus(selectedCourse._id || selectedCourse.id, newStatus);
+      showSuccess(
+        newStatus
+          ? "🎉 Course published successfully! It is now live for students in PrepZone."
+          : "Course unpublished and moved back to Draft (hidden from students)."
+      );
+      setCourses((prev) =>
+        prev.map((c) =>
+          String(c._id || c.id || c.slug) === String(selectedCourse._id || selectedCourse.id || selectedCourse.slug)
+            ? { ...c, isPublished: newStatus }
+            : c
+        )
+      );
+    } catch (err) {
+      showError(err?.response?.data?.message || err.message || "Failed to update publication status.");
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const loadCourses = async () => {
     try {
-      const res = isFaculty ? await courseService.getMyCourses() : await api.get("/courses");
-      const courseList = isFaculty
+      const res = user?.role === "admin" ? await api.get("/courses") : await courseService.getMyCourses();
+      const courseList = user?.role !== "admin"
         ? Array.isArray(res)
           ? res
           : res?.courses || res?.data?.courses || []
         : res?.data?.courses || res?.courses || [];
       setCourses(courseList);
       if (courseList.length > 0) {
-        if (paramCourseId && courseList.some((c) => (c._id || c.id || c.slug) === paramCourseId)) {
-          setSelectedCourseId(paramCourseId);
+        if (paramCourseId && courseList.some((c) => String(c._id || c.id || c.slug) === String(paramCourseId))) {
+          const match = courseList.find((c) => String(c._id || c.id || c.slug) === String(paramCourseId));
+          setSelectedCourseId(match._id || match.id);
         } else if (!selectedCourseId) {
           setSelectedCourseId(courseList[0]._id || courseList[0].id);
         }
@@ -583,8 +630,6 @@ export default function AdminCourseModulesPage() {
     }
   };
 
-  const selectedCourse = courses.find((c) => (c._id || c.id) === selectedCourseId);
-
   return (
     <div className="space-y-6 pb-16 select-none max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       {/* 1. Header Banner */}
@@ -612,7 +657,7 @@ export default function AdminCourseModulesPage() {
           >
             {courses.map((c) => (
               <option key={c._id || c.id} value={c._id || c.id}>
-                {c.title}
+                {c.title} {c.isPublished ? "• (Live)" : "• [Draft]"}
               </option>
             ))}
           </select>
@@ -634,8 +679,8 @@ export default function AdminCourseModulesPage() {
           <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
           <h3 className="text-base font-bold text-slate-800">No Courses Assigned to You Yet</h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
-            {isFaculty
-              ? "You will manage modules here once an administrator assigns courses to you. Ask your admin to assign a course to get started."
+            {isFacultyOnly
+              ? "You will manage modules here once the Head of Department (HOD) assigns a course to you."
               : "No courses are available yet. Create a course first from the course catalog."}
           </p>
         </div>
@@ -644,22 +689,69 @@ export default function AdminCourseModulesPage() {
       {/* 2. Course Overview & Rules Callout */}
       {selectedCourse && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Active Course
-            </span>
-            <h3 className="text-base font-extrabold text-slate-800 mt-1 line-clamp-1">
-              {selectedCourse.title}
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              Category: {selectedCourse.category} • {modules.length} Published Modules
-            </p>
-            {selectedCourse.assignedFacultyName && (
-              <p className="text-[11px] font-semibold text-[#0B4A8F] mt-1.5 inline-flex items-center gap-1">
-                <User className="w-3 h-3" />
-                Assigned to: {selectedCourse.assignedFacultyName}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Active Course
+                </span>
+                {selectedCourse.isPublished ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Live in PrepZone
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-50 text-amber-700 border border-amber-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    Draft / Unpublished
+                  </span>
+                )}
+              </div>
+              <h3 className="text-base font-extrabold text-slate-800 mt-1 line-clamp-1">
+                {selectedCourse.title}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Category: {selectedCourse.category} • {modules.length} Modules
               </p>
-            )}
+              {selectedCourse.assignedFacultyName && (
+                <p className="text-[11px] font-semibold text-[#0B4A8F] mt-1.5 inline-flex items-center gap-1">
+                  <User className="w-3 h-3" />
+                  Assigned to: {selectedCourse.assignedFacultyName}
+                </p>
+              )}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+              <span className="text-[11px] text-slate-500 font-medium">
+                {selectedCourse.isPublished ? "Visible to students" : "Publish when syllabus is ready"}
+              </span>
+              <button
+                type="button"
+                onClick={handleTogglePublish}
+                disabled={publishing}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs disabled:opacity-50 ${
+                  selectedCourse.isPublished
+                    ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                    : "bg-[#0B4A8F] text-white hover:bg-[#08386c] shadow-blue-500/20"
+                }`}
+                title={selectedCourse.isPublished ? "Unpublish course so students cannot see it" : "Publish course to student PrepZone"}
+              >
+                {publishing ? (
+                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                ) : selectedCourse.isPublished ? (
+                  <EyeOff className="w-3.5 h-3.5" />
+                ) : (
+                  <Globe className="w-3.5 h-3.5" />
+                )}
+                <span>
+                  {publishing
+                    ? "Updating..."
+                    : selectedCourse.isPublished
+                    ? "Unpublish"
+                    : "Publish to PrepZone"}
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">

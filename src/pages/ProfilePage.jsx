@@ -72,10 +72,21 @@ export default function ProfilePage({ embedded = false }) {
     }
   };
 
+  const staffId = String(user?.registerNumber || user?.staffId || user?.facultyId || "").toUpperCase();
+
+  const isHod =
+    staffId.includes("104") ||
+    staffId.includes("HOD") ||
+    role === "hod" ||
+    user?.role === "hod" ||
+    user?.designation?.toLowerCase().includes("hod") ||
+    user?.title?.toLowerCase().includes("hod") ||
+    user?.isHod === true;
+
   const roleLabel =
     role === "admin"
       ? "Institutional Administrator"
-      : role === "hod"
+      : isHod
         ? "Head of the Department (HOD)"
         : role === "faculty" || role === "teacher"
           ? "Faculty Member"

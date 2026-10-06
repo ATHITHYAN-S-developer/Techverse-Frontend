@@ -30,7 +30,8 @@ input:-webkit-autofill:active {
   --color-vcet-gray-light: #F4F4F4;
   --color-vcet-gray-border: #C9C9C9;
   --color-white: #FFFFFF;
-  --font-sans: 'Plus Jakarta Sans', 'Outfit', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'DM Sans', 'Plus Jakarta Sans', 'Outfit', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-portal: 'Space Grotesk', 'DM Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
 
   /* Portal design tokens — academic register: VCET blue carries the identity,
      gold is reserved for streak/points/active emphasis. */
@@ -42,10 +43,10 @@ input:-webkit-autofill:active {
   --color-vcet-paper: #FCFCFA;
   --color-vcet-paper-alt: #F6F5F0;
   --color-vcet-rule: #E4E1D8;
-  --font-display: 'Outfit', 'Plus Jakarta Sans', 'Sora', sans-serif;
+  --font-display: 'Space Grotesk', 'Outfit', 'Plus Jakarta Sans', 'Sora', sans-serif;
   --font-royal: 'Cinzel', 'Playfair Display', serif;
   --font-serif: 'Playfair Display', 'Fraunces', 'Georgia', 'Times New Roman', serif;
-  --font-body: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'DM Sans', 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
 
   --color-profile-main: #0062A9;
   --color-profile-hover: #004E85;

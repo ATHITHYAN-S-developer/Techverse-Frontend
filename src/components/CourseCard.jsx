@@ -1,5 +1,5 @@
 import React from "react";
-import { Clock, BookOpen, Award, ArrowRight, Bookmark, Sparkles } from "lucide-react";
+import { Clock, BookOpen, Award, ArrowRight, Bookmark, Sparkles, ShieldCheck, Globe } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { getCourseImageUrl } from "../services/courseService";
@@ -11,6 +11,8 @@ export default function CourseCard({ course }) {
   const bookmarked = isBookmarked(courseId);
   const coverImage = getCourseImageUrl(course.thumbnailUrl, course.thumbnail);
   const courseUrl = `/courses/${courseId}`;
+
+  const isDeptOnly = course.isDepartmentOnly || course.targetAudience === "department";
 
   const rawDesc = course.courseDescription || course.description || "";
   const descPreview = rawDesc
@@ -37,6 +39,25 @@ export default function CourseCard({ course }) {
         {/* Category Badge */}
         <span className="absolute top-3 left-3 px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-md text-[#0B4A8F] rounded-full shadow-xs">
           {course.category}
+        </span>
+
+        {/* Audience Badge (Only Dept vs All VCETians) */}
+        <span
+          className={`absolute top-3 right-11 px-2.5 py-0.5 text-[10px] font-bold rounded-full backdrop-blur-md flex items-center gap-1 text-white shadow-xs ${
+            isDeptOnly ? "bg-amber-600/90" : "bg-emerald-600/90"
+          }`}
+        >
+          {isDeptOnly ? (
+            <>
+              <ShieldCheck className="w-3 h-3" />
+              <span>Only {course.departmentCode || "Dept"}</span>
+            </>
+          ) : (
+            <>
+              <Globe className="w-3 h-3" />
+              <span>All VCETians</span>
+            </>
+          )}
         </span>
 
         {/* Bookmark Button */}
