@@ -54,7 +54,7 @@ export default function SyllabusAccordion({ subject, isExpanded, onToggle, onOpe
                         {String(uIdx + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-vcet-blue-deep">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-vcet-blue-deep">
                           Unit {unit.unitNumber}
                         </p>
                         <p className="text-xs text-slate-600 font-medium leading-tight">{unit.title}</p>

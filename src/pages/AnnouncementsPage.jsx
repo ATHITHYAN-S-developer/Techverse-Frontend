@@ -367,7 +367,7 @@ export default function AnnouncementsPage() {
               <Flame className="w-4 h-4" />
               <span>Urgent Alerts</span>
               {urgentCount > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-rose-100 text-rose-700">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-rose-100 text-rose-700">
                   {urgentCount}
                 </span>
               )}
@@ -384,7 +384,7 @@ export default function AnnouncementsPage() {
               <Bookmark className="w-4 h-4" />
               <span>Saved</span>
               {savedIds.length > 0 && (
-                <span className="px-1.5 py-0.2 rounded-full text-[9px] font-black bg-amber-100 text-amber-800">
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-amber-100 text-amber-800">
                   {savedIds.length}
                 </span>
               )}

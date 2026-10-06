@@ -191,7 +191,7 @@ export default function LoginHeroPanel() {
               <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/90 mt-0.5">
                 {stat.label}
               </div>
-              <div className="text-[9px] sm:text-[11px] text-blue-200/80 font-normal truncate hidden sm:block">
+              <div className="text-[10px] sm:text-[11px] text-blue-200/80 font-normal truncate hidden sm:block">
                 {stat.desc}
               </div>
             </motion.div>

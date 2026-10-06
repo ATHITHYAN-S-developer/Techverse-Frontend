@@ -584,7 +584,7 @@ export default function AdminDashboard() {
                         {act.title}
                       </span>
                       <span
-                        className={`text-[9px] px-1.5 py-0.2 rounded-full font-bold border ${act.badgeColor}`}
+                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold border ${act.badgeColor}`}
                       >
                         {act.badge}
                       </span>

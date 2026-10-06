@@ -843,7 +843,7 @@ export default function AdminCourseModulesPage() {
                             <Video className="w-3.5 h-3.5" />
                             <span>{videoCount} Video{videoCount > 1 ? "s" : ""}</span>
                             <span
-                              className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                              className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
                                 mod.isVideoMandatory
                                   ? "bg-amber-100 text-amber-800 border border-amber-300"
                                   : "bg-blue-100/70 text-vcet-blue-deep"

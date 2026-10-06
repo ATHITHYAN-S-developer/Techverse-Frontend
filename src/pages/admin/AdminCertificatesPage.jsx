@@ -266,7 +266,7 @@ export default function AdminCertificatesPage() {
               <div className="text-[11px] uppercase tracking-widest font-black text-amber-700 mb-1">
                 Velalar College of Engineering and Technology
               </div>
-              <div className="text-[9px] uppercase tracking-wider text-slate-500 mb-4">
+              <div className="text-[10px] uppercase tracking-wider text-slate-500 mb-4">
                 (Autonomous) • Accredited by NAAC with 'A+' Grade • Erode - 638 012
               </div>
 

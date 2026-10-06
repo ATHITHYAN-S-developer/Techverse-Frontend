@@ -85,6 +85,15 @@ export default function FacultyLayout() {
     ? `Head of the Department • ${deptCode || deptName}`
     : (deptName.startsWith("Department of") ? deptName : `Department of ${deptName}`);
 
+  // Escape closes the mobile drawer
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   // Lock body scroll on mobile when sidebar is open
   useEffect(() => {
     if (sidebarOpen) {
@@ -110,6 +119,12 @@ export default function FacultyLayout() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-vcet-blue selection:text-white font-sans">
       <ScrollToTop />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-vcet-blue focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to content
+      </a>
       {/* 1. Global Faculty Topbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -167,7 +182,7 @@ export default function FacultyLayout() {
             </Link>
             <button
               onClick={handleLogout}
-              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-1"
+              className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-1"
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
@@ -218,7 +233,7 @@ export default function FacultyLayout() {
           </div>
 
           <div className="p-3 space-y-1 overflow-y-auto flex-1">
-            <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {isHod ? "HOD Management" : "Faculty Management"}
             </div>
             {facultyNav.map((item) => {
@@ -264,7 +279,7 @@ export default function FacultyLayout() {
         </aside>
 
         {/* Main Content Pane */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main id="main-content" className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

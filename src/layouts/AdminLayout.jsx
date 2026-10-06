@@ -116,6 +116,10 @@ export default function AdminLayout() {
         e.preventDefault();
         setSearchOpen((prev) => !prev);
       }
+      if (e.key === "Escape") {
+        setSearchOpen(false);
+        setSidebarOpen(false);
+      }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -173,6 +177,12 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-vcet-blue selection:text-white font-sans">
       <ScrollToTop />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-vcet-blue focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to content
+      </a>
 
       {/* 1. TOP HEADER - Clean White */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-xs">
@@ -250,7 +260,7 @@ export default function AdminLayout() {
             </div>
             <button
               onClick={handleLogout}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 cursor-pointer"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 cursor-pointer"
               title="Sign Out"
             >
               <LogOut className="w-4 h-4" />
@@ -303,7 +313,7 @@ export default function AdminLayout() {
           <div className="p-3 space-y-4 overflow-y-auto flex-1">
             {ADMIN_NAV_TREE.map((sec, sIdx) => (
               <div key={sIdx} className="space-y-1">
-                <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase px-3 block">
+                <span className="text-[10px] font-black tracking-wider text-slate-500 uppercase px-3 block">
                   {sec.category}
                 </span>
                 <div className="space-y-0.5">
@@ -326,12 +336,12 @@ export default function AdminLayout() {
                           <span className="truncate">{item.name}</span>
                         </div>
                         {item.badge && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
                             {item.badge}
                           </span>
                         )}
                         {item.alert && (
-                          <span className="text-[9px] px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-bold border border-rose-200 animate-pulse">
+                          <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-bold border border-rose-200 animate-pulse">
                             Security
                           </span>
                         )}
@@ -349,14 +359,14 @@ export default function AdminLayout() {
               <Shield className="w-4 h-4 text-vcet-blue shrink-0" />
               <div className="min-w-0">
                 <span className="text-slate-900 font-bold block truncate">VCET Governance</span>
-                <span className="text-[10px] text-slate-400 block truncate">v1.0 • Erode, TN</span>
+                <span className="text-[10px] text-slate-500 block truncate">v1.0 • Erode, TN</span>
               </div>
             </div>
           </div>
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 min-w-0 max-w-full overflow-x-hidden bg-slate-50">
+        <main id="main-content" className="flex-1 lg:ml-64 p-4 sm:p-6 lg:p-8 min-w-0 max-w-full overflow-x-hidden bg-slate-50">
           <Outlet />
         </main>
       </div>
@@ -398,7 +408,7 @@ export default function AdminLayout() {
                     <ChevronRight className="w-3.5 h-3.5 text-vcet-blue" />
                     <span className="font-bold">{item.title}</span>
                   </div>
-                  <span className="text-[10px] font-mono text-slate-400 uppercase">{item.category}</span>
+                  <span className="text-[10px] font-mono text-slate-500 uppercase">{item.category}</span>
                 </button>
               ))}
             </div>

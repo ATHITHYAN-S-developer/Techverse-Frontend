@@ -835,7 +835,7 @@ function EqualDriveCard({ event, onClick }) {
       {/* Badges */}
       <div className="relative z-10 flex items-start justify-between gap-2 p-5">
         <span
-          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider backdrop-blur-md ${
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider backdrop-blur-md ${
             event.poster
               ? "bg-black/60 text-white border border-white/15"
               : "bg-white/20 text-white border border-white/20"
@@ -845,7 +845,7 @@ function EqualDriveCard({ event, onClick }) {
           {event.badge || "Campus Drive"}
         </span>
         {dateStr && (
-          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider backdrop-blur-md">
+          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
             <CalendarDays size={9} /> {formatShortDate(dateStr)}
           </span>
         )}
@@ -1059,7 +1059,7 @@ function BentoCardSmall({ event, tone = "white", onClick }) {
         {/* Category badge at top-left of the preview */}
         <div className="absolute top-2 left-2">
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black tracking-wider backdrop-blur-md ${
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black tracking-wider backdrop-blur-md ${
               isDark
                 ? "bg-white/20 text-white border border-white/20"
                 : "bg-black/60 text-white border border-black/10"
@@ -1072,7 +1072,7 @@ function BentoCardSmall({ event, tone = "white", onClick }) {
 
         {/* Date chip at top-right of the preview */}
         {dateStr && (
-          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider backdrop-blur-md">
+          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[10px] font-black uppercase tracking-wider backdrop-blur-md">
             <CalendarDays size={9} /> {formatShortDate(dateStr)}
           </span>
         )}

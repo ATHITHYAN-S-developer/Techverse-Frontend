@@ -58,7 +58,7 @@ function NavLinks({ onNavigate }) {
     <nav className="py-2">
       {STUDENT_NAV.map((group) => (
         <div key={group.label} className="mb-7 last:mb-0">
-          <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-profile-ink/35">
+          <p className="px-3 mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-profile-ink/75">
             {group.label}
           </p>
           <ul className="space-y-0.5">
@@ -106,6 +106,7 @@ export default function StudentLayout() {
         e.preventDefault();
         setSearchOpen((prev) => !prev);
       }
+      if (e.key === "Escape") setSidebarOpen(false);
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
@@ -132,8 +133,14 @@ export default function StudentLayout() {
   const closeSidebar = () => setSidebarOpen(false);
 
   return (
-    <div className="h-screen overflow-hidden bg-profile-paper text-profile-ink selection:bg-profile-main selection:text-white font-sans flex flex-col">
+    <div className="h-dvh overflow-hidden bg-profile-paper text-profile-ink selection:bg-profile-main selection:text-white font-sans flex flex-col">
       <ScrollToTop />
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-vcet-blue focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
+      >
+        Skip to content
+      </a>
 
       {/* Topbar */}
       <header className="sticky top-0 z-40 bg-profile-paper/95 backdrop-blur-md border-b border-profile-rule">
@@ -169,7 +176,7 @@ export default function StudentLayout() {
               <span className="inline-flex items-center gap-1.5 font-display font-semibold text-profile-main tabular-nums">
                 <Flame className="w-3.5 h-3.5 fill-profile-main" />
                 {streak?.currentStreak || 0}
-                <span className="font-sans font-normal text-profile-ink/45">day streak</span>
+                <span className="font-sans font-normal text-profile-ink/70">day streak</span>
               </span>
             </Link>
 
@@ -181,14 +188,14 @@ export default function StudentLayout() {
                 <span className="text-xs font-semibold text-profile-ink leading-tight truncate max-w-[130px] group-hover:text-profile-main transition-colors">
                   {user?.name || "Student"}
                 </span>
-                <span className="text-[10px] font-medium text-profile-ink/45 tabular-nums">
+                <span className="text-[11px] font-medium text-profile-ink/70 tabular-nums">
                   {user?.registerNumber || user?.email || "Student"}
                 </span>
               </span>
             </Link>
             <button
               onClick={handleLogout}
-              className="p-1.5 rounded-lg text-profile-ink/40 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 shrink-0"
+              className="p-1.5 rounded-lg text-profile-ink/60 hover:text-rose-600 hover:bg-rose-50 transition-colors ml-1 shrink-0"
               title="Sign Out"
               aria-label="Sign out"
             >
@@ -270,7 +277,7 @@ export default function StudentLayout() {
         )}
 
         {/* Content */}
-        <main className="min-h-0 flex-1 overflow-y-auto">
+        <main id="main-content" className="min-h-0 flex-1 overflow-y-auto">
           <Outlet />
         </main>
       </div>

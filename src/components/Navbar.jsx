@@ -109,7 +109,7 @@ export default function Navbar() {
 
                   {link.badge && (
                     <span
-                      className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded border transition-colors ${
+                      className={`text-[10px] font-black uppercase px-1.5 py-0.2 rounded border transition-colors ${
                         active
                           ? "border-vcet-blue-deep text-vcet-blue-deep bg-blue-50/60"
                           : "border-red-400/80 text-red-600 bg-red-50/50"
@@ -240,7 +240,7 @@ export default function Navbar() {
                           <span>{link.name}</span>
                         </div>
                         {link.badge && (
-                          <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded border border-red-400 text-red-600 bg-red-50">
+                          <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded border border-red-400 text-red-600 bg-red-50">
                             {link.badge}
                           </span>
                         )}

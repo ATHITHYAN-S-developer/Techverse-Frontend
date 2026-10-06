@@ -446,7 +446,7 @@ function PastEventCard({ item }) {
 
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
           <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black tracking-wider border shadow-sm ${catStyle.badgeBg}`}
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black tracking-wider border shadow-sm ${catStyle.badgeBg}`}
           >
             <Icon size={10} />
             {catStyle.label}
@@ -454,7 +454,7 @@ function PastEventCard({ item }) {
         </div>
 
         {ev && (
-          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[9px] font-black uppercase tracking-wider shadow-sm">
+          <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-slate-900/80 text-white text-[10px] font-black uppercase tracking-wider shadow-sm">
             Ended {formatShortDate(ev)}
           </span>
         )}

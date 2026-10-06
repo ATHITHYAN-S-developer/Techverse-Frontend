@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
@@ -34,11 +34,11 @@ input:-webkit-autofill:active {
   --color-vcet-surface: #F5F8FB;
   --color-white: #FFFFFF;
   /* Type stacks only use families that are actually imported below
-     (Geist, Sora, Fraunces, Inter) â€” anything else silently falls back. */
+     (Geist, Sora, Fraunces, Inter) — anything else silently falls back. */
   --font-sans: 'Geist Variable', 'Inter Variable', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-portal: 'Sora Variable', 'Geist Variable', system-ui, sans-serif;
 
-  /* Portal design tokens â€” academic register: VCET blue carries the identity,
+  /* Portal design tokens — academic register: VCET blue carries the identity,
      gold is reserved for streak/points/active emphasis. */
   --color-vcet-gold: #B8860B;
   --color-vcet-gold-soft: #D4A017;
@@ -53,7 +53,7 @@ input:-webkit-autofill:active {
   --font-serif: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
   --font-body: 'Geist Variable', 'Inter Variable', system-ui, sans-serif;
 
-  /* Legacy portal palette — now aliases of the VCET brand tokens so the
+  /* Legacy portal palette � now aliases of the VCET brand tokens so the
      product has one source of truth for colour instead of two registers. */
   --color-profile-main: var(--color-vcet-blue);
   --color-profile-hover: var(--color-vcet-blue-deep);
