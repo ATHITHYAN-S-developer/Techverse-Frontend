@@ -13,7 +13,8 @@ import {
   ExternalLink,
   ShieldCheck,
   BookOpen,
-  Code2
+  Code2,
+} from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import techverseLogoImg from "../assets/techverse-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
