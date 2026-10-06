@@ -5,7 +5,7 @@ export default function ResourceTags({ items, labelFor, tone = "blue" }) {
 
   const toneClasses =
     tone === "blue"
-      ? "bg-[#EFF6FF] text-[#0B4A8F] ring-1 ring-blue-100"
+      ? "bg-[#EFF6FF] text-vcet-blue-deep ring-1 ring-blue-100"
       : "bg-slate-100 text-slate-600";
 
   return (

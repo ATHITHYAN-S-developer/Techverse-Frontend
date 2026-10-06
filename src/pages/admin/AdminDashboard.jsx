@@ -120,7 +120,7 @@ export default function AdminDashboard() {
 
     <div className="space-y-6 max-w-7xl mx-auto text-slate-800">
       {/* 1. Header Hero Banner - Crisp Institutional Blue */}
-      <div className="bg-gradient-to-r from-[#0B4A8F] via-[#0062A8] to-sky-600 border border-blue-800 rounded-3xl p-6 sm:p-8 shadow-md text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-gradient-to-r from-vcet-blue-deep via-vcet-blue to-sky-600 border border-blue-800 rounded-3xl p-6 sm:p-8 shadow-md text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-white text-xs font-semibold mb-3">
             <ShieldCheck className="w-3.5 h-3.5 text-sky-200" />
@@ -137,7 +137,7 @@ export default function AdminDashboard() {
         <div className="flex flex-wrap items-center gap-2.5">
           <Link
             to="/admin/students"
-            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-[#0062A8] font-bold text-xs shadow-sm transition-all text-center"
+            className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-vcet-blue font-bold text-xs shadow-sm transition-all text-center"
           >
             Manage Students
           </Link>
@@ -165,7 +165,7 @@ export default function AdminDashboard() {
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
               Students
             </span>
-            <div className="p-2 rounded-xl bg-blue-50 text-[#0062A8]">
+            <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue">
               <GraduationCap className="w-4 h-4" />
             </div>
           </div>
@@ -353,7 +353,7 @@ export default function AdminDashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div>
               <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#0062A8]" />
+                <TrendingUp className="w-4 h-4 text-vcet-blue" />
                 Student Activity & Learning Telemetry
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -368,7 +368,7 @@ export default function AdminDashboard() {
                   onClick={() => setActivityMetric(m)}
                   className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all ${
                     activityMetric === m
-                      ? "bg-white text-[#0062A8] shadow-xs"
+                      ? "bg-white text-vcet-blue shadow-xs"
                       : "text-slate-500 hover:text-slate-900"
                   }`}
                 >
@@ -513,7 +513,7 @@ export default function AdminDashboard() {
             </div>
             <Link
               to="/admin/courses"
-              className="text-xs font-bold text-[#0062A8] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-vcet-blue hover:underline flex items-center gap-1"
             >
               <span>View Courses</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -530,7 +530,7 @@ export default function AdminDashboard() {
                 <div key={c.courseId || c.name} className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs gap-3">
                     <span className="font-bold text-slate-800 truncate">{c.name}</span>
-                    <span className="font-mono font-bold text-[#0062A8] whitespace-nowrap">
+                    <span className="font-mono font-bold text-vcet-blue whitespace-nowrap">
                       {c.rate}% · {formatNumber(c.enrollments)} enrolled
                     </span>
                   </div>
@@ -560,7 +560,7 @@ export default function AdminDashboard() {
             </div>
             <Link
               to="/admin/audit-logs"
-              className="text-xs font-bold text-[#0062A8] hover:underline flex items-center gap-1"
+              className="text-xs font-bold text-vcet-blue hover:underline flex items-center gap-1"
             >
               <span>Audit Logs</span>
               <ArrowRight className="w-3.5 h-3.5" />

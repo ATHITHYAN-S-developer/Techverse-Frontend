@@ -35,7 +35,7 @@ const HOURLY_VISITOR_DATA = [
 ];
 
 const DEVICE_BREAKDOWN = [
-  { device: "Desktop / Laptops", percentage: 68, count: "3,326", icon: Monitor, color: "text-[#0062A8]" },
+  { device: "Desktop / Laptops", percentage: 68, count: "3,326", icon: Monitor, color: "text-vcet-blue" },
   { device: "Mobile Phones", percentage: 28, count: "1,370", icon: Smartphone, color: "text-emerald-600" },
   { device: "Tablets / iPads", percentage: 4, count: "196", icon: Tablet, color: "text-amber-600" }
 ];
@@ -56,7 +56,7 @@ export default function AdminVisitorsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-            <Globe className="w-6 h-6 text-[#0062A8]" />
+            <Globe className="w-6 h-6 text-vcet-blue" />
             Institutional Visitor Traffic & Privacy Analytics
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -69,7 +69,7 @@ export default function AdminVisitorsPage() {
             onClick={() => setTimeRange("today")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               timeRange === "today"
-                ? "bg-[#0062A8] text-white shadow-xs"
+                ? "bg-vcet-blue text-white shadow-xs"
                 : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
             }`}
           >
@@ -79,7 +79,7 @@ export default function AdminVisitorsPage() {
             onClick={() => setTimeRange("week")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               timeRange === "week"
-                ? "bg-[#0062A8] text-white shadow-xs"
+                ? "bg-vcet-blue text-white shadow-xs"
                 : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
             }`}
           >
@@ -89,7 +89,7 @@ export default function AdminVisitorsPage() {
             onClick={() => setTimeRange("month")}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
               timeRange === "month"
-                ? "bg-[#0062A8] text-white shadow-xs"
+                ? "bg-vcet-blue text-white shadow-xs"
                 : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200"
             }`}
           >
@@ -110,7 +110,7 @@ export default function AdminVisitorsPage() {
 
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
           <span className="text-[10px] uppercase font-bold text-slate-400">This Week's Visitors</span>
-          <p className="text-2xl font-black text-[#0062A8] mt-1">28,450</p>
+          <p className="text-2xl font-black text-vcet-blue mt-1">28,450</p>
           <span className="text-[10px] text-slate-500 mt-1 block">Institutional Footfall</span>
         </div>
 
@@ -135,8 +135,8 @@ export default function AdminVisitorsPage() {
             <p className="text-xs text-slate-500">Peak student activity occurs during lab sessions (11 AM - 4 PM).</p>
           </div>
           <div className="flex items-center gap-4 text-xs">
-            <span className="flex items-center gap-1.5 text-[#0062A8] font-bold">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#0062A8] inline-block" />
+            <span className="flex items-center gap-1.5 text-vcet-blue font-bold">
+              <span className="w-2.5 h-2.5 rounded-full bg-vcet-blue inline-block" />
               Visitors
             </span>
             <span className="flex items-center gap-1.5 text-emerald-600 font-bold">
@@ -198,7 +198,7 @@ export default function AdminVisitorsPage() {
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-[#0062A8] h-2 rounded-full"
+                      className="bg-vcet-blue h-2 rounded-full"
                       style={{ width: `${d.percentage}%` }}
                     />
                   </div>
@@ -224,7 +224,7 @@ export default function AdminVisitorsPage() {
               <tbody className="divide-y divide-slate-100">
                 {TOP_PAGES.map((p) => (
                   <tr key={p.path} className="hover:bg-slate-50/80">
-                    <td className="px-3 py-2.5 font-mono font-bold text-[#0062A8]">{p.path}</td>
+                    <td className="px-3 py-2.5 font-mono font-bold text-vcet-blue">{p.path}</td>
                     <td className="px-3 py-2.5 font-medium text-slate-900">{p.name}</td>
                     <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800">{p.views}</td>
                     <td className="px-3 py-2.5 text-right font-mono font-bold text-emerald-600">{p.unique}</td>

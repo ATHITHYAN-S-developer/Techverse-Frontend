@@ -289,7 +289,7 @@ export default function AdminStudentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-            <GraduationCap className="w-6 h-6 text-[#0062A8]" />
+            <GraduationCap className="w-6 h-6 text-vcet-blue" />
             Student Directory & Profile Management
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -299,7 +299,7 @@ export default function AdminStudentsPage() {
 
         <button
           onClick={handleOpenAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-blue-700 text-white font-bold text-xs shadow-xs transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add Student</span>
@@ -315,7 +315,7 @@ export default function AdminStudentsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by student name, register number (732924CSE...), email..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0062A8] focus:bg-white"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-vcet-blue focus:bg-white"
           />
         </div>
 
@@ -369,7 +369,7 @@ export default function AdminStudentsPage() {
             <tbody className="divide-y divide-slate-100">
               {filtered.map((s) => (
                 <tr key={s.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-5 py-3.5 font-mono font-bold text-[#0062A8] text-xs">
+                  <td className="px-5 py-3.5 font-mono font-bold text-vcet-blue text-xs">
                     {s.regNo}
                   </td>
                   <td className="px-4 py-3.5">
@@ -410,7 +410,7 @@ export default function AdminStudentsPage() {
                       </button>
                       <button
                         onClick={() => handleOpenEdit(s)}
-                        className="p-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 text-[#0062A8] border border-slate-200"
+                        className="p-1.5 rounded-lg bg-slate-50 hover:bg-blue-50 text-vcet-blue border border-slate-200"
                         title="Edit Student"
                       >
                         <Edit className="w-3.5 h-3.5" />
@@ -498,7 +498,7 @@ export default function AdminStudentsPage() {
               <img
                 src={profileStudent.avatar}
                 alt={profileStudent.name}
-                className="w-16 h-16 rounded-2xl object-cover border-2 border-[#0062A8]/30 shadow-xs"
+                className="w-16 h-16 rounded-2xl object-cover border-2 border-vcet-blue/30 shadow-xs"
               />
               <div>
                 <div className="flex items-center gap-2">
@@ -513,7 +513,7 @@ export default function AdminStudentsPage() {
                     {profileStudent.isActive ? "Active" : "Blocked"}
                   </span>
                 </div>
-                <p className="text-xs font-mono text-[#0062A8] font-bold mt-0.5">{profileStudent.regNo}</p>
+                <p className="text-xs font-mono text-vcet-blue font-bold mt-0.5">{profileStudent.regNo}</p>
                 <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1">
                   <span>{profileStudent.department}</span>
                   <span>•</span>
@@ -573,7 +573,7 @@ export default function AdminStudentsPage() {
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
                   <span className="text-[10px] text-slate-500">Tests Attempted</span>
-                  <p className="text-base font-bold text-[#0062A8] mt-0.5">{profileStudent.stats.testsAttempted}</p>
+                  <p className="text-base font-bold text-vcet-blue mt-0.5">{profileStudent.stats.testsAttempted}</p>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
                   <span className="text-[10px] text-slate-500">Average Score</span>
@@ -630,7 +630,7 @@ export default function AdminStudentsPage() {
             </button>
 
             <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-              <GraduationCap className="w-5 h-5 text-[#0062A8]" />
+              <GraduationCap className="w-5 h-5 text-vcet-blue" />
               {editingStudent ? "Edit Student Information" : "Add Student to Institutional Registry"}
             </h2>
 
@@ -644,7 +644,7 @@ export default function AdminStudentsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g. Athithya V"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-[#0062A8] focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white"
                   />
                 </div>
                 <div>
@@ -655,7 +655,7 @@ export default function AdminStudentsPage() {
                     value={formData.regNo}
                     onChange={(e) => setFormData({ ...formData, regNo: e.target.value.toUpperCase() })}
                     placeholder="e.g. 732924CSE001"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-[#0062A8] focus:bg-white font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white font-mono"
                   />
                 </div>
               </div>
@@ -669,7 +669,7 @@ export default function AdminStudentsPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="e.g. 732924cse001@vcet.ac.in"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-[#0062A8] focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white"
                   />
                 </div>
                 <div>
@@ -679,7 +679,7 @@ export default function AdminStudentsPage() {
                     required
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-[#0062A8] focus:bg-white font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white font-mono"
                   />
                 </div>
               </div>
@@ -763,7 +763,7 @@ export default function AdminStudentsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-blue-700 text-white font-bold shadow-xs"
+                  className="px-5 py-2 rounded-xl bg-vcet-blue hover:bg-blue-700 text-white font-bold shadow-xs"
                 >
                   {editingStudent ? "Save Changes" : "Register Student"}
                 </button>

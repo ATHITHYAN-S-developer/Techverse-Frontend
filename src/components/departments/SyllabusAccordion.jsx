@@ -12,13 +12,13 @@ export default function SyllabusAccordion({ subject, isExpanded, onToggle, onOpe
         onClick={onToggle}
         aria-expanded={isExpanded}
         aria-controls={`syllabus-${subject.id}`}
-        className="w-full flex items-center justify-between gap-2 text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F]/50 rounded-lg"
+        className="w-full flex items-center justify-between gap-2 text-xs font-bold text-slate-700 hover:text-vcet-blue-deep cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50 rounded-lg"
       >
         <span className="flex items-center gap-1.5">
           {hasUnits ? (
-            <FileText size={13} className="text-[#0B4A8F]" />
+            <FileText size={13} className="text-vcet-blue-deep" />
           ) : (
-            <BookMarked size={13} className="text-[#0B4A8F]" />
+            <BookMarked size={13} className="text-vcet-blue-deep" />
           )}
           <span>
             {hasUnits
@@ -50,11 +50,11 @@ export default function SyllabusAccordion({ subject, isExpanded, onToggle, onOpe
                 <ol className="space-y-2">
                   {subject.units.map((unit, uIdx) => (
                     <li key={uIdx} className="flex items-start gap-3">
-                      <span className="w-6 h-6 rounded-full bg-[#EFF6FF] text-[#0B4A8F] text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5 ring-1 ring-blue-100">
+                      <span className="w-6 h-6 rounded-full bg-[#EFF6FF] text-vcet-blue-deep text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5 ring-1 ring-blue-100">
                         {String(uIdx + 1).padStart(2, "0")}
                       </span>
                       <div className="min-w-0">
-                        <p className="text-[9px] font-black uppercase tracking-widest text-[#0B4A8F]">
+                        <p className="text-[9px] font-black uppercase tracking-widest text-vcet-blue-deep">
                           Unit {unit.unitNumber}
                         </p>
                         <p className="text-xs text-slate-600 font-medium leading-tight">{unit.title}</p>
@@ -68,12 +68,12 @@ export default function SyllabusAccordion({ subject, isExpanded, onToggle, onOpe
                     <li key={r._id || r.id}>
                       <button
                         onClick={() => onOpenResource(r)}
-                        className="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-white text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F]/50"
+                        className="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-white text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50"
                       >
                         <span className="text-xs font-medium text-slate-700 leading-tight line-clamp-1">
                           {r.title}
                         </span>
-                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-[#0B4A8F]">
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold text-vcet-blue-deep">
                           <Download size={11} /> {r.downloadsCount || 0}
                         </span>
                       </button>

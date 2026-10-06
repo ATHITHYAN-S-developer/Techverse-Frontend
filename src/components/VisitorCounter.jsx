@@ -66,7 +66,7 @@ export default function VisitorCounter() {
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ duration: 0.4 }}
         whileHover={{ scale: 1.05 }}
-        className="group flex items-center gap-2.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-[#0062A8] text-white shadow-2xl shadow-[#0062A8]/35 border border-white/30 hover:border-white/60 transition-all duration-200 cursor-default"
+        className="group flex items-center gap-2.5 px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-full bg-vcet-blue text-white shadow-2xl shadow-vcet-blue/35 border border-white/30 hover:border-white/60 transition-all duration-200 cursor-default"
         title={`Total visitors on ${SITE_NAME}`}
       >
         {/* Eye Icon with Live Pulse Indicator */}

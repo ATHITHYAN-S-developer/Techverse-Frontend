@@ -78,7 +78,7 @@ export default function AdminAnalyticsPage() {
   return (
     <div className="space-y-6 max-w-7xl mx-auto text-slate-800">
       <div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold mb-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold mb-2">
           <ShieldAlert className="w-3.5 h-3.5" />
           <span>VCET Institutional Telemetry & Anti-Cheat Control</span>
         </div>
@@ -95,7 +95,7 @@ export default function AdminAnalyticsPage() {
         <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-1 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs text-slate-500 font-bold uppercase">Students Started</span>
-            <Users className="w-4 h-4 text-[#0062A8]" />
+            <Users className="w-4 h-4 text-vcet-blue" />
           </div>
           <div className="text-2xl sm:text-3xl font-black text-slate-900">{summary.totalStarted}</div>
           <span className="text-[11px] text-slate-500">Across MCQ & Coding Arenas</span>
@@ -207,7 +207,7 @@ export default function AdminAnalyticsPage() {
         <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-xs">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#0062A8]" /> Student Enrollment by Department
+              <Users className="w-4 h-4 text-vcet-blue" /> Student Enrollment by Department
             </h3>
             <span className="text-xs text-slate-500">Total: 5,240</span>
           </div>
@@ -273,7 +273,7 @@ export default function AdminAnalyticsPage() {
         <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-xs">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#0062A8]" /> Platform Traffic Trends
+              <Globe className="w-4 h-4 text-vcet-blue" /> Platform Traffic Trends
             </h3>
             <span className="text-xs text-slate-500">Last 7 Days</span>
           </div>

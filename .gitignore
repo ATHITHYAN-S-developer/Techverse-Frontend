@@ -56,3 +56,4 @@ tests/_dump.spec.js
 
 # Vercel deployment config (kept local)
 vercel.json
+playwright-report/

@@ -44,7 +44,7 @@ export default function LoginHeroPanel() {
   return (
     <div
       onMouseMove={handleMouseMove}
-      className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white p-8 sm:p-10 md:p-12 min-h-[380px] md:min-h-[640px]"
+      className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-vcet-blue-deep via-[#084282] to-[#063A75] text-white p-8 sm:p-10 md:p-12 min-h-[380px] md:min-h-[640px]"
     >
       {/* Decorative ambient background circles with continuous slow drift & mouse parallax */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden select-none">

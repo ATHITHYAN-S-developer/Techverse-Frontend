@@ -97,7 +97,7 @@ export default function AdminCertificatesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-            <Award className="w-6 h-6 text-[#0062A8]" />
+            <Award className="w-6 h-6 text-vcet-blue" />
             Institutional Certificate Registry & Verification
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
@@ -111,7 +111,7 @@ export default function AdminCertificatesPage() {
           rel="noreferrer"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-all border border-slate-200 self-start sm:self-auto"
         >
-          <ExternalLink className="w-4 h-4 text-[#0062A8]" />
+          <ExternalLink className="w-4 h-4 text-vcet-blue" />
           <span>Open Public Verifier</span>
         </a>
       </div>
@@ -136,7 +136,7 @@ export default function AdminCertificatesPage() {
         </div>
         <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs">
           <span className="text-[10px] uppercase font-bold text-slate-400">Status</span>
-          <p className="text-2xl font-black text-[#0062A8] mt-1">Verified</p>
+          <p className="text-2xl font-black text-vcet-blue mt-1">Verified</p>
         </div>
       </div>
 
@@ -149,7 +149,7 @@ export default function AdminCertificatesPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by Certificate No (TV-2026-...), Register No, or Student Name..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0062A8] focus:bg-white"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-vcet-blue focus:bg-white"
           />
         </div>
 
@@ -185,7 +185,7 @@ export default function AdminCertificatesPage() {
               {filtered.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-5 py-3.5">
-                    <div className="font-mono font-bold text-[#0062A8] text-sm">
+                    <div className="font-mono font-bold text-vcet-blue text-sm">
                       {c.certificateNumber}
                     </div>
                     <a
@@ -276,7 +276,7 @@ export default function AdminCertificatesPage() {
 
               <p className="text-xs text-slate-500 mt-4">This is to certify that</p>
 
-              <div className="text-lg sm:text-xl font-black text-[#0062A8] my-2">
+              <div className="text-lg sm:text-xl font-black text-vcet-blue my-2">
                 {previewCert.studentName}
               </div>
 
@@ -311,7 +311,7 @@ export default function AdminCertificatesPage() {
                   showSuccess(`Certificate ${previewCert.certificateNumber} downloaded ✓`);
                   setPreviewCert(null);
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-[#0062A8] hover:bg-blue-700 text-white font-bold text-xs rounded-xl"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-vcet-blue hover:bg-blue-700 text-white font-bold text-xs rounded-xl"
               >
                 <Download className="w-4 h-4" />
                 <span>Download PDF</span>

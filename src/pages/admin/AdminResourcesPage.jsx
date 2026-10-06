@@ -258,7 +258,7 @@ export default function AdminResourcesPage() {
 
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add New Resource</span>
@@ -273,7 +273,7 @@ export default function AdminResourcesPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search all resources..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0062A8]/20 focus:border-[#0062A8]"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-vcet-blue/20 focus:border-vcet-blue"
           />
         </div>
 
@@ -375,7 +375,7 @@ export default function AdminResourcesPage() {
                       </td>
                       <td className="px-4 py-4">{subjectLabel(item)}</td>
                       <td className="px-4 py-4">
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-[#0062A8] border border-blue-200">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-vcet-blue border border-blue-200">
                           {(item.type || "notes").replace(/_/g, " ")}
                         </span>
                       </td>
@@ -395,7 +395,7 @@ export default function AdminResourcesPage() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             onClick={() => handleOpenFile(item)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#0062A8] hover:bg-slate-100"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-vcet-blue hover:bg-slate-100"
                             title="Open / Download"
                           >
                             {item.fileUrl ? <Download className="w-4 h-4" /> : <ExternalLink className="w-4 h-4" />}
@@ -409,7 +409,7 @@ export default function AdminResourcesPage() {
                           </button>
                           <button
                             onClick={() => openEdit(item)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-[#0062A8] hover:bg-slate-100"
+                            className="p-1.5 rounded-lg text-slate-500 hover:text-vcet-blue hover:bg-slate-100"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
@@ -453,7 +453,7 @@ export default function AdminResourcesPage() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. OS Unit 2 Process Synchronization Notes"
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-[#0062A8]"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-vcet-blue"
                 />
               </div>
 
@@ -522,8 +522,8 @@ export default function AdminResourcesPage() {
                 <label className="font-bold text-slate-700 block mb-1">
                   Upload File (PDF / Document / Image / ZIP, max 50MB)
                 </label>
-                <label className="flex items-center justify-center gap-2 w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-[#0062A8] bg-slate-50 cursor-pointer">
-                  <Upload className="w-4 h-4 text-[#0062A8]" />
+                <label className="flex items-center justify-center gap-2 w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-vcet-blue bg-slate-50 cursor-pointer">
+                  <Upload className="w-4 h-4 text-vcet-blue" />
                   <span className="text-slate-600 font-semibold">
                     {formData.file ? formData.file.name : "Choose file..."}
                   </span>
@@ -581,7 +581,7 @@ export default function AdminResourcesPage() {
                   type="checkbox"
                   checked={formData.isPublished}
                   onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })}
-                  className="w-4 h-4 accent-[#0062A8]"
+                  className="w-4 h-4 accent-vcet-blue"
                 />
                 <span className="font-bold text-slate-700">
                   Publish immediately (visible to students &amp; public)
@@ -599,7 +599,7 @@ export default function AdminResourcesPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold shadow-md disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold shadow-md disabled:opacity-50"
                 >
                   {saving ? "Saving..." : editingResource ? "Save Changes" : "Add to Portal"}
                 </button>

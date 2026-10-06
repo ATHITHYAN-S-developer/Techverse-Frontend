@@ -18,11 +18,11 @@ export default function ExamModeHeader({
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
         {/* Left: Brand & Test Title */}
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-[#0B4A8F] shrink-0 shadow-2xs">
+          <div className="w-8 h-8 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-center text-vcet-blue-deep shrink-0 shadow-2xs">
             <ShieldAlert className="w-4 h-4" />
           </div>
           <div className="min-w-0">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0B4A8F] block">
+            <span className="text-[10px] font-extrabold uppercase tracking-widest text-vcet-blue-deep block">
               VCET Exam Mode Active
             </span>
             <h2 className="text-xs sm:text-sm font-bold text-slate-900 truncate max-w-[200px] sm:max-w-md">
@@ -64,10 +64,10 @@ export default function ExamModeHeader({
             className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl font-mono text-xs sm:text-sm font-black border transition-all ${
               isTimeCritical
                 ? "bg-rose-600 text-white border-rose-500 animate-bounce shadow-md shadow-rose-600/30"
-                : "bg-sky-50 border-sky-200 text-[#0B4A8F]"
+                : "bg-sky-50 border-sky-200 text-vcet-blue-deep"
             }`}
           >
-            <Clock className="w-4 h-4 text-[#0B4A8F]" />
+            <Clock className="w-4 h-4 text-vcet-blue-deep" />
             <span>{formatTime ? formatTime(timeLeftSeconds) : timeLeftSeconds}</span>
           </div>
 
@@ -76,7 +76,7 @@ export default function ExamModeHeader({
             type="button"
             onClick={onSubmitExam}
             disabled={isSubmitting}
-            className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-[#0B4A8F] hover:bg-[#0062A8] text-white flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
+            className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-vcet-blue-deep hover:bg-vcet-blue text-white flex items-center gap-1.5 shadow-sm active:scale-95 transition-all cursor-pointer"
           >
             <Send className="w-3.5 h-3.5" />
             <span>{isSubmitting ? "Submitting..." : "Submit Test"}</span>

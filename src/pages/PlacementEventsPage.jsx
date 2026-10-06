@@ -244,7 +244,7 @@ export default function PlacementEventsPage() {
   }, [selected, showHelpModal]);
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] text-[#0F172A] font-sans antialiased pb-24 relative overflow-hidden selection:bg-[#0062A8]/15 selection:text-[#0062A8]">
+    <div className="min-h-screen bg-[#FFFFFF] text-[#0F172A] font-sans antialiased pb-24 relative overflow-hidden selection:bg-vcet-blue/15 selection:text-vcet-blue">
       <style>{`
         .placement-hero-gradient {
           background: linear-gradient(135deg, #071E3D 0%, #0A3563 50%, #0062A8 100%);
@@ -280,14 +280,14 @@ export default function PlacementEventsPage() {
 
       {loading ? (
         <div className="h-[calc(100vh-64px)] supports-[height:100svh]:h-[calc(100svh-64px)] flex flex-col items-center justify-center gap-3">
-          <div className="w-8 h-8 border-3 border-[#0062A8] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-3 border-vcet-blue border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-medium text-[#64748B]">Fetching placement events...</p>
         </div>
       ) : totalVisible === 0 ? (
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 pb-24">
           <div className="bg-white rounded-2xl border border-[#E2E8F0] px-6 py-16 text-center shadow-xs">
             <div className="w-16 h-16 rounded-2xl bg-[#F7F9FC] border border-[#E2E8F0] flex items-center justify-center mx-auto mb-4">
-              <PartyPopper size={28} className="text-[#0062A8]/40" />
+              <PartyPopper size={28} className="text-vcet-blue/40" />
             </div>
             <h3 className="text-lg font-bold text-[#0F172A]">
               {backendReachable ? "No placement events right now" : "Placement events are unavailable"}
@@ -300,7 +300,7 @@ export default function PlacementEventsPage() {
             {!backendReachable && (
               <button
                 onClick={() => window.location.reload()}
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#0062A8] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#004E86] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0062A8]/50"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-vcet-blue px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#004E86] focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue/50"
               >
                 Retry
               </button>
@@ -335,8 +335,8 @@ export default function PlacementEventsPage() {
         className="fixed bottom-6 right-6 z-40 group flex items-center gap-3 bg-white hover:bg-slate-50 text-slate-900 border border-slate-200/90 rounded-full pl-2.5 pr-4 py-2 shadow-2xl hover:shadow-cyan-500/10 transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer"
         aria-label="Placement Cell Helpdesk"
       >
-        <div className="relative w-10 h-10 rounded-full bg-[#EBF3FC] text-[#0062A8] flex items-center justify-center font-bold text-sm ring-2 ring-emerald-500/80 ring-offset-2 overflow-hidden shadow-inner">
-          <Headphones size={20} className="text-[#0062A8]" />
+        <div className="relative w-10 h-10 rounded-full bg-[#EBF3FC] text-vcet-blue flex items-center justify-center font-bold text-sm ring-2 ring-emerald-500/80 ring-offset-2 overflow-hidden shadow-inner">
+          <Headphones size={20} className="text-vcet-blue" />
           <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-white" />
         </div>
         <div className="text-left hidden sm:block">
@@ -376,7 +376,7 @@ export default function PlacementEventsPage() {
           >
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-[#0062A8] flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-vcet-blue flex items-center justify-center font-bold">
                   <Headphones size={22} />
                 </div>
                 <div>
@@ -394,7 +394,7 @@ export default function PlacementEventsPage() {
 
             <div className="py-5 space-y-4 text-sm text-slate-600">
               <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <Building2 size={18} className="text-[#0062A8] shrink-0 mt-0.5" />
+                <Building2 size={18} className="text-vcet-blue shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-slate-900 text-xs">Placement Office</p>
                   <p className="text-xs text-slate-600 mt-0.5">Block A — First Floor, Room 108</p>
@@ -402,7 +402,7 @@ export default function PlacementEventsPage() {
               </div>
 
               <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <PhoneCall size={18} className="text-[#0062A8] shrink-0 mt-0.5" />
+                <PhoneCall size={18} className="text-vcet-blue shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-slate-900 text-xs">Drive Coordinator Helpline</p>
                   <p className="text-xs text-slate-600 mt-0.5">+91 (0424) 2244201 / Ext: 312</p>
@@ -410,7 +410,7 @@ export default function PlacementEventsPage() {
               </div>
 
               <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-100">
-                <Mail size={18} className="text-[#0062A8] shrink-0 mt-0.5" />
+                <Mail size={18} className="text-vcet-blue shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold text-slate-900 text-xs">Official Queries</p>
                   <p className="text-xs text-slate-600 mt-0.5">placement@velalarengg.ac.in</p>
@@ -420,7 +420,7 @@ export default function PlacementEventsPage() {
 
             <button
               onClick={() => setShowHelpModal(false)}
-              className="w-full py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#004f87] text-white font-semibold text-sm transition-colors cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-vcet-blue hover:bg-[#004f87] text-white font-semibold text-sm transition-colors cursor-pointer"
             >
               Got it
             </button>
@@ -532,7 +532,7 @@ function HeroSlide({ event, active, onViewMore }) {
               <Flame size={13} />
               Featured Drive
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider bg-blue-50 text-[#0062A8] border border-blue-200/80 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider bg-blue-50 text-vcet-blue border border-blue-200/80 backdrop-blur-sm">
               <Briefcase size={12} />
               PLACEMENT
             </span>
@@ -917,7 +917,7 @@ function FullScreenDrive({ event, onClick }) {
               <Flame size={13} />
               More Drives
             </span>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider border bg-blue-50 text-[#0062A8] border-blue-200/80 backdrop-blur-sm">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-[10px] font-black tracking-wider border bg-blue-50 text-vcet-blue border-blue-200/80 backdrop-blur-sm">
               <Briefcase size={12} />
               {event.badge || "Campus Drive"}
             </span>
@@ -1081,7 +1081,7 @@ function BentoCardSmall({ event, tone = "white", onClick }) {
       {/* Bottom Typography & Details */}
       <div className="pt-4 text-center">
         <h3
-          className={`text-sm sm:text-base font-bold tracking-tight line-clamp-1 group-hover:text-[#0062A8] transition-colors ${
+          className={`text-sm sm:text-base font-bold tracking-tight line-clamp-1 group-hover:text-vcet-blue transition-colors ${
             isDark ? "group-hover:text-cyan-400" : ""
           }`}
         >
@@ -1143,7 +1143,7 @@ function BentoCardTall({ event, onClick }) {
             />
           </div>
         ) : (
-          <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[#0A2540] to-[#0062A8] text-white p-6 flex flex-col items-center justify-center text-center shadow-xl group-hover:scale-105 transition-transform duration-500">
+          <div className="w-full h-full rounded-2xl bg-gradient-to-br from-[#0A2540] to-vcet-blue text-white p-6 flex flex-col items-center justify-center text-center shadow-xl group-hover:scale-105 transition-transform duration-500">
             <Briefcase size={54} strokeWidth={1.5} className="text-cyan-300 mb-3" />
             <h4 className="font-extrabold text-lg text-white line-clamp-2">{event.title}</h4>
             <p className="text-xs text-white/80 mt-1">{event.department || "All Eligible Branches"}</p>
@@ -1153,7 +1153,7 @@ function BentoCardTall({ event, onClick }) {
 
       {/* Bottom Typography & Details */}
       <div className="text-center pt-2 z-10">
-        <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-[#0F172A] tracking-tight line-clamp-1 group-hover:text-[#0062A8] transition-colors">
+        <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-[#0F172A] tracking-tight line-clamp-1 group-hover:text-vcet-blue transition-colors">
           {event.title}
         </h3>
         <p className="text-xs sm:text-sm font-semibold text-slate-600 mt-1.5">
@@ -1161,7 +1161,7 @@ function BentoCardTall({ event, onClick }) {
         </p>
 
         <div className="mt-4 flex items-center justify-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0062A8] bg-blue-50 border border-blue-200/80 px-4 py-1.5 rounded-full shadow-xs group-hover:bg-[#0062A8] group-hover:text-white transition-colors">
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-vcet-blue bg-blue-50 border border-blue-200/80 px-4 py-1.5 rounded-full shadow-xs group-hover:bg-vcet-blue group-hover:text-white transition-colors">
             View Details & Apply
             <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
           </span>
@@ -1220,17 +1220,17 @@ function EventModal({ event, onClose }) {
         <div className="flex flex-wrap items-center gap-2.5 text-xs text-[#64748B] pb-3 border-b border-slate-100">
           {event.date && (
             <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-3 py-1.5 rounded-lg">
-              <CalendarDays size={13} className="text-[#0062A8]" /> {formatDateString(event.date)}
+              <CalendarDays size={13} className="text-vcet-blue" /> {formatDateString(event.date)}
             </span>
           )}
           {event.time && (
             <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-3 py-1.5 rounded-lg">
-              <Clock size={13} className="text-[#0062A8]" /> {event.time}
+              <Clock size={13} className="text-vcet-blue" /> {event.time}
             </span>
           )}
           {event.venue && (
             <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-3 py-1.5 rounded-lg">
-              <MapPin size={13} className="text-[#0062A8]" /> {event.venue}
+              <MapPin size={13} className="text-vcet-blue" /> {event.venue}
             </span>
           )}
         </div>
@@ -1254,12 +1254,12 @@ function EventModal({ event, onClose }) {
         {/* Issuer */}
         <div className="text-xs text-[#64748B] pt-2 space-y-1.5 border-t border-slate-100">
           <div className="flex items-center gap-1.5">
-            <Users2 size={13} className="text-[#0062A8]" />
+            <Users2 size={13} className="text-vcet-blue" />
             Posted By: <strong className="text-[#0F172A]">{POSTED_BY}</strong>
           </div>
           {event.department && (
             <div className="flex items-center gap-1.5">
-              <Building2 size={13} className="text-[#0062A8]" />
+              <Building2 size={13} className="text-vcet-blue" />
               Eligible Departments: <strong className="text-[#0F172A]">{event.department}</strong>
             </div>
           )}
@@ -1279,7 +1279,7 @@ function EventModal({ event, onClose }) {
             href={event.linkUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0062A8] text-white text-sm font-semibold hover:bg-[#004f87] transition-colors cursor-pointer shadow-sm"
+            className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue text-white text-sm font-semibold hover:bg-[#004f87] transition-colors cursor-pointer shadow-sm"
           >
             <span>{event.linkText || "Apply / View Portal"}</span>
             <ExternalLink size={14} />

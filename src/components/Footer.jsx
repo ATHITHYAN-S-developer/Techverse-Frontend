@@ -55,13 +55,13 @@ export default function Footer() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="bg-[#444445] text-white pt-16 pb-12 relative overflow-hidden"
+      className="bg-vcet-dark text-white pt-16 pb-12 relative overflow-hidden"
     >
       {/* Top Gradient Border */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-14 border-b border-[#C9C9C9]/20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-14 border-b border-vcet-gray-border/20">
           {/* Column 1: Brand & College Emblem */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export default function Footer() {
               </div>
             </div>
 
-            <p className="text-xs text-[#C9C9C9] leading-relaxed pt-1 font-normal">
+            <p className="text-xs text-vcet-gray leading-relaxed pt-1 font-normal">
               A student-focused technology resource discovery hub created for the engineering scholars of {COLLEGE_NAME}.
             </p>
 
@@ -87,7 +87,7 @@ export default function Footer() {
                   className="h-10 object-contain"
                   onError={() => setJubileeError(true)}
                 />
-                <span className="text-[10px] uppercase tracking-wider text-[#C9C9C9]/80 font-mono">
+                <span className="text-[10px] uppercase tracking-wider text-vcet-gray/80 font-mono">
                   25 Years of Excellence
                 </span>
               </div>
@@ -105,7 +105,7 @@ export default function Footer() {
                 <li key={link.name}>
                   <Link
                     to={link.href}
-                    className="group text-[#C9C9C9] hover:text-white transition-colors inline-flex items-center gap-2"
+                    className="group text-vcet-gray hover:text-white transition-colors inline-flex items-center gap-2"
                   >
                     <span className="text-blue-400 group-hover:translate-x-0.5 transition-transform duration-200">→</span>
                     <span className="relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-400 after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-200">
@@ -136,7 +136,7 @@ export default function Footer() {
                 <li key={domain.name}>
                   <Link
                     to={domain.href}
-                    className="group text-[#C9C9C9] hover:text-white transition-colors inline-flex items-center gap-2"
+                    className="group text-vcet-gray hover:text-white transition-colors inline-flex items-center gap-2"
                   >
                     <span className="text-blue-400 group-hover:translate-x-0.5 transition-transform duration-200">→</span>
                     <span className="relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-400 after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-200">
@@ -154,7 +154,7 @@ export default function Footer() {
               <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               CONNECT
             </h4>
-            <div className="space-y-3 text-xs text-[#C9C9C9]">
+            <div className="space-y-3 text-xs text-vcet-gray">
               <div className="flex items-start gap-2.5">
                 <FiMapPin className="text-blue-400 shrink-0 mt-0.5" size={14} />
                 <span>{COLLEGE_LOCATION}</span>
@@ -179,7 +179,7 @@ export default function Footer() {
                 href={COLLEGE_LINKS.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-[#0062A8] hover:bg-[#00528c] shadow-md transition-all hover:scale-[1.02]"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white bg-vcet-blue hover:bg-vcet-blue-hover shadow-md transition-all hover:scale-[1.02]"
               >
                 <FiGlobe size={13} />
                 <span>VCET Official Website</span>
@@ -190,7 +190,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Copyright, Visitor Counter and Accreditations */}
-        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-[#C9C9C9] gap-4 text-center md:text-left">
+        <div className="pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-vcet-gray gap-4 text-center md:text-left">
           <p>© 2026 {SITE_NAME} • Velalar College of Engineering and Technology</p>
 
           {/* Institutional Live Visitor Counter Badge in Footer */}
@@ -200,7 +200,7 @@ export default function Footer() {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
             </span>
             <FiEye className="w-3.5 h-3.5 text-blue-300" />
-            <span className="text-[#C9C9C9] font-sans font-medium text-[11px] uppercase tracking-wider">
+            <span className="text-vcet-gray font-sans font-medium text-[11px] uppercase tracking-wider">
               Total Visitors:
             </span>
             <span className="font-extrabold text-white text-xs tracking-tight">
@@ -208,7 +208,7 @@ export default function Footer() {
             </span>
           </div>
 
-          <p className="font-mono text-[11px] text-[#C9C9C9]/80">
+          <p className="font-mono text-[11px] text-vcet-gray/80">
             Autonomous Institution • Affiliated to Anna University, Chennai
           </p>
         </div>

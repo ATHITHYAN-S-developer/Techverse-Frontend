@@ -263,7 +263,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col md:flex-row overflow-hidden selection:bg-[#0062A8] selection:text-white">
+    <div className="min-h-screen w-full bg-white flex flex-col md:flex-row overflow-hidden selection:bg-vcet-blue selection:text-white">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -282,7 +282,7 @@ export default function LoginPage() {
             style={{ opacity: 0.07, filter: "grayscale(1) brightness(1.08)" }}
           />
           {/* Soft brand glows */}
-          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-[#0062A8]/10 blur-3xl" />
+          <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-vcet-blue/10 blur-3xl" />
           <div className="absolute -bottom-28 -left-24 w-96 h-96 rounded-full bg-sky-200/50 blur-3xl" />
           {/* Bottom fade keeps the copyright row legible */}
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white to-transparent" />
@@ -299,7 +299,7 @@ export default function LoginPage() {
 
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-[#0062A8] transition-colors px-3 py-1.5 rounded-full bg-gray-50 hover:bg-blue-50 border border-gray-200/60"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 hover:text-vcet-blue transition-colors px-3 py-1.5 rounded-full bg-gray-50 hover:bg-blue-50 border border-gray-200/60"
           >
             <ArrowLeft size={14} />
             <span>Back to Home</span>
@@ -308,13 +308,13 @@ export default function LoginPage() {
 
         {/* Center Container */}
         <div className="relative z-10 w-full max-w-md mx-auto my-auto py-6">
-          <div className="bg-white/85 backdrop-blur-md rounded-2xl border border-white/70 shadow-xl shadow-[#0B4A8F]/[0.10] px-5 sm:px-8 py-7 sm:py-8">
+          <div className="bg-white/85 backdrop-blur-md rounded-2xl border border-white/70 shadow-xl shadow-vcet-blue-deep/[0.10] px-5 sm:px-8 py-7 sm:py-8">
           {/* Welcome Heading */}
           <motion.div variants={itemVariants} className="mb-5">
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-[#0062A8]">
+            <span className="text-xs font-black uppercase tracking-[0.2em] text-vcet-blue">
               {roles.find((r) => r.id === activeRole)?.badge}
             </span>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0062A8] tracking-tight mt-1">
+            <h1 className="text-3xl sm:text-4xl font-extrabold text-vcet-blue tracking-tight mt-1">
               Welcome Back
             </h1>
             <p className="text-sm text-gray-700 mt-1.5 font-normal">
@@ -337,12 +337,12 @@ export default function LoginPage() {
                   onClick={() => handleRoleChange(role.id)}
                   className={`flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 cursor-pointer ${
                     isActive
-                      ? "bg-white text-[#0062A8] shadow-xs font-black border border-gray-200/50 scale-[1.02]"
+                      ? "bg-white text-vcet-blue shadow-xs font-black border border-gray-200/50 scale-[1.02]"
                       : "text-gray-700 hover:text-gray-900 font-semibold"
 
                   }`}
                 >
-                  <Icon size={18} className={isActive ? "text-[#0062A8]" : "text-gray-500"} />
+                  <Icon size={18} className={isActive ? "text-vcet-blue" : "text-gray-500"} />
                   <span className="text-xs mt-1 truncate max-w-full">{role.label}</span>
                 </button>
               );
@@ -362,7 +362,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="studentReg"
-                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-vcet-blue mb-1.5"
                   >
                     REGISTER NUMBER
                   </label>
@@ -371,13 +371,13 @@ export default function LoginPage() {
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
                       errors.studentReg
                         ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                        : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
+                        : "border-gray-300 focus-within:border-vcet-blue focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue/20"
                     }`}
                   >
                     <IdCard
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.studentReg ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
+                        errors.studentReg ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
                       }`}
                     />
                     <input
@@ -392,7 +392,7 @@ export default function LoginPage() {
                         if (errors.studentReg) setErrors((prev) => ({ ...prev, studentReg: "" }));
                       }}
                       placeholder="732924ECE001"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8] tracking-wider font-mono uppercase"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue tracking-wider font-mono uppercase"
                     />
                   </motion.div>
                   {errors.studentReg && (
@@ -411,7 +411,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="studentDob"
-                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-vcet-blue mb-1.5"
                   >
                     DATE OF BIRTH
                   </label>
@@ -420,13 +420,13 @@ export default function LoginPage() {
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
                       errors.studentDob
                         ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                        : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
+                        : "border-gray-300 focus-within:border-vcet-blue focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue/20"
                     }`}
                   >
                     <CalendarDays
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.studentDob ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
+                        errors.studentDob ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
                       }`}
                     />
                     <input
@@ -447,7 +447,7 @@ export default function LoginPage() {
                         setStudentDob(e.target.value);
                         if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
                       }}
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8]"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue"
                     />
                   </motion.div>
                   {errors.studentDob && (
@@ -471,7 +471,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="facultyEmail"
-                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-vcet-blue mb-1.5"
                   >
                     FACULTY ID
                   </label>
@@ -480,13 +480,13 @@ export default function LoginPage() {
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
                       errors.facultyEmail
                         ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                        : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
+                        : "border-gray-300 focus-within:border-vcet-blue focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue/20"
                     }`}
                   >
 <IdCard
                     size={19}
                     className={`transition-colors shrink-0 ${
-                      errors.facultyEmail ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
+                      errors.facultyEmail ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
                     }`}
                   />
                   <input
@@ -500,7 +500,7 @@ export default function LoginPage() {
                         if (errors.facultyEmail) setErrors((prev) => ({ ...prev, facultyEmail: "" }));
                       }}
                       placeholder="VCET-FAC-CSE-104"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8]/60"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60"
                     />
                   </motion.div>
                   {errors.facultyEmail && (
@@ -519,7 +519,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="facultyPassword"
-                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8]"
+                    className="block text-xs font-bold uppercase tracking-wider text-vcet-blue"
                   >
                     FACULTY PASSWORD
                   </label>
@@ -528,13 +528,13 @@ export default function LoginPage() {
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
                       errors.facultyPassword
                         ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                        : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
+                        : "border-gray-300 focus-within:border-vcet-blue focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue/20"
                     }`}
                   >
                     <Lock
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.facultyPassword ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
+                        errors.facultyPassword ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
                       }`}
                     />
                     <input
@@ -548,7 +548,7 @@ export default function LoginPage() {
                         if (errors.facultyPassword) setErrors((prev) => ({ ...prev, facultyPassword: "" }));
                       }}
                       placeholder="••••••••"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue"
                     />
                     <button
                       type="button"
@@ -579,7 +579,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="adminUsername"
-                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-vcet-blue mb-1.5"
                   >
                     ADMIN ACCOUNT / USERNAME
                   </label>
@@ -588,13 +588,13 @@ export default function LoginPage() {
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
                       errors.adminUsername
                         ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                        : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
+                        : "border-gray-300 focus-within:border-vcet-blue focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue/20"
                     }`}
                   >
                     <UserCheck
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.adminUsername ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
+                        errors.adminUsername ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
                       }`}
                     />
                     <input
@@ -608,7 +608,7 @@ export default function LoginPage() {
                         if (errors.adminUsername) setErrors((prev) => ({ ...prev, adminUsername: "" }));
                       }}
                       placeholder="admin@vcet.ac.in"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-[#0062A8] placeholder:text-[#0062A8]"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue"
                     />
                   </motion.div>
                   {errors.adminUsername && (
@@ -627,7 +627,7 @@ export default function LoginPage() {
                 >
                   <label
                     htmlFor="adminPassword"
-                    className="block text-xs font-bold uppercase tracking-wider text-[#0062A8] mb-1.5"
+                    className="block text-xs font-bold uppercase tracking-wider text-vcet-blue mb-1.5"
                   >
                     ADMIN SECURITY KEY / PASSCODE
                   </label>
@@ -636,13 +636,13 @@ export default function LoginPage() {
                     className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-gray-50/70 hover:bg-white ${
                       errors.adminPassword
                         ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                        : "border-gray-300 focus-within:border-[#0062A8] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0062A8]/20"
+                        : "border-gray-300 focus-within:border-vcet-blue focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue/20"
                     }`}
                   >
                     <Lock
                       size={19}
                       className={`transition-colors shrink-0 ${
-                        errors.adminPassword ? "text-red-500" : "text-slate-500 group-focus-within:text-[#0062A8]"
+                        errors.adminPassword ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
                       }`}
                     />
                     <input
@@ -656,7 +656,7 @@ export default function LoginPage() {
                         if (errors.adminPassword) setErrors((prev) => ({ ...prev, adminPassword: "" }));
                       }}
                       placeholder="••••••••••••"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-[#0062A8] placeholder:text-[#0062A8]"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue"
                     />
                     <button
                       type="button"
@@ -678,17 +678,17 @@ export default function LoginPage() {
 
             {/* Remember Me Option */}
             <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-medium text-[#0062A8]">
+              <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-medium text-vcet-blue">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-[#0062A8] focus:ring-[#0062A8] accent-[#0062A8] cursor-pointer"
+                  className="h-4 w-4 rounded border-gray-300 text-vcet-blue focus:ring-vcet-blue accent-vcet-blue cursor-pointer"
                 />
                 <span>Remember me on this device</span>
               </label>
-              <div className="flex items-center gap-1 text-[11px] font-bold text-[#0062A8] bg-[#E8F3FB] px-2 py-0.5 rounded-md border border-[#BBD9EE]">
-                <ShieldCheck size={12} className="text-[#0062A8]" />
+              <div className="flex items-center gap-1 text-[11px] font-bold text-vcet-blue bg-[#E8F3FB] px-2 py-0.5 rounded-md border border-[#BBD9EE]">
+                <ShieldCheck size={12} className="text-vcet-blue" />
                 <span>
                   {activeRole === "student"
                     ? "Student Auth"
@@ -722,7 +722,7 @@ export default function LoginPage() {
                 className={`relative w-full h-12 rounded-xl text-xs sm:text-sm font-bold tracking-wide uppercase text-white shadow-md shadow-blue-900/15 transition-all duration-200 flex items-center justify-center overflow-hidden cursor-pointer ${
                   status === "success"
                     ? "bg-emerald-600 scale-[1.01]"
-                    : "bg-[#0062A8] hover:bg-[#00508a] hover:scale-[1.01] hover:shadow-lg hover:shadow-[#0062A8]/25 active:scale-[0.99]"
+                    : "bg-vcet-blue hover:bg-[#00508a] hover:scale-[1.01] hover:shadow-lg hover:shadow-vcet-blue/25 active:scale-[0.99]"
                 } disabled:cursor-not-allowed`}
               >
                 {status === "loading" && (
@@ -760,9 +760,9 @@ export default function LoginPage() {
           </form>
 
           {/* Bottom Explore Link */}
-          <div className="text-center mt-6 text-xs text-[#0062A8] font-normal">
+          <div className="text-center mt-6 text-xs text-vcet-blue font-normal">
             New to TechVerse?{" "}
-            <Link to="/technology" className="font-bold text-[#0062A8] hover:underline">
+            <Link to="/technology" className="font-bold text-vcet-blue hover:underline">
               Explore Resources
             </Link>
           </div>
@@ -776,7 +776,7 @@ export default function LoginPage() {
       </motion.div>
 
       {/* 2. RIGHT PANEL: Deep VCET Blue Background (#0062A8) with Framed Illustration Card (48% Width) */}
-      <div className="w-full md:w-[48%] bg-[#0062A8] flex flex-col justify-between p-8 sm:p-12 lg:p-14 min-h-[380px] md:min-h-screen relative overflow-hidden">
+      <div className="w-full md:w-[48%] bg-vcet-blue flex flex-col justify-between p-8 sm:p-12 lg:p-14 min-h-[380px] md:min-h-screen relative overflow-hidden">
         <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/10 blur-2xl pointer-events-none" />
         <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-blue-400/20 blur-2xl pointer-events-none" />
 

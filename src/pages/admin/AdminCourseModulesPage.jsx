@@ -636,7 +636,7 @@ export default function AdminCourseModulesPage() {
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-blue-50 text-[#0B4A8F]">
+            <span className="p-2 rounded-xl bg-blue-50 text-vcet-blue-deep">
               <Layers className="w-5 h-5" />
             </span>
             <h1 className="text-xl sm:text-2xl font-black text-slate-900">
@@ -653,7 +653,7 @@ export default function AdminCourseModulesPage() {
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/20 max-w-xs"
+            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/20 max-w-xs"
           >
             {courses.map((c) => (
               <option key={c._id || c.id} value={c._id || c.id}>
@@ -665,7 +665,7 @@ export default function AdminCourseModulesPage() {
           <button
             onClick={handleOpenAdd}
             disabled={!selectedCourseId}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#084282] text-white font-bold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white font-bold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50"
           >
             <Plus className="w-4 h-4" />
             <span>Add Module</span>
@@ -714,7 +714,7 @@ export default function AdminCourseModulesPage() {
                 Category: {selectedCourse.category} • {modules.length} Modules
               </p>
               {selectedCourse.assignedFacultyName && (
-                <p className="text-[11px] font-semibold text-[#0B4A8F] mt-1.5 inline-flex items-center gap-1">
+                <p className="text-[11px] font-semibold text-vcet-blue-deep mt-1.5 inline-flex items-center gap-1">
                   <User className="w-3 h-3" />
                   Assigned to: {selectedCourse.assignedFacultyName}
                 </p>
@@ -732,7 +732,7 @@ export default function AdminCourseModulesPage() {
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs disabled:opacity-50 ${
                   selectedCourse.isPublished
                     ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                    : "bg-[#0B4A8F] text-white hover:bg-[#08386c] shadow-blue-500/20"
+                    : "bg-vcet-blue-deep text-white hover:bg-[#08386c] shadow-blue-500/20"
                 }`}
                 title={selectedCourse.isPublished ? "Unpublish course so students cannot see it" : "Publish course to student PrepZone"}
               >
@@ -788,12 +788,12 @@ export default function AdminCourseModulesPage() {
       <div className="space-y-4">
         {loading ? (
           <div className="p-12 text-center bg-white rounded-2xl border border-slate-200/80">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#0B4A8F]" />
+            <RefreshCw className="w-6 h-6 animate-spin mx-auto text-vcet-blue-deep" />
             <p className="text-xs text-slate-500 mt-2">Loading course syllabus modules...</p>
           </div>
         ) : modules.length === 0 ? (
           <div className="p-12 sm:p-16 text-center bg-white rounded-2xl border border-slate-200/80 space-y-3">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-[#0B4A8F] flex items-center justify-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-vcet-blue-deep flex items-center justify-center">
               <BookOpen className="w-7 h-7" />
             </div>
             <h3 className="text-base font-extrabold text-slate-800">
@@ -804,7 +804,7 @@ export default function AdminCourseModulesPage() {
             </p>
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B4A8F] text-white font-bold text-xs shadow-xs"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-vcet-blue-deep text-white font-bold text-xs shadow-xs"
             >
               <Plus className="w-4 h-4" /> Create First Module
             </button>
@@ -819,7 +819,7 @@ export default function AdminCourseModulesPage() {
               return (
                 <div
                   key={mod._id || mod.id}
-                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:border-[#0B4A8F]/40 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:border-vcet-blue-deep/40 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
                 >
                   <div className="flex items-start gap-3.5 flex-1">
                     <span className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 font-extrabold flex items-center justify-center text-sm shrink-0 border border-slate-200">
@@ -839,14 +839,14 @@ export default function AdminCourseModulesPage() {
                       <div className="flex flex-wrap items-center gap-2 pt-1">
                         {/* Video Badge */}
                         {mod.hasVideo ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-[#0B4A8F] border border-blue-200/70">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-vcet-blue-deep border border-blue-200/70">
                             <Video className="w-3.5 h-3.5" />
                             <span>{videoCount} Video{videoCount > 1 ? "s" : ""}</span>
                             <span
                               className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
                                 mod.isVideoMandatory
                                   ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                  : "bg-blue-100/70 text-[#0B4A8F]"
+                                  : "bg-blue-100/70 text-vcet-blue-deep"
                               }`}
                             >
                               {mod.isVideoMandatory ? "Mandatory" : "Optional"}
@@ -889,7 +889,7 @@ export default function AdminCourseModulesPage() {
                   <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
                     <button
                       onClick={() => handleOpenEdit(mod)}
-                      className="p-2 rounded-xl text-slate-600 hover:text-[#0B4A8F] hover:bg-slate-100 transition-colors"
+                      className="p-2 rounded-xl text-slate-600 hover:text-vcet-blue-deep hover:bg-slate-100 transition-colors"
                       title="Edit Module Content"
                     >
                       <Edit className="w-4 h-4" />
@@ -921,7 +921,7 @@ export default function AdminCourseModulesPage() {
             {/* Modal Header */}
             <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
               <div>
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0B4A8F] block">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest text-vcet-blue-deep block">
                   {editingModule ? "EDIT MODULE CONTENT" : "CREATE NEW MODULE"}
                 </span>
                 <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
@@ -951,7 +951,7 @@ export default function AdminCourseModulesPage() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="e.g., Module 1: Python Data Structures & Algorithms"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/20 focus:border-[#0B4A8F]"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/20 focus:border-vcet-blue-deep"
                   />
                 </div>
 
@@ -964,7 +964,7 @@ export default function AdminCourseModulesPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Briefly describe learning goals and topics covered in this module..."
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/20"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/20"
                   />
                 </div>
               </div>
@@ -973,7 +973,7 @@ export default function AdminCourseModulesPage() {
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-3">
                 <div className="flex items-center justify-between">
                   <h4 className="text-xs sm:text-sm font-extrabold text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[#0B4A8F]" />
+                    <Sparkles className="w-4 h-4 text-vcet-blue-deep" />
                     <span>CONTENT OPTIONS</span>
                   </h4>
                   <span className="text-[11px] text-slate-500 font-medium">
@@ -1005,11 +1005,11 @@ export default function AdminCourseModulesPage() {
                           if (checked) setActiveTab("videos");
                         }}
                         onClick={(e) => e.stopPropagation()}
-                        className="mt-1 w-4 h-4 text-[#0B4A8F] rounded border-slate-300 cursor-pointer"
+                        className="mt-1 w-4 h-4 text-vcet-blue-deep rounded border-slate-300 cursor-pointer"
                       />
                       <div className="space-y-0.5 flex-1">
                         <div className="flex items-center gap-1.5">
-                          <Video className="w-4 h-4 text-[#0B4A8F]" />
+                          <Video className="w-4 h-4 text-vcet-blue-deep" />
                           <span className="text-xs font-extrabold text-slate-900">Video</span>
                         </div>
                         <p className="text-[11px] text-slate-500">
@@ -1124,13 +1124,13 @@ export default function AdminCourseModulesPage() {
                     onClick={() => setActiveTab("videos")}
                     className={`pb-3 px-4 text-xs font-bold transition-all border-b-2 flex items-center gap-2 ${
                       activeTab === "videos"
-                        ? "border-[#0B4A8F] text-[#0B4A8F]"
+                        ? "border-vcet-blue-deep text-vcet-blue-deep"
                         : "border-transparent text-slate-500 hover:text-slate-800"
                     }`}
                   >
                     <Video className="w-4 h-4" />
                     <span>Module Videos</span>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-[#0B4A8F]">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-vcet-blue-deep">
                       {formData.videos.length}
                     </span>
                   </button>
@@ -1180,7 +1180,7 @@ export default function AdminCourseModulesPage() {
                 <div className="space-y-4">
                   {formData.videos.length === 0 && (
                     <div className="p-3.5 rounded-xl bg-blue-50/70 border border-blue-200 flex items-center gap-2 text-xs font-semibold text-blue-900">
-                      <Video className="w-4 h-4 shrink-0 text-[#0B4A8F]" />
+                      <Video className="w-4 h-4 shrink-0 text-vcet-blue-deep" />
                       <span>No videos added yet. Add lecture videos to this module below.</span>
                     </div>
                   )}
@@ -1222,7 +1222,7 @@ export default function AdminCourseModulesPage() {
                             }`}
                           >
                             <div className="space-y-1 min-w-0">
-                              <span className="text-[10px] font-bold text-[#0B4A8F] uppercase tracking-wider block">
+                              <span className="text-[10px] font-bold text-vcet-blue-deep uppercase tracking-wider block">
                                 Video {vIdx + 1} • {vid.duration || "20 mins"}
                               </span>
                               <h5 className="text-xs font-extrabold text-slate-900 truncate">
@@ -1242,7 +1242,7 @@ export default function AdminCourseModulesPage() {
                               <button
                                 type="button"
                                 onClick={() => handleStartEditVideo(vIdx)}
-                                className="p-1.5 text-slate-400 hover:text-[#0B4A8F] rounded-lg hover:bg-blue-50 transition-colors"
+                                className="p-1.5 text-slate-400 hover:text-vcet-blue-deep rounded-lg hover:bg-blue-50 transition-colors"
                                 title="Edit Video Details"
                               >
                                 <Edit className="w-4 h-4" />
@@ -1267,12 +1267,12 @@ export default function AdminCourseModulesPage() {
                     <h5 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
                       {editingVideoIdx !== null ? (
                         <>
-                          <Edit className="w-4 h-4 text-[#0B4A8F]" />
+                          <Edit className="w-4 h-4 text-vcet-blue-deep" />
                           <span>Edit Lecture Video #{editingVideoIdx + 1}</span>
                         </>
                       ) : (
                         <>
-                          <Plus className="w-4 h-4 text-[#0B4A8F]" />
+                          <Plus className="w-4 h-4 text-vcet-blue-deep" />
                           <span>Add Lecture Video to Playlist</span>
                         </>
                       )}
@@ -1328,7 +1328,7 @@ export default function AdminCourseModulesPage() {
                       <button
                         type="button"
                         onClick={handleAddVideo}
-                        className="px-4 py-2 bg-[#0B4A8F] hover:bg-[#084282] text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                        className="px-4 py-2 bg-vcet-blue-deep hover:bg-[#084282] text-white rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5 cursor-pointer"
                       >
                         {editingVideoIdx !== null ? <Save className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
                         <span>{editingVideoIdx !== null ? "Update Video" : "+ Add Video"}</span>
@@ -1720,7 +1720,7 @@ export default function AdminCourseModulesPage() {
             <div className="p-4 sm:px-6 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 bg-slate-50/90 shrink-0">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-500">
                 {formData.hasVideo && (
-                  <span className="inline-flex items-center gap-1 text-[#0B4A8F]">
+                  <span className="inline-flex items-center gap-1 text-vcet-blue-deep">
                     <Video className="w-3.5 h-3.5" />
                     {formData.videos.length} Video{formData.videos.length === 1 ? "" : "s"} ({formData.isVideoMandatory ? "Mandatory" : "Optional"})
                   </span>
@@ -1750,7 +1750,7 @@ export default function AdminCourseModulesPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-6 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#084282] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                  className="px-6 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white font-bold text-xs shadow-xs transition-colors flex items-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
                   <span>{saving ? "Saving to Database..." : editingModule ? "Update Module" : "Save & Publish Module"}</span>

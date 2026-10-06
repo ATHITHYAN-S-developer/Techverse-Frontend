@@ -92,7 +92,7 @@ export default function AdminViolationsPage() {
           onClick={() => showSuccess("Proctoring audit exported to CSV ✓")}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-all self-start sm:self-auto border border-slate-200"
         >
-          <Download className="w-4 h-4 text-[#0062A8]" />
+          <Download className="w-4 h-4 text-vcet-blue" />
           <span>Export Security Audit</span>
         </button>
       </div>
@@ -126,7 +126,7 @@ export default function AdminViolationsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by student register number, name, or exam title..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0062A8] focus:bg-white"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-vcet-blue focus:bg-white"
           />
         </div>
 

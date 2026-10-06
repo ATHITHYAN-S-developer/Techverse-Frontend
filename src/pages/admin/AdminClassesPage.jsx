@@ -49,7 +49,7 @@ export default function AdminClassesPage() {
 
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-hover text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add Class Section</span>
@@ -60,7 +60,7 @@ export default function AdminClassesPage() {
         {classes.map((cls) => (
           <div key={cls.id} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-[#0062A8] border border-blue-200">
+              <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-vcet-blue border border-blue-200">
                 {cls.department}
               </span>
               <span className="text-xs text-slate-500 font-mono">Sem {cls.semester}</span>
@@ -73,7 +73,7 @@ export default function AdminClassesPage() {
 
             <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
               <span>{cls.studentCount} Students Enrolled</span>
-              <span className="text-[#0062A8] font-semibold">{cls.year}</span>
+              <span className="text-vcet-blue font-semibold">{cls.year}</span>
             </div>
           </div>
         ))}
@@ -145,7 +145,7 @@ export default function AdminClassesPage() {
                 <button type="button" onClick={() => setModalOpen(false)} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl">
                   Cancel
                 </button>
-                <button type="submit" className="px-5 py-2 bg-[#0062A8] text-white font-bold rounded-xl shadow hover:bg-[#00528c]">
+                <button type="submit" className="px-5 py-2 bg-vcet-blue text-white font-bold rounded-xl shadow hover:bg-vcet-blue-hover">
                   Create Section
                 </button>
               </div>

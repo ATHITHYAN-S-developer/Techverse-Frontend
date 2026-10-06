@@ -101,7 +101,7 @@ export default function CertificatesPage() {
 
       {loading ? (
         <div className="p-16 text-center bg-white rounded-3xl border border-slate-200/80">
-          <RefreshCw className="w-6 h-6 animate-spin mx-auto text-[#0B4A8F]" />
+          <RefreshCw className="w-6 h-6 animate-spin mx-auto text-vcet-blue-deep" />
           <p className="text-xs text-slate-500 mt-2">Loading credentials...</p>
         </div>
       ) : certificates.length === 0 ? (
@@ -125,14 +125,14 @@ export default function CertificatesPage() {
             return (
               <div
                 key={certId}
-                className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-lg hover:border-[#0B4A8F]/40 transition-all p-6 flex flex-col justify-between space-y-6"
+                className="bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-lg hover:border-vcet-blue-deep/40 transition-all p-6 flex flex-col justify-between space-y-6"
               >
                 {/* Top Certificate Header */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <img src={vcetLogoImg} alt="VCET" className="w-10 h-10 object-contain" />
                     <div>
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#0B4A8F]">
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-vcet-blue-deep">
                         Velalar College of Engineering & Technology
                       </div>
                       <h3 className="text-base font-bold text-slate-900 leading-snug mt-0.5">
@@ -166,7 +166,7 @@ export default function CertificatesPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Certificate ID:</span>
-                    <span className="font-mono text-[11px] text-[#0B4A8F] font-bold">
+                    <span className="font-mono text-[11px] text-vcet-blue-deep font-bold">
                       {cert.certificateId || cert.certificateNumber || certId}
                     </span>
                   </div>
@@ -178,13 +178,13 @@ export default function CertificatesPage() {
                     onClick={() => handleOpenPreview(cert)}
                     className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <Eye className="w-4 h-4 text-[#0B4A8F]" />
+                    <Eye className="w-4 h-4 text-vcet-blue-deep" />
                     <span>Preview Certificate</span>
                   </button>
                   <button
                     onClick={() => handleDownload(cert)}
                     disabled={isDownloading}
-                    className="px-5 py-2.5 bg-[#0B4A8F] hover:bg-[#084282] text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                    className="px-5 py-2.5 bg-vcet-blue-deep hover:bg-[#084282] text-white font-bold text-xs rounded-xl shadow-xs flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                   >
                     <Download className="w-4 h-4" />
                     <span>{isDownloading ? "Generating..." : "Download PDF"}</span>
@@ -205,7 +205,7 @@ export default function CertificatesPage() {
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4">
               <div className="flex items-center gap-2.5">
-                <span className="p-2 rounded-xl bg-blue-50 text-[#0B4A8F]">
+                <span className="p-2 rounded-xl bg-blue-50 text-vcet-blue-deep">
                   <Award className="w-5 h-5" />
                 </span>
                 <div>
@@ -229,7 +229,7 @@ export default function CertificatesPage() {
             <div className="relative rounded-2xl overflow-hidden border border-slate-200 shadow-lg bg-slate-100 flex items-center justify-center aspect-[1.414/1]">
               {previewLoading ? (
                 <div className="flex flex-col items-center justify-center gap-3">
-                  <RefreshCw className="w-8 h-8 animate-spin text-[#0B4A8F]" />
+                  <RefreshCw className="w-8 h-8 animate-spin text-vcet-blue-deep" />
                   <span className="text-xs font-bold text-slate-600">
                     Rendering high-resolution vector certificate...
                   </span>
@@ -262,7 +262,7 @@ export default function CertificatesPage() {
                 <button
                   type="button"
                   onClick={() => handleDownload(selectedCert)}
-                  className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#084282] text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white font-bold text-xs shadow-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <FileDown className="w-4 h-4" />
                   <span>Download High-Resolution PDF</span>

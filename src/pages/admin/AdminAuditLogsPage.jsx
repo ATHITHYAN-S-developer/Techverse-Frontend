@@ -90,12 +90,12 @@ export default function AdminAuditLogsPage() {
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                         : log.action === "DELETE" || log.action === "BLOCK"
                         ? "bg-rose-50 text-rose-700 border border-rose-200"
-                        : "bg-blue-50 text-[#0062A8] border border-blue-200"
+                        : "bg-blue-50 text-vcet-blue border border-blue-200"
                     }`}>
                       {log.action}
                     </span>
                   </td>
-                  <td className="px-4 py-3.5 text-[#0062A8] font-bold">
+                  <td className="px-4 py-3.5 text-vcet-blue font-bold">
                     {log.resourceType}: {log.resourceId}
                   </td>
                   <td className="px-4 py-3.5 font-sans text-slate-600">

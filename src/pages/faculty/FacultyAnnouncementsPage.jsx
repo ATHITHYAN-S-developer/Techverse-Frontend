@@ -180,7 +180,7 @@ export default function FacultyAnnouncementsPage() {
 
         <button
           onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Broadcast Notice</span>
@@ -208,7 +208,7 @@ export default function FacultyAnnouncementsPage() {
                     ? "bg-rose-100 text-rose-700"
                     : item.priority === "Important"
                     ? "bg-amber-100 text-amber-800"
-                    : "bg-blue-50 text-[#0062A8]"
+                    : "bg-blue-50 text-vcet-blue"
                 }`}>
                   {item.priority || "Notice"}
                 </span>
@@ -226,7 +226,7 @@ export default function FacultyAnnouncementsPage() {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleOpenEdit(item)}
-                  className="p-1.5 hover:text-[#0062A8] rounded hover:bg-slate-50"
+                  className="p-1.5 hover:text-vcet-blue rounded hover:bg-slate-50"
                   title="Edit"
                 >
                   <Edit className="w-3.5 h-3.5" />
@@ -381,7 +381,7 @@ export default function FacultyAnnouncementsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#0062A8] text-white font-bold rounded-xl shadow"
+                  className="px-5 py-2 bg-vcet-blue text-white font-bold rounded-xl shadow"
                 >
                   Publish Notice
                 </button>

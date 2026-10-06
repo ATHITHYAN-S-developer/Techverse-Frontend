@@ -21,7 +21,7 @@ export default function CourseCard({ course }) {
     .trim();
 
   return (
-    <div className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:border-[#0B4A8F]/30 transition-all duration-300 flex flex-col justify-between cursor-pointer">
+    <div className="group bg-white rounded-2xl border border-slate-200/80 overflow-hidden shadow-xs hover:shadow-xl hover:border-vcet-blue-deep/30 transition-all duration-300 flex flex-col justify-between cursor-pointer">
       {/* Thumbnail Area */}
       <Link to={courseUrl} className="relative aspect-video w-full overflow-hidden bg-slate-100 block">
         <img
@@ -37,7 +37,7 @@ export default function CourseCard({ course }) {
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent opacity-80" />
         
         {/* Category Badge */}
-        <span className="absolute top-3 left-3 px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-md text-[#0B4A8F] rounded-full shadow-xs">
+        <span className="absolute top-3 left-3 px-2.5 py-1 text-[11px] font-bold bg-white/90 backdrop-blur-md text-vcet-blue-deep rounded-full shadow-xs">
           {course.category}
         </span>
 
@@ -85,15 +85,15 @@ export default function CourseCard({ course }) {
       <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
         <div>
           <Link to={courseUrl} className="block">
-            <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0B4A8F] transition-colors leading-snug">
+            <h3 className="text-base font-bold text-slate-900 group-hover:text-vcet-blue-deep transition-colors leading-snug">
               {course.title}
             </h3>
           </Link>
 
           {/* Course Description (3-Line Glimpse Box) */}
           <div className="mt-2.5 p-3 rounded-xl bg-slate-50 border border-slate-100 group-hover:bg-blue-50/40 group-hover:border-blue-100 transition-colors">
-            <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-[#0B4A8F] uppercase tracking-wider mb-1">
-              <Sparkles className="w-3 h-3 text-[#0B4A8F]" />
+            <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-vcet-blue-deep uppercase tracking-wider mb-1">
+              <Sparkles className="w-3 h-3 text-vcet-blue-deep" />
               <span>Course Description</span>
             </div>
             <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed font-normal">
@@ -108,14 +108,14 @@ export default function CourseCard({ course }) {
             <div className="mb-3">
               <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1">
                 <span>{course.progress >= 100 ? "Course Status" : "Progress"}</span>
-                <span className={course.progress >= 100 ? "text-emerald-600 font-bold flex items-center gap-1" : "text-[#0B4A8F]"}>
+                <span className={course.progress >= 100 ? "text-emerald-600 font-bold flex items-center gap-1" : "text-vcet-blue-deep"}>
                   {course.progress >= 100 ? "Completed 100% ✅" : `${course.progress}%`}
                 </span>
               </div>
               <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                 <div
                   className={`h-1.5 rounded-full transition-all duration-500 ${
-                    course.progress >= 100 ? "bg-emerald-500" : "bg-[#0B4A8F]"
+                    course.progress >= 100 ? "bg-emerald-500" : "bg-vcet-blue-deep"
                   }`}
                   style={{ width: `${course.progress}%` }}
                 />
@@ -137,7 +137,7 @@ export default function CourseCard({ course }) {
             className={`w-full py-2.5 px-4 font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer ${
               course.progress >= 100
                 ? "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-600 hover:text-white"
-                : "bg-slate-100 group-hover:bg-[#0B4A8F] group-hover:text-white text-slate-700"
+                : "bg-slate-100 group-hover:bg-vcet-blue-deep group-hover:text-white text-slate-700"
             }`}
           >
             {course.progress >= 100

@@ -147,7 +147,7 @@ export default function AdminLeaderboardPage() {
           }}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-all border border-slate-200 self-start sm:self-auto"
         >
-          <RefreshCw className="w-4 h-4 text-[#0062A8]" />
+          <RefreshCw className="w-4 h-4 text-vcet-blue" />
           <span>Recalculate Rankings</span>
         </button>
       </div>
@@ -195,7 +195,7 @@ export default function AdminLeaderboardPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search leaderboard by student name or register number..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0062A8] focus:bg-white"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-vcet-blue focus:bg-white"
           />
         </div>
 
@@ -241,7 +241,7 @@ export default function AdminLeaderboardPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3.5">
-                    <span className="font-bold text-[#0062A8]">{s.department}</span>
+                    <span className="font-bold text-vcet-blue">{s.department}</span>
                     <span className="text-slate-400"> • {s.year}</span>
                   </td>
                   <td className="px-4 py-3.5">

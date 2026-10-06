@@ -124,7 +124,7 @@ export default function AdminDepartmentsPage() {
 
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-hover text-white font-bold text-xs shadow-md transition-all"
         >
           <Plus className="w-4 h-4" />
           <span>Add Department</span>
@@ -149,7 +149,7 @@ export default function AdminDepartmentsPage() {
             >
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-50 text-[#0062A8] border border-blue-200 font-mono">
+                  <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-blue-50 text-vcet-blue border border-blue-200 font-mono">
                     {d.code}
                   </span>
                   <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
@@ -169,7 +169,7 @@ export default function AdminDepartmentsPage() {
 
                 <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs text-slate-600">
                   <div className="flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-[#0062A8]" />
+                    <Users className="w-3.5 h-3.5 text-vcet-blue" />
                     <span>{d.stats?.students ?? 0} Students</span>
                   </div>
                   <div className="flex items-center gap-1.5">
@@ -300,7 +300,7 @@ export default function AdminDepartmentsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-[#0062A8] text-white font-bold rounded-xl shadow hover:bg-[#00528c] disabled:opacity-50 inline-flex items-center gap-2"
+                  className="px-5 py-2 bg-vcet-blue text-white font-bold rounded-xl shadow hover:bg-vcet-blue-hover disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {editing ? "Save Changes" : "Create Department"}

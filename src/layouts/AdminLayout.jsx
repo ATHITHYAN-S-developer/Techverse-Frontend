@@ -171,7 +171,7 @@ export default function AdminLayout() {
     : quickSearchItems;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-[#0062A8] selection:text-white font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-vcet-blue selection:text-white font-sans">
       <ScrollToTop />
 
       {/* 1. TOP HEADER - Clean White */}
@@ -192,7 +192,7 @@ export default function AdminLayout() {
               alt="TechVerse"
               className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
             />
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#0062A8] font-extrabold border border-blue-200 uppercase tracking-wider">
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue font-extrabold border border-blue-200 uppercase tracking-wider">
               ADMIN
             </span>
           </Link>
@@ -237,14 +237,14 @@ export default function AdminLayout() {
 
           {/* Admin Avatar Pill */}
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#0062A8] to-sky-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-vcet-blue to-sky-600 text-white flex items-center justify-center font-bold text-xs shadow-xs">
               AD
             </div>
             <div className="hidden lg:block text-left">
               <span className="text-xs font-bold text-slate-800 block leading-tight">
                 {user?.name || "System Admin"}
               </span>
-              <span className="text-[10px] text-[#0062A8] font-bold leading-tight">
+              <span className="text-[10px] text-vcet-blue font-bold leading-tight">
                 Administrator
               </span>
             </div>
@@ -287,7 +287,7 @@ export default function AdminLayout() {
                 alt="TechVerse"
                 className="h-7 w-auto object-contain"
               />
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#0062A8] font-bold uppercase tracking-wider">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-vcet-blue font-bold uppercase tracking-wider">
                 Admin Control
               </span>
             </div>
@@ -317,12 +317,12 @@ export default function AdminLayout() {
                         onClick={() => setSidebarOpen(false)}
                         className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                           active
-                            ? "bg-blue-50 text-[#0062A8] font-bold border-l-4 border-[#0062A8] shadow-xs"
+                            ? "bg-blue-50 text-vcet-blue font-bold border-l-4 border-vcet-blue shadow-xs"
                             : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <Icon className={`w-4 h-4 shrink-0 ${active ? "text-[#0062A8]" : "text-slate-400"}`} />
+                          <Icon className={`w-4 h-4 shrink-0 ${active ? "text-vcet-blue" : "text-slate-400"}`} />
                           <span className="truncate">{item.name}</span>
                         </div>
                         {item.badge && (
@@ -346,7 +346,7 @@ export default function AdminLayout() {
           {/* Bottom Sidebar Institutional Badge */}
           <div className="p-3 border-t border-slate-100 bg-slate-50/70 shrink-0">
             <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2.5 shadow-xs">
-              <Shield className="w-4 h-4 text-[#0062A8] shrink-0" />
+              <Shield className="w-4 h-4 text-vcet-blue shrink-0" />
               <div className="min-w-0">
                 <span className="text-slate-900 font-bold block truncate">VCET Governance</span>
                 <span className="text-[10px] text-slate-400 block truncate">v1.0 • Erode, TN</span>
@@ -395,7 +395,7 @@ export default function AdminLayout() {
                   className="w-full text-left p-2.5 rounded-xl hover:bg-slate-100 text-xs flex items-center justify-between text-slate-700 hover:text-slate-900 transition-colors cursor-pointer"
                 >
                   <div className="flex items-center gap-2.5">
-                    <ChevronRight className="w-3.5 h-3.5 text-[#0062A8]" />
+                    <ChevronRight className="w-3.5 h-3.5 text-vcet-blue" />
                     <span className="font-bold">{item.title}</span>
                   </div>
                   <span className="text-[10px] font-mono text-slate-400 uppercase">{item.category}</span>

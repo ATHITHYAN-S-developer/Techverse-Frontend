@@ -134,7 +134,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
         >
           {/* Search Input Bar */}
           <div className="flex items-center px-4 py-3.5 border-b border-slate-100 bg-slate-50/50">
-            <Search className="w-5 h-5 text-[#0062A8] shrink-0 mr-3" />
+            <Search className="w-5 h-5 text-vcet-blue shrink-0 mr-3" />
             <input
               ref={inputRef}
               type="text"
@@ -170,7 +170,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                     <button
                       key={tag}
                       onClick={() => setQuery(tag)}
-                      className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 hover:bg-[#0062A8]/10 hover:text-[#0062A8] rounded-full transition-colors"
+                      className="text-xs px-2.5 py-1 bg-slate-100 text-slate-600 hover:bg-vcet-blue/10 hover:text-vcet-blue rounded-full transition-colors"
                     >
                       {tag}
                     </button>
@@ -190,7 +190,7 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
             {filteredCourses.length > 0 && (
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
-                  <GraduationCap className="w-3.5 h-3.5 text-[#0062A8]" /> Courses ({filteredCourses.length})
+                  <GraduationCap className="w-3.5 h-3.5 text-vcet-blue" /> Courses ({filteredCourses.length})
                 </div>
                 <div className="space-y-1.5">
                   {filteredCourses.map((c) => (
@@ -200,10 +200,10 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
                       className="p-2.5 rounded-xl hover:bg-slate-100/80 cursor-pointer flex items-center justify-between group transition-colors"
                     >
                       <div>
-                        <div className="text-sm font-semibold text-slate-800 group-hover:text-[#0062A8]">{c.title}</div>
+                        <div className="text-sm font-semibold text-slate-800 group-hover:text-vcet-blue">{c.title}</div>
                         <div className="text-xs text-slate-500">{c.category} • {c.level} • {c.duration}</div>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0062A8] group-hover:translate-x-0.5 transition-all" />
+                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-vcet-blue group-hover:translate-x-0.5 transition-all" />
                     </div>
                   ))}
                 </div>
@@ -268,16 +268,16 @@ export default function GlobalSearchModal({ isOpen, onClose }) {
             {filteredDepartments.length > 0 && (
               <div>
                 <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2 flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5 text-[#0B4A8F]" /> Departments ({filteredDepartments.length})
+                  <BookOpen className="w-3.5 h-3.5 text-vcet-blue-deep" /> Departments ({filteredDepartments.length})
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {filteredDepartments.map((d) => (
                     <div
                       key={d.code}
                       onClick={() => handleSelect("/departments")}
-                      className="p-2.5 rounded-xl border border-slate-100 hover:border-[#0062A8]/30 hover:bg-slate-50 cursor-pointer group transition-colors"
+                      className="p-2.5 rounded-xl border border-slate-100 hover:border-vcet-blue/30 hover:bg-slate-50 cursor-pointer group transition-colors"
                     >
-                      <div className="text-xs font-bold text-[#0062A8]">{d.code}</div>
+                      <div className="text-xs font-bold text-vcet-blue">{d.code}</div>
                       <div className="text-xs font-medium text-slate-700 line-clamp-1">{d.name}</div>
                     </div>
                   ))}

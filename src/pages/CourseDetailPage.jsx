@@ -62,7 +62,7 @@ export default function CourseDetailPage() {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#0062A8] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-vcet-blue border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -82,7 +82,7 @@ export default function CourseDetailPage() {
         <div>
           <Link
             to="/courses"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0062A8] text-white rounded-xl text-xs font-bold hover:bg-[#004f88] transition shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-vcet-blue text-white rounded-xl text-xs font-bold hover:bg-[#004f88] transition shadow-sm cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" /> Browse Available Courses
           </Link>
@@ -96,7 +96,7 @@ export default function CourseDetailPage() {
       <div className="max-w-xl mx-auto py-16 text-center space-y-4">
         <h2 className="text-xl font-bold text-slate-800">Course Not Found</h2>
         <p className="text-xs text-slate-500">The requested course could not be located in the catalog.</p>
-        <Link to="/courses" className="inline-block px-4 py-2 bg-[#0062A8] text-white rounded-xl text-xs font-bold cursor-pointer">
+        <Link to="/courses" className="inline-block px-4 py-2 bg-vcet-blue text-white rounded-xl text-xs font-bold cursor-pointer">
           Back to Courses
         </Link>
       </div>
@@ -129,7 +129,7 @@ export default function CourseDetailPage() {
       {/* Back button */}
       <button
         onClick={() => navigate("/courses")}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#0062A8] transition-colors cursor-pointer"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-vcet-blue transition-colors cursor-pointer"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Courses Catalog
       </button>
@@ -138,7 +138,7 @@ export default function CourseDetailPage() {
       {isFacultyOrAdmin && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-2.5">
-            <span className="p-2 rounded-xl bg-[#0062A8] text-white">
+            <span className="p-2 rounded-xl bg-vcet-blue text-white">
               <Settings className="w-4 h-4" />
             </span>
             <div>
@@ -152,14 +152,14 @@ export default function CourseDetailPage() {
           <div className="flex items-center gap-2">
             <Link
               to={`${moduleManagerLink}?courseId=${course._id || course.id}`}
-              className="px-3.5 py-1.5 bg-[#0062A8] hover:bg-[#0B4A8F] text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-1.5 bg-vcet-blue hover:bg-vcet-blue-deep text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Layers className="w-3.5 h-3.5" />
               <span>Manage Modules ({totalMods})</span>
             </Link>
             <Link
               to={courseManagerLink}
-              className="px-3.5 py-1.5 bg-white border border-slate-300 hover:border-[#0062A8] text-slate-800 hover:text-[#0062A8] text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer"
+              className="px-3.5 py-1.5 bg-white border border-slate-300 hover:border-vcet-blue text-slate-800 hover:text-vcet-blue text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer"
             >
               Edit Course Info
             </Link>
@@ -176,8 +176,8 @@ export default function CourseDetailPage() {
           
           <div className="relative z-10 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-sky-300 text-[11px] font-bold tracking-wide text-[#0062A8] uppercase shadow-2xs">
-                <Sparkles className="w-3.5 h-3.5 text-[#0062A8]" />
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 border border-sky-300 text-[11px] font-bold tracking-wide text-vcet-blue uppercase shadow-2xs">
+                <Sparkles className="w-3.5 h-3.5 text-vcet-blue" />
                 <span>Welcome New Student</span>
               </div>
               <span className="text-xs text-slate-600 font-medium">
@@ -203,13 +203,13 @@ export default function CourseDetailPage() {
 
             <div className="pt-2 flex flex-wrap items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-xs text-slate-600 font-medium">
-                <Info className="w-4 h-4 text-[#0062A8]" />
+                <Info className="w-4 h-4 text-vcet-blue" />
                 <span>Completion benchmark: {course.passingPercentage || course.passingScore || 50}% assessment score for verified certificate.</span>
               </div>
               {firstIncompleteModule && (
                 <Link
                   to={`/courses/${courseSlug}/module/${firstIncompleteModule.id || firstIncompleteModule._id}`}
-                  className="px-6 py-3 bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-extrabold text-xs rounded-xl shadow-md inline-flex items-center gap-2 transition-all cursor-pointer"
+                  className="px-6 py-3 bg-vcet-blue hover:bg-vcet-blue-deep text-white font-extrabold text-xs rounded-xl shadow-md inline-flex items-center gap-2 transition-all cursor-pointer"
                 >
                   <span>Start Course Now</span>
                   <ArrowRight className="w-4 h-4" />
@@ -224,7 +224,7 @@ export default function CourseDetailPage() {
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
         <div className="lg:col-span-2 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 text-xs font-bold bg-blue-50 text-[#0062A8] rounded-full border border-blue-200">
+            <span className="px-3 py-1 text-xs font-bold bg-blue-50 text-vcet-blue rounded-full border border-blue-200">
               {course.category}
             </span>
             <span className="text-xs font-semibold text-slate-500">{course.level || "Beginner to Intermediate"}</span>
@@ -236,11 +236,11 @@ export default function CourseDetailPage() {
 
           <div className="pt-2 flex flex-wrap items-center gap-6 text-xs text-slate-600 font-medium">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#0062A8]" />
+              <Clock className="w-4 h-4 text-vcet-blue" />
               <span>{course.duration || "30 Days"}</span>
             </div>
             <div className="flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[#0062A8]" />
+              <BookOpen className="w-4 h-4 text-vcet-blue" />
               <span>{course.modules?.length || course.totalModules || 0} Modules</span>
             </div>
             <div className="flex items-center gap-2">
@@ -255,11 +255,11 @@ export default function CourseDetailPage() {
           <div>
             <div className="flex items-center justify-between text-xs font-bold text-slate-800 mb-1.5">
               <span>Overall Progress</span>
-              <span className="text-[#0062A8]">{userProgress}%</span>
+              <span className="text-vcet-blue">{userProgress}%</span>
             </div>
             <div className="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden mb-4">
               <div
-                className="bg-[#0062A8] h-2.5 rounded-full transition-all duration-500"
+                className="bg-vcet-blue h-2.5 rounded-full transition-all duration-500"
                 style={{ width: `${userProgress}%` }}
               />
             </div>
@@ -279,7 +279,7 @@ export default function CourseDetailPage() {
           ) : firstIncompleteModule ? (
             <Link
               to={`/courses/${courseSlug}/module/${firstIncompleteModule.id || firstIncompleteModule._id}`}
-              className="w-full py-3 bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="w-full py-3 bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               <span>{hasStarted ? "Continue Learning" : "Start First Module"}</span>
               <ArrowRight className="w-4 h-4" />
@@ -295,7 +295,7 @@ export default function CourseDetailPage() {
       {/* COURSE DESCRIPTION */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-xl bg-blue-50 text-[#0062A8]">
+          <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue">
             <BookOpen className="w-5 h-5" />
           </div>
           <h2 className="text-lg font-bold text-slate-900">Course Description</h2>
@@ -312,12 +312,12 @@ export default function CourseDetailPage() {
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-[#0062A8]" /> Course Curriculum & Modules ({totalMods})
+            <BookOpen className="w-5 h-5 text-vcet-blue" /> Course Curriculum & Modules ({totalMods})
           </h2>
           {isFacultyOrAdmin && (
             <Link
               to={`${moduleManagerLink}?courseId=${course._id || course.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-[#0062A8] hover:bg-blue-100 font-bold text-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-vcet-blue hover:bg-blue-100 font-bold text-xs transition-colors cursor-pointer"
             >
               <Layers className="w-3.5 h-3.5" />
               <span>Add / Edit Modules</span>
@@ -348,7 +348,7 @@ export default function CourseDetailPage() {
                       isPassed
                         ? "bg-emerald-100 text-emerald-700"
                         : isUnlocked
-                        ? "bg-blue-50 text-[#0062A8]"
+                        ? "bg-blue-50 text-vcet-blue"
                         : "bg-slate-100 text-slate-400"
                     }`}>
                       {isPassed ? (
@@ -365,7 +365,7 @@ export default function CourseDetailPage() {
                         <span className="text-[10px] font-bold font-mono text-slate-400 uppercase">
                           Module {mod.moduleNumber || idx + 1}
                         </span>
-                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#0062A8] transition-colors">
+                        <h3 className="text-sm font-bold text-slate-900 group-hover:text-vcet-blue transition-colors">
                           {mod.title}
                         </h3>
                         {isPassed ? (
@@ -387,7 +387,7 @@ export default function CourseDetailPage() {
 
                       {/* Content Badges */}
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-[#0062A8] border border-blue-200/60 flex items-center gap-1">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-vcet-blue border border-blue-200/60 flex items-center gap-1">
                           <Video className="w-3 h-3" />
                           <span>{videoCount} Video{videoCount > 1 ? "s" : ""}</span>
                         </span>
@@ -416,7 +416,7 @@ export default function CourseDetailPage() {
                         className={`px-3.5 py-1.5 font-semibold text-xs rounded-lg transition-colors cursor-pointer ${
                           isPassed
                             ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border border-emerald-200"
-                            : "bg-slate-100 group-hover:bg-[#0062A8] group-hover:text-white text-slate-700"
+                            : "bg-slate-100 group-hover:bg-vcet-blue group-hover:text-white text-slate-700"
                         }`}
                       >
                         {isPassed ? "Review Module" : "Open Lesson"}
@@ -439,7 +439,7 @@ export default function CourseDetailPage() {
             {isFacultyOrAdmin && (
               <Link
                 to={`${moduleManagerLink}?courseId=${course._id || course.id}`}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0062A8] text-white font-bold text-xs shadow-xs"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-vcet-blue text-white font-bold text-xs shadow-xs"
               >
                 <Layers className="w-3.5 h-3.5" />
                 <span>Add First Module</span>

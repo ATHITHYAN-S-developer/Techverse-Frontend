@@ -8,7 +8,7 @@ import VcetBanner from "../components/VcetBanner";
 
 export default function PublicLayout() {
   return (
-    <div className="min-h-screen flex flex-col bg-white text-[#444445] selection:bg-[#0062A8] selection:text-white font-sans relative">
+    <div className="min-h-screen flex flex-col bg-white text-vcet-dark selection:bg-vcet-blue selection:text-white font-sans relative">
       <ScrollToTop />
       <Navbar />
       <VcetBanner />

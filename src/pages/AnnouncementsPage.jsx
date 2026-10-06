@@ -268,13 +268,13 @@ export default function AnnouncementsPage() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-[#F5F8FB] text-slate-800 font-sans antialiased selection:bg-[#0062A8] selection:text-white pb-32">
+    <div className="min-h-screen bg-vcet-surface text-slate-800 font-sans antialiased selection:bg-vcet-blue selection:text-white pb-32">
       <div className="max-w-[1300px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8">
         {/* ── 1. CLEAN INSTITUTIONAL PAGE HEADER ── */}
-        <div className="bg-white border border-[#D9E2EC] rounded-3xl p-6 sm:p-8 mb-6 shadow-xs relative overflow-hidden">
+        <div className="bg-white border border-vcet-line rounded-3xl p-6 sm:p-8 mb-6 shadow-xs relative overflow-hidden">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold">
                 <Megaphone className="w-3.5 h-3.5" />
                 <span>VCET Official Notice Board</span>
               </div>
@@ -287,7 +287,7 @@ export default function AnnouncementsPage() {
             </div>
 
             <div className="flex items-center gap-3 self-start md:self-center">
-              <div className="flex items-center gap-4 bg-[#F5F8FB] border border-[#D9E2EC] rounded-2xl px-4 py-2.5 text-xs">
+              <div className="flex items-center gap-4 bg-vcet-surface border border-vcet-line rounded-2xl px-4 py-2.5 text-xs">
                 <div>
                   <span className="text-slate-400 block text-[10px] uppercase font-bold tracking-wider">Active</span>
                   <span className="text-slate-900 font-black text-base">{activeCount}</span>
@@ -303,7 +303,7 @@ export default function AnnouncementsPage() {
         </div>
 
         {/* ── 2. SEARCH & CONTROLS BAR ── */}
-        <div className="bg-white border border-[#D9E2EC] rounded-2xl p-4 sm:p-5 mb-6 shadow-xs space-y-4">
+        <div className="bg-white border border-vcet-line rounded-2xl p-4 sm:p-5 mb-6 shadow-xs space-y-4">
           <div className="flex flex-col md:flex-row items-center gap-3">
             {/* Search Input */}
             <div className="relative flex-1 w-full">
@@ -313,7 +313,7 @@ export default function AnnouncementsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search circulars by title, topic, or keyword..."
-                className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-[#D9E2EC] rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-[#0062A8] transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-vcet-line rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-vcet-blue transition-all"
               />
               {searchQuery && (
                 <button
@@ -330,7 +330,7 @@ export default function AnnouncementsPage() {
               <select
                 value={selectedDept}
                 onChange={(e) => setSelectedDept(e.target.value)}
-                className="w-full px-3 py-2.5 bg-[#F8FAFC] border border-[#D9E2EC] rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:bg-white cursor-pointer"
+                className="w-full px-3 py-2.5 bg-[#F8FAFC] border border-vcet-line rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:bg-white cursor-pointer"
               >
                 <option value="All">All Departments</option>
                 {DEPARTMENTS.filter((d) => d !== "All").map((d) => (
@@ -348,7 +348,7 @@ export default function AnnouncementsPage() {
               onClick={() => setActiveTab("posts")}
               className={`flex items-center gap-2 py-2 border-b-2 transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "posts"
-                  ? "border-[#0062A8] text-[#0062A8]"
+                  ? "border-vcet-blue text-vcet-blue"
                   : "border-transparent text-slate-400 hover:text-slate-700"
               }`}
             >
@@ -398,12 +398,12 @@ export default function AnnouncementsPage() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="aspect-square bg-white rounded-2xl border border-[#D9E2EC] animate-pulse p-4"
+                className="aspect-square bg-white rounded-2xl border border-vcet-line animate-pulse p-4"
               />
             ))}
           </div>
         ) : filteredList.length === 0 ? (
-          <div className="text-center py-20 bg-white border border-[#D9E2EC] rounded-3xl p-8 shadow-xs">
+          <div className="text-center py-20 bg-white border border-vcet-line rounded-3xl p-8 shadow-xs">
             <Megaphone className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-base sm:text-lg font-bold text-slate-900">No Circulars Found</h3>
             <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto">
@@ -415,7 +415,7 @@ export default function AnnouncementsPage() {
                 setActiveTab("posts");
                 setSearchQuery("");
               }}
-              className="mt-4 px-4 py-2 bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold text-xs rounded-xl transition cursor-pointer"
+              className="mt-4 px-4 py-2 bg-vcet-blue hover:bg-[#0077C8] text-white font-bold text-xs rounded-xl transition cursor-pointer"
             >
               View All Circulars
             </button>
@@ -437,7 +437,7 @@ export default function AnnouncementsPage() {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.25 }}
                   onClick={() => setSelectedAnnouncement(item)}
-                  className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E2EC] overflow-hidden shadow-xs hover:shadow-lg hover:border-[#0062A8]/50 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                  className="bg-white rounded-2xl sm:rounded-3xl border border-vcet-line overflow-hidden shadow-xs hover:shadow-lg hover:border-vcet-blue/50 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
                 >
                   {/* Card Thumbnail Box */}
                   <div className="relative aspect-[16/10] w-full bg-slate-100 overflow-hidden">
@@ -448,7 +448,7 @@ export default function AnnouncementsPage() {
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0062A8]/10 via-blue-50 to-[#0077C8]/15 text-[#0062A8] p-4 text-center">
+                      <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-vcet-blue/10 via-blue-50 to-[#0077C8]/15 text-vcet-blue p-4 text-center">
                         <Megaphone className="w-10 h-10 opacity-50 mb-1" />
                         <span className="text-[10px] font-black uppercase tracking-wider opacity-70">
                           {item.category || "Notice"}
@@ -478,7 +478,7 @@ export default function AnnouncementsPage() {
                   {/* Body Content */}
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                     <div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#0062A8] mb-1">
+                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-vcet-blue mb-1">
                         <Building2 className="w-3.5 h-3.5 shrink-0" />
                         <span className="truncate">
                           {Array.isArray(item.departments) && item.departments.length > 0
@@ -487,7 +487,7 @@ export default function AnnouncementsPage() {
                         </span>
                       </div>
 
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-[#0062A8] transition-colors line-clamp-2 leading-snug">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-vcet-blue transition-colors line-clamp-2 leading-snug">
                         {item.title}
                       </h3>
 
@@ -497,14 +497,14 @@ export default function AnnouncementsPage() {
                     </div>
 
                     {/* Metadata pill */}
-                    <div className="text-[11px] bg-[#F5F8FB] p-2.5 rounded-xl border border-[#D9E2EC] space-y-1">
+                    <div className="text-[11px] bg-vcet-surface p-2.5 rounded-xl border border-vcet-line space-y-1">
                       <div className="flex flex-col gap-1 text-slate-600">
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3.5 h-3.5 text-[#0062A8] shrink-0" />
+                          <Calendar className="w-3.5 h-3.5 text-vcet-blue shrink-0" />
                           <span>Published: <strong className="text-slate-900">{formatDateTimeDisplay(item.publishDate || item.createdAt)}</strong></span>
                         </span>
                         {item.expiryDate && (
-                          <span className="text-amber-800 font-bold flex items-center gap-1 pt-1 border-t border-[#D9E2EC]/70">
+                          <span className="text-amber-800 font-bold flex items-center gap-1 pt-1 border-t border-vcet-line/70">
                             <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                             <span>Expires: <strong className="text-amber-900">{formatDateTimeDisplay(item.expiryDate)}</strong></span>
                           </span>
@@ -546,7 +546,7 @@ export default function AnnouncementsPage() {
                           handleShare(item);
                         }}
                         className={`p-1.5 hover:bg-slate-100 rounded-lg transition cursor-pointer ${
-                          copiedId === id ? 'text-green-600' : 'text-slate-600 hover:text-[#0062A8]'
+                          copiedId === id ? 'text-green-600' : 'text-slate-600 hover:text-vcet-blue'
                         }`}
                         title={copiedId === id ? 'Link Copied!' : 'Share Link'}
                       >
@@ -554,7 +554,7 @@ export default function AnnouncementsPage() {
                       </button>
                     </div>
 
-                    <span className="text-xs font-bold text-[#0062A8] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                    <span className="text-xs font-bold text-vcet-blue flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
                       Read More <ArrowRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -578,7 +578,7 @@ export default function AnnouncementsPage() {
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.2 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-2xl sm:rounded-3xl border border-[#D9E2EC] w-full max-w-3xl max-h-[92vh] overflow-y-auto md:overflow-hidden shadow-2xl flex flex-col md:flex-row relative text-slate-800"
+              className="bg-white rounded-2xl sm:rounded-3xl border border-vcet-line w-full max-w-3xl max-h-[92vh] overflow-y-auto md:overflow-hidden shadow-2xl flex flex-col md:flex-row relative text-slate-800"
             >
               {/* Close Button */}
               <button
@@ -626,7 +626,7 @@ export default function AnnouncementsPage() {
                     <div>
                       <span className="font-bold text-xs text-slate-900 flex items-center gap-1">
                         VCET Official
-                        <Check className="w-3 h-3 text-[#0062A8] stroke-[3]" />
+                        <Check className="w-3 h-3 text-vcet-blue stroke-[3]" />
                       </span>
                       <span className="text-[10px] text-slate-500 font-medium block">
                         {Array.isArray(selectedAnnouncement.departments) &&
@@ -641,7 +641,7 @@ export default function AnnouncementsPage() {
                     </div>
                   </div>
 
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-[#0062A8] border border-blue-200">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-vcet-blue border border-blue-200">
                     {selectedAnnouncement.category || "Circular"}
                   </span>
                 </div>
@@ -652,17 +652,17 @@ export default function AnnouncementsPage() {
                     {selectedAnnouncement.title}
                   </h2>
 
-                  <div className="bg-[#F5F8FB] rounded-xl p-3.5 border border-[#D9E2EC] space-y-1.5 text-xs">
+                  <div className="bg-vcet-surface rounded-xl p-3.5 border border-vcet-line space-y-1.5 text-xs">
                     <div className="flex items-center justify-between text-slate-600">
                       <span>Target Audience:</span>
                       <strong className="text-slate-900">{selectedAnnouncement.targetAudience === "all" ? "Everyone" : selectedAnnouncement.targetAudience || "Everyone"}</strong>
                     </div>
-                    <div className="flex items-center justify-between text-slate-600 pt-1 border-t border-[#D9E2EC]/70">
+                    <div className="flex items-center justify-between text-slate-600 pt-1 border-t border-vcet-line/70">
                       <span>Published:</span>
                       <strong className="text-slate-900">{formatDateTimeDisplay(selectedAnnouncement.publishDate || selectedAnnouncement.createdAt)}</strong>
                     </div>
                     {selectedAnnouncement.expiryDate && (
-                      <div className="flex items-center justify-between text-amber-900 font-bold pt-1 border-t border-[#D9E2EC]/70">
+                      <div className="flex items-center justify-between text-amber-900 font-bold pt-1 border-t border-vcet-line/70">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5 text-amber-600" /> Deadline / Expiry:
                         </span>
@@ -679,7 +679,7 @@ export default function AnnouncementsPage() {
                 </div>
 
                 {/* Footer Actions */}
-                <div className="p-4 border-t border-slate-100 bg-[#F5F8FB] flex items-center justify-between">
+                <div className="p-4 border-t border-slate-100 bg-vcet-surface flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => toggleLike(selectedAnnouncement._id || selectedAnnouncement.id)}
@@ -710,7 +710,7 @@ export default function AnnouncementsPage() {
                       className={`p-1.5 transition cursor-pointer ${
                         copiedId === (selectedAnnouncement._id || selectedAnnouncement.id)
                           ? 'text-green-600'
-                          : 'text-slate-600 hover:text-[#0062A8]'
+                          : 'text-slate-600 hover:text-vcet-blue'
                       }`}
                       title={copiedId === (selectedAnnouncement._id || selectedAnnouncement.id) ? 'Link Copied!' : 'Share Link'}
                     >
@@ -722,7 +722,7 @@ export default function AnnouncementsPage() {
 
                   <button
                     onClick={() => setSelectedAnnouncement(null)}
-                    className="px-5 py-1.5 rounded-xl bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold text-xs shadow-xs transition cursor-pointer"
+                    className="px-5 py-1.5 rounded-xl bg-vcet-blue hover:bg-[#0077C8] text-white font-bold text-xs shadow-xs transition cursor-pointer"
                   >
                     Close
                   </button>

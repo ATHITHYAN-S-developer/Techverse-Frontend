@@ -44,13 +44,13 @@ export default function ResourceFilters({
                 ? "Search resources, subjects, topics..."
                 : "Search resources, subjects, topics..."
             }
-            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] bg-slate-50/70 hover:bg-white transition-colors duration-150"
+            className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-[#0F172A] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep bg-slate-50/70 hover:bg-white transition-colors duration-150"
           />
           {searchQuery && (
             <button
               onClick={() => onSearchChange("")}
               aria-label="Clear search"
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F]/50"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50"
             >
               <X size={14} />
             </button>
@@ -68,7 +68,7 @@ export default function ResourceFilters({
               id="dept-filter"
               value={selectedDeptId}
               onChange={(e) => onDeptChange(e.target.value)}
-              className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] appearance-none cursor-pointer transition-colors duration-150"
+              className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep appearance-none cursor-pointer transition-colors duration-150"
             >
               <option value="all">All Departments ({departments.length})</option>
               {departments.map((dept) => (
@@ -90,7 +90,7 @@ export default function ResourceFilters({
                 id="sem-filter"
                 value={selectedSemester}
                 onChange={(e) => onSemesterChange(e.target.value)}
-                className="w-full pl-4 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] appearance-none cursor-pointer transition-colors duration-150"
+                className="w-full pl-4 pr-8 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep appearance-none cursor-pointer transition-colors duration-150"
               >
                 <option value="all">All Semesters</option>
                 {SEMESTERS.map((s) => (
@@ -109,7 +109,7 @@ export default function ResourceFilters({
         {/* Result summary */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-medium text-slate-500 flex items-center gap-1.5">
-            <Layers size={14} className="text-[#0B4A8F]" />
+            <Layers size={14} className="text-vcet-blue-deep" />
             {showingLabel}
           </span>
 
@@ -117,13 +117,13 @@ export default function ResourceFilters({
           {activeChips.map((chip) => (
             <span
               key={chip.type}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#EFF6FF] text-[#0B4A8F] font-semibold border border-blue-100"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#EFF6FF] text-vcet-blue-deep font-semibold border border-blue-100"
             >
               {chip.label}
               <button
                 onClick={() => onRemoveChip(chip.type)}
                 aria-label={`Remove ${chip.label} filter`}
-                className="ml-0.5 rounded p-0.5 text-[#0B4A8F] hover:text-[#084282] hover:bg-blue-100 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F]/50"
+                className="ml-0.5 rounded p-0.5 text-vcet-blue-deep hover:text-[#084282] hover:bg-blue-100 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50"
               >
                 <X size={12} />
               </button>
@@ -135,7 +135,7 @@ export default function ResourceFilters({
         {activeChips.length > 0 && (
           <button
             onClick={onResetFilters}
-            className="text-xs font-semibold text-[#0B4A8F] hover:text-[#084282] hover:underline underline-offset-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F]/50 rounded"
+            className="text-xs font-semibold text-vcet-blue-deep hover:text-[#084282] hover:underline underline-offset-2 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50 rounded"
           >
             Clear all filters
           </button>

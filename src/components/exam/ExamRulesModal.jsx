@@ -30,11 +30,11 @@ export default function ExamRulesModal({
         {/* Modal Header */}
         <div className="relative bg-gradient-to-r from-sky-50 via-blue-50 to-white p-6 sm:p-8 border-b border-sky-100 text-slate-900">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center text-[#0B4A8F] shadow-2xs">
+            <div className="w-10 h-10 rounded-2xl bg-sky-100 border border-sky-200 flex items-center justify-center text-vcet-blue-deep shadow-2xs">
               <ShieldAlert className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-xs font-bold uppercase tracking-widest text-[#0B4A8F]">
+              <span className="text-xs font-bold uppercase tracking-widest text-vcet-blue-deep">
                 VCET Academic Integrity Control
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">
@@ -145,7 +145,7 @@ export default function ExamRulesModal({
             onClick={onStartExam}
             className={`ml-auto px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-md cursor-pointer ${
               hasAgreed
-                ? "bg-[#0B4A8F] hover:bg-[#0062A8] text-white shadow-blue-500/20 active:scale-95"
+                ? "bg-vcet-blue-deep hover:bg-vcet-blue text-white shadow-blue-500/20 active:scale-95"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >

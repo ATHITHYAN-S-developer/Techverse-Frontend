@@ -514,19 +514,19 @@ export default function AdminPlacementPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F5F8FB] text-[#444445] p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen bg-vcet-surface text-vcet-dark p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-2.5 py-0.5 text-xs font-black uppercase tracking-wider bg-blue-100 text-[#0062A8] rounded-md">
+              <span className="px-2.5 py-0.5 text-xs font-black uppercase tracking-wider bg-blue-100 text-vcet-blue rounded-md">
                 Admin Control
               </span>
               <span className="text-xs text-slate-500 font-medium">Campus Recruitment & Training Management</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-2.5">
-              <Briefcase className="w-7 h-7 text-[#0062A8]" />
+              <Briefcase className="w-7 h-7 text-vcet-blue" />
               Placement & Career Hub Admin
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 mt-1 max-w-2xl">
@@ -540,16 +540,16 @@ export default function AdminPlacementPage() {
                 loadDrives();
                 loadTrainingData();
               }}
-              className="p-2.5 bg-white border border-[#D9E2EC] rounded-xl hover:bg-slate-50 text-slate-700 transition shadow-xs cursor-pointer"
+              className="p-2.5 bg-white border border-vcet-line rounded-xl hover:bg-slate-50 text-slate-700 transition shadow-xs cursor-pointer"
               title="Refresh all data"
             >
-              <RefreshCw className={`w-4 h-4 ${loadingDrives || loadingTraining ? "animate-spin text-[#0062A8]" : ""}`} />
+              <RefreshCw className={`w-4 h-4 ${loadingDrives || loadingTraining ? "animate-spin text-vcet-blue" : ""}`} />
             </button>
 
             {activeTab === "drives" && (
               <button
                 onClick={handleOpenAddDrive}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-vcet-blue hover:bg-[#0077C8] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 Publish Campus Drive
@@ -559,7 +559,7 @@ export default function AdminPlacementPage() {
             {activeTab === "companies" && (
               <button
                 onClick={handleOpenAddCompany}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-vcet-blue hover:bg-[#0077C8] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 Add Company Blueprint
@@ -569,7 +569,7 @@ export default function AdminPlacementPage() {
             {activeTab === "bootcamps" && (
               <button
                 onClick={handleOpenAddBootcamp}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition cursor-pointer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-vcet-blue hover:bg-[#0077C8] text-white font-bold text-xs sm:text-sm rounded-xl shadow-sm transition cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 Schedule Bootcamp
@@ -579,13 +579,13 @@ export default function AdminPlacementPage() {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex items-center gap-2 border-b border-[#D9E2EC] pb-2">
+        <div className="flex items-center gap-2 border-b border-vcet-line pb-2">
           <button
             onClick={() => setActiveTab("drives")}
             className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
               activeTab === "drives"
-                ? "bg-[#0062A8] text-white shadow-xs"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-[#D9E2EC]"
+                ? "bg-vcet-blue text-white shadow-xs"
+                : "bg-white text-slate-600 hover:bg-slate-100 border border-vcet-line"
             }`}
           >
             <Briefcase className="w-4 h-4" />
@@ -596,8 +596,8 @@ export default function AdminPlacementPage() {
             onClick={() => setActiveTab("companies")}
             className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
               activeTab === "companies"
-                ? "bg-[#0062A8] text-white shadow-xs"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-[#D9E2EC]"
+                ? "bg-vcet-blue text-white shadow-xs"
+                : "bg-white text-slate-600 hover:bg-slate-100 border border-vcet-line"
             }`}
           >
             <Building2 className="w-4 h-4" />
@@ -608,8 +608,8 @@ export default function AdminPlacementPage() {
             onClick={() => setActiveTab("bootcamps")}
             className={`flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer ${
               activeTab === "bootcamps"
-                ? "bg-[#0062A8] text-white shadow-xs"
-                : "bg-white text-slate-600 hover:bg-slate-100 border border-[#D9E2EC]"
+                ? "bg-vcet-blue text-white shadow-xs"
+                : "bg-white text-slate-600 hover:bg-slate-100 border border-vcet-line"
             }`}
           >
             <Award className="w-4 h-4" />
@@ -621,7 +621,7 @@ export default function AdminPlacementPage() {
         {activeTab === "drives" && (
           <div className="space-y-4">
             {/* Filter Bar */}
-            <div className="bg-white border border-[#D9E2EC] rounded-2xl p-4 shadow-xs">
+            <div className="bg-white border border-vcet-line rounded-2xl p-4 shadow-xs">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="relative">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -630,7 +630,7 @@ export default function AdminPlacementPage() {
                     placeholder="Search drives, companies, roles..."
                     value={searchDrives}
                     onChange={(e) => setSearchDrives(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-[#F5F8FB] border border-[#D9E2EC] rounded-xl text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-[#0062A8]"
+                    className="w-full pl-9 pr-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-vcet-blue"
                   />
                 </div>
 
@@ -638,7 +638,7 @@ export default function AdminPlacementPage() {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#F5F8FB] border border-[#D9E2EC] rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
                   >
                     <option value="ALL">All Categories</option>
                     {DRIVE_CATEGORIES.map((c) => (
@@ -653,7 +653,7 @@ export default function AdminPlacementPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-[#F5F8FB] border border-[#D9E2EC] rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
                   >
                     <option value="ALL">All Status (Live & Suspended)</option>
                     <option value="LIVE">🟢 Live Campus Drives</option>
@@ -665,12 +665,12 @@ export default function AdminPlacementPage() {
 
             {/* Drives List Grid */}
             {loadingDrives ? (
-              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-[#D9E2EC]">
-                <Loader2 className="w-8 h-8 text-[#0062A8] animate-spin mb-2" />
+              <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border border-vcet-line">
+                <Loader2 className="w-8 h-8 text-vcet-blue animate-spin mb-2" />
                 <p className="text-xs font-bold text-slate-500">Loading placement events...</p>
               </div>
             ) : filteredDrives.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-[#D9E2EC] p-6">
+              <div className="text-center py-16 bg-white rounded-2xl border border-vcet-line p-6">
                 <Briefcase className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="text-base font-bold text-slate-800">No Placement Drives Found</h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
@@ -685,7 +685,7 @@ export default function AdminPlacementPage() {
                   return (
                     <div
                       key={drive._id || drive.id}
-                      className="bg-white border border-[#D9E2EC] rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                      className="bg-white border border-vcet-line rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
                     >
                       <div className="relative aspect-[16/9] w-full bg-slate-100 overflow-hidden">
                         {poster ? (
@@ -698,7 +698,7 @@ export default function AdminPlacementPage() {
                             }}
                           />
                         ) : (
-                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0062A8]/10 to-[#0077C8]/20 text-[#0062A8]">
+                          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-vcet-blue/10 to-[#0077C8]/20 text-vcet-blue">
                             <Briefcase className="w-8 h-8 opacity-40 mb-1" />
                             <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">VCET Campus Drive</span>
                           </div>
@@ -734,43 +734,43 @@ export default function AdminPlacementPage() {
                           </p>
                         </div>
 
-                        <div className="space-y-1.5 text-[11px] bg-[#F5F8FB] p-2.5 rounded-xl border border-[#D9E2EC]">
+                        <div className="space-y-1.5 text-[11px] bg-vcet-surface p-2.5 rounded-xl border border-vcet-line">
                           <div className="flex items-center gap-1 text-slate-600">
-                            <Calendar className="w-3.5 h-3.5 text-[#0062A8] shrink-0" />
+                            <Calendar className="w-3.5 h-3.5 text-vcet-blue shrink-0" />
                             <span>Date: <strong className="text-slate-900">{drive.date ? String(drive.date).slice(0, 10) : "Upcoming"}</strong></span>
                           </div>
                           {drive.time && (
                             <div className="flex items-center gap-1 text-slate-600">
-                              <Clock className="w-3.5 h-3.5 text-[#0062A8] shrink-0" />
+                              <Clock className="w-3.5 h-3.5 text-vcet-blue shrink-0" />
                               <span>Time: <strong className="text-slate-900">{drive.time}</strong></span>
                             </div>
                           )}
                           <div className="flex items-center gap-1 text-slate-600">
-                            <MapPin className="w-3.5 h-3.5 text-[#0062A8] shrink-0" />
+                            <MapPin className="w-3.5 h-3.5 text-vcet-blue shrink-0" />
                             <span>Venue: <strong className="text-slate-900 truncate">{drive.venue || "VCET Campus"}</strong></span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="px-4 py-3 bg-white border-t border-[#D9E2EC] flex items-center justify-between">
+                      <div className="px-4 py-3 bg-white border-t border-vcet-line flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => setPreviewDrive(drive)}
-                            className="p-1.5 rounded-lg bg-[#F5F8FB] hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-[#D9E2EC] transition cursor-pointer"
+                            className="p-1.5 rounded-lg bg-vcet-surface hover:bg-slate-200 text-slate-600 hover:text-slate-900 border border-vcet-line transition cursor-pointer"
                             title="Preview"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleOpenEditDrive(drive)}
-                            className="p-1.5 rounded-lg bg-[#F5F8FB] hover:bg-blue-50 text-[#0062A8] border border-[#D9E2EC] transition cursor-pointer"
+                            className="p-1.5 rounded-lg bg-vcet-surface hover:bg-blue-50 text-vcet-blue border border-vcet-line transition cursor-pointer"
                             title="Edit"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteDrive(drive)}
-                            className="p-1.5 rounded-lg bg-[#F5F8FB] hover:bg-rose-50 text-[#DC2626] border border-[#D9E2EC] transition cursor-pointer"
+                            className="p-1.5 rounded-lg bg-vcet-surface hover:bg-rose-50 text-[#DC2626] border border-vcet-line transition cursor-pointer"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -800,7 +800,7 @@ export default function AdminPlacementPage() {
         {activeTab === "companies" && (
           <div className="space-y-4">
             {companies.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-[#D9E2EC] p-6">
+              <div className="text-center py-16 bg-white rounded-2xl border border-vcet-line p-6">
                 <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="text-base font-bold text-slate-800">No Company Blueprints Found</h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
@@ -812,20 +812,20 @@ export default function AdminPlacementPage() {
                 {companies.map((c) => (
                   <div
                     key={c._id || c.id}
-                    className="bg-white border border-[#D9E2EC] rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4"
+                    className="bg-white border border-vcet-line rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3">
                         {c.logo ? (
                           <img src={c.logo} alt={c.name} className="w-10 h-10 object-contain rounded-lg p-1 bg-slate-50 border border-slate-200" />
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-[#0062A8]/10 text-[#0062A8] flex items-center justify-center font-bold">
+                          <div className="w-10 h-10 rounded-lg bg-vcet-blue/10 text-vcet-blue flex items-center justify-center font-bold">
                             {c.name.charAt(0)}
                           </div>
                         )}
                         <div>
                           <h3 className="text-base font-bold text-slate-900 leading-tight">{c.name}</h3>
-                          <span className="text-[11px] font-semibold text-[#0062A8]">{c.packageRange || c.salary}</span>
+                          <span className="text-[11px] font-semibold text-vcet-blue">{c.packageRange || c.salary}</span>
                         </div>
                       </div>
                       <span className="text-[10px] uppercase font-mono px-2 py-0.5 bg-slate-100 rounded text-slate-600">
@@ -837,7 +837,7 @@ export default function AdminPlacementPage() {
                       {c.description || c.tagline}
                     </p>
 
-                    <div className="space-y-1.5 text-[11px] bg-[#F5F8FB] p-3 rounded-xl border border-[#D9E2EC]">
+                    <div className="space-y-1.5 text-[11px] bg-vcet-surface p-3 rounded-xl border border-vcet-line">
                       <div>
                         <strong className="text-slate-700">Role:</strong> <span className="text-slate-900">{c.role || "SDE / Graduate Trainee"}</span>
                       </div>
@@ -849,12 +849,12 @@ export default function AdminPlacementPage() {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-[#D9E2EC] flex items-center justify-between">
+                    <div className="pt-3 border-t border-vcet-line flex items-center justify-between">
                       <a
                         href={c.testLink || "#"}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-xs text-[#0062A8] hover:underline flex items-center gap-1 font-bold"
+                        className="text-xs text-vcet-blue hover:underline flex items-center gap-1 font-bold"
                       >
                         Practice Questions <ExternalLink className="w-3.5 h-3.5" />
                       </a>
@@ -862,14 +862,14 @@ export default function AdminPlacementPage() {
                       <div className="flex items-center gap-1.5">
                         <button
                           onClick={() => handleOpenEditCompany(c)}
-                          className="p-1.5 rounded-lg bg-[#F5F8FB] hover:bg-blue-50 text-[#0062A8] border border-[#D9E2EC] transition cursor-pointer"
+                          className="p-1.5 rounded-lg bg-vcet-surface hover:bg-blue-50 text-vcet-blue border border-vcet-line transition cursor-pointer"
                           title="Edit"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDeleteCompany(c)}
-                          className="p-1.5 rounded-lg bg-[#F5F8FB] hover:bg-rose-50 text-[#DC2626] border border-[#D9E2EC] transition cursor-pointer"
+                          className="p-1.5 rounded-lg bg-vcet-surface hover:bg-rose-50 text-[#DC2626] border border-vcet-line transition cursor-pointer"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -887,7 +887,7 @@ export default function AdminPlacementPage() {
         {activeTab === "bootcamps" && (
           <div className="space-y-4">
             {bootcamps.length === 0 ? (
-              <div className="text-center py-16 bg-white rounded-2xl border border-[#D9E2EC] p-6">
+              <div className="text-center py-16 bg-white rounded-2xl border border-vcet-line p-6">
                 <Award className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                 <h3 className="text-base font-bold text-slate-800">No Training Bootcamps Scheduled</h3>
                 <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
@@ -899,7 +899,7 @@ export default function AdminPlacementPage() {
                 {bootcamps.map((b) => (
                   <div
                     key={b._id || b.id}
-                    className="bg-white border border-[#D9E2EC] rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3"
+                    className="bg-white border border-vcet-line rounded-2xl p-5 shadow-xs flex flex-col justify-between space-y-3"
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2">
@@ -914,32 +914,32 @@ export default function AdminPlacementPage() {
                       <p className="text-xs text-slate-500 mt-1">Trainer: {b.trainer}</p>
                     </div>
 
-                    <div className="space-y-1.5 text-[11px] bg-[#F5F8FB] p-3 rounded-xl border border-[#D9E2EC]">
+                    <div className="space-y-1.5 text-[11px] bg-vcet-surface p-3 rounded-xl border border-vcet-line">
                       <div className="flex items-center gap-1.5 text-slate-700">
-                        <Calendar className="w-3.5 h-3.5 text-[#0062A8]" />
+                        <Calendar className="w-3.5 h-3.5 text-vcet-blue" />
                         <span>Dates: <strong>{b.date}</strong></span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-700">
-                        <Clock className="w-3.5 h-3.5 text-[#0062A8]" />
+                        <Clock className="w-3.5 h-3.5 text-vcet-blue" />
                         <span>Timings: <strong>{b.time}</strong></span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-700">
-                        <Users className="w-3.5 h-3.5 text-[#0062A8]" />
+                        <Users className="w-3.5 h-3.5 text-vcet-blue" />
                         <span>Eligibility: <strong>{b.eligible}</strong></span>
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-[#D9E2EC] flex items-center justify-end gap-2">
+                    <div className="pt-3 border-t border-vcet-line flex items-center justify-end gap-2">
                       <button
                         onClick={() => handleOpenEditBootcamp(b)}
-                        className="p-1.5 rounded-lg bg-[#F5F8FB] hover:bg-blue-50 text-[#0062A8] border border-[#D9E2EC] transition cursor-pointer"
+                        className="p-1.5 rounded-lg bg-vcet-surface hover:bg-blue-50 text-vcet-blue border border-vcet-line transition cursor-pointer"
                         title="Edit"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteBootcamp(b)}
-                        className="p-1.5 rounded-lg bg-[#F5F8FB] hover:bg-rose-50 text-[#DC2626] border border-[#D9E2EC] transition cursor-pointer"
+                        className="p-1.5 rounded-lg bg-vcet-surface hover:bg-rose-50 text-[#DC2626] border border-vcet-line transition cursor-pointer"
                         title="Delete"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -956,7 +956,7 @@ export default function AdminPlacementPage() {
       {/* --- MODAL: CREATE / EDIT DRIVE --- */}
       {driveModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white border border-[#D9E2EC] rounded-2xl w-full max-w-xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto text-slate-800">
+          <div className="bg-white border border-vcet-line rounded-2xl w-full max-w-xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto text-slate-800">
             <button
               onClick={() => setDriveModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
@@ -965,7 +965,7 @@ export default function AdminPlacementPage() {
             </button>
 
             <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-              <Briefcase className="w-5 h-5 text-[#0062A8]" />
+              <Briefcase className="w-5 h-5 text-vcet-blue" />
               {editingDrive ? "Edit Placement Drive" : "Publish Campus Placement Drive"}
             </h2>
 
@@ -978,7 +978,7 @@ export default function AdminPlacementPage() {
                   value={driveFormData.title}
                   onChange={(e) => setDriveFormData({ ...driveFormData, title: e.target.value })}
                   placeholder="e.g. ZOHO Corporation — Campus Recruitment Drive 2026"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:border-[#0062A8] focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white text-xs"
                 />
               </div>
 
@@ -991,7 +991,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.organiser}
                     onChange={(e) => setDriveFormData({ ...driveFormData, organiser: e.target.value })}
                     placeholder="e.g. Zoho Corporation"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1000,7 +1000,7 @@ export default function AdminPlacementPage() {
                   <select
                     value={driveFormData.category}
                     onChange={(e) => setDriveFormData({ ...driveFormData, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   >
                     {DRIVE_CATEGORIES.map((c) => (
                       <option key={c.key} value={c.key}>
@@ -1019,7 +1019,7 @@ export default function AdminPlacementPage() {
                     required
                     value={driveFormData.date}
                     onChange={(e) => setDriveFormData({ ...driveFormData, date: e.target.value })}
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1030,7 +1030,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.time}
                     onChange={(e) => setDriveFormData({ ...driveFormData, time: e.target.value })}
                     placeholder="09:00 AM - 04:30 PM"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1043,7 +1043,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.venue}
                     onChange={(e) => setDriveFormData({ ...driveFormData, venue: e.target.value })}
                     placeholder="e.g. VCET Placement Lab 3"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1054,7 +1054,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.department}
                     onChange={(e) => setDriveFormData({ ...driveFormData, department: e.target.value })}
                     placeholder="e.g. CSE, IT, AI&DS, ECE"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1066,7 +1066,7 @@ export default function AdminPlacementPage() {
                   value={driveFormData.description}
                   onChange={(e) => setDriveFormData({ ...driveFormData, description: e.target.value })}
                   placeholder="Job profile, salary package, rounds, dress code, required documents..."
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:border-[#0062A8] focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white text-xs"
                 />
               </div>
 
@@ -1078,7 +1078,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.linkUrl}
                     onChange={(e) => setDriveFormData({ ...driveFormData, linkUrl: e.target.value })}
                     placeholder="https://forms.gle/... or company portal"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1089,7 +1089,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.linkText}
                     onChange={(e) => setDriveFormData({ ...driveFormData, linkText: e.target.value })}
                     placeholder="Register Now / View Details"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1100,9 +1100,9 @@ export default function AdminPlacementPage() {
                   Upload Poster Image <span className="text-slate-400 font-normal">(optional)</span>
                 </label>
                 {driveImagePreview ? (
-                  <div className="relative rounded-xl overflow-hidden border border-[#D9E2EC] bg-[#F5F8FB]">
+                  <div className="relative rounded-xl overflow-hidden border border-vcet-line bg-vcet-surface">
                     <img src={driveImagePreview} alt="Preview" className="w-full h-32 object-cover" />
-                    <div className="flex items-center justify-between px-3 py-1.5 bg-white border-t border-[#D9E2EC]">
+                    <div className="flex items-center justify-between px-3 py-1.5 bg-white border-t border-vcet-line">
                       <span className="text-[11px] text-slate-500 truncate max-w-[80%]">
                         {driveImageFile?.name || "Selected Poster"}
                       </span>
@@ -1119,8 +1119,8 @@ export default function AdminPlacementPage() {
                     </div>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center gap-1.5 w-full h-20 rounded-xl border-2 border-dashed border-[#D9E2EC] bg-[#F5F8FB] hover:bg-slate-100 cursor-pointer transition-colors">
-                    <Upload className="w-5 h-5 text-[#0062A8]" />
+                  <label className="flex flex-col items-center justify-center gap-1.5 w-full h-20 rounded-xl border-2 border-dashed border-vcet-line bg-vcet-surface hover:bg-slate-100 cursor-pointer transition-colors">
+                    <Upload className="w-5 h-5 text-vcet-blue" />
                     <span className="text-xs text-slate-600 font-medium">Click to upload company poster</span>
                     <input
                       type="file"
@@ -1150,14 +1150,14 @@ export default function AdminPlacementPage() {
                   id="drive-pin-toggle"
                   checked={driveFormData.isPinned}
                   onChange={(e) => setDriveFormData({ ...driveFormData, isPinned: e.target.checked })}
-                  className="rounded text-[#0062A8] focus:ring-[#0062A8]"
+                  className="rounded text-vcet-blue focus:ring-vcet-blue"
                 />
                 <label htmlFor="drive-pin-toggle" className="text-xs text-slate-700 font-bold flex items-center gap-1 cursor-pointer">
-                  <Pin className="w-3.5 h-3.5 text-[#0062A8]" /> Pin to top of placement announcements
+                  <Pin className="w-3.5 h-3.5 text-vcet-blue" /> Pin to top of placement announcements
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-[#D9E2EC]">
+              <div className="flex justify-end gap-2 pt-4 border-t border-vcet-line">
                 <button
                   type="button"
                   onClick={() => setDriveModalOpen(false)}
@@ -1168,7 +1168,7 @@ export default function AdminPlacementPage() {
                 <button
                   type="submit"
                   disabled={savingDrive}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold shadow-xs cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-vcet-blue hover:bg-[#0077C8] text-white font-bold shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {savingDrive && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {editingDrive ? "Save Changes" : "Broadcast Campus Drive"}
@@ -1182,7 +1182,7 @@ export default function AdminPlacementPage() {
       {/* --- MODAL: CREATE / EDIT COMPANY BLUEPRINT --- */}
       {companyModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white border border-[#D9E2EC] rounded-2xl w-full max-w-xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto text-slate-800">
+          <div className="bg-white border border-vcet-line rounded-2xl w-full max-w-xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto text-slate-800">
             <button
               onClick={() => setCompanyModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
@@ -1191,7 +1191,7 @@ export default function AdminPlacementPage() {
             </button>
 
             <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-              <Building2 className="w-5 h-5 text-[#0062A8]" />
+              <Building2 className="w-5 h-5 text-vcet-blue" />
               {editingCompany ? "Edit Company Blueprint" : "Create Company Blueprint"}
             </h2>
 
@@ -1205,7 +1205,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.name}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, name: e.target.value })}
                     placeholder="e.g. Zoho Corporation"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1216,7 +1216,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.packageRange}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, packageRange: e.target.value })}
                     placeholder="₹6.0 LPA - ₹10.0 LPA"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1229,7 +1229,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.role}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, role: e.target.value })}
                     placeholder="Software Development Engineer"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1240,7 +1240,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.logo}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, logo: e.target.value })}
                     placeholder="https://... logo.png"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1252,7 +1252,7 @@ export default function AdminPlacementPage() {
                   value={companyFormData.eligibility}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, eligibility: e.target.value })}
                   placeholder="BE/B.Tech (All Branches) • No standing backlogs • 6.5+ CGPA"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                 />
               </div>
 
@@ -1263,7 +1263,7 @@ export default function AdminPlacementPage() {
                   value={companyFormData.roundsText}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, roundsText: e.target.value })}
                   placeholder="Round 1: Basic Programming MCQs&#10;Round 2: Data Structures & Algorithms&#10;Round 3: HR & Cultural Fit"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs font-mono"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs font-mono"
                 />
               </div>
 
@@ -1274,7 +1274,7 @@ export default function AdminPlacementPage() {
                   value={companyFormData.questionsText}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, questionsText: e.target.value })}
                   placeholder="Print spiral matrix&#10;Implement custom string copy without built-ins"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                 />
               </div>
 
@@ -1285,11 +1285,11 @@ export default function AdminPlacementPage() {
                   value={companyFormData.testLink}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, testLink: e.target.value })}
                   placeholder="https://www.geeksforgeeks.org/..."
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-[#D9E2EC]">
+              <div className="flex justify-end gap-2 pt-4 border-t border-vcet-line">
                 <button
                   type="button"
                   onClick={() => setCompanyModalOpen(false)}
@@ -1300,7 +1300,7 @@ export default function AdminPlacementPage() {
                 <button
                   type="submit"
                   disabled={savingCompany}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold shadow-xs cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-vcet-blue hover:bg-[#0077C8] text-white font-bold shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {savingCompany && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {editingCompany ? "Save Changes" : "Save Company Blueprint"}
@@ -1314,7 +1314,7 @@ export default function AdminPlacementPage() {
       {/* --- MODAL: CREATE / EDIT BOOTCAMP --- */}
       {bootcampModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white border border-[#D9E2EC] rounded-2xl w-full max-w-xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto text-slate-800">
+          <div className="bg-white border border-vcet-line rounded-2xl w-full max-w-xl p-6 shadow-2xl relative max-h-[92vh] overflow-y-auto text-slate-800">
             <button
               onClick={() => setBootcampModalOpen(false)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
@@ -1323,7 +1323,7 @@ export default function AdminPlacementPage() {
             </button>
 
             <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-              <Award className="w-5 h-5 text-[#0062A8]" />
+              <Award className="w-5 h-5 text-vcet-blue" />
               {editingBootcamp ? "Edit Training Bootcamp" : "Schedule Training Bootcamp"}
             </h2>
 
@@ -1336,7 +1336,7 @@ export default function AdminPlacementPage() {
                   value={bootcampFormData.title}
                   onChange={(e) => setBootcampFormData({ ...bootcampFormData, title: e.target.value })}
                   placeholder="e.g. Zoho Corporation Coding & Application Bootcamp"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                 />
               </div>
 
@@ -1348,7 +1348,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.trainer}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, trainer: e.target.value })}
                     placeholder="VCET Placement Cell"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1359,7 +1359,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.mode}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, mode: e.target.value })}
                     placeholder="Hybrid (Lab 2 & Google Meet)"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1372,7 +1372,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.date}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, date: e.target.value })}
                     placeholder="Oct 12 - Oct 16, 2026"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1383,7 +1383,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.time}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, time: e.target.value })}
                     placeholder="04:30 PM - 06:30 PM IST"
-                    className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1395,11 +1395,11 @@ export default function AdminPlacementPage() {
                   value={bootcampFormData.tagsText}
                   onChange={(e) => setBootcampFormData({ ...bootcampFormData, tagsText: e.target.value })}
                   placeholder="Aptitude, Coding, Mock TR"
-                  className="w-full px-3 py-2 bg-[#F5F8FB] rounded-xl border border-[#D9E2EC] text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-4 border-t border-[#D9E2EC]">
+              <div className="flex justify-end gap-2 pt-4 border-t border-vcet-line">
                 <button
                   type="button"
                   onClick={() => setBootcampModalOpen(false)}
@@ -1410,7 +1410,7 @@ export default function AdminPlacementPage() {
                 <button
                   type="submit"
                   disabled={savingBootcamp}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#0077C8] text-white font-bold shadow-xs cursor-pointer disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-vcet-blue hover:bg-[#0077C8] text-white font-bold shadow-xs cursor-pointer disabled:opacity-50"
                 >
                   {savingBootcamp && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {editingBootcamp ? "Save Changes" : "Save Bootcamp"}
@@ -1424,7 +1424,7 @@ export default function AdminPlacementPage() {
       {/* --- PREVIEW DRIVE MODAL --- */}
       {previewDrive && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white border border-[#D9E2EC] rounded-2xl w-full max-w-lg p-6 shadow-2xl relative text-slate-800 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white border border-vcet-line rounded-2xl w-full max-w-lg p-6 shadow-2xl relative text-slate-800 max-h-[90vh] overflow-y-auto">
             <button
               onClick={() => setPreviewDrive(null)}
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
@@ -1441,7 +1441,7 @@ export default function AdminPlacementPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0062A8]/10 to-[#0077C8]/20 text-[#0062A8]">
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-vcet-blue/10 to-[#0077C8]/20 text-vcet-blue">
                     <Briefcase className="w-10 h-10 opacity-40 mb-1" />
                     <span className="text-xs font-bold uppercase tracking-wider opacity-60">VCET Campus Drive</span>
                   </div>
@@ -1449,7 +1449,7 @@ export default function AdminPlacementPage() {
               </div>
 
               <div>
-                <span className="px-2.5 py-0.5 text-[10px] font-bold bg-[#0062A8] text-white rounded-full">
+                <span className="px-2.5 py-0.5 text-[10px] font-bold bg-vcet-blue text-white rounded-full">
                   {previewDrive.organiser}
                 </span>
                 <h3 className="text-base font-bold text-slate-900 leading-snug mt-2">
@@ -1460,7 +1460,7 @@ export default function AdminPlacementPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 bg-[#F5F8FB] p-3 rounded-xl border border-[#D9E2EC]">
+              <div className="grid grid-cols-2 gap-2 bg-vcet-surface p-3 rounded-xl border border-vcet-line">
                 <div>
                   <span className="text-slate-400 text-[10px] uppercase font-bold">Drive Date</span>
                   <p className="font-bold text-slate-800">{previewDrive.date ? String(previewDrive.date).slice(0, 10) : "Upcoming"}</p>
@@ -1469,7 +1469,7 @@ export default function AdminPlacementPage() {
                   <span className="text-slate-400 text-[10px] uppercase font-bold">Timings</span>
                   <p className="font-bold text-slate-800">{previewDrive.time || "Full Day"}</p>
                 </div>
-                <div className="col-span-2 pt-2 border-t border-[#D9E2EC]">
+                <div className="col-span-2 pt-2 border-t border-vcet-line">
                   <span className="text-slate-400 text-[10px] uppercase font-bold">Venue</span>
                   <p className="font-bold text-slate-800">{previewDrive.venue || "VCET Campus"}</p>
                 </div>

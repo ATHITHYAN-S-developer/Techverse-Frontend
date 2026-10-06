@@ -79,7 +79,7 @@ export default function Navbar() {
           {/* 1. Left: Compact VCET Brand Wordmark */}
           <Link
             to="/"
-            className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F] rounded-lg group"
+            className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep rounded-lg group"
             title="VCET TechVerse"
           >
             <img
@@ -101,8 +101,8 @@ export default function Navbar() {
                   to={link.href}
                   className={`relative py-1 text-[13px] tracking-tight transition-colors duration-150 select-none flex items-center gap-1.5 ${
                     active
-                      ? "text-[#0B4A8F] font-bold"
-                      : "text-slate-600 hover:text-[#0B4A8F] font-medium"
+                      ? "text-vcet-blue-deep font-bold"
+                      : "text-slate-600 hover:text-vcet-blue-deep font-medium"
                   }`}
                 >
                   <span>{link.name}</span>
@@ -111,7 +111,7 @@ export default function Navbar() {
                     <span
                       className={`text-[9px] font-black uppercase px-1.5 py-0.2 rounded border transition-colors ${
                         active
-                          ? "border-[#0B4A8F] text-[#0B4A8F] bg-blue-50/60"
+                          ? "border-vcet-blue-deep text-vcet-blue-deep bg-blue-50/60"
                           : "border-red-400/80 text-red-600 bg-red-50/50"
                       }`}
                     >
@@ -122,7 +122,7 @@ export default function Navbar() {
                   {active && (
                     <motion.div
                       layoutId="navbarUnderline"
-                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-[#0B4A8F] rounded-full"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-vcet-blue-deep rounded-full"
                       transition={{ duration: 0.18, ease: "easeInOut" }}
                     />
                   )}
@@ -151,7 +151,7 @@ export default function Navbar() {
                 {/* Role / Dashboard Button */}
                 <Link
                   to={getDashboardPath()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-[#0B4A8F] hover:bg-[#0062A8] shadow-sm transition-all"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-vcet-blue-deep hover:bg-vcet-blue shadow-sm transition-all"
                 >
                   <User size={13} />
                   <span className="max-w-[130px] truncate hidden sm:inline">
@@ -163,7 +163,7 @@ export default function Navbar() {
             ) : (
               <Link
                 to="/login"
-                className="group inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold text-[#0B4A8F] border border-[#0B4A8F] hover:bg-[#0B4A8F] hover:text-white transition-colors"
+                className="group inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-bold text-vcet-blue-deep border border-vcet-blue-deep hover:bg-vcet-blue-deep hover:text-white transition-colors"
               >
                 <span>Login</span>
                 <ArrowRight
@@ -209,7 +209,7 @@ export default function Navbar() {
                 <div className="p-4 border-b border-slate-100 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="font-black text-slate-900 text-base">VCET</span>
-                    <span className="text-xs font-bold text-[#0B4A8F]">TechVerse</span>
+                    <span className="text-xs font-bold text-vcet-blue-deep">TechVerse</span>
                   </div>
                   <button
                     onClick={() => setMobileMenuOpen(false)}
@@ -231,12 +231,12 @@ export default function Navbar() {
                         onClick={() => setMobileMenuOpen(false)}
                         className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
                           active
-                            ? "bg-blue-50 text-[#0B4A8F] font-bold border-l-4 border-[#0B4A8F]"
+                            ? "bg-blue-50 text-vcet-blue-deep font-bold border-l-4 border-vcet-blue-deep"
                             : "text-slate-700 hover:bg-slate-50"
                         }`}
                       >
                         <div className="flex items-center gap-3">
-                          <Icon size={16} className={active ? "text-[#0B4A8F]" : "text-slate-400"} />
+                          <Icon size={16} className={active ? "text-vcet-blue-deep" : "text-slate-400"} />
                           <span>{link.name}</span>
                         </div>
                         {link.badge && (
@@ -252,7 +252,7 @@ export default function Navbar() {
                     <Link
                       to="/verify"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-[#0062A8]"
+                      className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue"
                     >
                       <ShieldCheck size={16} className="text-emerald-600" />
                       <span>Verify Certificate</span>
@@ -260,7 +260,7 @@ export default function Navbar() {
                     <Link
                       to="/coding"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-[#0062A8]"
+                      className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue"
                     >
                       <Code2 size={16} className="text-indigo-600" />
                       <span>Coding Arena</span>
@@ -276,7 +276,7 @@ export default function Navbar() {
                     <Link
                       to={getDashboardPath()}
                       onClick={() => setMobileMenuOpen(false)}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] text-white text-xs font-bold"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep text-white text-xs font-bold"
                     >
                       <User size={14} />
                       <span>Open {role === "admin" ? "Admin Hub" : role === "faculty" ? "Faculty Hub" : "Student Dashboard"}</span>
@@ -295,7 +295,7 @@ export default function Navbar() {
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] text-white text-xs font-bold"
+                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep text-white text-xs font-bold"
                   >
                     <LogIn size={14} />
                     <span>Login to TechVerse</span>

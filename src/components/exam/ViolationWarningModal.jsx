@@ -98,7 +98,7 @@ export default function ViolationWarningModal({
             <button
               type="button"
               onClick={onDismiss}
-              className="w-full py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-wider bg-[#0B4A8F] hover:bg-[#0062A8] text-white flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer active:scale-95 transition-all"
+              className="w-full py-3 px-4 rounded-2xl font-black text-xs uppercase tracking-wider bg-vcet-blue-deep hover:bg-vcet-blue text-white flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 cursor-pointer active:scale-95 transition-all"
             >
               <Maximize2 className="w-4 h-4" />
               <span>Resume Exam & Return to Fullscreen</span>

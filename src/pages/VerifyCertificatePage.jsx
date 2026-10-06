@@ -36,7 +36,7 @@ export default function VerifyCertificatePage() {
     <div className="max-w-3xl mx-auto py-12 px-4 sm:px-6 space-y-8">
       {/* 1. Header */}
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold shadow-xs">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold shadow-xs">
           <ShieldCheck className="w-4 h-4" />
           <span>Official Institutional Registry</span>
         </div>
@@ -65,14 +65,14 @@ export default function VerifyCertificatePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Enter Certificate ID (e.g. VCET-CERT-2026-PY-0091)"
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-2xl text-xs sm:text-sm border border-slate-200 text-slate-900 focus:outline-none focus:border-[#0062A8] font-mono"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-2xl text-xs sm:text-sm border border-slate-200 text-slate-900 focus:outline-none focus:border-vcet-blue font-mono"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full sm:w-auto px-6 py-3 bg-[#0B4A8F] hover:bg-[#0062A8] text-white font-bold text-xs rounded-2xl shadow transition-all shrink-0 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-6 py-3 bg-vcet-blue-deep hover:bg-vcet-blue text-white font-bold text-xs rounded-2xl shadow transition-all shrink-0 flex items-center justify-center gap-2"
           >
             <ShieldCheck className="w-4 h-4" />
             <span>{loading ? "Verifying..." : "Verify Credential"}</span>
@@ -87,7 +87,7 @@ export default function VerifyCertificatePage() {
               setQuery("VCET-CERT-2026-PY-0091");
               handleVerify("VCET-CERT-2026-PY-0091");
             }}
-            className="text-[#0062A8] hover:underline font-mono"
+            className="text-vcet-blue hover:underline font-mono"
           >
             VCET-CERT-2026-PY-0091
           </button>
@@ -98,7 +98,7 @@ export default function VerifyCertificatePage() {
               setQuery("VCET-CERT-2026-GIT-0044");
               handleVerify("VCET-CERT-2026-GIT-0044");
             }}
-            className="text-[#0062A8] hover:underline font-mono"
+            className="text-vcet-blue hover:underline font-mono"
           >
             VCET-CERT-2026-GIT-0044
           </button>
@@ -134,7 +134,7 @@ export default function VerifyCertificatePage() {
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
                   <span className="text-slate-400">Awarded To:</span>
                   <div className="text-sm font-bold text-slate-900">{result.studentName}</div>
-                  <div className="font-mono text-[11px] text-[#0062A8]">{result.registerNumber}</div>
+                  <div className="font-mono text-[11px] text-vcet-blue">{result.registerNumber}</div>
                 </div>
 
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-1">
@@ -159,7 +159,7 @@ export default function VerifyCertificatePage() {
                 <button
                   type="button"
                   onClick={() => downloadCertificatePdf(result)}
-                  className="px-4 py-2 bg-[#0B4A8F] hover:bg-[#084282] text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer"
+                  className="px-4 py-2 bg-vcet-blue-deep hover:bg-[#084282] text-white font-bold text-xs rounded-xl shadow-xs shrink-0 cursor-pointer"
                 >
                   Download PDF
                 </button>

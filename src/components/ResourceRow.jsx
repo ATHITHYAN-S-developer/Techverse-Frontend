@@ -115,9 +115,9 @@ export default function ResourceRow({ resource, index, totalCount }) {
       badges.push(
         <span
           key="web"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F4F4] text-[#444445] text-xs font-semibold border border-[#C9C9C9]/60 shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-vcet-gray-light text-vcet-dark text-xs font-semibold border border-vcet-gray-border/60 shadow-2xs"
         >
-          <FiGlobe className="text-[#0062A8]" size={13} />
+          <FiGlobe className="text-vcet-blue" size={13} />
           <span>Web</span>
         </span>
       );
@@ -126,7 +126,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
       badges.push(
         <span
           key="android"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F4F4] text-[#444445] text-xs font-semibold border border-[#C9C9C9]/60 shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-vcet-gray-light text-vcet-dark text-xs font-semibold border border-vcet-gray-border/60 shadow-2xs"
         >
           <FaAndroid className="text-emerald-600" size={13} />
           <span>Android</span>
@@ -137,9 +137,9 @@ export default function ResourceRow({ resource, index, totalCount }) {
       badges.push(
         <span
           key="ios"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F4F4] text-[#444445] text-xs font-semibold border border-[#C9C9C9]/60 shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-vcet-gray-light text-vcet-dark text-xs font-semibold border border-vcet-gray-border/60 shadow-2xs"
         >
-          <FaApple className="text-[#444445]" size={13} />
+          <FaApple className="text-vcet-dark" size={13} />
           <span>iOS</span>
         </span>
       );
@@ -148,9 +148,9 @@ export default function ResourceRow({ resource, index, totalCount }) {
       badges.push(
         <span
           key="mobile"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F4F4] text-[#444445] text-xs font-semibold border border-[#C9C9C9]/60 shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-vcet-gray-light text-vcet-dark text-xs font-semibold border border-vcet-gray-border/60 shadow-2xs"
         >
-          <FiSmartphone className="text-[#0062A8]" size={13} />
+          <FiSmartphone className="text-vcet-blue" size={13} />
           <span>Mobile</span>
         </span>
       );
@@ -160,9 +160,9 @@ export default function ResourceRow({ resource, index, totalCount }) {
       badges.push(
         <span
           key="custom"
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F4F4F4] text-[#444445] text-xs font-semibold border border-[#C9C9C9]/60"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-vcet-gray-light text-vcet-dark text-xs font-semibold border border-vcet-gray-border/60"
         >
-          <FiGlobe className="text-[#0062A8]" size={13} />
+          <FiGlobe className="text-vcet-blue" size={13} />
           <span>{platformStr}</span>
         </span>
       );
@@ -195,8 +195,8 @@ export default function ResourceRow({ resource, index, totalCount }) {
       id={`resource-${resource.id}`}
       className={`relative w-full py-14 sm:py-20 px-4 sm:px-6 lg:px-12 transition-colors duration-300 rounded-3xl ${
         isFeatured
-          ? "bg-gradient-to-r from-[#0062A8]/[0.07] via-[#0062A8]/[0.03] to-[#0062A8]/[0.07] border-2 border-[#0062A8]/40 shadow-sm"
-          : "bg-white border border-[#C9C9C9]/60 hover:border-[#0062A8]/40"
+          ? "bg-gradient-to-r from-vcet-blue/[0.07] via-vcet-blue/[0.03] to-vcet-blue/[0.07] border-2 border-vcet-blue/40 shadow-sm"
+          : "bg-white border border-vcet-gray-border/60 hover:border-vcet-blue/40"
       }`}
     >
       {/* Featured Ribbon / Top Pick Badge */}
@@ -207,7 +207,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
             transition={{ type: "spring", stiffness: 220, damping: 18 }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#0062A8] text-white text-xs font-extrabold uppercase tracking-wider shadow-md"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-vcet-blue text-white text-xs font-extrabold uppercase tracking-wider shadow-md"
           >
             <motion.span
               animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
@@ -241,15 +241,15 @@ export default function ResourceRow({ resource, index, totalCount }) {
               onClick={openUrl}
               className={`group relative rounded-3xl p-8 sm:p-10 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 shadow-md hover:shadow-2xl border ${
                 isFeatured
-                  ? "bg-gradient-to-br from-white via-[#F0F7FC] to-[#E3EFF9] border-[#0062A8]/30 hover:border-[#0062A8]"
-                  : "bg-gradient-to-br from-white via-[#FAFAFA] to-[#F4F4F4] border-[#C9C9C9] hover:border-[#0062A8]"
+                  ? "bg-gradient-to-br from-white via-[#F0F7FC] to-[#E3EFF9] border-vcet-blue/30 hover:border-vcet-blue"
+                  : "bg-gradient-to-br from-white via-[#FAFAFA] to-vcet-gray-light border-vcet-gray-border hover:border-vcet-blue"
               }`}
             >
               {/* Decorative Subtle Background Pattern */}
               <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#0062A8_1px,transparent_1px)] [background-size:16px_16px] rounded-3xl pointer-events-none" />
 
               {/* High-Res Logo or Styled Panel */}
-              <div className="relative z-10 w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-white p-4 shadow-sm border border-[#C9C9C9]/50 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+              <div className="relative z-10 w-28 h-28 sm:w-36 sm:h-36 rounded-2xl bg-white p-4 shadow-sm border border-vcet-gray-border/50 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
                 {logoSrc ? (
                   <img
                     src={logoSrc}
@@ -257,13 +257,13 @@ export default function ResourceRow({ resource, index, totalCount }) {
                     className="w-full h-full object-contain rounded-xl"
                   />
                 ) : (
-                  <div className="w-full h-full rounded-xl bg-[#0062A8]/10 flex items-center justify-center text-[#0062A8]">
+                  <div className="w-full h-full rounded-xl bg-vcet-blue/10 flex items-center justify-center text-vcet-blue">
                     {resource.type === "youtube" ? (
-                      <FaYoutube className="w-14 h-14 text-[#0062A8]" />
+                      <FaYoutube className="w-14 h-14 text-vcet-blue" />
                     ) : resource.type === "updates" ? (
-                      <FaNewspaper className="w-14 h-14 text-[#0062A8]" />
+                      <FaNewspaper className="w-14 h-14 text-vcet-blue" />
                     ) : (
-                      <FiGlobe className="w-14 h-14 text-[#0062A8]" />
+                      <FiGlobe className="w-14 h-14 text-vcet-blue" />
                     )}
                   </div>
                 )}
@@ -271,10 +271,10 @@ export default function ResourceRow({ resource, index, totalCount }) {
 
               {/* Resource Brand Title & Category badge below logo */}
               <div className="mt-5 text-center relative z-10">
-                <span className="text-xs uppercase font-extrabold tracking-wider px-3 py-1 bg-white text-[#0062A8] rounded-full border border-[#0062A8]/20 shadow-2xs">
+                <span className="text-xs uppercase font-extrabold tracking-wider px-3 py-1 bg-white text-vcet-blue rounded-full border border-vcet-blue/20 shadow-2xs">
                   {resource.category}
                 </span>
-                <p className="text-[11px] text-[#444445]/60 font-mono mt-2 uppercase tracking-widest">
+                <p className="text-[11px] text-vcet-dark/60 font-mono mt-2 uppercase tracking-widest">
                   {String(index + 1).padStart(2, "0")} / {String(totalCount).padStart(2, "0")}
                 </p>
               </div>
@@ -296,10 +296,10 @@ export default function ResourceRow({ resource, index, totalCount }) {
             transition={{ duration: 0.5, ease: EASE_EXPO }}
             className="flex items-center gap-3"
           >
-            <span className="font-mono text-2xl sm:text-3xl font-black text-[#0062A8]/30">
+            <span className="font-mono text-2xl sm:text-3xl font-black text-vcet-blue/30">
               {String(index + 1).padStart(2, "0")}
             </span>
-            <span className="text-xs font-bold uppercase tracking-wider text-[#0062A8] bg-[#0062A8]/10 px-3 py-1 rounded-full">
+            <span className="text-xs font-bold uppercase tracking-wider text-vcet-blue bg-vcet-blue/10 px-3 py-1 rounded-full">
               {resource.type.toUpperCase()} • {resource.category}
             </span>
           </motion.div>
@@ -310,7 +310,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
             transition={{ duration: 0.55, ease: EASE_EXPO, delay: 0.08 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#444445] tracking-tight leading-tight hover:text-[#0062A8] transition-colors cursor-pointer"
+            className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight hover:text-vcet-blue transition-colors cursor-pointer"
             onClick={openUrl}
           >
             {resource.name}
@@ -322,7 +322,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.1 }}
             transition={{ duration: 0.55, ease: EASE_EXPO, delay: 0.15 }}
-            className="text-sm sm:text-base text-[#444445]/85 leading-relaxed font-normal max-w-2xl"
+            className="text-sm sm:text-base text-vcet-dark/85 leading-relaxed font-normal max-w-2xl"
           >
             {resource.description}
           </motion.p>
@@ -335,7 +335,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
             transition={{ duration: 0.5, ease: EASE_EXPO, delay: 0.2 }}
             className="flex items-center gap-2 pt-1"
           >
-            <span className="text-xs font-bold uppercase tracking-wider text-[#444445]/60 mr-1">
+            <span className="text-xs font-bold uppercase tracking-wider text-vcet-dark/60 mr-1">
               Available On:
             </span>
             <div className="flex flex-wrap gap-2">
@@ -364,7 +364,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
                     damping: 16,
                     delay: 0.28 + tagIdx * 0.06,
                   }}
-                  className="text-xs font-bold text-[#444445] bg-[#F4F4F4] hover:bg-[#0062A8]/10 hover:text-[#0062A8] border border-[#C9C9C9]/70 px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
+                  className="text-xs font-bold text-vcet-dark bg-vcet-gray-light hover:bg-vcet-blue/10 hover:text-vcet-blue border border-vcet-gray-border/70 px-3 py-1.5 rounded-xl transition-colors shadow-2xs"
                 >
                   #{tag}
                 </motion.span>
@@ -388,7 +388,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
             <button
               type="button"
               onClick={openUrl}
-              className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider text-white bg-[#0062A8] hover:bg-[#004e87] shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0062A8] focus:ring-offset-2"
+              className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider text-white bg-vcet-blue hover:bg-[#004e87] shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
             >
               <span>{getButtonLabel()}</span>
               <FiExternalLink
@@ -407,7 +407,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
         viewport={{ once: true, amount: 0.1 }}
         transition={{ duration: 0.8, ease: EASE_EXPO }}
         style={{ transformOrigin: "left" }}
-        className="absolute bottom-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-[#C9C9C9]/70 to-transparent"
+        className="absolute bottom-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-vcet-gray/70 to-transparent"
       />
     </section>
   );

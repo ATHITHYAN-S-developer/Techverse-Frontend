@@ -44,12 +44,12 @@ export function ToastProvider({ children }) {
                   ? "bg-white text-sky-950 border-sky-200"
                   : toast.type === "error"
                   ? "bg-white text-slate-800 border-slate-300"
-                  : "bg-sky-50 text-[#0B4A8F] border-sky-200"
+                  : "bg-sky-50 text-vcet-blue-deep border-sky-200"
               }`}
             >
-              {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-[#0B4A8F] shrink-0" />}
+              {toast.type === "success" && <CheckCircle2 className="w-4 h-4 text-vcet-blue-deep shrink-0" />}
               {toast.type === "error" && <AlertCircle className="w-4 h-4 text-slate-600 shrink-0" />}
-              {toast.type === "info" && <Info className="w-4 h-4 text-[#0B4A8F] shrink-0" />}
+              {toast.type === "info" && <Info className="w-4 h-4 text-vcet-blue-deep shrink-0" />}
               
               <div className="flex-1 leading-snug">{toast.message}</div>
               

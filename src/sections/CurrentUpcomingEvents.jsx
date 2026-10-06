@@ -107,7 +107,7 @@ function issuerName(item) {
 /* ─────────────────────── category colours ─────────────────────── */
 
 const categoryConfig = {
-  placement: { label: "PLACEMENT", badgeBg: "bg-blue-50 text-[#0062A8] border-blue-200/80", icon: Briefcase },
+  placement: { label: "PLACEMENT", badgeBg: "bg-blue-50 text-vcet-blue border-blue-200/80", icon: Briefcase },
   hackathon: { label: "HACKATHON", badgeBg: "bg-purple-50 text-purple-700 border-purple-200/80", icon: Trophy },
   academic: { label: "ACADEMIC", badgeBg: "bg-emerald-50 text-emerald-700 border-emerald-200/80", icon: GraduationCap },
   exam: { label: "EXAM", badgeBg: "bg-amber-50 text-amber-800 border-amber-200/80", icon: FileText },
@@ -240,7 +240,7 @@ export default function CurrentUpcomingEvents() {
           </div>
           {loaded && announcements.length > 0 && (
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#0062A8] bg-white px-3 py-1.5 rounded-full border border-slate-200">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-vcet-blue bg-white px-3 py-1.5 rounded-full border border-slate-200">
                 <Megaphone size={12} /> {currentAnnouncements.length} current & upcoming
               </span>
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200">
@@ -252,7 +252,7 @@ export default function CurrentUpcomingEvents() {
 
         {!loaded ? (
           <div className="py-16 text-center space-y-3">
-            <div className="w-8 h-8 border-3 border-[#0062A8] border-t-transparent rounded-full animate-spin mx-auto" />
+            <div className="w-8 h-8 border-3 border-vcet-blue border-t-transparent rounded-full animate-spin mx-auto" />
             <p className="text-sm font-medium text-[#64748B]">Loading events...</p>
           </div>
         ) : announcements.length === 0 ? (
@@ -343,7 +343,7 @@ function SlideCarousel({ slides, activeIndex }) {
               {catStyle.label}
             </span>
             {status === "upcoming" ? (
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-50 text-[#0062A8] border border-blue-200/80 text-[10px] font-black uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-50 text-vcet-blue border border-blue-200/80 text-[10px] font-black uppercase tracking-wider">
                 <CalendarDays size={11} />
                 Upcoming Event
               </span>
@@ -374,16 +374,16 @@ function SlideCarousel({ slides, activeIndex }) {
             </span>
             {issuerName(item) && (
               <span className="inline-flex items-center gap-1.5 font-semibold text-[#0F172A] bg-slate-100 px-2.5 py-1 rounded-md">
-                <UserRound size={13} className="text-[#0062A8]" /> Issued by {issuerName(item)}
+                <UserRound size={13} className="text-vcet-blue" /> Issued by {issuerName(item)}
               </span>
             )}
             {ev ? (
-              <span className="inline-flex items-center gap-1.5 font-bold text-[#0062A8] bg-[#E8F3FB] px-2 py-0.5 rounded">
+              <span className="inline-flex items-center gap-1.5 font-bold text-vcet-blue bg-[#E8F3FB] px-2 py-0.5 rounded">
                 <CalendarDays size={13} /> Event: {formatDateString(ev)}
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5">
-                <CalendarDays size={13} className="text-[#0062A8]" />
+                <CalendarDays size={13} className="text-vcet-blue" />
                 {formatPublishDate(item)}
               </span>
             )}
@@ -391,7 +391,7 @@ function SlideCarousel({ slides, activeIndex }) {
 
           <Link
             to="/announcements"
-            className="inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs shadow-md transition-all cursor-pointer group/vm"
+            className="inline-flex items-center gap-2 self-start px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs shadow-md transition-all cursor-pointer group/vm"
           >
             <span>View More</span>
             <ArrowRight size={14} className="group-hover/vm:translate-x-0.5 transition-transform" />
@@ -407,7 +407,7 @@ function SlideCarousel({ slides, activeIndex }) {
               key={slide._id || slide.id || i}
               aria-hidden="true"
               className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === safeIndex ? "w-8 bg-[#0062A8]" : "w-2.5 bg-slate-300"
+                i === safeIndex ? "w-8 bg-vcet-blue" : "w-2.5 bg-slate-300"
               }`}
             />
           ))}
@@ -462,7 +462,7 @@ function PastEventCard({ item }) {
 
       {/* Body */}
       <div className="p-3.5 flex flex-col flex-1">
-        <h4 className="text-xs font-bold text-[#0F172A] group-hover:text-[#0062A8] transition-colors leading-snug mb-1 line-clamp-2">
+        <h4 className="text-xs font-bold text-[#0F172A] group-hover:text-vcet-blue transition-colors leading-snug mb-1 line-clamp-2">
           {item.title}
         </h4>
         <p className="text-[11px] text-[#64748B] line-clamp-2 leading-relaxed mb-2 flex-1">
@@ -472,7 +472,7 @@ function PastEventCard({ item }) {
           <span className="text-[10px] font-semibold text-slate-400 truncate max-w-[60%]">
             {deptLabel(item)}
           </span>
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0062A8]">
+          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-vcet-blue">
             View More
             <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform" />
           </span>

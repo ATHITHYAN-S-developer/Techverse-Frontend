@@ -195,11 +195,11 @@ export default function ResourceListView({
   };
 
   return (
-    <div className="relative min-h-[85vh] bg-[#F8FAFC] text-[#444445] pb-24 flex flex-col justify-between select-none">
+    <div className="relative min-h-[85vh] bg-[#F8FAFC] text-vcet-dark pb-24 flex flex-col justify-between select-none">
       {/* =========================================================================
           1. HERO SECTION (Exact Match with Departments & Courses Pages)
           ========================================================================= */}
-      <section className="relative bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
+      <section className="relative bg-gradient-to-br from-vcet-blue-deep via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
         <div className="absolute inset-0 pointer-events-none select-none overflow-hidden opacity-25">
           <div className="absolute -left-24 -top-24 h-96 w-96 rounded-full border border-white/20" />
           <div className="absolute right-[-40px] top-1/4 h-80 w-80 rounded-full border border-white/20" />
@@ -245,12 +245,12 @@ export default function ResourceListView({
             >
               <Link
                 to={ctaLink}
-                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
+                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-vcet-blue-deep font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors duration-150"
               >
                 <span>{ctaText}</span>
                 <ArrowRight
                   size={15}
-                  className="transition-transform duration-150 group-hover:translate-x-1 text-[#0B4A8F]"
+                  className="transition-transform duration-150 group-hover:translate-x-1 text-vcet-blue-deep"
                 />
               </Link>
             </motion.div>
@@ -262,7 +262,7 @@ export default function ResourceListView({
       <div className="max-w-7xl mx-auto w-full px-6 sm:px-10 lg:px-16 pt-6 flex items-center justify-between">
         <Link
           to="/"
-          className="group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0062A8] hover:text-[#004e87] transition-colors duration-200"
+          className="group inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-vcet-blue hover:text-[#004e87] transition-colors duration-200"
         >
           <FiArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
           <span className="border-b border-transparent group-hover:border-[#004e87]">
@@ -270,7 +270,7 @@ export default function ResourceListView({
           </span>
         </Link>
 
-        <span className="text-xs font-mono font-bold text-[#444445]/60 uppercase tracking-widest">
+        <span className="text-xs font-mono font-bold text-vcet-dark/60 uppercase tracking-widest">
           {resources.length} Resources
         </span>
       </div>
@@ -281,7 +281,7 @@ export default function ResourceListView({
         onClick={() => scrollToIndex(activeIndex - 1)}
         disabled={activeIndex === 0}
         aria-label="Previous resource"
-        className="hidden md:flex absolute left-3 lg:left-6 top-1/2 -translate-y-1/2 z-30 p-2 text-[#444445]/40 hover:text-[#0062A8] transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
+        className="hidden md:flex absolute left-3 lg:left-6 top-1/2 -translate-y-1/2 z-30 p-2 text-vcet-dark/40 hover:text-vcet-blue transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
       >
         <FiChevronLeft size={42} strokeWidth={1.5} />
       </button>
@@ -291,7 +291,7 @@ export default function ResourceListView({
         onClick={() => scrollToIndex(activeIndex + 1)}
         disabled={activeIndex === resources.length - 1}
         aria-label="Next resource"
-        className="hidden md:flex absolute right-3 lg:right-6 top-1/2 -translate-y-1/2 z-30 p-2 text-[#444445]/40 hover:text-[#0062A8] transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
+        className="hidden md:flex absolute right-3 lg:right-6 top-1/2 -translate-y-1/2 z-30 p-2 text-vcet-dark/40 hover:text-vcet-blue transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
       >
         <FiChevronRight size={42} strokeWidth={1.5} />
       </button>
@@ -315,12 +315,12 @@ export default function ResourceListView({
               key={resource.id}
               className={`resource-panel shrink-0 snap-start flex flex-col justify-between py-6 px-4 sm:px-6 relative transition-all duration-300 ${
                 isFeatured
-                  ? "w-[88vw] sm:w-[54vw] lg:w-[42vw] bg-[#0062A8]/[0.05] rounded-3xl"
+                  ? "w-[88vw] sm:w-[54vw] lg:w-[42vw] bg-vcet-blue/[0.05] rounded-3xl"
                   : "w-[82vw] sm:w-[48vw] lg:w-[36vw]"
               }`}
             >
               {/* Huge Faint Background Numeral */}
-              <div className="absolute top-2 right-4 text-[70px] sm:text-[90px] font-mono font-black text-[#0062A8]/[0.08] pointer-events-none select-none leading-none z-0">
+              <div className="absolute top-2 right-4 text-[70px] sm:text-[90px] font-mono font-black text-vcet-blue/[0.08] pointer-events-none select-none leading-none z-0">
                 {String(index + 1).padStart(2, "0")}
               </div>
 
@@ -339,7 +339,7 @@ export default function ResourceListView({
                         draggable={false}
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-xl bg-[#0062A8]/10 text-[#0062A8] flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-xl bg-vcet-blue/10 text-vcet-blue flex items-center justify-center">
                         {resource.type === "youtube" ? (
                           <FaYoutube size={26} />
                         ) : resource.type === "updates" ? (
@@ -353,11 +353,11 @@ export default function ResourceListView({
 
                   <div className="flex items-center gap-2">
                     {isFeatured && (
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#0062A8] bg-[#0062A8]/15 px-2.5 py-1 rounded-full">
+                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-vcet-blue bg-vcet-blue/15 px-2.5 py-1 rounded-full">
                         ★ Top Pick
                       </span>
                     )}
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#444445]/60">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-vcet-dark/60">
                       {resource.category}
                     </span>
                   </div>
@@ -366,26 +366,26 @@ export default function ResourceListView({
                 {/* Resource Name */}
                 <h3
                   onClick={() => openUrl(resource.url)}
-                  className="text-2xl sm:text-3xl font-extrabold text-[#444445] tracking-tight leading-snug cursor-pointer hover:text-[#0062A8] transition-colors"
+                  className="text-2xl sm:text-3xl font-extrabold text-vcet-dark tracking-tight leading-snug cursor-pointer hover:text-vcet-blue transition-colors"
                 >
                   {resource.name}
                 </h3>
 
                 {/* Description in Plain Flow */}
-                <p className="text-xs sm:text-sm text-[#444445]/80 leading-relaxed font-normal">
+                <p className="text-xs sm:text-sm text-vcet-dark/80 leading-relaxed font-normal">
                   {resource.description}
                 </p>
 
                 {/* Tags as Inline Text Separated by "·" */}
                 {resource.tags && resource.tags.length > 0 && (
-                  <div className="text-[11px] font-semibold text-[#444445]/70 tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-1 pt-1">
+                  <div className="text-[11px] font-semibold text-vcet-dark/70 tracking-wider flex flex-wrap items-center gap-x-1.5 gap-y-1 pt-1">
                     {resource.tags.map((tag, idx) => (
                       <React.Fragment key={tag}>
-                        <span className="underline underline-offset-4 decoration-[#C9C9C9] hover:text-[#0062A8] transition-colors">
+                        <span className="underline underline-offset-4 decoration-vcet-gray hover:text-vcet-blue transition-colors">
                           #{tag}
                         </span>
                         {idx < resource.tags.length - 1 && (
-                          <span className="text-[#0062A8] font-bold no-underline">·</span>
+                          <span className="text-vcet-blue font-bold no-underline">·</span>
                         )}
                       </React.Fragment>
                     ))}
@@ -394,17 +394,17 @@ export default function ResourceListView({
               </div>
 
               {/* Bottom Row: Platform & Plain Text Link with Animated Underline */}
-              <div className="pt-6 border-t border-[#C9C9C9]/40 flex items-center justify-between mt-6 relative z-10">
-                <span className="text-[11px] text-[#444445]/60 font-medium">
+              <div className="pt-6 border-t border-vcet-gray-border/40 flex items-center justify-between mt-6 relative z-10">
+                <span className="text-[11px] text-vcet-dark/60 font-medium">
                   {resource.platform}
                 </span>
 
                 <button
                   type="button"
                   onClick={() => openUrl(resource.url)}
-                  className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-[#0062A8] hover:text-[#004e87] transition-colors cursor-pointer focus:outline-none"
+                  className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-vcet-blue hover:text-[#004e87] transition-colors cursor-pointer focus:outline-none"
                 >
-                  <span className="border-b-2 border-[#0062A8] group-hover:border-[#004e87] pb-0.5 transition-colors">
+                  <span className="border-b-2 border-vcet-blue group-hover:border-[#004e87] pb-0.5 transition-colors">
                     {getButtonLabel(resource.type)}
                   </span>
                   <FiArrowRight
@@ -433,8 +433,8 @@ export default function ResourceListView({
               <div
                 className={`h-1 rounded-full transition-all duration-300 ${
                   isActive
-                    ? "w-8 bg-[#0062A8]"
-                    : "w-3.5 bg-[#C9C9C9]/50 group-hover:bg-[#C9C9C9]"
+                    ? "w-8 bg-vcet-blue"
+                    : "w-3.5 bg-vcet-gray/50 group-hover:bg-vcet-gray"
                 }`}
               />
             </button>

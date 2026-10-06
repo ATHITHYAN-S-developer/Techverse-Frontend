@@ -191,7 +191,7 @@ export default function AdminFacultyPage() {
 
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-hover text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add Staff</span>
@@ -267,11 +267,11 @@ export default function AdminFacultyPage() {
                     <tr key={s._id || s.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="px-5 py-4">
                         <div className="font-bold text-slate-900 text-sm">{s.name}</div>
-                        <div className="text-[#0062A8] font-mono font-bold text-[11px] mt-0.5">{s.staffId || s.username || s.email}</div>
+                        <div className="text-vcet-blue font-mono font-bold text-[11px] mt-0.5">{s.staffId || s.username || s.email}</div>
                       </td>
                       <td className="px-4 py-4">
                         {dept && dept.code ? (
-                          <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 font-semibold text-[#0062A8] text-[11px]">
+                          <span className="px-2 py-0.5 rounded bg-blue-50 border border-blue-200 font-semibold text-vcet-blue text-[11px]">
                             {dept.code}
                           </span>
                         ) : (
@@ -443,7 +443,7 @@ export default function AdminFacultyPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-[#0062A8] text-white font-bold rounded-xl shadow hover:bg-[#00528c] disabled:opacity-50 inline-flex items-center gap-2"
+                  className="px-5 py-2 bg-vcet-blue text-white font-bold rounded-xl shadow hover:bg-vcet-blue-hover disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {editing ? "Save Changes" : "Create Staff"}
@@ -486,7 +486,7 @@ export default function AdminFacultyPage() {
                 <button type="button" onClick={() => setResetDialog({ open: false, staff: null, password: "" })} className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-xl">
                   Cancel
                 </button>
-                <button type="submit" className="px-5 py-2 bg-[#0062A8] text-white font-bold rounded-xl shadow hover:bg-[#00528c]">
+                <button type="submit" className="px-5 py-2 bg-vcet-blue text-white font-bold rounded-xl shadow hover:bg-vcet-blue-hover">
                   Reset Password
                 </button>
               </div>

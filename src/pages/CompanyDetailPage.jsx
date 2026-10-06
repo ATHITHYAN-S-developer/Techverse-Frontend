@@ -45,7 +45,7 @@ export default function CompanyDetailPage() {
     <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 space-y-6">
       <button
         onClick={() => navigate("/training")}
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-[#0062A8] transition-colors"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-vcet-blue transition-colors"
       >
         <ArrowLeft className="w-4 h-4" /> Back to Placement Training
       </button>
@@ -55,7 +55,7 @@ export default function CompanyDetailPage() {
         <div className="flex items-center gap-4">
           <img src={companyData.logo} alt={companyData.name} className="w-16 h-16 object-contain p-2 bg-slate-50 rounded-2xl border border-slate-100" />
           <div>
-            <span className="text-xs font-bold text-[#0062A8] uppercase tracking-wider">{companyData.tagline}</span>
+            <span className="text-xs font-bold text-vcet-blue uppercase tracking-wider">{companyData.tagline}</span>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-0.5">{companyData.name}</h1>
             <p className="text-xs text-slate-500 mt-1">{companyData.eligibility}</p>
           </div>
@@ -80,7 +80,7 @@ export default function CompanyDetailPage() {
           {companyData.rounds?.map((r, idx) => (
             <div key={idx} className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-[#0062A8] border border-blue-200">
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-50 text-vcet-blue border border-blue-200">
                   {r.round}
                 </span>
                 <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -114,7 +114,7 @@ export default function CompanyDetailPage() {
         <div className="pt-4 flex items-center justify-between">
           <Link
             to="/coding"
-            className="px-5 py-2.5 bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs rounded-xl shadow flex items-center gap-2"
+            className="px-5 py-2.5 bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs rounded-xl shadow flex items-center gap-2"
           >
             <span>Practice in Coding Arena</span>
             <ArrowRight className="w-4 h-4" />

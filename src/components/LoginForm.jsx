@@ -128,7 +128,7 @@ export default function LoginForm() {
         {/* Header: Portal badge, heading, top-right interactive button */}
         <div className="flex items-start justify-between gap-4 mb-6 md:mb-8">
           <div>
-            <span className="text-[11px] font-black uppercase tracking-[0.24em] text-[#0B4A8F] block mb-1">
+            <span className="text-[11px] font-black uppercase tracking-[0.24em] text-vcet-blue-deep block mb-1">
               STUDENT PORTAL
             </span>
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
@@ -138,7 +138,7 @@ export default function LoginForm() {
 
           <button
             type="button"
-            className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-[#0B4A8F] hover:bg-[#0B4A8F] hover:text-white transition-all duration-300 shadow-sm border border-blue-100"
+            className="group relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-blue-50 text-vcet-blue-deep hover:bg-vcet-blue-deep hover:text-white transition-all duration-300 shadow-sm border border-blue-100"
             title="Student Portal Access"
             aria-label="Student Portal"
           >
@@ -171,7 +171,7 @@ export default function LoginForm() {
               className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-slate-50/50 hover:bg-white ${
                 errors.registerNumber
                   ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                  : "border-slate-200 focus-within:border-[#0B4A8F] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0B4A8F]/20"
+                  : "border-slate-200 focus-within:border-vcet-blue-deep focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue-deep/20"
               }`}
             >
               <IdCard
@@ -179,7 +179,7 @@ export default function LoginForm() {
                 className={`transition-colors duration-200 shrink-0 ${
                   errors.registerNumber
                     ? "text-red-500"
-                    : "text-slate-400 group-focus-within:text-[#0B4A8F]"
+                    : "text-slate-400 group-focus-within:text-vcet-blue-deep"
                 }`}
               />
               <input
@@ -220,7 +220,7 @@ export default function LoginForm() {
               className={`group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-all duration-200 bg-slate-50/50 hover:bg-white ${
                 errors.password
                   ? "border-red-400 ring-2 ring-red-100 bg-red-50/20"
-                  : "border-slate-200 focus-within:border-[#0B4A8F] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#0B4A8F]/20"
+                  : "border-slate-200 focus-within:border-vcet-blue-deep focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue-deep/20"
               }`}
             >
               <Lock
@@ -228,7 +228,7 @@ export default function LoginForm() {
                 className={`transition-colors duration-200 shrink-0 ${
                   errors.password
                     ? "text-red-500"
-                    : "text-slate-400 group-focus-within:text-[#0B4A8F]"
+                    : "text-slate-400 group-focus-within:text-vcet-blue-deep"
                 }`}
               />
               <input
@@ -272,7 +272,7 @@ export default function LoginForm() {
                 type="checkbox"
                 checked={keepSignedIn}
                 onChange={(e) => setKeepSignedIn(e.target.checked)}
-                className="h-4 w-4 rounded-md border-slate-300 text-[#0B4A8F] focus:ring-[#0B4A8F] cursor-pointer accent-[#0B4A8F]"
+                className="h-4 w-4 rounded-md border-slate-300 text-vcet-blue-deep focus:ring-vcet-blue-deep cursor-pointer accent-vcet-blue-deep"
               />
               <span>Keep me signed in on this device</span>
             </label>
@@ -305,7 +305,7 @@ export default function LoginForm() {
               className={`relative w-full h-12 rounded-xl text-xs sm:text-sm font-black tracking-wider uppercase text-white shadow-lg shadow-blue-900/15 transition-all duration-200 flex items-center justify-center overflow-hidden cursor-pointer ${
                 status === "success"
                   ? "bg-emerald-600 scale-[1.01]"
-                  : "bg-[#0B4A8F] hover:bg-[#083E7A] hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-900/25 active:scale-[0.99]"
+                  : "bg-vcet-blue-deep hover:bg-[#083E7A] hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-900/25 active:scale-[0.99]"
               } disabled:cursor-not-allowed`}
             >
               {status === "loading" && (
@@ -347,7 +347,7 @@ export default function LoginForm() {
         New to TechVerse?{" "}
         <Link
           to="/technology"
-          className="text-[#0B4A8F] hover:text-[#063A75] font-black hover:underline transition-colors"
+          className="text-vcet-blue-deep hover:text-[#063A75] font-black hover:underline transition-colors"
         >
           Explore resources
         </Link>

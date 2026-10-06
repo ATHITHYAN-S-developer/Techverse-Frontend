@@ -254,7 +254,7 @@ export default function ProfilePage({ embedded = false }) {
                   onClick={() => setResetModalOpen(true)}
                   className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-5 py-2.5 font-body text-xs font-bold uppercase tracking-wider transition-all rounded-lg shadow-sm cursor-pointer self-start sm:self-auto"
                 >
-                  <KeyRound className="h-4 w-4 text-[#0062A8]" />
+                  <KeyRound className="h-4 w-4 text-vcet-blue" />
                   <span>Reset Password</span>
                 </button>
               ) : <div />}
@@ -277,7 +277,7 @@ export default function ProfilePage({ embedded = false }) {
           <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-blue-50 text-[#0062A8]">
+                <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue">
                   <KeyRound className="w-5 h-5" />
                 </div>
                 <div>
@@ -346,7 +346,7 @@ export default function ProfilePage({ embedded = false }) {
                 <button
                   type="submit"
                   disabled={resetting}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-[#0062A8] hover:bg-[#004f88] text-white shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 rounded-xl text-xs font-bold bg-vcet-blue hover:bg-[#004f88] text-white shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
                 >
                   {resetting ? "Resetting..." : "Confirm & Update Password"}
                 </button>

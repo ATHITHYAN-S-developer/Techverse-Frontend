@@ -31,7 +31,7 @@ export default function ConfirmDialog({
 
           <div className="flex items-start gap-4">
             <div className={`p-3 rounded-xl ${
-              confirmVariant === "danger" ? "bg-rose-50 text-rose-600" : "bg-blue-50 text-[#0062A8]"
+              confirmVariant === "danger" ? "bg-rose-50 text-rose-600" : "bg-blue-50 text-vcet-blue"
             }`}>
               <AlertTriangle className="w-6 h-6" />
             </div>
@@ -52,7 +52,7 @@ export default function ConfirmDialog({
                   className={`px-4 py-2 text-xs font-semibold text-white rounded-xl shadow transition-colors ${
                     confirmVariant === "danger"
                       ? "bg-rose-600 hover:bg-rose-700"
-                      : "bg-[#0062A8] hover:bg-[#0B4A8F]"
+                      : "bg-vcet-blue hover:bg-vcet-blue-deep"
                   }`}
                 >
                   {confirmLabel}

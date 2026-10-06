@@ -91,7 +91,7 @@ export default function CollegeBackground() {
 
         {/* Layer 2: Balanced Lighter Overlay (~0.40-0.48) with clear center reveal */}
         <div className="absolute inset-0 bg-black/35 pointer-events-none" />
-        <div className="absolute inset-0 bg-[#0062A8]/12 mix-blend-multiply pointer-events-none" />
+        <div className="absolute inset-0 bg-vcet-blue/12 mix-blend-multiply pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/20 to-black/55 pointer-events-none" />
       </div>
     </div>

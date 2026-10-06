@@ -28,7 +28,7 @@ export default function AdminSettingsPage() {
       <form onSubmit={handleSave} className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-sm">
         <div className="space-y-4">
           <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-2">
-            <Settings className="w-4 h-4 text-[#0062A8]" /> Academic Term Settings
+            <Settings className="w-4 h-4 text-vcet-blue" /> Academic Term Settings
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -69,7 +69,7 @@ export default function AdminSettingsPage() {
                 type="checkbox"
                 checked={allowStudentDownloads}
                 onChange={(e) => setAllowStudentDownloads(e.target.checked)}
-                className="w-4 h-4 accent-[#0062A8] rounded"
+                className="w-4 h-4 accent-vcet-blue rounded"
               />
             </label>
 
@@ -82,7 +82,7 @@ export default function AdminSettingsPage() {
                 type="checkbox"
                 checked={maintenanceMode}
                 onChange={(e) => setMaintenanceMode(e.target.checked)}
-                className="w-4 h-4 accent-[#0062A8] rounded"
+                className="w-4 h-4 accent-vcet-blue rounded"
               />
             </label>
           </div>
@@ -91,7 +91,7 @@ export default function AdminSettingsPage() {
         <div className="pt-4 border-t border-slate-100 flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2.5 bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
+            className="px-6 py-2.5 bg-vcet-blue hover:bg-vcet-blue-hover text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             <span>Save Configuration</span>

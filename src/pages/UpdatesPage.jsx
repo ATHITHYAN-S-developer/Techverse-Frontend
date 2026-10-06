@@ -42,7 +42,7 @@ export default function UpdatesPage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-slate-500 font-bold text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-5 h-5 border-2 border-[#0062A8] border-t-transparent rounded-full animate-spin" />
+          <div className="w-5 h-5 border-2 border-vcet-blue border-t-transparent rounded-full animate-spin" />
           <span>Loading Tech Pulse Updates...</span>
         </div>
       </div>
@@ -50,7 +50,7 @@ export default function UpdatesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-[#0062A8] selection:text-white select-none">
+    <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-vcet-blue selection:text-white select-none">
       <ResourceListView
         resources={updateResources}
         pageTitle="Tech Pulse — Apps for Tech Updates"

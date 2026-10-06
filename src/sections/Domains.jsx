@@ -25,7 +25,7 @@ export default function Domains({ resources = [] }) {
   const getCount = (type) => resources.filter((r) => r.type === type).length;
 
   return (
-    <div className="relative bg-[#F8FAFC] text-[#444445] selection:bg-[#0062A8] selection:text-white flex flex-col gap-10 sm:gap-14 lg:gap-16 py-10 sm:py-14 lg:py-16">
+    <div className="relative bg-[#F8FAFC] text-vcet-dark selection:bg-vcet-blue selection:text-white flex flex-col gap-10 sm:gap-14 lg:gap-16 py-10 sm:py-14 lg:py-16">
 
       {/* =========================================================================
           SECTION 1: TECH EXPLORER (Image LEFT, Text RIGHT)
@@ -53,19 +53,19 @@ export default function Domains({ resources = [] }) {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.8, ease: EASE_EXPO }}
               style={{ transformOrigin: "right" }}
-              className="absolute inset-0 bg-[#0062A8] z-10 pointer-events-none"
+              className="absolute inset-0 bg-vcet-blue z-10 pointer-events-none"
             />
 
             {/* Ambient Overlay & Badge */}
             <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-6 sm:p-8 pointer-events-none">
-              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[#0062A8] text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
+              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
                 <FiGlobe size={14} />
                 <span>Web Platforms</span>
               </div>
 
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <span className="text-xs uppercase tracking-widest text-[#C9C9C9] font-mono block">
+                  <span className="text-xs uppercase tracking-widest text-vcet-gray font-mono block">
                     RESOURCE DOMAIN
                   </span>
                   <h4 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -73,7 +73,7 @@ export default function Domains({ resources = [] }) {
                   </h4>
                 </div>
 
-                <span className="text-xs font-bold px-3.5 py-1.5 bg-[#0062A8] text-white rounded-xl shadow-xs">
+                <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
                   {getCount("technology") || 10}+ Websites
                 </span>
               </div>
@@ -91,10 +91,10 @@ export default function Domains({ resources = [] }) {
                 transition={{ duration: 0.6, ease: EASE_EXPO, delay: 0.1 }}
                 className="flex items-center gap-3"
               >
-                <span className="text-3xl sm:text-4xl font-mono font-black text-[#0062A8]/30">
+                <span className="text-3xl sm:text-4xl font-mono font-black text-vcet-blue/30">
                   01
                 </span>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0062A8]/10 text-[#0062A8] text-xs uppercase tracking-widest font-bold">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-vcet-blue/10 text-vcet-blue text-xs uppercase tracking-widest font-bold">
                   <FiGlobe size={13} />
                   <span>Section 01 • Hands-On Learning</span>
                 </div>
@@ -106,7 +106,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.2 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#444445] tracking-tight leading-tight"
+                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
               >
                 Tech Explorer — Websites to Improve Tech Knowledge
               </motion.h2>
@@ -117,7 +117,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.3 }}
-                className="text-sm sm:text-base text-[#444445]/80 leading-relaxed font-normal"
+                className="text-sm sm:text-base text-vcet-dark/80 leading-relaxed font-normal"
               >
                 Discover curated websites that open the door to new technologies, artificial intelligence, cybersecurity challenges, and interactive development platforms designed to elevate engineering skills.
               </motion.p>
@@ -137,7 +137,7 @@ export default function Domains({ resources = [] }) {
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }}
                     transition={{ duration: 0.4, delay: 0.4 + i * 0.08, ease: EASE_EXPO }}
-                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-[#F4F4F4] text-[#444445] rounded-xl border border-[#C9C9C9]/70 hover:border-[#0062A8] hover:text-[#0062A8] transition-colors"
+                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-vcet-gray-light text-vcet-dark rounded-xl border border-vcet-gray-border/70 hover:border-vcet-blue hover:text-vcet-blue transition-colors"
                   >
                     {tag}
                   </motion.span>
@@ -155,7 +155,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/technology")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-[#0062A8] hover:bg-[#00528c] text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0062A8] focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Tech Explorer</span>
                   <motion.span
@@ -191,10 +191,10 @@ export default function Domains({ resources = [] }) {
                 transition={{ duration: 0.6, ease: EASE_EXPO, delay: 0.1 }}
                 className="flex items-center gap-3"
               >
-                <span className="text-3xl sm:text-4xl font-mono font-black text-[#0062A8]/30">
+                <span className="text-3xl sm:text-4xl font-mono font-black text-vcet-blue/30">
                   02
                 </span>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0062A8]/10 text-[#0062A8] text-xs uppercase tracking-widest font-bold">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-vcet-blue/10 text-vcet-blue text-xs uppercase tracking-widest font-bold">
                   <FiBell size={13} />
                   <span>Section 02 • Real-Time Feeds</span>
                 </div>
@@ -206,7 +206,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.2 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#444445] tracking-tight leading-tight"
+                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
               >
                 Tech Pulse — Apps for Tech Updates
               </motion.h2>
@@ -217,7 +217,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.3 }}
-                className="text-sm sm:text-base text-[#444445]/80 leading-relaxed font-normal"
+                className="text-sm sm:text-base text-vcet-dark/80 leading-relaxed font-normal"
               >
                 Catch the pulse of the tech industry. Access real-time technology news, AI breakthroughs, framework updates, open-source releases, and engaging engineering discussions in one unified stream.
               </motion.p>
@@ -237,7 +237,7 @@ export default function Domains({ resources = [] }) {
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }}
                     transition={{ duration: 0.4, delay: 0.4 + i * 0.08, ease: EASE_EXPO }}
-                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-white text-[#444445] rounded-xl border border-[#C9C9C9]/70 hover:border-[#0062A8] hover:text-[#0062A8] transition-colors shadow-2xs"
+                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-white text-vcet-dark rounded-xl border border-vcet-gray-border/70 hover:border-vcet-blue hover:text-vcet-blue transition-colors shadow-2xs"
                   >
                     {tag}
                   </motion.span>
@@ -255,7 +255,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/updates")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-[#0062A8] hover:bg-[#00528c] text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0062A8] focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Tech Pulse</span>
                   <motion.span
@@ -288,19 +288,19 @@ export default function Domains({ resources = [] }) {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.8, ease: EASE_EXPO }}
               style={{ transformOrigin: "left" }}
-              className="absolute inset-0 bg-[#0062A8] z-10 pointer-events-none"
+              className="absolute inset-0 bg-vcet-blue z-10 pointer-events-none"
             />
 
             {/* Ambient Overlay & Badge */}
             <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-6 sm:p-8 pointer-events-none">
-              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[#0062A8] text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
+              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
                 <FiBell size={14} />
                 <span>Real-Time Updates</span>
               </div>
 
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <span className="text-xs uppercase tracking-widest text-[#C9C9C9] font-mono block">
+                  <span className="text-xs uppercase tracking-widest text-vcet-gray font-mono block">
                     RESOURCE DOMAIN
                   </span>
                   <h4 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -308,7 +308,7 @@ export default function Domains({ resources = [] }) {
                   </h4>
                 </div>
 
-                <span className="text-xs font-bold px-3.5 py-1.5 bg-[#0062A8] text-white rounded-xl shadow-xs">
+                <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
                   {getCount("updates") || 8}+ Feeds & Apps
                 </span>
               </div>
@@ -343,19 +343,19 @@ export default function Domains({ resources = [] }) {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.8, ease: EASE_EXPO }}
               style={{ transformOrigin: "right" }}
-              className="absolute inset-0 bg-[#0062A8] z-10 pointer-events-none"
+              className="absolute inset-0 bg-vcet-blue z-10 pointer-events-none"
             />
 
             {/* Ambient Overlay & Badge */}
             <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-6 sm:p-8 pointer-events-none">
-              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[#0062A8] text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
+              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
                 <FiYoutube size={14} />
                 <span>Video Channels</span>
               </div>
 
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <span className="text-xs uppercase tracking-widest text-[#C9C9C9] font-mono block">
+                  <span className="text-xs uppercase tracking-widest text-vcet-gray font-mono block">
                     RESOURCE DOMAIN
                   </span>
                   <h4 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -363,7 +363,7 @@ export default function Domains({ resources = [] }) {
                   </h4>
                 </div>
 
-                <span className="text-xs font-bold px-3.5 py-1.5 bg-[#0062A8] text-white rounded-xl shadow-xs">
+                <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
                   {getCount("youtube") || 6}+ Curated Channels
                 </span>
               </div>
@@ -381,10 +381,10 @@ export default function Domains({ resources = [] }) {
                 transition={{ duration: 0.6, ease: EASE_EXPO, delay: 0.1 }}
                 className="flex items-center gap-3"
               >
-                <span className="text-3xl sm:text-4xl font-mono font-black text-[#0062A8]/30">
+                <span className="text-3xl sm:text-4xl font-mono font-black text-vcet-blue/30">
                   03
                 </span>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0062A8]/10 text-[#0062A8] text-xs uppercase tracking-widest font-bold">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-vcet-blue/10 text-vcet-blue text-xs uppercase tracking-widest font-bold">
                   <FiYoutube size={13} />
                   <span>Section 03 • Visual Lectures & Demos</span>
                 </div>
@@ -396,7 +396,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.2 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#444445] tracking-tight leading-tight"
+                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
               >
                 Tech Vision — Tech YouTube Channels
               </motion.h2>
@@ -407,7 +407,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.3 }}
-                className="text-sm sm:text-base text-[#444445]/80 leading-relaxed font-normal"
+                className="text-sm sm:text-base text-vcet-dark/80 leading-relaxed font-normal"
               >
                 Learn through visual storytelling, animated deep-dives, paper breakdowns, research insights, and comprehensive programming masterclasses curated from the best engineering creators globally.
               </motion.p>
@@ -427,7 +427,7 @@ export default function Domains({ resources = [] }) {
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }}
                     transition={{ duration: 0.4, delay: 0.4 + i * 0.08, ease: EASE_EXPO }}
-                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-[#F4F4F4] text-[#444445] rounded-xl border border-[#C9C9C9]/70 hover:border-[#0062A8] hover:text-[#0062A8] transition-colors"
+                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-vcet-gray-light text-vcet-dark rounded-xl border border-vcet-gray-border/70 hover:border-vcet-blue hover:text-vcet-blue transition-colors"
                   >
                     {tag}
                   </motion.span>
@@ -445,7 +445,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/youtube")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-[#0062A8] hover:bg-[#00528c] text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0062A8] focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Tech Vision</span>
                   <motion.span
@@ -481,10 +481,10 @@ export default function Domains({ resources = [] }) {
                 transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.1 }}
                 className="flex items-center gap-3"
               >
-                <span className="text-3xl sm:text-4xl font-mono font-black text-[#0062A8]/30">
+                <span className="text-3xl sm:text-4xl font-mono font-black text-vcet-blue/30">
                   04
                 </span>
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#0062A8]/10 text-[#0062A8] text-xs uppercase tracking-widest font-bold">
+                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-vcet-blue/10 text-vcet-blue text-xs uppercase tracking-widest font-bold">
                   <FiAward size={13} />
                   <span>Section 04 • Placement Ready</span>
                 </div>
@@ -496,7 +496,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.2 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#444445] tracking-tight leading-tight"
+                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
               >
                 Skill Forge — Aptitude Preparation Apps
               </motion.h2>
@@ -507,7 +507,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.3 }}
-                className="text-sm sm:text-base text-[#444445]/80 leading-relaxed font-normal"
+                className="text-sm sm:text-base text-vcet-dark/80 leading-relaxed font-normal"
               >
                 Sharpen your analytical acumen. Master quantitative ability, logical deduction, verbal reasoning, and company-specific recruitment mock tests with high-yield practice tools.
               </motion.p>
@@ -527,7 +527,7 @@ export default function Domains({ resources = [] }) {
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }}
                     transition={{ type: "spring", stiffness: 200, damping: 16, delay: 0.4 + i * 0.08 }}
-                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-white text-[#444445] rounded-xl border border-[#C9C9C9]/70 hover:border-[#0062A8] hover:text-[#0062A8] transition-colors shadow-2xs"
+                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-white text-vcet-dark rounded-xl border border-vcet-gray-border/70 hover:border-vcet-blue hover:text-vcet-blue transition-colors shadow-2xs"
                   >
                     {tag}
                   </motion.span>
@@ -545,7 +545,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/aptitude")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-[#0062A8] hover:bg-[#00528c] text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#0062A8] focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Skill Forge</span>
                   <motion.span
@@ -578,19 +578,19 @@ export default function Domains({ resources = [] }) {
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.8, ease: EASE_EXPO }}
               style={{ transformOrigin: "left" }}
-              className="absolute inset-0 bg-[#0062A8] z-10 pointer-events-none"
+              className="absolute inset-0 bg-vcet-blue z-10 pointer-events-none"
             />
 
             {/* Ambient Overlay & Badge */}
             <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-6 sm:p-8 pointer-events-none">
-              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-[#0062A8] text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
+              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
                 <FiAward size={14} />
                 <span>Aptitude Training</span>
               </div>
 
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <span className="text-xs uppercase tracking-widest text-[#C9C9C9] font-mono block">
+                  <span className="text-xs uppercase tracking-widest text-vcet-gray font-mono block">
                     RESOURCE DOMAIN
                   </span>
                   <h4 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
@@ -598,7 +598,7 @@ export default function Domains({ resources = [] }) {
                   </h4>
                 </div>
 
-                <span className="text-xs font-bold px-3.5 py-1.5 bg-[#0062A8] text-white rounded-xl shadow-xs">
+                <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
                   {getCount("aptitude") || 6}+ Platforms & Drills
                 </span>
               </div>

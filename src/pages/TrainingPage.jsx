@@ -114,9 +114,9 @@ export default function TrainingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-[#0B4A8F] selection:text-white scroll-smooth">
+    <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-vcet-blue-deep selection:text-white scroll-smooth">
       {/* 1. HERO SECTION */}
-      <section className="relative bg-gradient-to-br from-[#0B4A8F] via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
+      <section className="relative bg-gradient-to-br from-vcet-blue-deep via-[#084282] to-[#063A75] text-white py-12 sm:py-16 px-4 sm:px-6 lg:px-8 overflow-hidden shadow-xs">
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
             <div className="max-w-2xl">
@@ -154,12 +154,12 @@ export default function TrainingPage() {
             >
               <Link
                 to="/courses"
-                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-[#0B4A8F] font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors"
+                className="group relative inline-flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white text-vcet-blue-deep font-bold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-slate-50 transition-colors"
               >
                 <span>EXPLORE COURSES</span>
                 <ArrowRight
                   size={15}
-                  className="transition-transform duration-150 group-hover:translate-x-1 text-[#0B4A8F]"
+                  className="transition-transform duration-150 group-hover:translate-x-1 text-vcet-blue-deep"
                 />
               </Link>
             </motion.div>
@@ -184,7 +184,7 @@ export default function TrainingPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tracks, company patterns (Zoho, TCS, Infosys), or skills..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] bg-slate-50/70 hover:bg-white transition-colors"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep bg-slate-50/70 hover:bg-white transition-colors"
               />
               {searchQuery && (
                 <button
@@ -200,7 +200,7 @@ export default function TrainingPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-[#0B4A8F]/15 focus:border-[#0B4A8F] cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep cursor-pointer"
               >
                 <option value="all">All Disciplines</option>
                 <option value="Aptitude">Placement Aptitude</option>
@@ -218,7 +218,7 @@ export default function TrainingPage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-50 text-[#0B4A8F] border border-blue-100">
+              <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue-deep border border-blue-100">
                 <Target size={18} />
               </div>
               <div>
@@ -247,16 +247,16 @@ export default function TrainingPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.25, delay: (index % 4) * 0.05 }}
-                  className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/40 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                  className="bg-white rounded-2xl border border-slate-200/90 hover:border-vcet-blue-deep/40 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="p-2.5 rounded-xl bg-blue-50 text-[#0B4A8F] border border-blue-100">
+                        <div className="p-2.5 rounded-xl bg-blue-50 text-vcet-blue-deep border border-blue-100">
                           <Icon size={20} />
                         </div>
                         <div>
-                          <span className="text-[11px] font-black uppercase tracking-wider text-[#0B4A8F]">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-vcet-blue-deep">
                             {track.category}
                           </span>
                           <span className="text-[11px] font-semibold text-slate-500 block">
@@ -283,10 +283,10 @@ export default function TrainingPage() {
                       <button
                         type="button"
                         onClick={() => toggleTrackExpand(track.trackId || track._id)}
-                        className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-[#0B4A8F] cursor-pointer select-none"
+                        className="w-full flex items-center justify-between text-xs font-bold text-slate-700 hover:text-vcet-blue-deep cursor-pointer select-none"
                       >
                         <span className="flex items-center gap-1.5">
-                          <CheckCircle2 size={14} className="text-[#0B4A8F]" />
+                          <CheckCircle2 size={14} className="text-vcet-blue-deep" />
                           <span>Core Syllabus Modules ({track.topics?.length || 0})</span>
                         </span>
                         {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -296,7 +296,7 @@ export default function TrainingPage() {
                         <div className="mt-3 pt-2.5 border-t border-slate-200/80 space-y-1.5 text-xs text-slate-600">
                           {track.topics?.map((topic, tIdx) => (
                             <div key={tIdx} className="flex items-start gap-2 py-0.5">
-                              <span className="w-1.5 h-1.5 rounded-full bg-[#0B4A8F] mt-1.5 shrink-0" />
+                              <span className="w-1.5 h-1.5 rounded-full bg-vcet-blue-deep mt-1.5 shrink-0" />
                               <span className="leading-tight font-medium">{topic}</span>
                             </div>
                           ))}
@@ -316,7 +316,7 @@ export default function TrainingPage() {
                           href={res.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-[#0B4A8F] text-xs font-bold transition-colors"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-vcet-blue-deep text-xs font-bold transition-colors"
                         >
                           <span>{res.name}</span>
                           <ExternalLink size={12} />
@@ -334,7 +334,7 @@ export default function TrainingPage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-50 text-[#0B4A8F] border border-blue-100">
+              <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue-deep border border-blue-100">
                 <Building2 size={18} />
               </div>
               <div>
@@ -359,11 +359,11 @@ export default function TrainingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.25, delay: (index % 4) * 0.05 }}
-                className="bg-white rounded-2xl border border-slate-200/90 hover:border-[#0B4A8F]/40 p-5 sm:p-6 shadow-xs flex flex-col justify-between"
+                className="bg-white rounded-2xl border border-slate-200/90 hover:border-vcet-blue-deep/40 p-5 sm:p-6 shadow-xs flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-sm font-black uppercase tracking-wider text-[#0B4A8F]">
+                    <span className="text-sm font-black uppercase tracking-wider text-vcet-blue-deep">
                       {comp.company || comp.name}
                     </span>
                     <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -379,7 +379,7 @@ export default function TrainingPage() {
                   </p>
 
                   <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl mb-4 text-xs text-slate-700">
-                    <strong className="text-[#0B4A8F] block mb-1">
+                    <strong className="text-vcet-blue-deep block mb-1">
                       Exam Strategy & Pattern:
                     </strong>
                     {comp.pattern}
@@ -405,7 +405,7 @@ export default function TrainingPage() {
                     href={comp.testLink || "#"}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors"
+                    className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors"
                   >
                     <span>PRACTICE {(comp.company || comp.name || "").toUpperCase()} TEST SERIES</span>
                     <ExternalLink size={13} />
@@ -420,7 +420,7 @@ export default function TrainingPage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-50 text-[#0B4A8F] border border-blue-100">
+              <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue-deep border border-blue-100">
                 <Calendar size={18} />
               </div>
               <div>
@@ -459,7 +459,7 @@ export default function TrainingPage() {
                 className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col justify-between"
               >
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-[#0B4A8F] border border-blue-200 inline-block mb-3">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue-deep border border-blue-200 inline-block mb-3">
                     {bootcamp.status}
                   </span>
 
@@ -469,15 +469,15 @@ export default function TrainingPage() {
 
                   <div className="space-y-2 text-xs text-slate-600 my-4">
                     <div className="flex items-center gap-2">
-                      <Calendar size={14} className="text-[#0B4A8F] shrink-0" />
+                      <Calendar size={14} className="text-vcet-blue-deep shrink-0" />
                       <span>{bootcamp.date}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Clock size={14} className="text-[#0B4A8F] shrink-0" />
+                      <Clock size={14} className="text-vcet-blue-deep shrink-0" />
                       <span>{bootcamp.time}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Users2 size={14} className="text-[#0B4A8F] shrink-0" />
+                      <Users2 size={14} className="text-vcet-blue-deep shrink-0" />
                       <span>{bootcamp.eligible}</span>
                     </div>
                   </div>
@@ -497,7 +497,7 @@ export default function TrainingPage() {
                 <button
                   type="button"
                   onClick={() => handleRegisterBootcamp(bootcamp.bootcampId || bootcamp._id)}
-                  className="w-full py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors cursor-pointer"
+                  className="w-full py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors cursor-pointer"
                 >
                   REGISTER NOW (FREE)
                 </button>
@@ -510,7 +510,7 @@ export default function TrainingPage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-xl bg-blue-50 text-[#0B4A8F] border border-blue-100">
+              <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue-deep border border-blue-100">
                 <Download size={18} />
               </div>
               <div>
@@ -535,7 +535,7 @@ export default function TrainingPage() {
               >
                 <div>
                   <div className="flex items-center justify-between text-xs text-slate-500 mb-3">
-                    <span className="font-bold text-[#0B4A8F] uppercase tracking-wider text-[11px]">
+                    <span className="font-bold text-vcet-blue-deep uppercase tracking-wider text-[11px]">
                       {item.category}
                     </span>
                     <span className="font-mono text-[11px]">{item.size}</span>
@@ -558,7 +558,7 @@ export default function TrainingPage() {
                   href={item.url || "#"}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#083E7A] text-white text-xs font-bold uppercase tracking-wider shadow-xs transition-colors"
                 >
                   <Download size={13} />
                   <span>DOWNLOAD TOOLKIT</span>

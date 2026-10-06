@@ -376,7 +376,7 @@ export default function AdminCoursesPage() {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-[#0062A8]" />
+              <BookOpen className="w-6 h-6 text-vcet-blue" />
               {isFacultyOnly
                 ? "My Assigned Courses & Modules"
                 : isHod
@@ -404,7 +404,7 @@ export default function AdminCoursesPage() {
           {canCreateCourse && (
             <button
               onClick={handleOpenAddModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-hover text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Create Course</span>
@@ -422,7 +422,7 @@ export default function AdminCoursesPage() {
             onClick={() => setUnassignedOnly(false)}
             className={`px-3.5 py-1.5 rounded-full text-[11px] font-bold border transition-colors cursor-pointer ${
               !unassignedOnly
-                ? "bg-[#0062A8] text-white border-[#0062A8]"
+                ? "bg-vcet-blue text-white border-vcet-blue"
                 : "bg-white text-slate-600 border-slate-200 hover:border-blue-300"
             }`}
           >
@@ -460,7 +460,7 @@ export default function AdminCoursesPage() {
           {canCreateCourse && (
             <button
               onClick={handleOpenAddModal}
-              className="px-5 py-2.5 bg-[#0062A8] text-white font-bold text-xs rounded-xl shadow hover:bg-[#00528c] cursor-pointer"
+              className="px-5 py-2.5 bg-vcet-blue text-white font-bold text-xs rounded-xl shadow hover:bg-vcet-blue-hover cursor-pointer"
             >
               Create Course
             </button>
@@ -500,7 +500,7 @@ export default function AdminCoursesPage() {
                     }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-                  <span className="absolute top-3 left-3 px-2.5 py-1 text-[10px] font-bold bg-[#0062A8] text-white rounded-full shadow-sm">
+                  <span className="absolute top-3 left-3 px-2.5 py-1 text-[10px] font-bold bg-vcet-blue text-white rounded-full shadow-sm">
                     {course.category}
                   </span>
 
@@ -545,7 +545,7 @@ export default function AdminCoursesPage() {
                 <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                   <div>
                     <Link to={courseUrl} className="block">
-                      <h3 className="text-base font-bold text-slate-900 hover:text-[#0062A8] transition-colors leading-snug">
+                      <h3 className="text-base font-bold text-slate-900 hover:text-vcet-blue transition-colors leading-snug">
                         {course.title}
                       </h3>
                     </Link>
@@ -569,7 +569,7 @@ export default function AdminCoursesPage() {
                     </span>
                     {course.assignedFacultyName ? (
                       <span
-                        className="text-[10px] text-[#0062A8] font-semibold truncate flex items-center gap-1 mt-0.5"
+                        className="text-[10px] text-vcet-blue font-semibold truncate flex items-center gap-1 mt-0.5"
                         title={`Assigned to ${course.assignedFacultyName}`}
                       >
                         <User className="w-3 h-3 shrink-0" />
@@ -607,7 +607,7 @@ export default function AdminCoursesPage() {
 
                     <Link
                       to={`${moduleManagerBaseUrl}?courseId=${course._id || course.id}`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 text-[#0062A8] hover:bg-blue-100 border border-blue-200 font-bold text-xs transition-all"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-blue-50 text-vcet-blue hover:bg-blue-100 border border-blue-200 font-bold text-xs transition-all"
                       title="Manage Modules & Curriculum"
                     >
                       <Layers className="w-3.5 h-3.5" />
@@ -653,7 +653,7 @@ export default function AdminCoursesPage() {
             </button>
 
             <h2 className="text-lg font-black text-slate-900 mb-4 flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-[#0062A8]" />
+              <BookOpen className="w-5 h-5 text-vcet-blue" />
               {editingCourse ? "Edit Course" : "Create a Course"}
             </h2>
 
@@ -688,9 +688,9 @@ export default function AdminCoursesPage() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-300 hover:border-[#0062A8] text-slate-700 hover:text-[#0062A8] rounded-xl font-bold shadow-xs transition-all text-xs cursor-pointer"
+                        className="inline-flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-300 hover:border-vcet-blue text-slate-700 hover:text-vcet-blue rounded-xl font-bold shadow-xs transition-all text-xs cursor-pointer"
                       >
-                        <Upload className="w-3.5 h-3.5 text-[#0062A8]" />
+                        <Upload className="w-3.5 h-3.5 text-vcet-blue" />
                         <span>{imageFile ? "Change Image" : "Upload Cover Image"}</span>
                       </button>
 
@@ -798,7 +798,7 @@ export default function AdminCoursesPage() {
                     }
                     className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       formData.targetAudience === "department"
-                        ? "bg-[#0062A8] text-white shadow-sm"
+                        ? "bg-vcet-blue text-white shadow-sm"
                         : "text-slate-600 hover:text-slate-900 bg-transparent"
                     }`}
                   >
@@ -812,7 +812,7 @@ export default function AdminCoursesPage() {
                     }
                     className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                       formData.targetAudience === "all"
-                        ? "bg-[#0062A8] text-white shadow-sm"
+                        ? "bg-vcet-blue text-white shadow-sm"
                         : "text-slate-600 hover:text-slate-900 bg-transparent"
                     }`}
                   >
@@ -844,14 +844,14 @@ export default function AdminCoursesPage() {
                   {selectedFaculty ? (
                     <div className="flex items-center justify-between p-3 rounded-2xl bg-sky-50 border border-sky-200">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-9 h-9 rounded-xl bg-[#0062A8] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                        <div className="w-9 h-9 rounded-xl bg-vcet-blue text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
                           {selectedFaculty.name?.charAt(0) || "F"}
                         </div>
                         <div className="min-w-0">
                           <div className="font-bold text-xs text-slate-900 truncate flex items-center gap-1.5">
                             <span>{selectedFaculty.name}</span>
                             {selectedFaculty.staffId && (
-                              <span className="px-1.5 py-0.5 rounded bg-sky-100 text-[#0062A8] font-mono text-[10px] font-bold">
+                              <span className="px-1.5 py-0.5 rounded bg-sky-100 text-vcet-blue font-mono text-[10px] font-bold">
                                 {selectedFaculty.staffId}
                               </span>
                             )}
@@ -921,7 +921,7 @@ export default function AdminCoursesPage() {
                                 className="w-full p-2.5 text-left hover:bg-sky-50/70 rounded-xl flex items-center justify-between transition-colors cursor-pointer group"
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-[#0062A8]/10 text-slate-700 group-hover:text-[#0062A8] flex items-center justify-center font-bold text-xs shrink-0">
+                                  <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-vcet-blue/10 text-slate-700 group-hover:text-vcet-blue flex items-center justify-center font-bold text-xs shrink-0">
                                     {fac.name?.charAt(0) || "F"}
                                   </div>
                                   <div className="min-w-0">
@@ -934,7 +934,7 @@ export default function AdminCoursesPage() {
                                   </div>
                                 </div>
                                 {fac.staffId && (
-                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 group-hover:bg-sky-100 text-slate-600 group-hover:text-[#0062A8] font-mono text-[10px] font-bold shrink-0">
+                                  <span className="px-2 py-0.5 rounded-md bg-slate-100 group-hover:bg-sky-100 text-slate-600 group-hover:text-vcet-blue font-mono text-[10px] font-bold shrink-0">
                                     {fac.staffId}
                                   </span>
                                 )}
@@ -950,7 +950,7 @@ export default function AdminCoursesPage() {
                 editingCourse && formData.assignedFacultyName && (
                   <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-between text-[11px]">
                     <span className="text-slate-600">Course Ownership:</span>
-                    <span className="font-bold text-[#0062A8] flex items-center gap-1">
+                    <span className="font-bold text-vcet-blue flex items-center gap-1">
                       <User className="w-3.5 h-3.5" />
                       Assigned to {formData.assignedFacultyName}
                     </span>
@@ -969,7 +969,7 @@ export default function AdminCoursesPage() {
                 <button
                   type="submit"
                   disabled={uploading || (!isFaculty && !editingCourse && !formData.assignedFacultyId)}
-                  className="px-5 py-2 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold shadow-md disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+                  className="px-5 py-2 rounded-xl bg-vcet-blue hover:bg-vcet-blue-hover text-white font-bold shadow-md disabled:opacity-50 flex items-center gap-2 cursor-pointer"
                   title={!isFaculty && !editingCourse && !formData.assignedFacultyId ? "Please assign a faculty member first" : ""}
                 >
                   {uploading ? (

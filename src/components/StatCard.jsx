@@ -11,7 +11,7 @@ export default function StatCard({
   color = "blue"
 }) {
   const colorMap = {
-    blue: "bg-blue-50 text-[#0062A8] border-blue-100",
+    blue: "bg-blue-50 text-vcet-blue border-blue-100",
     emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
     amber: "bg-amber-50 text-amber-700 border-amber-100",
     purple: "bg-purple-50 text-purple-700 border-purple-100",

@@ -128,7 +128,7 @@ export default function CertificatePreviewSection() {
             <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden border-2 border-white/20 bg-slate-950 shadow-2xl p-2 sm:p-3 aspect-[1.414/1] flex items-center justify-center">
               {loading ? (
                 <div className="flex flex-col items-center justify-center gap-3 text-slate-400">
-                  <div className="w-8 h-8 border-4 border-[#0B4A8F] border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-4 border-vcet-blue-deep border-t-transparent rounded-full animate-spin" />
                   <span className="text-xs font-semibold">Generating Live Certificate...</span>
                 </div>
               ) : previewUrl ? (
@@ -213,7 +213,7 @@ export default function CertificatePreviewSection() {
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
               <Link
                 to="/certificates"
-                className="flex-1 px-5 py-3.5 rounded-xl bg-[#0B4A8F] hover:bg-[#0062A8] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all group"
+                className="flex-1 px-5 py-3.5 rounded-xl bg-vcet-blue-deep hover:bg-vcet-blue text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-all group"
               >
                 <span>My Certificates</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />

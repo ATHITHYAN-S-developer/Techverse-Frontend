@@ -344,12 +344,12 @@ export default function AdminCodingPage() {
       {/* 1. Top Header Banner */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold mb-2">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Faculty & Educator Control Center</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
-            <Code2 className="w-6 h-6 text-[#0062A8]" />
+            <Code2 className="w-6 h-6 text-vcet-blue" />
             Teacher Coding Customization & Assessment Studio
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
@@ -384,7 +384,7 @@ export default function AdminCodingPage() {
           </span>
           <button
             onClick={loadData}
-            className="text-xs text-[#0062A8] font-bold hover:underline flex items-center gap-1 cursor-pointer"
+            className="text-xs text-vcet-blue font-bold hover:underline flex items-center gap-1 cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refresh</span>
@@ -399,7 +399,7 @@ export default function AdminCodingPage() {
                 key={t._id}
                 className={`group flex items-center gap-2 px-4 py-2 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
                   isSelected
-                    ? "bg-[#0B4A8F] text-white border-[#0B4A8F] shadow-sm"
+                    ? "bg-vcet-blue-deep text-white border-vcet-blue-deep shadow-sm"
                     : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100"
                 }`}
                 onClick={() => setSelectedTestId(t._id)}
@@ -439,7 +439,7 @@ export default function AdminCodingPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search problems by title, tags (Zoho, Array, DP), or description..."
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-2xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#0062A8] focus:bg-white"
+            className="w-full pl-10 pr-4 py-2.5 bg-slate-50 rounded-2xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-vcet-blue focus:bg-white"
           />
         </div>
 
@@ -502,7 +502,7 @@ export default function AdminCodingPage() {
                       <div className="flex items-center justify-end gap-1.5">
                         <button
                           onClick={() => handleOpenEditProblem(p)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-[#0062A8] transition-colors cursor-pointer"
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-vcet-blue transition-colors cursor-pointer"
                           title="Edit Problem & Test Cases"
                         >
                           <Edit className="w-4 h-4" />
@@ -544,11 +544,11 @@ export default function AdminCodingPage() {
             </button>
 
             <div className="border-b border-slate-100 pb-4">
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#0062A8]">
+              <span className="text-[11px] font-black uppercase tracking-wider text-vcet-blue">
                 Problem Authoring Suite
               </span>
               <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 mt-0.5">
-                <Code2 className="w-5 h-5 text-[#0062A8]" />
+                <Code2 className="w-5 h-5 text-vcet-blue" />
                 {editingProblem ? "Edit Coding Challenge & Test Cases" : "Create New Custom Coding Challenge"}
               </h2>
             </div>
@@ -564,7 +564,7 @@ export default function AdminCodingPage() {
                     value={problemForm.title}
                     onChange={(e) => setProblemForm({ ...problemForm, title: e.target.value })}
                     placeholder="e.g. Subarray with Given Sum"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-[#0062A8] focus:bg-white"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-vcet-blue focus:bg-white"
                   />
                 </div>
                 <div>
@@ -603,7 +603,7 @@ export default function AdminCodingPage() {
                   value={problemForm.description}
                   onChange={(e) => setProblemForm({ ...problemForm, description: e.target.value })}
                   placeholder="Explain the algorithmic problem, input constraints, and expectations in detail..."
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 leading-relaxed focus:outline-none focus:border-[#0062A8] focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 leading-relaxed focus:outline-none focus:border-vcet-blue focus:bg-white"
                 />
               </div>
 
@@ -840,11 +840,11 @@ export default function AdminCodingPage() {
             </button>
 
             <div>
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#0062A8]">
+              <span className="text-[11px] font-black uppercase tracking-wider text-vcet-blue">
                 Assessment Customization
               </span>
               <h2 className="text-xl font-black text-slate-900 flex items-center gap-2 mt-0.5">
-                <FolderPlus className="w-5 h-5 text-[#0062A8]" />
+                <FolderPlus className="w-5 h-5 text-vcet-blue" />
                 Create New Coding Assessment Track
               </h2>
             </div>
@@ -858,7 +858,7 @@ export default function AdminCodingPage() {
                   value={testForm.title}
                   onChange={(e) => setTestForm({ ...testForm, title: e.target.value })}
                   placeholder="e.g. CSE 3rd Sem Python Lab Assessment"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-[#0062A8] focus:bg-white"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 font-bold focus:outline-none focus:border-vcet-blue focus:bg-white"
                 />
               </div>
 
@@ -934,7 +934,7 @@ export default function AdminCodingPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2 rounded-xl bg-[#0062A8] hover:bg-blue-700 text-white font-black shadow-sm cursor-pointer"
+                  className="px-6 py-2 rounded-xl bg-vcet-blue hover:bg-blue-700 text-white font-black shadow-sm cursor-pointer"
                 >
                   Create Assessment Track
                 </button>

@@ -242,13 +242,13 @@ export default function CourseAssessmentPage() {
 
           <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-semibold flex items-center justify-around">
             <span>Course Progress:</span>
-            <span className="font-bold text-[#0062A8]">{test.completedModulesCount} of {test.totalModules} Module Tests Passed</span>
+            <span className="font-bold text-vcet-blue">{test.completedModulesCount} of {test.totalModules} Module Tests Passed</span>
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               onClick={() => navigate(test.courseSlug ? `/courses/${test.courseSlug}` : "/courses")}
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#0062A8] hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
             >
               <span>Go to Course Modules</span>
               <ArrowRight className="w-4 h-4" />
@@ -378,7 +378,7 @@ export default function CourseAssessmentPage() {
             <div className="lg:col-span-8 bg-white rounded-3xl border border-sky-100 p-6 sm:p-8 shadow-sm space-y-6">
               {/* Question Header */}
               <div className="flex items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                <span className="px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-[#0B4A8F] text-xs font-bold">
+                <span className="px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-vcet-blue-deep text-xs font-bold">
                   Question {currentQIndex + 1} of {questions.length}
                 </span>
                 <span className="text-xs font-medium">
@@ -408,13 +408,13 @@ export default function CourseAssessmentPage() {
                       onClick={() => handleSelectOption(currentQId, oIdx)}
                       className={`w-full text-left p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-3.5 ${
                         isSelected
-                          ? "bg-sky-50/80 border-[#0B4A8F] text-[#0B4A8F] shadow-xs"
+                          ? "bg-sky-50/80 border-vcet-blue-deep text-vcet-blue-deep shadow-xs"
                           : "bg-white border-slate-200 text-slate-700 hover:bg-sky-50/40 hover:border-sky-200"
                       }`}
                     >
                       <span
                         className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
-                          isSelected ? "bg-[#0B4A8F] text-white" : "bg-slate-100 text-slate-600"
+                          isSelected ? "bg-vcet-blue-deep text-white" : "bg-slate-100 text-slate-600"
                         }`}
                       >
                         {String.fromCharCode(65 + oIdx)}
@@ -440,7 +440,7 @@ export default function CourseAssessmentPage() {
                   <button
                     type="button"
                     onClick={() => setCurrentQIndex((i) => Math.min(questions.length - 1, i + 1))}
-                    className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-[#0B4A8F] hover:bg-[#0062A8] flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                    className="px-5 py-2 rounded-xl text-xs font-bold text-white bg-vcet-blue-deep hover:bg-vcet-blue flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                   >
                     Next <ArrowRight className="w-4 h-4" />
                   </button>
@@ -475,7 +475,7 @@ export default function CourseAssessmentPage() {
                         onClick={() => setCurrentQIndex(idx)}
                         className={`h-9 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           isCurrent
-                            ? "ring-2 ring-sky-400 bg-[#0B4A8F] text-white font-black shadow-xs"
+                            ? "ring-2 ring-sky-400 bg-vcet-blue-deep text-white font-black shadow-xs"
                             : isAnswered
                             ? "bg-emerald-50 border border-emerald-300 text-emerald-700"
                             : "bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100"
@@ -491,7 +491,7 @@ export default function CourseAssessmentPage() {
               {/* Security Monitor Card */}
               <div className="bg-white rounded-3xl border border-sky-100 p-5 shadow-sm space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
-                  <ShieldAlert className="w-4 h-4 text-[#0B4A8F]" />
+                  <ShieldAlert className="w-4 h-4 text-vcet-blue-deep" />
                   <span>Exam Mode Monitor</span>
                 </div>
                 <div className="text-[11px] text-slate-600 space-y-1.5">

@@ -445,7 +445,7 @@ export default function CodingPage() {
             to={user?.role === "admin" ? "/admin/coding" : "/faculty/coding"}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-white text-blue-900 font-black text-xs hover:bg-blue-50 shadow-md active:scale-95 transition-all shrink-0 cursor-pointer"
           >
-            <Settings className="w-4 h-4 text-[#0062A8]" />
+            <Settings className="w-4 h-4 text-vcet-blue" />
             <span>Manage Problems & Tests</span>
           </Link>
         </div>
@@ -460,7 +460,7 @@ export default function CodingPage() {
           <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold">
                   <Code2 className="w-3.5 h-3.5" />
                   <span>VCET Online Compiler & Test Arena</span>
                 </div>
@@ -503,7 +503,7 @@ export default function CodingPage() {
             {/* Quick Rules Banner */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-slate-100">
               <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/60">
-                <Clock className="w-5 h-5 text-[#0062A8] shrink-0" />
+                <Clock className="w-5 h-5 text-vcet-blue shrink-0" />
                 <div>
                   <div className="text-xs font-bold text-slate-800">4-Hour Max Duration</div>
                   <div className="text-[11px] text-slate-500">Ample time to write & verify solutions</div>
@@ -593,7 +593,7 @@ export default function CodingPage() {
                       </span>
 
                       <div className="flex items-center gap-1 text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                        <Clock className="w-3 h-3 text-[#0062A8]" />
+                        <Clock className="w-3 h-3 text-vcet-blue" />
                         <span>4 Hours</span>
                       </div>
                     </div>
@@ -610,8 +610,8 @@ export default function CodingPage() {
 
                     {/* Creator Info (Name of who created this problem statement) */}
                     <div className="pt-3 border-t border-slate-100">
-                      <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-blue-50/80 border border-blue-100 text-[#0062A8]">
-                        <User className="w-4 h-4 shrink-0 text-[#0062A8]" />
+                      <div className="flex items-center gap-2 p-2.5 rounded-2xl bg-blue-50/80 border border-blue-100 text-vcet-blue">
+                        <User className="w-4 h-4 shrink-0 text-vcet-blue" />
                         <div className="text-[11px] leading-tight">
                           <span className="text-slate-500 block text-[10px] font-medium">Problem Created By:</span>
                           <span className="font-bold text-slate-900">{creatorName}</span>
@@ -660,7 +660,7 @@ export default function CodingPage() {
                       <button
                         type="button"
                         onClick={() => handleOpenInCompiler(prob)}
-                        className="w-full py-3 px-4 rounded-2xl text-xs font-black bg-[#0062A8] hover:bg-[#004f88] text-white flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-98 transition-all cursor-pointer"
+                        className="w-full py-3 px-4 rounded-2xl text-xs font-black bg-vcet-blue hover:bg-[#004f88] text-white flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 active:scale-98 transition-all cursor-pointer"
                       >
                         <Play className="w-3.5 h-3.5 fill-white" />
                         <span>Solve Problem in Compiler</span>
@@ -719,7 +719,7 @@ export default function CodingPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
-                  <User className="w-3.5 h-3.5 text-[#0062A8]" />
+                  <User className="w-3.5 h-3.5 text-vcet-blue" />
                   <span>
                     Created by:{" "}
                     <strong className="text-slate-800">
@@ -762,7 +762,7 @@ export default function CodingPage() {
                 {/* Creator Attribution Card */}
                 <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-100 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-[#0062A8] text-white flex items-center justify-center font-bold text-xs">
+                    <div className="w-8 h-8 rounded-full bg-vcet-blue text-white flex items-center justify-center font-bold text-xs">
                       {((selectedProblem.author || selectedProblem.createdByName || "Prof")[0]).toUpperCase()}
                     </div>
                     <div>
@@ -778,7 +778,7 @@ export default function CodingPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded text-[#0062A8] border border-blue-200">
+                    <span className="text-[10px] font-bold bg-white px-2 py-0.5 rounded text-vcet-blue border border-blue-200">
                       VCET CSE
                     </span>
                   </div>

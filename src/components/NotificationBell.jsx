@@ -26,7 +26,7 @@ export default function NotificationBell() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notifications"
-        className="relative p-2 text-slate-600 hover:text-[#0062A8] hover:bg-slate-100 rounded-lg transition-colors"
+        className="relative p-2 text-slate-600 hover:text-vcet-blue hover:bg-slate-100 rounded-lg transition-colors"
       >
         <Bell className="w-5 h-5" />
         {unreadCount > 0 && (
@@ -51,7 +51,7 @@ export default function NotificationBell() {
               <div className="flex items-center gap-2">
                 <span className="font-semibold text-slate-800 text-sm">Notifications</span>
                 {unreadCount > 0 && (
-                  <span className="px-1.5 py-0.5 text-[11px] font-bold bg-[#0062A8]/10 text-[#0062A8] rounded-full">
+                  <span className="px-1.5 py-0.5 text-[11px] font-bold bg-vcet-blue/10 text-vcet-blue rounded-full">
                     {unreadCount} new
                   </span>
                 )}
@@ -59,7 +59,7 @@ export default function NotificationBell() {
               {unreadCount > 0 && (
                 <button
                   onClick={markAllNotificationsRead}
-                  className="text-xs text-[#0062A8] hover:underline flex items-center gap-1 font-medium"
+                  className="text-xs text-vcet-blue hover:underline flex items-center gap-1 font-medium"
                 >
                   <CheckCheck className="w-3.5 h-3.5" /> Mark all as read
                 </button>
@@ -82,7 +82,7 @@ export default function NotificationBell() {
                     }`}
                   >
                     {!n.read && (
-                      <span className="absolute left-1.5 top-5 w-1.5 h-1.5 rounded-full bg-[#0062A8]" />
+                      <span className="absolute left-1.5 top-5 w-1.5 h-1.5 rounded-full bg-vcet-blue" />
                     )}
                     <div className="pl-2">
                       <div className="flex items-start justify-between gap-2">
@@ -98,7 +98,7 @@ export default function NotificationBell() {
                         <Link
                           to={n.link}
                           onClick={() => setIsOpen(false)}
-                          className="inline-flex items-center gap-1 text-[11px] font-medium text-[#0062A8] hover:underline mt-1.5"
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-vcet-blue hover:underline mt-1.5"
                         >
                           View details <ExternalLink className="w-3 h-3" />
                         </Link>
@@ -114,7 +114,7 @@ export default function NotificationBell() {
               <Link
                 to="/announcements"
                 onClick={() => setIsOpen(false)}
-                className="text-xs font-medium text-slate-600 hover:text-[#0062A8] block py-1"
+                className="text-xs font-medium text-slate-600 hover:text-vcet-blue block py-1"
               >
                 View Institutional Circulars →
               </Link>

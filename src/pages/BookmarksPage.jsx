@@ -16,7 +16,7 @@ export default function BookmarksPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 space-y-6">
       <div>
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold shadow-xs mb-2">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold shadow-xs mb-2">
           <Bookmark className="w-3.5 h-3.5" />
           <span>My Personal Library</span>
         </div>
@@ -38,7 +38,7 @@ export default function BookmarksPage() {
           <div className="pt-2">
             <Link
               to="/courses"
-              className="inline-block px-5 py-2.5 bg-[#0062A8] hover:bg-[#0B4A8F] text-white font-bold text-xs rounded-xl shadow"
+              className="inline-block px-5 py-2.5 bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs rounded-xl shadow"
             >
               Explore Courses
             </Link>
@@ -49,11 +49,11 @@ export default function BookmarksPage() {
           {bookmarks.map((b) => (
             <div
               key={b.id}
-              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-[#0062A8]/40 transition-colors"
+              className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-vcet-blue/40 transition-colors"
             >
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-[#0062A8]">
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-blue-50 text-vcet-blue">
                     {b.type || "Course"}
                   </span>
                   <button
@@ -69,7 +69,7 @@ export default function BookmarksPage() {
 
               <Link
                 to={b.url || `/courses/${b.id}`}
-                className="w-full py-2 bg-slate-100 hover:bg-[#0062A8] hover:text-white text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors"
+                className="w-full py-2 bg-slate-100 hover:bg-vcet-blue hover:text-white text-slate-700 font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors"
               >
                 <span>Open Resource</span>
                 <ArrowRight className="w-3.5 h-3.5" />

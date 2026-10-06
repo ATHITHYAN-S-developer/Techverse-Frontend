@@ -108,7 +108,7 @@ export default function FacultyLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-[#0062A8] selection:text-white font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-vcet-blue selection:text-white font-sans">
       <ScrollToTop />
       {/* 1. Global Faculty Topbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
@@ -127,7 +127,7 @@ export default function FacultyLayout() {
               alt="TechVerse"
               className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
             />
-            <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-[#0062A8] font-bold border border-blue-200 uppercase tracking-wider">
+            <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue font-bold border border-blue-200 uppercase tracking-wider">
               {isHod ? "HOD Portal" : user?.role === "admin" ? "Admin Hub" : "Faculty Hub"}
             </span>
           </Link>
@@ -135,8 +135,8 @@ export default function FacultyLayout() {
 
         {/* Topbar Center: Dynamic Department Badge */}
         <div className="hidden md:flex items-center">
-          <span className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#0062A8]" />
+          <span className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5 text-vcet-blue" />
             {displayDeptBadge}
           </span>
         </div>
@@ -145,7 +145,7 @@ export default function FacultyLayout() {
         <div className="flex items-center gap-3">
           <Link
             to="/faculty/resources"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0062A8] hover:bg-[#0B4A8F] text-white text-xs font-bold shadow-xs transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white text-xs font-bold shadow-xs transition-colors"
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>Upload Notes</span>
@@ -153,7 +153,7 @@ export default function FacultyLayout() {
 
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
             <Link to="/faculty/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-full bg-[#0B4A8F] text-white font-bold text-xs flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-vcet-blue-deep text-white font-bold text-xs flex items-center justify-center shadow-sm">
                 {user?.name?.charAt(0) || "F"}
               </div>
               <div className="flex flex-col text-left hidden sm:flex">
@@ -204,7 +204,7 @@ export default function FacultyLayout() {
                 alt="TechVerse"
                 className="h-7 w-auto object-contain"
               />
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-[#0062A8] font-bold uppercase tracking-wider">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-vcet-blue font-bold uppercase tracking-wider">
                 {isHod ? "HOD Portal" : "Faculty Portal"}
               </span>
             </div>
@@ -232,8 +232,8 @@ export default function FacultyLayout() {
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     active
-                      ? "bg-[#0B4A8F] text-white shadow-sm"
-                      : "text-slate-600 hover:bg-slate-100 hover:text-[#0B4A8F]"
+                      ? "bg-vcet-blue-deep text-white shadow-sm"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-vcet-blue-deep"
                   }`}
                 >
                   <Icon className={`w-4 h-4 ${active ? "text-white" : "text-slate-400"}`} />
@@ -248,7 +248,7 @@ export default function FacultyLayout() {
             <Link
               to="/"
               onClick={() => setSidebarOpen(false)}
-              className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:text-[#0062A8] rounded-lg hover:bg-white"
+              className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue rounded-lg hover:bg-white"
             >
               <span>Main Portal</span>
               <ExternalLink className="w-3.5 h-3.5 text-slate-400" />

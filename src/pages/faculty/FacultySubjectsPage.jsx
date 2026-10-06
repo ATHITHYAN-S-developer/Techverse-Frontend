@@ -128,7 +128,7 @@ export default function FacultySubjectsPage() {
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
             Add and maintain subjects for your department, then upload notes for each subject.
           </p>
-          <span className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-[#0062A8] text-xs font-bold">
+          <span className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold">
             <ShieldCheck className="w-3.5 h-3.5" />
             {deptName} ({department?.code || ownDeptCode})
           </span>
@@ -136,7 +136,7 @@ export default function FacultySubjectsPage() {
 
         <button
           onClick={openAdd}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0062A8] hover:bg-[#00528c] text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-hover text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
         >
           <Plus className="w-4 h-4" />
           <span>Add Subject</span>
@@ -187,7 +187,7 @@ export default function FacultySubjectsPage() {
                   <tr key={s._id || s.id} className="hover:bg-slate-50/80 transition-colors">
                     <td className="px-5 py-4">
                       <div className="font-bold text-slate-900 text-sm">{s.name}</div>
-                      <div className="text-[#0062A8] font-mono font-bold text-[11px] mt-0.5">{s.code}</div>
+                      <div className="text-vcet-blue font-mono font-bold text-[11px] mt-0.5">{s.code}</div>
                     </td>
                     <td className="px-4 py-4 font-medium text-slate-700">Sem {s.semester}</td>
                     <td className="px-4 py-4 text-slate-600 font-medium">{s.credits ?? 3}</td>
@@ -297,7 +297,7 @@ export default function FacultySubjectsPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="px-5 py-2 bg-[#0062A8] text-white font-bold rounded-xl shadow hover:bg-[#00528c] disabled:opacity-50 inline-flex items-center gap-2"
+                  className="px-5 py-2 bg-vcet-blue text-white font-bold rounded-xl shadow hover:bg-vcet-blue-hover disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   {editing ? "Save Changes" : "Add Subject"}

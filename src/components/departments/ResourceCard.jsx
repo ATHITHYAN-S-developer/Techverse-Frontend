@@ -31,7 +31,7 @@ export default function ResourceCard({
       <div>
         {/* Top metadata */}
         <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#EFF6FF] text-[#0B4A8F] ring-1 ring-blue-100">
+          <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-[#EFF6FF] text-vcet-blue-deep ring-1 ring-blue-100">
             {deptCode} • {typeLabel(resource.type)}
           </span>
           {resource.unit && (
@@ -42,7 +42,7 @@ export default function ResourceCard({
         </div>
 
         {/* Title (2-line clamp) */}
-        <h3 className="text-lg font-bold text-[#0F172A] group-hover:text-[#0B4A8F] transition-colors duration-200 leading-snug mb-1.5 line-clamp-2">
+        <h3 className="text-lg font-bold text-[#0F172A] group-hover:text-vcet-blue-deep transition-colors duration-200 leading-snug mb-1.5 line-clamp-2">
           {resource.title}
         </h3>
 
@@ -66,7 +66,7 @@ export default function ResourceCard({
         <button
           onClick={() => canOpen && onOpenResource(resource)}
           disabled={!canOpen}
-          className="group/btn w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#0B4A8F] hover:bg-[#084282] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0B4A8F] focus-visible:ring-offset-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+          className="group/btn w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep focus-visible:ring-offset-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
         >
           <CtaIcon size={13} className="transition-transform duration-200 group-hover/btn:translate-x-0.5" />
           <span>{canOpen ? ctaLabel : "NO FILE ATTACHED"}</span>
