@@ -25,6 +25,7 @@ import {
   Globe,
   Check,
   EyeOff,
+  Users,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
@@ -482,12 +483,15 @@ export default function AdminCoursesPage() {
             const coverImage = getCourseImageUrl(course.thumbnailUrl, course.thumbnail);
             const totalMods = course.totalModules || course.modulesCount || course.modules?.length || 0;
             const isDeptOnly = course.targetAudience === "department" || course.isDepartmentOnly;
+            // Mirrors backend rules: admin can manage every course; HOD only
+            // courses of their own department; assigned faculty manage only
+            // the course's MODULES (never the course record itself).
             const canManageThisCourse =
-              canCreateCourse ||
-              (course.createdBy && String(course.createdBy._id || course.createdBy) === String(user?._id)) ||
-              (course.assignedFacultyId && String(course.assignedFacultyId) === String(user?._id)) ||
-              (course.assignedFacultyStaffId && course.assignedFacultyStaffId === user?.staffId) ||
-              (course.departmentId && String(course.departmentId._id || course.departmentId) === String(user?.departmentId?._id || user?.departmentId));
+              user?.role === "admin" ||
+              (isHod &&
+                course.departmentId &&
+                String(course.departmentId._id || course.departmentId) ===
+                  String(user?.departmentId?._id || user?.departmentId));
 
             return (
               <div
@@ -589,7 +593,8 @@ export default function AdminCoursesPage() {
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
-                    {/* Publish/Unpublish Toggle Button */}
+                    {/* Publish/Unpublish Toggle Button (HOD of dept / Admin only) */}
+                    {canManageThisCourse && (
                     <button
                       type="button"
                       onClick={() => handleTogglePublish(course)}
@@ -610,6 +615,16 @@ export default function AdminCoursesPage() {
                       )}
                       <span>{course.isPublished ? "Unpublish" : "Publish"}</span>
                     </button>
+                    )}
+
+                    <Link
+                      to={`${moduleManagerBaseUrl}/students?courseId=${course._id || course.id}`}
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs transition-all"
+                      title="View enrolled students & per-module status, export to Excel"
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Students</span>
+                    </Link>
 
                     <Link
                       to={`${moduleManagerBaseUrl}?courseId=${course._id || course.id}`}

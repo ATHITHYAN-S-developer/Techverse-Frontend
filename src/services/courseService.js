@@ -275,4 +275,53 @@ export const courseService = {
     const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/submit-test`, data);
     return res?.data || res;
   },
+
+  // ----------------------------------------------------------------
+  // Course Students List & Excel Export (/api/courses/:courseId/students)
+  // ----------------------------------------------------------------
+  async getCourseStudents(courseId) {
+    const res = await api.get(`/courses/${courseId}/students`);
+    return res?.data || res;
+  },
+
+  /**
+   * Authenticated fetch-blob download of the .xlsx student report.
+   * A plain <a href> would not carry the JWT, so the export would 401.
+   */
+  async exportCourseStudents(courseId) {
+    const isOfflineSession = localStorage.getItem("techverse_offline_session") === "1";
+    const token = isOfflineSession
+      ? null
+      : localStorage.getItem("techverse_token") ||
+        sessionStorage.getItem("techverse_token") ||
+        localStorage.getItem("vcetTechHubToken") ||
+        sessionStorage.getItem("vcetTechHubToken");
+
+    const response = await fetch(`${API_BASE_URL}/courses/${courseId}/students/export`, {
+      method: "GET",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const error = new Error(errorData.message || `Export failed (HTTP ${response.status})`);
+      error.status = response.status;
+      throw error;
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") || "";
+    const filenameMatch = disposition.match(/filename="?([^";]+)"?/);
+    const filename = filenameMatch ? filenameMatch[1] : "students.xlsx";
+
+    const objectUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = objectUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(objectUrl);
+    return filename;
+  },
 };

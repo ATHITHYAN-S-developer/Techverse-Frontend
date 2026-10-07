@@ -70,6 +70,7 @@ const ADMIN_NAV_TREE = [
     items: [
       { name: "Courses", href: "/admin/courses", icon: BookOpen },
       { name: "Course Modules", href: "/admin/modules", icon: Puzzle },
+      { name: "Course Students", href: "/admin/modules/students", icon: GraduationCap },
     ],
   },
   {
@@ -164,6 +165,7 @@ export default function AdminLayout() {
     { title: "Academic Resources", category: "ACADEMIC", link: "/admin/resources" },
     { title: "Self-Paced Courses", category: "CONTENT", link: "/admin/courses" },
     { title: "Course Modules Builder", category: "CONTENT", link: "/admin/modules" },
+    { title: "Course Students & Export", category: "CONTENT", link: "/admin/modules/students" },
     { title: "Coding Arena Problems", category: "ASSESSMENT", link: "/admin/coding" },
     { title: "Exam Violation Telemetry", category: "ASSESSMENT", link: "/admin/violations" },
     { title: "Issued Certificates", category: "ACHIEVEMENT", link: "/admin/certificates" },

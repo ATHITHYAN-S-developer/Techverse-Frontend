@@ -29,6 +29,7 @@ import {
   Award,
   ArrowLeft,
   User,
+  Users,
   EyeOff,
   Globe,
   Lock,
@@ -50,6 +51,7 @@ function extractYouTubeId(url) {
 export default function AdminCourseModulesPage() {
   const { showSuccess, showError, showInfo } = useToast();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const paramCourseId = searchParams.get("courseId") || "";
   const isHod =
@@ -669,6 +671,21 @@ export default function AdminCourseModulesPage() {
           >
             <Plus className="w-4 h-4" />
             <span>Add Module</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                `${user?.role === "admin" ? "/admin" : "/faculty"}/modules/students?courseId=${selectedCourseId}`
+              )
+            }
+            disabled={!selectedCourseId}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs sm:text-sm transition-colors cursor-pointer disabled:opacity-50"
+            title="View enrolled students & per-module status, export to Excel"
+          >
+            <Users className="w-4 h-4" />
+            <span>Students</span>
           </button>
         </div>
       </div>

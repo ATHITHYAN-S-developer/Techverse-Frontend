@@ -44,6 +44,7 @@ import FacultyResourcesPage from "./pages/faculty/FacultyResourcesPage";
 import FacultySubjectsPage from "./pages/faculty/FacultySubjectsPage";
 import FacultyAnnouncementsPage from "./pages/faculty/FacultyAnnouncementsPage";
 import FacultyStudentsPage from "./pages/faculty/FacultyStudentsPage";
+import CourseStudentsPage from "./pages/faculty/CourseStudentsPage";
 import ProfilePage from "./pages/ProfilePage";
 
 // Admin Control Pages
@@ -142,6 +143,7 @@ export default function App() {
               <Route path="dashboard" element={<FacultyDashboard />} />
               <Route path="courses" element={<AdminCoursesPage />} />
               <Route path="modules" element={<AdminCourseModulesPage />} />
+              <Route path="modules/students" element={<CourseStudentsPage />} />
               <Route path="coding" element={<AdminCodingPage />} />
               <Route path="resources" element={<FacultyResourcesPage />} />
               <Route path="subjects" element={<Navigate to="/faculty/dashboard" replace />} />
@@ -171,6 +173,7 @@ export default function App() {
               <Route path="resources" element={<AdminResourcesPage />} />
               <Route path="courses" element={<AdminCoursesPage />} />
               <Route path="modules" element={<AdminCourseModulesPage />} />
+              <Route path="modules/students" element={<CourseStudentsPage />} />
               <Route path="coding" element={<AdminCodingPage />} />
               <Route path="violations" element={<AdminViolationsPage />} />
               <Route path="certificates" element={<AdminCertificatesPage />} />

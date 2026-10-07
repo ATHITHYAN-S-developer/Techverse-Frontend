@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   BookOpen,
   Code2,
+  GraduationCap,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import techverseLogoImg from "../assets/techverse-logo.png";
@@ -28,6 +29,7 @@ const getFacultyNav = (isHod) => {
       { name: "HOD Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
       { name: "Create & Manage Courses", href: "/faculty/courses", icon: BookOpen },
       { name: "All Course Modules", href: "/faculty/modules", icon: Layers },
+      { name: "Course Students", href: "/faculty/modules/students", icon: GraduationCap },
       { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
       { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
       { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
@@ -41,6 +43,7 @@ const getFacultyNav = (isHod) => {
     { name: "Faculty Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
     { name: "My Assigned Courses", href: "/faculty/courses", icon: BookOpen },
     { name: "Course Modules & Syllabus", href: "/faculty/modules", icon: Layers },
+    { name: "Course Students", href: "/faculty/modules/students", icon: GraduationCap },
     { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
     { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
     { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
@@ -121,7 +124,17 @@ export default function FacultyLayout() {
 
   const isActive = (path) => {
     if (path === "/faculty/dashboard") return location.pathname === "/faculty/dashboard";
-    return location.pathname.startsWith(path);
+    if (location.pathname === path) return true;
+    if (!location.pathname.startsWith(path + "/")) return false;
+    // Prefix match — only the LONGEST matching nav entry should appear active
+    // (e.g. /faculty/modules/students must not also highlight "Course Modules").
+    const longestMatch = facultyNav.reduce((best, item) => {
+      const href = item.href;
+      const matches =
+        location.pathname === href || location.pathname.startsWith(href + "/");
+      return matches && href.length > best.length ? href : best;
+    }, "");
+    return longestMatch === path;
   };
 
   return (
