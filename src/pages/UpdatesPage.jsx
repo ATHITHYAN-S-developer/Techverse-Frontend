@@ -16,22 +16,18 @@ export default function UpdatesPage() {
   useEffect(() => {
     async function loadResources() {
       const fallbackUpdates = RESOURCES.filter((item) => item.type === "updates");
+      let list = fallbackUpdates;
       try {
         const all = await resourceService.getAllResources();
         const dbUpdates = all.filter((item) => item.type === "updates");
 
         if (dbUpdates && dbUpdates.length > 0) {
-          const map = new Map();
-          fallbackUpdates.forEach((r) => map.set(r.id || r.name, r));
-          dbUpdates.forEach((r) => map.set(r.id || r.name || r._id, { ...r, id: r.id || r._id }));
-          setUpdateResources(Array.from(map.values()));
-        } else {
-          setUpdateResources(fallbackUpdates);
+          list = dbUpdates;
         }
       } catch (err) {
         console.warn("Using curated fallback for Tech Pulse resources:", err);
-        setUpdateResources(fallbackUpdates);
       } finally {
+        setUpdateResources(list);
         setLoading(false);
       }
     }

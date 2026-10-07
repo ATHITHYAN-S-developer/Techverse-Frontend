@@ -16,22 +16,18 @@ export default function TechnologyPage() {
   useEffect(() => {
     async function loadResources() {
       const fallbackTech = RESOURCES.filter((item) => item.type === "technology");
+      let list = fallbackTech;
       try {
         const all = await resourceService.getAllResources();
         const dbTech = all.filter((item) => item.type === "technology");
 
         if (dbTech && dbTech.length > 0) {
-          const map = new Map();
-          fallbackTech.forEach((r) => map.set(r.id || r.name, r));
-          dbTech.forEach((r) => map.set(r.id || r.name || r._id, { ...r, id: r.id || r._id }));
-          setTechResources(Array.from(map.values()));
-        } else {
-          setTechResources(fallbackTech);
+          list = dbTech;
         }
       } catch (err) {
         console.warn("Using curated fallback for Tech Explorer resources:", err);
-        setTechResources(fallbackTech);
       } finally {
+        setTechResources(list);
         setLoading(false);
       }
     }
