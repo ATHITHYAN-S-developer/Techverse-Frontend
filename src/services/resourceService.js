@@ -34,7 +34,8 @@ function buildResourceFormData(payload) {
   const fd = new FormData();
   fd.append("title", payload.title || payload.name || "");
   fd.append("description", payload.description || "");
-  if (payload.departmentId) fd.append("departmentId", payload.departmentId);
+  const deptId = payload.departmentId?._id || payload.departmentId;
+  if (deptId) fd.append("departmentId", deptId);
   if (payload.department) fd.append("department", payload.department);
   if (payload.subjectId) fd.append("subjectId", payload.subjectId);
   if (payload.subjectCode) fd.append("subjectCode", payload.subjectCode);

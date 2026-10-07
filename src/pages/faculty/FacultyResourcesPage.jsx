@@ -29,7 +29,7 @@ export default function FacultyResourcesPage() {
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const ownDeptId = user?.departmentId || "";
+  const ownDeptId = user?.departmentId?._id || user?.departmentId || "";
   const ownDeptCode = user?.department?.toUpperCase?.() || "";
   const currentUserId = String(user?._id || user?.id || "");
 
