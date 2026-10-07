@@ -145,7 +145,7 @@ export default function UnifiedFilterBar({
                 setDeptOpen(false);
                 setSortOpen(false);
               }}
-              className="w-full h-12 flex items-center justify-between gap-3 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full h-12 flex items-center justify-between gap-3 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 text-left transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
@@ -262,7 +262,7 @@ export default function UnifiedFilterBar({
                 setCategoryOpen(false);
                 setSortOpen(false);
               }}
-              className="w-full h-12 flex items-center justify-between gap-3 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full h-12 flex items-center justify-between gap-3 px-3.5 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-slate-100/80 hover:border-slate-300 text-left transition-all duration-200 focus:ring-2 focus:ring-blue-500/20"
             >
               <div className="flex items-center gap-2.5 min-w-0">
                 <span
@@ -378,7 +378,7 @@ export default function UnifiedFilterBar({
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder="Search title, tags, course code..."
-              className="w-full h-12 rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              className="w-full h-12 rounded-xl border border-slate-200 bg-white pl-9 pr-8 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             />
             {searchQuery && (
               <button

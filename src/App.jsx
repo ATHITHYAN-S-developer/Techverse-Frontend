@@ -8,6 +8,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
+import { MotionConfig } from "framer-motion";
 
 // Layouts
 import PublicLayout from "./layouts/PublicLayout";
@@ -86,9 +87,10 @@ function RequireAuth({ children, allowedRoles }) {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <BrowserRouter>
+    <MotionConfig reducedMotion="user">
+      <AuthProvider>
+        <ToastProvider>
+          <BrowserRouter>
           <Routes>
             {/* 1. Public Pages (Navbar + Footer) */}
             <Route element={<PublicLayout />}>
@@ -184,6 +186,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
       </ToastProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </MotionConfig>
   );
 }

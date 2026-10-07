@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, Flame, PlayCircle, Sparkles } from "lucide-react";
@@ -38,6 +38,48 @@ export default function WelcomeHero({ user, streak }) {
 
   const identity = studentIdentity(user);
   const hasStreak = currentStreak > 0;
+
+  // Typing Revealing Animation State
+  // Bind last single letter initial to previous word with non-breaking space (\u00A0)
+  const greetingPrefix = `${greetingForNow()}, `;
+  const boundName = studentName.replace(/\s+([A-Za-z])$/, "\u00A0$1");
+  const fullTextToType = `${greetingPrefix}${boundName}`;
+
+  const [typedCount, setTypedCount] = useState(reduceMotion ? fullTextToType.length : 0);
+  const [isTypingComplete, setIsTypingComplete] = useState(Boolean(reduceMotion));
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setTypedCount(fullTextToType.length);
+      setIsTypingComplete(true);
+      return;
+    }
+
+    setTypedCount(0);
+    setIsTypingComplete(false);
+
+    let charPos = 0;
+    const startDelay = setTimeout(() => {
+      const timer = setInterval(() => {
+        charPos += 1;
+        setTypedCount(charPos);
+        if (charPos >= fullTextToType.length) {
+          clearInterval(timer);
+          // Keep cursor pulsing for 1.8s then smoothly finish
+          setTimeout(() => setIsTypingComplete(true), 1800);
+        }
+      }, 35);
+
+      return () => clearInterval(timer);
+    }, 120);
+
+    return () => clearTimeout(startDelay);
+  }, [user?.name, reduceMotion]);
+
+  const displayedGreeting = greetingPrefix.slice(0, Math.min(typedCount, greetingPrefix.length));
+  const displayedName = typedCount > greetingPrefix.length
+    ? boundName.slice(0, typedCount - greetingPrefix.length)
+    : "";
 
   return (
     <section className="relative isolate overflow-hidden bg-profile-main">
@@ -88,17 +130,23 @@ export default function WelcomeHero({ user, streak }) {
               </span>
             </motion.div>
 
+            {/* Dynamic Typewriter Heading with Non-Breaking Initial */}
             <motion.h1
               variants={fadeUp}
-              className="mt-5 font-serif text-[2.1rem] sm:text-[2.85rem] font-bold leading-[1.15] tracking-tight text-white"
+              className="mt-5 font-serif text-[1.85rem] sm:text-[2.35rem] md:text-[2.65rem] lg:text-[2.85rem] font-bold leading-[1.2] tracking-tight text-white min-h-[1.2em]"
             >
-              {greetingForNow()},{" "}
-              <motion.span
-                variants={fadeUp}
-                className="block sm:inline font-extrabold text-white tracking-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]"
-              >
-                {studentName}
-              </motion.span>
+              <span>{displayedGreeting}</span>
+              {displayedName && (
+                <span className="inline-block whitespace-nowrap font-extrabold text-white tracking-normal drop-shadow-[0_2px_4px_rgba(0,0,0,0.25)]">
+                  {displayedName}
+                </span>
+              )}
+              {!isTypingComplete && (
+                <span
+                  aria-hidden="true"
+                  className="inline-block w-[2.5px] sm:w-[3px] h-[0.85em] bg-white ml-1.5 align-baseline animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                />
+              )}
             </motion.h1>
 
             <motion.p

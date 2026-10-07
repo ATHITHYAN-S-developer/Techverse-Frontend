@@ -185,14 +185,14 @@ export default function FacultyStudentsPage() {
                 ? "Loading students..."
                 : `Search across ${students.length} ${deptCode || ""} students by name or register number...`
             }
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-vcet-blue/20"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:ring-2 focus:ring-vcet-blue/20"
           />
         </div>
 
         <select
           value={selectedClass}
           onChange={(e) => setSelectedClass(e.target.value)}
-          className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 focus:outline-none w-full sm:w-auto"
+          className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 w-full sm:w-auto"
         >
           <option value="ALL">All Year Batches ({students.length})</option>
           <option value="II Year">II Year {deptCode}</option>

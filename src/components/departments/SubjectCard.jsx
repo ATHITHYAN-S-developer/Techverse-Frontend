@@ -74,7 +74,7 @@ export default function SubjectCard({
         <button
           onClick={() => onOpenResource(notesResource || subject.filteredResources[0])}
           disabled={!notesResource && subject.filteredResources.length === 0}
-          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep focus-visible:ring-offset-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-vcet-blue-deep focus-visible:ring-offset-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
         >
           <Download size={13} />
           <span>LECTURE NOTES</span>
@@ -83,7 +83,7 @@ export default function SubjectCard({
         {questionBankResource && (
           <button
             onClick={() => onOpenResource(questionBankResource)}
-            className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-vcet-blue-deep ring-1 ring-blue-200 text-xs font-bold uppercase tracking-wider transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50"
+            className="inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#EFF6FF] hover:bg-blue-100 text-vcet-blue-deep ring-1 ring-blue-200 text-xs font-bold uppercase tracking-wider transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50"
           >
             <HelpCircle size={13} />
             <span>QUESTION BANK</span>

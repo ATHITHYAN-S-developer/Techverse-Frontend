@@ -155,7 +155,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/technology")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Tech Explorer</span>
                   <motion.span
@@ -255,7 +255,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/updates")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Tech Pulse</span>
                   <motion.span
@@ -445,7 +445,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/youtube")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Tech Vision</span>
                   <motion.span
@@ -545,7 +545,7 @@ export default function Domains({ resources = [] }) {
                 <button
                   type="button"
                   onClick={() => navigate("/aptitude")}
-                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
+                  className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Skill Forge</span>
                   <motion.span

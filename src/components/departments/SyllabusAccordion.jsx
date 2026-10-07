@@ -12,7 +12,7 @@ export default function SyllabusAccordion({ subject, isExpanded, onToggle, onOpe
         onClick={onToggle}
         aria-expanded={isExpanded}
         aria-controls={`syllabus-${subject.id}`}
-        className="w-full flex items-center justify-between gap-2 text-xs font-bold text-slate-700 hover:text-vcet-blue-deep cursor-pointer select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50 rounded-lg"
+        className="w-full flex items-center justify-between gap-2 text-xs font-bold text-slate-700 hover:text-vcet-blue-deep cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50 rounded-lg"
       >
         <span className="flex items-center gap-1.5">
           {hasUnits ? (
@@ -68,7 +68,7 @@ export default function SyllabusAccordion({ subject, isExpanded, onToggle, onOpe
                     <li key={r._id || r.id}>
                       <button
                         onClick={() => onOpenResource(r)}
-                        className="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-white text-left cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50"
+                        className="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-lg hover:bg-white text-left cursor-pointer focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50"
                       >
                         <span className="text-xs font-medium text-slate-700 leading-tight line-clamp-1">
                           {r.title}

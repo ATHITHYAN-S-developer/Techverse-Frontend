@@ -281,7 +281,7 @@ export default function CoursesPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search courses by title, topic, or instructor..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-vcet-blue/20 focus:border-vcet-blue bg-slate-50/50 hover:bg-white transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-vcet-blue/20 focus:border-vcet-blue bg-slate-50/50 hover:bg-white transition-all"
               />
             </div>
 
@@ -290,7 +290,7 @@ export default function CoursesPage() {
               <select
                 value={levelFilter}
                 onChange={(e) => setLevelFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/50 focus:outline-none focus:ring-2 focus:ring-vcet-blue"
+                className="px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 bg-slate-50/50 focus:ring-2 focus:ring-vcet-blue"
               >
                 <option value="ALL">All Levels</option>
                 <option value="Beginner">Beginner</option>
@@ -320,17 +320,6 @@ export default function CoursesPage() {
                   </button>
                 ))}
               </div>
-
-              {(searchQuery || categoryFilter !== "ALL" || levelFilter !== "ALL" || progressTab !== "all") && (
-                <button
-                  type="button"
-                  onClick={handleResetFilters}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl transition-colors cursor-pointer"
-                >
-                  <RotateCcw size={13} />
-                  <span>Reset</span>
-                </button>
-              )}
             </div>
           </div>
         </div>

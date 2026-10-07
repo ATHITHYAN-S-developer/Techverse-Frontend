@@ -112,10 +112,19 @@ export default function FacultyAnnouncementsPage() {
         ? new Date(`${formData.expiryDate}T${formData.expiryTime}:00`).toISOString()
         : new Date(`${formData.expiryDate}T23:59:59`).toISOString();
 
+      const userDept =
+        user?.departmentName ||
+        user?.department ||
+        (user?.departmentCode ? `${user.departmentCode} Department` : "") ||
+        user?.departmentId?.name ||
+        "General";
+
       const payload = {
         ...formData,
         expiryDate: combinedExpiry,
-        department: "CSE Department",
+        department: userDept,
+        departments: JSON.stringify([userDept]),
+        departmentId: user?.departmentId?._id || user?.departmentId || undefined,
       };
 
       if (imageFile) {
@@ -222,7 +231,14 @@ export default function FacultyAnnouncementsPage() {
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <span>{item.createdBy?.name || item.authorName || item.author || "CSE Department"}</span>
+              <div className="flex flex-col">
+                <span className="font-semibold text-slate-800">
+                  {item.createdBy?.name || item.authorName || item.author || "VCET Faculty"}
+                </span>
+                <span className="text-[10px] text-slate-400">
+                  {item.authorDepartment || item.createdBy?.departmentName || item.createdBy?.departmentId?.name || item.department || ""}
+                </span>
+              </div>
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => handleOpenEdit(item)}

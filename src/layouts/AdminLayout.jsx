@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Users,
@@ -36,8 +37,8 @@ import { useAuth } from "../context/AuthContext";
 import techverseLogoImg from "../assets/techverse-logo.png";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
-
 import VcetBanner from "../components/VcetBanner";
+import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
 
 const ADMIN_NAV_TREE = [
   {
@@ -137,7 +138,14 @@ export default function AdminLayout() {
     };
   }, [sidebarOpen]);
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
     logout();
     navigate("/login");
   };
@@ -177,6 +185,11 @@ export default function AdminLayout() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col selection:bg-vcet-blue selection:text-white font-sans">
       <ScrollToTop />
+      <LogoutConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+      />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-vcet-blue focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
@@ -186,21 +199,13 @@ export default function AdminLayout() {
 
       {/* 1. TOP HEADER - Clean White */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-xs">
-        {/* Left: Hamburger & Institutional Title */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden cursor-pointer"
-            aria-label="Toggle Navigation"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
+        {/* Left: Institutional Title */}
+        <div className="flex items-center gap-2.5 min-w-0">
           <Link to="/" className="flex items-center gap-2.5 group">
             <img
               src={techverseLogoImg}
               alt="TechVerse"
-              className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
+              className="h-8 sm:h-9 w-auto max-w-[150px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
             />
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue font-extrabold border border-blue-200 uppercase tracking-wider">
               ADMIN
@@ -265,6 +270,17 @@ export default function AdminLayout() {
             >
               <LogOut className="w-4 h-4" />
             </button>
+
+            {/* Consistently Positioned Mobile Hamburger Button (Right Side) with Micro-Animation */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 lg:hidden cursor-pointer ml-1"
+              aria-label="Toggle Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </motion.button>
           </div>
         </div>
       </header>
@@ -274,42 +290,110 @@ export default function AdminLayout() {
 
       {/* 2. BODY: FIXED SIDEBAR + MAIN CONTENT AREA */}
       <div className="flex flex-1 relative">
-        {/* Mobile Backdrop Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 lg:hidden transition-opacity"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* SIDEBAR - Responsive Mobile Drawer & Desktop Fixed Sidebar */}
-        <aside
-          className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] sm:w-80 bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:top-[53px] lg:bottom-0 lg:left-0 lg:w-64 lg:z-30 flex flex-col justify-between shadow-2xl lg:shadow-none overflow-hidden ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          {/* Mobile Drawer Header */}
-          <div className="lg:hidden flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/90 shrink-0">
-            <div className="flex items-center gap-2">
-              <img
-                src={techverseLogoImg}
-                alt="TechVerse"
-                className="h-7 w-auto object-contain"
+        {/* Mobile Backdrop & Drawer with Spring Animation */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
+                onClick={() => setSidebarOpen(false)}
+                aria-hidden="true"
               />
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-vcet-blue font-bold uppercase tracking-wider">
-                Admin Control
-              </span>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer"
-              aria-label="Close navigation"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
+              <motion.aside
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                className="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] sm:w-80 bg-white border-l border-slate-200 flex flex-col justify-between shadow-2xl overflow-hidden"
+              >
+                {/* Mobile Drawer Header */}
+                <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/90 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={techverseLogoImg}
+                      alt="TechVerse"
+                      className="h-7 w-auto object-contain"
+                    />
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-vcet-blue font-bold uppercase tracking-wider">
+                      Admin Control
+                    </span>
+                  </div>
+                  <motion.button
+                    whileHover={{ rotate: 90, scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setSidebarOpen(false)}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                    aria-label="Close navigation"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                </div>
+
+                <div className="p-3 space-y-4 overflow-y-auto flex-1">
+                  {ADMIN_NAV_TREE.map((sec, sIdx) => (
+                    <div key={sIdx} className="space-y-1">
+                      <span className="text-[10px] font-black tracking-wider text-slate-500 uppercase px-3 block">
+                        {sec.category}
+                      </span>
+                      <div className="space-y-0.5">
+                        {sec.items.map((item, iIdx) => {
+                          const Icon = item.icon;
+                          const active = isActive(item.href);
+                          return (
+                            <Link
+                              key={iIdx}
+                              to={item.href}
+                              onClick={() => setSidebarOpen(false)}
+                              className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+                                active
+                                  ? "bg-blue-50 text-vcet-blue font-bold border-l-4 border-vcet-blue shadow-xs"
+                                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <Icon className={`w-4 h-4 shrink-0 ${active ? "text-vcet-blue" : "text-slate-400"}`} />
+                                <span className="truncate">{item.name}</span>
+                              </div>
+                              {item.badge && (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-200">
+                                  {item.badge}
+                                </span>
+                              )}
+                              {item.alert && (
+                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-rose-50 text-rose-700 font-bold border border-rose-200 animate-pulse">
+                                  Security
+                                </span>
+                              )}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Bottom Sidebar Institutional Badge */}
+                <div className="p-3 border-t border-slate-100 bg-slate-50/70 shrink-0">
+                  <div className="p-2.5 rounded-xl bg-white border border-slate-200 text-[11px] text-slate-600 flex items-center gap-2.5 shadow-xs">
+                    <Shield className="w-4 h-4 text-vcet-blue shrink-0" />
+                    <div className="min-w-0">
+                      <span className="text-slate-900 font-bold block truncate">VCET Governance</span>
+                      <span className="text-[10px] text-slate-500 block truncate">v1.0 • Erode, TN</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.aside>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Desktop Fixed Sidebar */}
+        <aside className="hidden lg:flex fixed top-[53px] bottom-0 left-0 w-64 z-30 bg-white border-r border-slate-200 flex-col justify-between overflow-hidden shadow-none">
           <div className="p-3 space-y-4 overflow-y-auto flex-1">
             {ADMIN_NAV_TREE.map((sec, sIdx) => (
               <div key={sIdx} className="space-y-1">
@@ -324,7 +408,6 @@ export default function AdminLayout() {
                       <Link
                         key={iIdx}
                         to={item.href}
-                        onClick={() => setSidebarOpen(false)}
                         className={`flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                           active
                             ? "bg-blue-50 text-vcet-blue font-bold border-l-4 border-vcet-blue shadow-xs"

@@ -184,7 +184,7 @@ export default function TrainingPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search tracks, company patterns (Zoho, TCS, Infosys), or skills..."
-                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep bg-slate-50/70 hover:bg-white transition-colors"
+                className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep bg-slate-50/70 hover:bg-white transition-colors"
               />
               {searchQuery && (
                 <button
@@ -200,7 +200,7 @@ export default function TrainingPage() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50/70 hover:bg-white focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-bold text-slate-700 bg-slate-50/70 hover:bg-white focus:ring-2 focus:ring-vcet-blue-deep/15 focus:border-vcet-blue-deep cursor-pointer"
               >
                 <option value="all">All Disciplines</option>
                 <option value="Aptitude">Placement Aptitude</option>

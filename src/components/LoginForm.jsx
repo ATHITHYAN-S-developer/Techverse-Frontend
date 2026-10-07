@@ -23,7 +23,7 @@ export default function LoginForm() {
     }
     const regPattern = /^[0-9]{2,6}[A-Z]{2,5}[0-9]{2,4}$/;
     if (!regPattern.test(clean)) {
-      return "Enter your valid register number (e.g. 732924CSE001)";
+      return "Enter your valid register number (e.g. 732924CSR014)";
     }
     return "";
   };
@@ -190,7 +190,7 @@ export default function LoginForm() {
                 autoComplete="username"
                 value={registerNumber}
                 onChange={handleRegisterChange}
-                placeholder="732924CSE001"
+                placeholder="732924CSR014"
                 aria-invalid={Boolean(errors.registerNumber)}
                 aria-describedby={errors.registerNumber ? "reg-error" : undefined}
                 className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-slate-800 placeholder:text-slate-400 tracking-wider font-mono uppercase"

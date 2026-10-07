@@ -20,7 +20,7 @@ export default function ResourceSearch({ query, onChange, inputRef }) {
           onChange={(e) => onChange(e.target.value)}
           placeholder="Search notes, question banks, software, subjects…"
           autoComplete="off"
-          className="w-full h-14 sm:h-16 rounded-2xl border border-profile-rule bg-white pl-12 pr-24 sm:pr-28 text-sm text-profile-ink placeholder:text-profile-ink/60 shadow-sm ring-1 ring-transparent transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-profile-main focus:border-profile-main"
+          className="w-full h-14 sm:h-16 rounded-2xl border border-profile-rule bg-white pl-12 pr-24 sm:pr-28 text-sm text-profile-ink placeholder:text-profile-ink/60 shadow-sm ring-1 ring-transparent transition-all duration-200 focus:ring-2 focus:ring-profile-main focus:border-profile-main"
         />
         <span className="hidden sm:inline-flex absolute right-4 top-1/2 -translate-y-1/2 items-center gap-1 rounded-lg border border-profile-rule bg-profile-alt px-2 py-1 text-[11px] font-semibold text-profile-ink/60">
           <Command size={11} />K

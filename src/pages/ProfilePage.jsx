@@ -17,14 +17,35 @@ export default function ProfilePage({ embedded = false }) {
 
   const [phone, setPhone] = useState(user?.phone || user?.contactPhone || "+91 98421 54320");
   const [bio, setBio] = useState(user?.bio || "Aspiring Software Engineer passionate about Cloud Systems, Python, and Full-Stack Development.");
-  const [email, setEmail] = useState(user?.email || "");
+  const [email, setEmail] = useState(() => {
+    if (role === "student") {
+      const savedCustom = localStorage.getItem(`student_custom_email_${user?._id || user?.id}`);
+      if (savedCustom) return savedCustom;
+      if (user?.studentEnteredEmail || user?.hasCustomEmail) {
+        return user.studentEnteredEmail || "";
+      }
+      return ""; // Default to blank for any student as requested
+    }
+    return user?.email || "";
+  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (user?.email) setEmail(user.email);
+    if (role === "student") {
+      const savedCustom = localStorage.getItem(`student_custom_email_${user?._id || user?.id}`);
+      if (savedCustom) {
+        setEmail(savedCustom);
+      } else if (user?.studentEnteredEmail || user?.hasCustomEmail) {
+        setEmail(user.studentEnteredEmail || "");
+      } else {
+        setEmail(""); // Keep blank for students
+      }
+    } else {
+      if (user?.email) setEmail(user.email);
+    }
     if (user?.phone || user?.contactPhone) setPhone(user.phone || user.contactPhone);
     if (user?.bio) setBio(user.bio);
-  }, [user]);
+  }, [user, role]);
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -59,10 +80,19 @@ export default function ProfilePage({ embedded = false }) {
     e.preventDefault();
     setSaving(true);
     try {
+      if (role === "student") {
+        if (email.trim()) {
+          localStorage.setItem(`student_custom_email_${user?._id || user?.id}`, email.trim());
+        } else {
+          localStorage.removeItem(`student_custom_email_${user?._id || user?.id}`);
+        }
+      }
       await updateProfile({
         phone,
         bio,
         email: email.trim(),
+        hasCustomEmail: Boolean(email.trim()),
+        studentEnteredEmail: email.trim(),
       });
       showSuccess("Profile information updated successfully ✓");
     } catch (error) {
@@ -95,7 +125,7 @@ export default function ProfilePage({ embedded = false }) {
   const labelCls =
     "block font-body text-xs font-medium text-profile-ink/55";
   const underlineBase =
-    "mt-1.5 block w-full border-0 border-b border-profile-rule bg-transparent px-0 py-2 font-body text-[15px] transition-colors focus:border-profile-main focus:outline-none focus:ring-0";
+    "mt-1.5 block w-full border-0 border-b border-profile-rule bg-transparent px-0 py-2 font-body text-[15px] transition-colors focus:border-profile-main";
   const saveButtonCls =
     "group inline-flex items-center gap-2 border border-profile-main bg-profile-main px-6 py-2.5 font-body text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-transparent hover:text-profile-main";
 
@@ -198,17 +228,21 @@ export default function ProfilePage({ embedded = false }) {
 
               <div>
                 <label htmlFor="profile-email" className={labelCls}>
-                  Institutional Email
+                  {role === "student" ? "Institutional / Contact Email (Optional)" : "Institutional Email"}
                 </label>
                 <input
                   id="profile-email"
                   type="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@vcet.ac.in"
+                  placeholder={role === "student" ? "Enter your email ID" : "name@vcet.ac.in"}
                   className={`${underlineBase} font-mono tabular-nums text-profile-ink`}
                 />
+                {role === "student" && (
+                  <span className="mt-1.5 block font-body text-[11px] italic text-profile-ink/40">
+                    Blank by default. Fill in with your student mail ID.
+                  </span>
+                )}
               </div>
             </div>
           </section>
@@ -308,7 +342,7 @@ export default function ProfilePage({ embedded = false }) {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Enter new password (min. 4 characters)"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 pr-10"
                   />
                   <button
                     type="button"
@@ -330,7 +364,7 @@ export default function ProfilePage({ embedded = false }) {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Re-enter new password"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 

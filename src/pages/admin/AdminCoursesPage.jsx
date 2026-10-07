@@ -482,6 +482,12 @@ export default function AdminCoursesPage() {
             const coverImage = getCourseImageUrl(course.thumbnailUrl, course.thumbnail);
             const totalMods = course.totalModules || course.modulesCount || course.modules?.length || 0;
             const isDeptOnly = course.targetAudience === "department" || course.isDepartmentOnly;
+            const canManageThisCourse =
+              canCreateCourse ||
+              (course.createdBy && String(course.createdBy._id || course.createdBy) === String(user?._id)) ||
+              (course.assignedFacultyId && String(course.assignedFacultyId) === String(user?._id)) ||
+              (course.assignedFacultyStaffId && course.assignedFacultyStaffId === user?.staffId) ||
+              (course.departmentId && String(course.departmentId._id || course.departmentId) === String(user?.departmentId?._id || user?.departmentId));
 
             return (
               <div
@@ -614,7 +620,7 @@ export default function AdminCoursesPage() {
                       <span>Modules</span>
                     </Link>
 
-                    {canCreateCourse && (
+                    {canManageThisCourse && (
                       <>
                         <button
                           onClick={() => handleOpenEditModal(course)}
@@ -716,7 +722,7 @@ export default function AdminCoursesPage() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. Python Programming Masterclass"
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -728,7 +734,7 @@ export default function AdminCoursesPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Comprehensive walkthrough of modern concepts, problem solving, and real-world projects..."
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -738,7 +744,7 @@ export default function AdminCoursesPage() {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Programming">Programming</option>
                     <option value="Web Development">Web Development</option>
@@ -753,7 +759,7 @@ export default function AdminCoursesPage() {
                   <select
                     value={formData.level}
                     onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Beginner">Beginner</option>
                     <option value="Beginner to Intermediate">Beginner to Intermediate</option>
@@ -776,7 +782,7 @@ export default function AdminCoursesPage() {
                     required
                     value={formData.passingPercentage}
                     onChange={(e) => setFormData({ ...formData, passingPercentage: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:ring-2 focus:ring-blue-500 pr-10"
                   />
                   <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold">%</span>
                 </div>
@@ -891,7 +897,7 @@ export default function AdminCoursesPage() {
                           }}
                           onFocus={() => setFacultyDropdownOpen(true)}
                           placeholder="Search faculty by name or Staff ID (e.g. Senthamarai or 105)..."
-                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs"
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:ring-2 focus:ring-blue-500 text-xs"
                         />
                       </div>
 

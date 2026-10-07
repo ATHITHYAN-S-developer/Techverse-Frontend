@@ -402,7 +402,7 @@ export default function ResourceListView({
                 <button
                   type="button"
                   onClick={() => openUrl(resource.url)}
-                  className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-vcet-blue hover:text-[#004e87] transition-colors cursor-pointer focus:outline-none"
+                  className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-vcet-blue hover:text-[#004e87] transition-colors cursor-pointer"
                 >
                   <span className="border-b-2 border-vcet-blue group-hover:border-[#004e87] pb-0.5 transition-colors">
                     {getButtonLabel(resource.type)}
@@ -428,7 +428,7 @@ export default function ResourceListView({
               type="button"
               onClick={() => scrollToIndex(idx)}
               aria-label={`Go to item ${idx + 1}`}
-              className="group py-2 focus:outline-none cursor-pointer"
+              className="group py-2 cursor-pointer"
             >
               <div
                 className={`h-1 rounded-full transition-all duration-300 ${

@@ -149,14 +149,47 @@ export default function AnnouncementsPage() {
     });
   };
 
-  const toggleLike = (id) => {
-    setLikedIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      try {
-        localStorage.setItem("techverse_liked_circulars", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
+  const toggleLike = async (id) => {
+    const isCurrentlyLiked = likedIds.includes(id);
+    const nextLiked = isCurrentlyLiked ? likedIds.filter((x) => x !== id) : [...likedIds, id];
+    setLikedIds(nextLiked);
+    try {
+      localStorage.setItem("techverse_liked_circulars", JSON.stringify(nextLiked));
+    } catch {}
+
+    // Optimistically update likesCount on items
+    setAnnouncements((prev) =>
+      prev.map((item) => {
+        if ((item._id || item.id) === id) {
+          const currentCount = item.likesCount || 0;
+          const newCount = isCurrentlyLiked ? Math.max(0, currentCount - 1) : currentCount + 1;
+          return { ...item, likesCount: newCount };
+        }
+        return item;
+      })
+    );
+
+    if (selectedAnnouncement && (selectedAnnouncement._id || selectedAnnouncement.id) === id) {
+      setSelectedAnnouncement((prev) => {
+        if (!prev) return prev;
+        const currentCount = prev.likesCount || 0;
+        return { ...prev, likesCount: isCurrentlyLiked ? Math.max(0, currentCount - 1) : currentCount + 1 };
+      });
+    }
+
+    try {
+      const res = await announcementService.toggleLike(id);
+      if (res && res.likesCount !== undefined) {
+        setAnnouncements((prev) =>
+          prev.map((item) => ((item._id || item.id) === id ? { ...item, likesCount: res.likesCount } : item))
+        );
+        if (selectedAnnouncement && (selectedAnnouncement._id || selectedAnnouncement.id) === id) {
+          setSelectedAnnouncement((prev) => (prev ? { ...prev, likesCount: res.likesCount } : prev));
+        }
+      }
+    } catch (err) {
+      console.warn("Like API sync warning:", err);
+    }
   };
 
   const handleShare = async (item) => {
@@ -313,7 +346,7 @@ export default function AnnouncementsPage() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search circulars by title, topic, or keyword..."
-                className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-vcet-line rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-vcet-blue transition-all"
+                className="w-full pl-10 pr-4 py-2.5 bg-[#F8FAFC] border border-vcet-line rounded-xl text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:bg-white focus:border-vcet-blue transition-all"
               />
               {searchQuery && (
                 <button
@@ -330,7 +363,7 @@ export default function AnnouncementsPage() {
               <select
                 value={selectedDept}
                 onChange={(e) => setSelectedDept(e.target.value)}
-                className="w-full px-3 py-2.5 bg-[#F8FAFC] border border-vcet-line rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:bg-white cursor-pointer"
+                className="w-full px-3 py-2.5 bg-[#F8FAFC] border border-vcet-line rounded-xl text-xs font-bold text-slate-700 focus:bg-white cursor-pointer"
               >
                 <option value="All">All Departments</option>
                 {DEPARTMENTS.filter((d) => d !== "All").map((d) => (
@@ -478,13 +511,26 @@ export default function AnnouncementsPage() {
                   {/* Body Content */}
                   <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
                     <div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-vcet-blue mb-1">
-                        <Building2 className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">
-                          {Array.isArray(item.departments) && item.departments.length > 0
-                            ? (item.departments.includes("All") ? "All Departments" : item.departments.join(", "))
-                            : (item.department || item.departmentId?.code || "All Departments")}
-                        </span>
+                      <div className="flex items-center justify-between gap-1 text-[11px] font-bold text-vcet-blue mb-1">
+                        <div className="flex items-center gap-1.5 truncate">
+                          <Building2 className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">
+                            {item.authorDepartment ||
+                              item.createdBy?.departmentName ||
+                              item.createdBy?.departmentId?.name ||
+                              (item.createdBy?.departmentCode ? `${item.createdBy.departmentCode} Department` : "") ||
+                              (Array.isArray(item.departments) && item.departments.length > 0 && !item.departments.includes("All")
+                                ? item.departments.join(", ")
+                                : item.department !== "All"
+                                ? item.department
+                                : "Institutional")}
+                          </span>
+                        </div>
+                        {(item.createdBy?.name || item.authorName) && (
+                          <span className="text-[10px] text-slate-400 font-medium shrink-0">
+                            {item.createdBy?.name || item.authorName}
+                          </span>
+                        )}
                       </div>
 
                       <h3 className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-vcet-blue transition-colors line-clamp-2 leading-snug">
@@ -521,10 +567,15 @@ export default function AnnouncementsPage() {
                           e.stopPropagation();
                           toggleLike(id);
                         }}
-                        className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-600 hover:text-rose-600 transition cursor-pointer"
-                        title="Like"
+                        className={`flex items-center gap-1 px-2 py-1 rounded-lg transition cursor-pointer ${
+                          isLiked
+                            ? "bg-rose-50 text-rose-600 font-bold"
+                            : "hover:bg-slate-100 text-slate-600 hover:text-rose-600 font-semibold"
+                        }`}
+                        title={isLiked ? "Unlike" : "Like"}
                       >
                         <Heart className={`w-4 h-4 ${isLiked ? "fill-rose-500 text-rose-500" : ""}`} />
+                        <span className="text-xs">{item.likesCount || (isLiked ? 1 : 0)}</span>
                       </button>
 
                       <button
@@ -625,18 +676,25 @@ export default function AnnouncementsPage() {
                     </div>
                     <div>
                       <span className="font-bold text-xs text-slate-900 flex items-center gap-1">
-                        VCET Official
+                        {selectedAnnouncement.createdBy?.name ||
+                          selectedAnnouncement.authorName ||
+                          (selectedAnnouncement.authorRole === "admin" ? "VCET Official" : "Faculty Official")}
                         <Check className="w-3 h-3 text-vcet-blue stroke-[3]" />
                       </span>
                       <span className="text-[10px] text-slate-500 font-medium block">
-                        {Array.isArray(selectedAnnouncement.departments) &&
-                        selectedAnnouncement.departments.length > 0
-                          ? selectedAnnouncement.departments.includes("All")
-                            ? "All Departments"
-                            : selectedAnnouncement.departments.join(", ")
-                          : selectedAnnouncement.department ||
-                            selectedAnnouncement.departmentId?.name ||
-                            "All Departments"}
+                        {selectedAnnouncement.authorDepartment ||
+                          selectedAnnouncement.createdBy?.departmentName ||
+                          selectedAnnouncement.createdBy?.departmentId?.name ||
+                          (selectedAnnouncement.createdBy?.departmentCode
+                            ? `${selectedAnnouncement.createdBy.departmentCode} Department`
+                            : "") ||
+                          (Array.isArray(selectedAnnouncement.departments) &&
+                          selectedAnnouncement.departments.length > 0 &&
+                          !selectedAnnouncement.departments.includes("All")
+                            ? selectedAnnouncement.departments.join(", ")
+                            : selectedAnnouncement.department !== "All"
+                            ? selectedAnnouncement.department
+                            : "VCET Institutional")}
                       </span>
                     </div>
                   </div>
@@ -683,7 +741,12 @@ export default function AnnouncementsPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => toggleLike(selectedAnnouncement._id || selectedAnnouncement.id)}
-                      className="p-1.5 text-slate-600 hover:text-rose-600 transition cursor-pointer"
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl transition cursor-pointer ${
+                        likedIds.includes(selectedAnnouncement._id || selectedAnnouncement.id)
+                          ? "bg-rose-50 text-rose-600 font-bold"
+                          : "hover:bg-slate-100 text-slate-600 hover:text-rose-600 font-semibold"
+                      }`}
+                      title={likedIds.includes(selectedAnnouncement._id || selectedAnnouncement.id) ? "Unlike" : "Like"}
                     >
                       <Heart
                         className={`w-5 h-5 ${
@@ -692,6 +755,10 @@ export default function AnnouncementsPage() {
                             : ""
                         }`}
                       />
+                      <span className="text-xs">
+                        {selectedAnnouncement.likesCount ||
+                          (likedIds.includes(selectedAnnouncement._id || selectedAnnouncement.id) ? 1 : 0)}
+                      </span>
                     </button>
                     <button
                       onClick={() => toggleSave(selectedAnnouncement._id || selectedAnnouncement.id)}

@@ -9,7 +9,6 @@ import {
   Award,
   TrendingUp,
   Activity,
-  ArrowRight,
   ShieldCheck,
   Download,
   Eye,
@@ -19,7 +18,6 @@ import {
   Code2,
   Flame,
   Globe,
-  Clock,
   UserX,
   FileCheck,
   Zap,
@@ -40,25 +38,6 @@ import { analyticsService } from "../../services/analyticsService";
 /** Compact display for large counts: 723 -> "723", 48210 -> "48,210". */
 const formatNumber = (value) =>
   typeof value === "number" && Number.isFinite(value) ? value.toLocaleString("en-IN") : "0";
-
-/** "3 mins ago" from an ISO timestamp, or "just now" for anything sub-minute. */
-function timeAgo(input) {
-  if (!input) return "";
-  const then = new Date(input).getTime();
-  if (!Number.isFinite(then)) return "";
-
-  const seconds = Math.max(0, Math.round((Date.now() - then) / 1000));
-  if (seconds < 60) return "just now";
-
-  const minutes = Math.round(seconds / 60);
-  if (minutes < 60) return `${minutes} min${minutes === 1 ? "" : "s"} ago`;
-
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-
-  const days = Math.round(hours / 24);
-  return `${days} day${days === 1 ? "" : "s"} ago`;
-}
 
 const SKELETON = "text-slate-300";
 
@@ -113,11 +92,7 @@ export default function AdminDashboard() {
     downloads: Number(point.downloads) || 0,
   }));
 
-  const courseCompletion = summary?.courseVelocity || [];
-  const recentActivities = summary?.recentActivity || [];
-
   return (
-
     <div className="space-y-6 max-w-7xl mx-auto text-slate-800">
       {/* 1. Header Hero Banner - Crisp Institutional Blue */}
       <div className="bg-gradient-to-r from-vcet-blue-deep via-vcet-blue to-sky-600 border border-blue-800 rounded-3xl p-6 sm:p-8 shadow-md text-white flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -493,110 +468,6 @@ export default function AdminDashboard() {
             <span className="text-slate-900 font-mono font-bold">
               {formatNumber(summary?.departmentTotal)}
             </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Course Completion Velocity & Live Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Left: Course Completion */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <BookOpen className="w-4 h-4 text-amber-600" />
-                Course Completion Velocity
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Pass rates and module completion percentages across top technical courses.
-              </p>
-            </div>
-            <Link
-              to="/admin/courses"
-              className="text-xs font-bold text-vcet-blue hover:underline flex items-center gap-1"
-            >
-              <span>View Courses</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="space-y-4 pt-2">
-            {courseCompletion.length === 0 ? (
-              <p className="text-xs text-slate-400 py-6 text-center">
-                No courses published yet.
-              </p>
-            ) : (
-              courseCompletion.map((c) => (
-                <div key={c.courseId || c.name} className="space-y-1.5">
-                  <div className="flex items-center justify-between text-xs gap-3">
-                    <span className="font-bold text-slate-800 truncate">{c.name}</span>
-                    <span className="font-mono font-bold text-vcet-blue whitespace-nowrap">
-                      {c.rate}% · {formatNumber(c.enrollments)} enrolled
-                    </span>
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className={`${c.color} h-2.5 rounded-full transition-all duration-700`}
-                      style={{ width: `${c.rate}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Right: Live Institutional Activity Stream */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-sky-600" />
-                Recent Institutional Activity
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Live stream of courses, uploads, test submissions, and verified certificates.
-              </p>
-            </div>
-            <Link
-              to="/admin/audit-logs"
-              className="text-xs font-bold text-vcet-blue hover:underline flex items-center gap-1"
-            >
-              <span>Audit Logs</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="divide-y divide-slate-100 space-y-0.5">
-            {recentActivities.length === 0 ? (
-              <p className="text-xs text-slate-400 py-6 text-center">
-                No recent activity recorded.
-              </p>
-            ) : (
-              recentActivities.map((act, idx) => (
-                <div
-                  key={act.id || idx}
-                  className="py-3 flex items-start justify-between gap-3"
-                >
-                  <div className="space-y-0.5 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-xs text-slate-900 truncate">
-                        {act.title}
-                      </span>
-                      <span
-                        className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold border ${act.badgeColor}`}
-                      >
-                        {act.badge}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 truncate">{act.user}</p>
-                  </div>
-                  <span className="text-[10px] text-slate-400 whitespace-nowrap font-mono">
-                    {timeAgo(act.timestamp || act.time)}
-                  </span>
-                </div>
-              ))
-            )}
           </div>
         </div>
       </div>

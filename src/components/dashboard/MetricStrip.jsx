@@ -9,7 +9,8 @@ const METRICS = [
     key: "streak",
     label: "Current Streak",
     icon: Flame,
-    to: "/profile",
+    to: null,
+    showView: false,
     accent: "text-profile-main",
     fill: "fill-profile-main",
     unit: (n) => (n === 1 ? "day" : "days"),
@@ -19,6 +20,7 @@ const METRICS = [
     label: "Active Courses",
     icon: BookOpen,
     to: "/courses",
+    showView: true,
     accent: "text-profile-ink",
     fill: "",
     unit: () => "in progress",
@@ -28,6 +30,7 @@ const METRICS = [
     label: "Certificates",
     icon: Award,
     to: "/certificates",
+    showView: true,
     accent: "text-emerald-600",
     fill: "",
     unit: () => "earned",
@@ -85,20 +88,26 @@ export default function MetricStrip({
 
 function MetricCell({ metric, value, index, reduceMotion, inView }) {
   const Icon = metric.icon;
+  const isLink = Boolean(metric.to);
+  const Container = isLink ? Link : "div";
 
   return (
     <motion.div variants={fadeUp}>
-      <Link
-        to={metric.to}
-        className={`group relative block overflow-hidden px-5 py-6 transition-colors duration-300 hover:bg-profile-alt ${
+      <Container
+        {...(isLink ? { to: metric.to } : {})}
+        className={`group relative block overflow-hidden px-5 py-6 transition-colors duration-300 ${
+          isLink ? "hover:bg-profile-alt cursor-pointer" : ""
+        } ${
           index > 0 ? "border-t border-profile-rule sm:border-t-0 sm:border-l" : ""
         } ${index > 0 ? "sm:border-profile-rule" : ""}`}
       >
-        {/* Accent rail that wipes across on hover. */}
-        <span
-          aria-hidden="true"
-          className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-gradient-to-r from-profile-main to-profile-hover transition-transform duration-500 ease-out group-hover:scale-x-100"
-        />
+        {/* Accent rail that wipes across on hover for actionable links */}
+        {isLink && (
+          <span
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-gradient-to-r from-profile-main to-profile-hover transition-transform duration-500 ease-out group-hover:scale-x-100"
+          />
+        )}
 
         <div className="flex items-center gap-1.5">
           <motion.span
@@ -127,12 +136,17 @@ function MetricCell({ metric, value, index, reduceMotion, inView }) {
         </p>
 
         <p className="mt-0.5 text-[11px] text-profile-ink/40">
-          {value === null ? "loading" : metric.unit(value)} {"\u00b7"}{" "}
-          <span className="text-profile-ink transition-colors group-hover:text-profile-main">
-            view
-          </span>
+          {value === null ? "loading" : metric.unit(value)}
+          {metric.showView && (
+            <>
+              {" \u00b7 "}
+              <span className="text-profile-ink transition-colors group-hover:text-profile-main">
+                view
+              </span>
+            </>
+          )}
         </p>
-      </Link>
+      </Container>
     </motion.div>
   );
 }

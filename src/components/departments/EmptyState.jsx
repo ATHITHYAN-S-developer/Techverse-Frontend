@@ -26,7 +26,7 @@ export default function EmptyState({ message, onReset }) {
       </p>
       <button
         onClick={onReset}
-        className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-profile-main hover:bg-profile-hover text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-profile-main focus-visible:ring-offset-2"
+        className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-profile-main hover:bg-profile-hover text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-profile-main focus-visible:ring-offset-2"
       >
         <RotateCcw size={13} />
         Clear all filters

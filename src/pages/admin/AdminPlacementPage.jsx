@@ -630,7 +630,7 @@ export default function AdminPlacementPage() {
                     placeholder="Search drives, companies, roles..."
                     value={searchDrives}
                     onChange={(e) => setSearchDrives(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-vcet-blue"
+                    className="w-full pl-9 pr-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs text-slate-800 focus:bg-white focus:border-vcet-blue"
                   />
                 </div>
 
@@ -638,7 +638,7 @@ export default function AdminPlacementPage() {
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:bg-white"
                   >
                     <option value="ALL">All Categories</option>
                     {DRIVE_CATEGORIES.map((c) => (
@@ -653,7 +653,7 @@ export default function AdminPlacementPage() {
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:bg-white"
                   >
                     <option value="ALL">All Status (Live & Suspended)</option>
                     <option value="LIVE">🟢 Live Campus Drives</option>
@@ -978,7 +978,7 @@ export default function AdminPlacementPage() {
                   value={driveFormData.title}
                   onChange={(e) => setDriveFormData({ ...driveFormData, title: e.target.value })}
                   placeholder="e.g. ZOHO Corporation — Campus Recruitment Drive 2026"
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:border-vcet-blue focus:bg-white text-xs"
                 />
               </div>
 
@@ -991,7 +991,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.organiser}
                     onChange={(e) => setDriveFormData({ ...driveFormData, organiser: e.target.value })}
                     placeholder="e.g. Zoho Corporation"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1000,7 +1000,7 @@ export default function AdminPlacementPage() {
                   <select
                     value={driveFormData.category}
                     onChange={(e) => setDriveFormData({ ...driveFormData, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   >
                     {DRIVE_CATEGORIES.map((c) => (
                       <option key={c.key} value={c.key}>
@@ -1019,7 +1019,7 @@ export default function AdminPlacementPage() {
                     required
                     value={driveFormData.date}
                     onChange={(e) => setDriveFormData({ ...driveFormData, date: e.target.value })}
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1030,7 +1030,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.time}
                     onChange={(e) => setDriveFormData({ ...driveFormData, time: e.target.value })}
                     placeholder="09:00 AM - 04:30 PM"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1043,7 +1043,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.venue}
                     onChange={(e) => setDriveFormData({ ...driveFormData, venue: e.target.value })}
                     placeholder="e.g. VCET Placement Lab 3"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1054,7 +1054,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.department}
                     onChange={(e) => setDriveFormData({ ...driveFormData, department: e.target.value })}
                     placeholder="e.g. CSE, IT, AI&DS, ECE"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1066,7 +1066,7 @@ export default function AdminPlacementPage() {
                   value={driveFormData.description}
                   onChange={(e) => setDriveFormData({ ...driveFormData, description: e.target.value })}
                   placeholder="Job profile, salary package, rounds, dress code, required documents..."
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:border-vcet-blue focus:bg-white text-xs"
                 />
               </div>
 
@@ -1078,7 +1078,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.linkUrl}
                     onChange={(e) => setDriveFormData({ ...driveFormData, linkUrl: e.target.value })}
                     placeholder="https://forms.gle/... or company portal"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1089,7 +1089,7 @@ export default function AdminPlacementPage() {
                     value={driveFormData.linkText}
                     onChange={(e) => setDriveFormData({ ...driveFormData, linkText: e.target.value })}
                     placeholder="Register Now / View Details"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1205,7 +1205,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.name}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, name: e.target.value })}
                     placeholder="e.g. Zoho Corporation"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1216,7 +1216,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.packageRange}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, packageRange: e.target.value })}
                     placeholder="₹6.0 LPA - ₹10.0 LPA"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1229,7 +1229,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.role}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, role: e.target.value })}
                     placeholder="Software Development Engineer"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1240,7 +1240,7 @@ export default function AdminPlacementPage() {
                     value={companyFormData.logo}
                     onChange={(e) => setCompanyFormData({ ...companyFormData, logo: e.target.value })}
                     placeholder="https://... logo.png"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1252,7 +1252,7 @@ export default function AdminPlacementPage() {
                   value={companyFormData.eligibility}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, eligibility: e.target.value })}
                   placeholder="BE/B.Tech (All Branches) • No standing backlogs • 6.5+ CGPA"
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                 />
               </div>
 
@@ -1263,7 +1263,7 @@ export default function AdminPlacementPage() {
                   value={companyFormData.roundsText}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, roundsText: e.target.value })}
                   placeholder="Round 1: Basic Programming MCQs&#10;Round 2: Data Structures & Algorithms&#10;Round 3: HR & Cultural Fit"
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs font-mono"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs font-mono"
                 />
               </div>
 
@@ -1274,7 +1274,7 @@ export default function AdminPlacementPage() {
                   value={companyFormData.questionsText}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, questionsText: e.target.value })}
                   placeholder="Print spiral matrix&#10;Implement custom string copy without built-ins"
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                 />
               </div>
 
@@ -1285,7 +1285,7 @@ export default function AdminPlacementPage() {
                   value={companyFormData.testLink}
                   onChange={(e) => setCompanyFormData({ ...companyFormData, testLink: e.target.value })}
                   placeholder="https://www.geeksforgeeks.org/..."
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                 />
               </div>
 
@@ -1336,7 +1336,7 @@ export default function AdminPlacementPage() {
                   value={bootcampFormData.title}
                   onChange={(e) => setBootcampFormData({ ...bootcampFormData, title: e.target.value })}
                   placeholder="e.g. Zoho Corporation Coding & Application Bootcamp"
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                 />
               </div>
 
@@ -1348,7 +1348,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.trainer}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, trainer: e.target.value })}
                     placeholder="VCET Placement Cell"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1359,7 +1359,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.mode}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, mode: e.target.value })}
                     placeholder="Hybrid (Lab 2 & Google Meet)"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1372,7 +1372,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.date}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, date: e.target.value })}
                     placeholder="Oct 12 - Oct 16, 2026"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
 
@@ -1383,7 +1383,7 @@ export default function AdminPlacementPage() {
                     value={bootcampFormData.time}
                     onChange={(e) => setBootcampFormData({ ...bootcampFormData, time: e.target.value })}
                     placeholder="04:30 PM - 06:30 PM IST"
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   />
                 </div>
               </div>
@@ -1395,7 +1395,7 @@ export default function AdminPlacementPage() {
                   value={bootcampFormData.tagsText}
                   onChange={(e) => setBootcampFormData({ ...bootcampFormData, tagsText: e.target.value })}
                   placeholder="Aptitude, Coding, Mock TR"
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                 />
               </div>
 

@@ -388,7 +388,7 @@ export default function ResourceRow({ resource, index, totalCount }) {
             <button
               type="button"
               onClick={openUrl}
-              className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider text-white bg-vcet-blue hover:bg-[#004e87] shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:outline-none focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
+              className="group inline-flex items-center gap-2.5 px-6 py-3 rounded-xl text-xs sm:text-sm font-bold uppercase tracking-wider text-white bg-vcet-blue hover:bg-[#004e87] shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
             >
               <span>{getButtonLabel()}</span>
               <FiExternalLink

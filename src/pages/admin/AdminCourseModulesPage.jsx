@@ -653,7 +653,7 @@ export default function AdminCourseModulesPage() {
           <select
             value={selectedCourseId}
             onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/20 max-w-xs"
+            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-vcet-blue-deep/20 max-w-xs"
           >
             {courses.map((c) => (
               <option key={c._id || c.id} value={c._id || c.id}>
@@ -951,7 +951,7 @@ export default function AdminCourseModulesPage() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     placeholder="e.g., Module 1: Python Data Structures & Algorithms"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/20 focus:border-vcet-blue-deep"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-vcet-blue-deep/20 focus:border-vcet-blue-deep"
                   />
                 </div>
 
@@ -964,7 +964,7 @@ export default function AdminCourseModulesPage() {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Briefly describe learning goals and topics covered in this module..."
-                    className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-vcet-blue-deep/20"
+                    className="w-full px-4 py-2 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium text-slate-900 focus:ring-2 focus:ring-vcet-blue-deep/20"
                   />
                 </div>
               </div>

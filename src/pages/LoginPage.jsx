@@ -109,7 +109,7 @@ export default function LoginPage() {
       if (!cleanReg) {
         newErrors.studentReg = "Register number is required";
       } else if (!regPattern.test(cleanReg)) {
-        newErrors.studentReg = "Enter a valid register number (e.g. 732924ECE001)";
+        newErrors.studentReg = "Enter a valid register number (e.g. 732924CSR014)";
       }
 
       if (!cleanDob) {
@@ -335,6 +335,7 @@ export default function LoginPage() {
                   key={role.id}
                   type="button"
                   onClick={() => handleRoleChange(role.id)}
+                  aria-pressed={isActive}
                   className={`flex flex-col items-center justify-center py-2.5 px-1 rounded-xl transition-all duration-200 cursor-pointer ${
                     isActive
                       ? "bg-white text-vcet-blue shadow-xs font-black border border-gray-200/50 scale-[1.02]"
@@ -391,12 +392,14 @@ export default function LoginPage() {
                         setStudentReg(e.target.value.toUpperCase());
                         if (errors.studentReg) setErrors((prev) => ({ ...prev, studentReg: "" }));
                       }}
-                      placeholder="732924ECE001"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue tracking-wider font-mono uppercase"
+                      placeholder="732924CSR014"
+                      aria-invalid={Boolean(errors.studentReg)}
+                      aria-describedby={errors.studentReg ? "studentReg-error" : undefined}
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60 tracking-wider font-mono uppercase"
                     />
                   </motion.div>
                   {errors.studentReg && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                    <p id="studentReg-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
                       <AlertCircle size={13} className="shrink-0" />
                       <span>{errors.studentReg}</span>
                     </p>
@@ -443,6 +446,8 @@ export default function LoginPage() {
                       min="1900-01-01"
                       max={todayIso}
                       value={studentDob}
+                      aria-invalid={Boolean(errors.studentDob)}
+                      aria-describedby={errors.studentDob ? "studentDob-error" : undefined}
                       onChange={(e) => {
                         setStudentDob(e.target.value);
                         if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
@@ -451,7 +456,7 @@ export default function LoginPage() {
                     />
                   </motion.div>
                   {errors.studentDob && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                    <p id="studentDob-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
                       <AlertCircle size={13} className="shrink-0" />
                       <span>{errors.studentDob}</span>
                     </p>
@@ -500,11 +505,13 @@ export default function LoginPage() {
                         if (errors.facultyEmail) setErrors((prev) => ({ ...prev, facultyEmail: "" }));
                       }}
                       placeholder="VCET-FAC-CSE-104"
+                      aria-invalid={Boolean(errors.facultyEmail)}
+                      aria-describedby={errors.facultyEmail ? "facultyEmail-error" : undefined}
                       className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60"
                     />
                   </motion.div>
                   {errors.facultyEmail && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                    <p id="facultyEmail-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
                       <AlertCircle size={13} className="shrink-0" />
                       <span>{errors.facultyEmail}</span>
                     </p>
@@ -548,18 +555,21 @@ export default function LoginPage() {
                         if (errors.facultyPassword) setErrors((prev) => ({ ...prev, facultyPassword: "" }));
                       }}
                       placeholder="••••••••"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue"
+                      aria-invalid={Boolean(errors.facultyPassword)}
+                      aria-describedby={errors.facultyPassword ? "facultyPassword-error" : undefined}
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue/60"
                     />
                     <button
                       type="button"
                       onClick={() => setShowFacultyPassword((prev) => !prev)}
+                      aria-label={showFacultyPassword ? "Hide faculty password" : "Show faculty password"}
                       className="text-slate-500 hover:text-slate-700 p-1 cursor-pointer"
                     >
-                      {showFacultyPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showFacultyPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                     </button>
                   </motion.div>
                   {errors.facultyPassword && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                    <p id="facultyPassword-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
                       <AlertCircle size={13} className="shrink-0" />
                       <span>{errors.facultyPassword}</span>
                     </p>
@@ -608,11 +618,13 @@ export default function LoginPage() {
                         if (errors.adminUsername) setErrors((prev) => ({ ...prev, adminUsername: "" }));
                       }}
                       placeholder="admin@vcet.ac.in"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue"
+                      aria-invalid={Boolean(errors.adminUsername)}
+                      aria-describedby={errors.adminUsername ? "adminUsername-error" : undefined}
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60"
                     />
                   </motion.div>
                   {errors.adminUsername && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                    <p id="adminUsername-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
                       <AlertCircle size={13} className="shrink-0" />
                       <span>{errors.adminUsername}</span>
                     </p>
@@ -656,18 +668,21 @@ export default function LoginPage() {
                         if (errors.adminPassword) setErrors((prev) => ({ ...prev, adminPassword: "" }));
                       }}
                       placeholder="••••••••••••"
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue"
+                      aria-invalid={Boolean(errors.adminPassword)}
+                      aria-describedby={errors.adminPassword ? "adminPassword-error" : undefined}
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue/60"
                     />
                     <button
                       type="button"
                       onClick={() => setShowAdminPassword((prev) => !prev)}
+                      aria-label={showAdminPassword ? "Hide admin security key" : "Show admin security key"}
                       className="text-slate-500 hover:text-slate-700 p-1 cursor-pointer"
                     >
-                      {showAdminPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showAdminPassword ? <EyeOff size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
                     </button>
                   </motion.div>
                   {errors.adminPassword && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
+                    <p id="adminPassword-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
                       <AlertCircle size={13} className="shrink-0" />
                       <span>{errors.adminPassword}</span>
                     </p>
@@ -703,6 +718,7 @@ export default function LoginPage() {
             <AnimatePresence>
               {serverError && (
                 <motion.div
+                  role="alert"
                   initial={{ opacity: 0, y: -6, height: 0 }}
                   animate={{ opacity: 1, y: 0, height: "auto" }}
                   exit={{ opacity: 0, y: -6, height: 0 }}
@@ -719,7 +735,7 @@ export default function LoginPage() {
               <button
                 type="submit"
                 disabled={status === "loading" || status === "success"}
-                className={`relative w-full h-12 rounded-xl text-xs sm:text-sm font-bold tracking-wide uppercase text-white shadow-md shadow-blue-900/15 transition-all duration-200 flex items-center justify-center overflow-hidden cursor-pointer ${
+                className={`group relative w-full h-12 rounded-xl text-xs sm:text-sm font-bold tracking-wide uppercase text-white shadow-md shadow-blue-900/15 transition-all duration-200 flex items-center justify-center overflow-hidden cursor-pointer ${
                   status === "success"
                     ? "bg-emerald-600 scale-[1.01]"
                     : "bg-vcet-blue hover:bg-[#00508a] hover:scale-[1.01] hover:shadow-lg hover:shadow-vcet-blue/25 active:scale-[0.99]"
@@ -752,7 +768,7 @@ export default function LoginPage() {
                         ? "SIGN IN AS FACULTY"
                         : "SIGN IN AS ADMINISTRATOR"}
                     </span>
-                    <ArrowRight size={16} />
+                    <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
                   </div>
                 )}
               </button>
@@ -770,7 +786,7 @@ export default function LoginPage() {
         </div>
 
         {/* Bottom Copyright */}
-        <div className="relative z-10 text-xs text-gray-400 text-center md:text-left mt-4">
+        <div className="relative z-10 text-xs text-gray-500 text-center md:text-left mt-4">
           © {new Date().getFullYear()} Velalar College of Engineering and Technology (Autonomous).
         </div>
       </motion.div>

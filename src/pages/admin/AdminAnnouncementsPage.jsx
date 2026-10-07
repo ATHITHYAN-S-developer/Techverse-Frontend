@@ -541,7 +541,7 @@ export default function AdminAnnouncementsPage() {
                 placeholder="Search circulars..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-vcet-blue"
+                className="w-full pl-9 pr-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs text-slate-800 focus:bg-white focus:border-vcet-blue"
               />
             </div>
 
@@ -550,7 +550,7 @@ export default function AdminAnnouncementsPage() {
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
+                className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:bg-white"
               >
                 <option value="ALL">All Priorities</option>
                 <option value="URGENT">🔴 Urgent</option>
@@ -564,7 +564,7 @@ export default function AdminAnnouncementsPage() {
               <select
                 value={audienceFilter}
                 onChange={(e) => setAudienceFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
+                className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:bg-white"
               >
                 <option value="ALL">All Audiences</option>
                 {AUDIENCES.map((aud) => (
@@ -580,7 +580,7 @@ export default function AdminAnnouncementsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:bg-white"
+                className="w-full px-3 py-2 bg-vcet-surface border border-vcet-line rounded-xl text-xs font-semibold text-slate-800 focus:bg-white"
               >
                 <option value="ALL">All Status</option>
                 <option value="LIVE">🟢 Live Feeds</option>
@@ -827,7 +827,7 @@ export default function AdminAnnouncementsPage() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. Smart India Hackathon (SIH 2026) Internal Round"
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:border-vcet-blue focus:bg-white text-xs"
                 />
               </div>
 
@@ -839,7 +839,7 @@ export default function AdminAnnouncementsPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Full circular text, guidelines, instructions, or venue details..."
-                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white text-xs"
+                  className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:border-vcet-blue focus:bg-white text-xs"
                 />
               </div>
 
@@ -849,7 +849,7 @@ export default function AdminAnnouncementsPage() {
                   <select
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   >
                     {CATEGORIES.map((c) => (
                       <option key={c} value={c}>
@@ -864,7 +864,7 @@ export default function AdminAnnouncementsPage() {
                   <select
                     value={formData.priority}
                     onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs font-bold"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs font-bold"
                   >
                     <option value="Urgent">🔴 Urgent</option>
                     <option value="Important">🟠 Important</option>
@@ -879,7 +879,7 @@ export default function AdminAnnouncementsPage() {
                   <select
                     value={formData.targetAudience}
                     onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
-                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:outline-none focus:bg-white text-xs"
+                    className="w-full px-3 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 focus:bg-white text-xs"
                   >
                     {AUDIENCES.map((a) => (
                       <option key={a} value={a}>
@@ -996,7 +996,7 @@ export default function AdminAnnouncementsPage() {
                         required
                         value={formData.publishDate}
                         onChange={(e) => setFormData({ ...formData, publishDate: e.target.value })}
-                        className="w-full px-2.5 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:outline-none focus:bg-white"
+                        className="w-full px-2.5 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:bg-white"
                       />
                     </div>
                     <div>
@@ -1004,7 +1004,7 @@ export default function AdminAnnouncementsPage() {
                         type="time"
                         value={formData.publishTime || "09:00"}
                         onChange={(e) => setFormData({ ...formData, publishTime: e.target.value })}
-                        className="w-full px-2 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:outline-none focus:bg-white"
+                        className="w-full px-2 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:bg-white"
                       />
                     </div>
                   </div>
@@ -1029,7 +1029,7 @@ export default function AdminAnnouncementsPage() {
                         type="date"
                         value={formData.expiryDate}
                         onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                        className="w-full px-2.5 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:outline-none focus:bg-white"
+                        className="w-full px-2.5 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:bg-white"
                       />
                     </div>
                     <div>
@@ -1037,7 +1037,7 @@ export default function AdminAnnouncementsPage() {
                         type="time"
                         value={formData.expiryTime || "23:59"}
                         onChange={(e) => setFormData({ ...formData, expiryTime: e.target.value })}
-                        className="w-full px-2 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:outline-none focus:bg-white"
+                        className="w-full px-2 py-2 bg-vcet-surface rounded-xl border border-vcet-line text-slate-900 text-xs focus:bg-white"
                       />
                     </div>
                   </div>

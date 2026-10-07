@@ -300,7 +300,7 @@ export default function PlacementEventsPage() {
             {!backendReachable && (
               <button
                 onClick={() => window.location.reload()}
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-vcet-blue px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#004E86] focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue/50"
+                className="mt-5 inline-flex items-center gap-2 rounded-full bg-vcet-blue px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#004E86] focus-visible:ring-2 focus-visible:ring-vcet-blue/50"
               >
                 Retry
               </button>

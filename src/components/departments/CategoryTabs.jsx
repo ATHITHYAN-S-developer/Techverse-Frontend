@@ -26,7 +26,7 @@ export default function CategoryTabs({ active, onSelect, counts }) {
             onClick={() => onSelect(id)}
             initial={false}
             whileHover={{ y: -2 }}
-            className={`relative flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold transition-colors duration-200 cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50 ${
+            className={`relative flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-full text-xs sm:text-sm font-bold transition-colors duration-200 cursor-pointer select-none whitespace-nowrap focus-visible:ring-2 focus-visible:ring-vcet-blue-deep/50 ${
               isActive
                 ? "text-white shadow-md"
                 : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 shadow-sm"

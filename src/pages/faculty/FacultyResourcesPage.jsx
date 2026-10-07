@@ -204,7 +204,7 @@ export default function FacultyResourcesPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search notes, labs, question banks..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:outline-none focus:ring-2 focus:ring-vcet-blue/20 focus:border-vcet-blue"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 focus:ring-2 focus:ring-vcet-blue/20 focus:border-vcet-blue"
           />
         </div>
         <span className="text-xs font-semibold text-slate-500 px-1 whitespace-nowrap">
@@ -324,7 +324,7 @@ export default function FacultyResourcesPage() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   placeholder="e.g. Unit 3 DBMS Relational Algebra & SQL Notes"
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:border-vcet-blue"
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:border-vcet-blue"
                 />
               </div>
 

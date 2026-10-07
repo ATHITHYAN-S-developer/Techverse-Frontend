@@ -25,6 +25,7 @@ import {
 import techverseLogoImg from "../assets/techverse-logo.png";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import { useAuth } from "../context/AuthContext";
+import LogoutConfirmationModal from "./LogoutConfirmationModal";
 
 const NAV_LINKS = [
   { name: "Home", href: "/", icon: Home },
@@ -45,6 +46,7 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [logoError, setLogoError] = useState(false);
   const { user, role, isAuthenticated, logout, streak } = useAuth();
@@ -135,7 +137,7 @@ export default function Navbar() {
           <div className="flex items-center gap-3 shrink-0">
             {/* Authenticated State vs Public Login */}
             {isAuthenticated ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
                 {/* Streak Badge for Students */}
                 {role === "student" && (
                   <Link
@@ -148,16 +150,27 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                {/* Role / Dashboard Button */}
+                {/* Consistent User Profile Navigation - Displays Full Name on Desktop and Mobile */}
                 <Link
-                  to={getDashboardPath()}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold text-white bg-vcet-blue-deep hover:bg-vcet-blue shadow-sm transition-all"
+                  to={role === "student" ? "/dashboard#profile" : getDashboardPath()}
+                  className="flex items-center gap-2 group min-w-0"
+                  title="View Profile & Dashboard"
                 >
-                  <User size={13} />
-                  <span className="max-w-[130px] truncate hidden sm:inline">
-                    {role === "admin" ? "Admin Hub" : role === "faculty" ? "Faculty" : user?.name || "Dashboard"}
+                  <span className="w-8 h-8 rounded-full bg-vcet-blue-deep text-white font-display text-xs font-semibold flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                    {user?.name?.charAt(0) || "U"}
                   </span>
-                  <span className="sm:hidden">Hub</span>
+                  <span className="flex flex-col text-left min-w-0">
+                    <span className="text-xs font-semibold text-slate-800 leading-tight truncate max-w-[100px] sm:max-w-[140px] group-hover:text-vcet-blue transition-colors">
+                      {user?.name || "Student"}
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 tabular-nums truncate max-w-[100px] sm:max-w-[140px]">
+                      {role === "student"
+                        ? (user?.registerNumber || "Student")
+                        : role === "admin"
+                          ? "Administrator"
+                          : "Faculty"}
+                    </span>
+                  </span>
                 </Link>
               </div>
             ) : (
@@ -173,15 +186,17 @@ export default function Navbar() {
               </Link>
             )}
 
-            {/* Mobile Hamburger Button */}
-            <button
+            {/* Mobile Hamburger Button with Micro-Animation */}
+            <motion.button
               type="button"
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 lg:hidden focus:outline-none"
+              className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 lg:hidden cursor-pointer"
               aria-label="Open Navigation Drawer"
             >
               <Menu size={22} />
-            </button>
+            </motion.button>
           </div>
         </div>
       </header>
@@ -194,6 +209,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
               onClick={() => setMobileMenuOpen(false)}
               className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
             />
@@ -202,8 +218,8 @@ export default function Navbar() {
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="fixed top-0 right-0 bottom-0 w-[290px] bg-white shadow-2xl z-50 flex flex-col justify-between"
+              transition={{ type: "spring", damping: 28, stiffness: 280 }}
+              className="fixed top-0 right-0 bottom-0 w-[295px] max-w-[85vw] bg-white shadow-2xl z-50 flex flex-col justify-between overflow-y-auto"
             >
               <div>
                 <div className="p-4 border-b border-slate-100 flex items-center justify-between">
@@ -211,66 +227,123 @@ export default function Navbar() {
                     <span className="font-black text-slate-900 text-base">VCET</span>
                     <span className="text-xs font-bold text-vcet-blue-deep">TechVerse</span>
                   </div>
-                  <button
+                  <motion.button
+                    whileHover={{ rotate: 90, scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100"
+                    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 cursor-pointer"
                   >
                     <X size={20} />
-                  </button>
+                  </motion.button>
                 </div>
 
-                <nav className="px-3 py-3 space-y-1">
+                <motion.nav
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: { staggerChildren: 0.045, delayChildren: 0.08 },
+                    },
+                  }}
+                  className="px-3 py-3 space-y-1"
+                >
                   {NAV_LINKS.map((link) => {
                     const Icon = link.icon;
                     const active = isTabActive(link.href);
 
                     return (
-                      <Link
+                      <motion.div
                         key={link.name}
-                        to={link.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
-                          active
-                            ? "bg-blue-50 text-vcet-blue-deep font-bold border-l-4 border-vcet-blue-deep"
-                            : "text-slate-700 hover:bg-slate-50"
-                        }`}
+                        variants={{
+                          hidden: { opacity: 0, x: 20 },
+                          visible: {
+                            opacity: 1,
+                            x: 0,
+                            transition: { type: "spring", damping: 25, stiffness: 300 },
+                          },
+                        }}
+                        whileHover={{ x: 4 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex items-center gap-3">
-                          <Icon size={16} className={active ? "text-vcet-blue-deep" : "text-slate-400"} />
-                          <span>{link.name}</span>
-                        </div>
-                        {link.badge && (
-                          <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded border border-red-400 text-red-600 bg-red-50">
-                            {link.badge}
-                          </span>
-                        )}
-                      </Link>
+                        <Link
+                          to={link.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-colors ${
+                            active
+                              ? "bg-blue-50 text-vcet-blue-deep font-bold border-l-4 border-vcet-blue-deep"
+                              : "text-slate-700 hover:bg-slate-50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Icon size={16} className={active ? "text-vcet-blue-deep" : "text-slate-400"} />
+                            <span>{link.name}</span>
+                          </div>
+                          {link.badge && (
+                            <span className="text-[10px] font-black uppercase px-1.5 py-0.5 rounded border border-red-400 text-red-600 bg-red-50">
+                              {link.badge}
+                            </span>
+                          )}
+                        </Link>
+                      </motion.div>
                     );
                   })}
 
                   <div className="pt-2 border-t border-slate-100 mt-2 space-y-1">
-                    <Link
-                      to="/verify"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue"
+                    <motion.div
+                      variants={{
+                        hidden: { opacity: 0, x: 20 },
+                        visible: {
+                          opacity: 1,
+                          x: 0,
+                          transition: { type: "spring", damping: 25, stiffness: 300 },
+                        },
+                      }}
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <ShieldCheck size={16} className="text-emerald-600" />
-                      <span>Verify Certificate</span>
-                    </Link>
-                    <Link
-                      to="/coding"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue"
+                      <Link
+                        to="/verify"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue"
+                      >
+                        <ShieldCheck size={16} className="text-emerald-600" />
+                        <span>Verify Certificate</span>
+                      </Link>
+                    </motion.div>
+                    <motion.div
+                      variants={{
+                        hidden: { opacity: 0, x: 20 },
+                        visible: {
+                          opacity: 1,
+                          x: 0,
+                          transition: { type: "spring", damping: 25, stiffness: 300 },
+                        },
+                      }}
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      <Code2 size={16} className="text-indigo-600" />
-                      <span>Coding Arena</span>
-                    </Link>
+                      <Link
+                        to="/coding"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3.5 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue"
+                      >
+                        <Code2 size={16} className="text-indigo-600" />
+                        <span>Coding Arena</span>
+                      </Link>
+                    </motion.div>
                   </div>
-                </nav>
+                </motion.nav>
               </div>
 
               {/* Drawer Bottom Actions */}
-              <div className="p-4 border-t border-slate-100 bg-slate-50">
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="p-4 border-t border-slate-100 bg-slate-50"
+              >
                 {isAuthenticated ? (
                   <div className="space-y-2">
                     <Link
@@ -283,10 +356,10 @@ export default function Navbar() {
                     </Link>
                     <button
                       onClick={() => {
-                        logout();
+                        setShowLogoutConfirm(true);
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-semibold"
+                      className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-rose-600 hover:bg-rose-50 text-xs font-semibold cursor-pointer"
                     >
                       <LogOut size={14} /> Sign Out
                     </button>
@@ -301,11 +374,21 @@ export default function Navbar() {
                     <span>Login to TechVerse</span>
                   </Link>
                 )}
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      <LogoutConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          logout();
+          navigate("/login");
+        }}
+      />
     </>
   );
 }

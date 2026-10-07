@@ -58,6 +58,16 @@ export const announcementService = {
     saveAnnouncements(all);
     return true;
   },
+
+  async toggleLike(id) {
+    try {
+      const res = await apiRequest(`/announcements/${id}/like`, { method: "POST" });
+      return res;
+    } catch (err) {
+      console.warn("Announcement like API fallback:", err);
+      return { success: false };
+    }
+  },
 };
 
 // ─── localStorage helpers ────────────────────────────────────────────────────

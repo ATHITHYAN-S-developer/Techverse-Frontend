@@ -164,7 +164,6 @@ export default function AdminStudentsPage() {
   const [editingStudent, setEditingStudent] = useState(null);
   const [profileStudent, setProfileStudent] = useState(null);
   const [passwordResetStudent, setPasswordResetStudent] = useState(null);
-  const [newPassword, setNewPassword] = useState("");
 
   const [formData, setFormData] = useState({
     name: "",
@@ -176,7 +175,7 @@ export default function AdminStudentsPage() {
     section: "A",
     phone: "",
     email: "",
-    password: "student123",
+    dateOfBirth: "",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
     isActive: true
   });
@@ -193,7 +192,7 @@ export default function AdminStudentsPage() {
       section: "A",
       phone: "",
       email: "",
-      password: "student123",
+      dateOfBirth: "",
       avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
       isActive: true
     });
@@ -202,7 +201,11 @@ export default function AdminStudentsPage() {
 
   const handleOpenEdit = (stu) => {
     setEditingStudent(stu);
-    setFormData({ ...stu });
+    setFormData({
+      ...stu,
+      // `<input type="date">` only accepts `yyyy-MM-dd`, not a full ISO stamp.
+      dateOfBirth: stu.dateOfBirth ? String(stu.dateOfBirth).slice(0, 10) : "",
+    });
     setModalOpen(true);
   };
 
@@ -210,6 +213,11 @@ export default function AdminStudentsPage() {
     e.preventDefault();
     if (!formData.name.trim() || !formData.regNo.trim()) {
       showError("Please enter student name and register number");
+      return;
+    }
+
+    if (!formData.dateOfBirth) {
+      showError("A student's date of birth is required - it is also their login password");
       return;
     }
 
@@ -256,16 +264,17 @@ export default function AdminStudentsPage() {
 
   const handleResetPassword = (e) => {
     e.preventDefault();
-    if (!newPassword.trim()) {
-      showError("Please enter a new password");
+    // Students sign in with their date of birth, so restoring a password means
+    // restoring that value - there is no separate secret to invent here.
+    const dob = passwordResetStudent.dateOfBirth
+      ? String(passwordResetStudent.dateOfBirth).slice(0, 10)
+      : "";
+    if (!dob) {
+      showError("This student has no date of birth on file, so no password can be set.");
       return;
     }
-    setStudents((prev) =>
-      prev.map((s) => (s.id === passwordResetStudent.id ? { ...s, password: newPassword } : s))
-    );
-    showSuccess(`Password reset for ${passwordResetStudent.regNo} ✓`);
+    showSuccess(`Password reset to ${passwordResetStudent.regNo}'s date of birth (${dob}) ✓`);
     setPasswordResetStudent(null);
-    setNewPassword("");
   };
 
   // Filtering and search run on the server so results span the whole roster,
@@ -315,7 +324,7 @@ export default function AdminStudentsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by student name, register number (732924CSE...), email..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-vcet-blue focus:bg-white"
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-vcet-blue focus:bg-white"
           />
         </div>
 
@@ -326,7 +335,7 @@ export default function AdminStudentsPage() {
               setDeptFilter(e.target.value);
               loadStudents(1, { dept: e.target.value });
             }}
-            className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 focus:outline-none focus:bg-white"
+            className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 focus:bg-white"
           >
             <option value="ALL">All Departments</option>
             {departments.map((d) => (
@@ -342,7 +351,7 @@ export default function AdminStudentsPage() {
               setStatusFilter(e.target.value);
               loadStudents(1, { status: e.target.value });
             }}
-            className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 focus:outline-none focus:bg-white"
+            className="px-3 py-2 bg-slate-50 rounded-xl text-xs font-semibold text-slate-700 border border-slate-200 focus:bg-white"
           >
             <option value="ALL">All Status</option>
             <option value="active">Active</option>
@@ -381,7 +390,7 @@ export default function AdminStudentsPage() {
                       />
                       <div>
                         <div className="font-bold text-slate-900 text-sm">{s.name}</div>
-                        <div className="text-[10px] text-slate-500">{s.email}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">{s.registerNumber || s.regNo || "—"}</div>
                       </div>
                     </div>
                   </td>
@@ -416,10 +425,7 @@ export default function AdminStudentsPage() {
                         <Edit className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => {
-                          setPasswordResetStudent(s);
-                          setNewPassword("");
-                        }}
+                        onClick={() => setPasswordResetStudent(s)}
                         className="p-1.5 rounded-lg bg-slate-50 hover:bg-amber-50 text-amber-600 border border-slate-200"
                         title="Reset Password"
                       >
@@ -519,7 +525,7 @@ export default function AdminStudentsPage() {
                   <span>•</span>
                   <span>{profileStudent.class} (Sem {profileStudent.semester})</span>
                   <span>•</span>
-                  <span>{profileStudent.email}</span>
+                  <span>{profileStudent.hasCustomEmail || profileStudent.studentEnteredEmail ? profileStudent.email : "Email: Not filled yet"}</span>
                 </div>
               </div>
             </div>
@@ -644,7 +650,7 @@ export default function AdminStudentsPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     placeholder="e.g. Athithya V"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:border-vcet-blue focus:bg-white"
                   />
                 </div>
                 <div>
@@ -655,7 +661,7 @@ export default function AdminStudentsPage() {
                     value={formData.regNo}
                     onChange={(e) => setFormData({ ...formData, regNo: e.target.value.toUpperCase() })}
                     placeholder="e.g. 732924CSE001"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:border-vcet-blue focus:bg-white font-mono"
                   />
                 </div>
               </div>
@@ -669,18 +675,21 @@ export default function AdminStudentsPage() {
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     placeholder="e.g. 732924cse001@vcet.ac.in"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:border-vcet-blue focus:bg-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Login Password *</label>
+                  <label className="block text-slate-700 font-bold mb-1">Date of Birth *</label>
                   <input
-                    type="text"
+                    type="date"
                     required
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-vcet-blue focus:bg-white font-mono"
+                    value={formData.dateOfBirth}
+                    onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:border-vcet-blue focus:bg-white font-mono"
                   />
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    This is also the student's login password.
+                  </p>
                 </div>
               </div>
 
@@ -690,7 +699,7 @@ export default function AdminStudentsPage() {
                   <select
                     value={formData.department}
                     onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:bg-white"
                   >
                     {departments.map((d) => (
                       <option key={d} value={d}>
@@ -704,7 +713,7 @@ export default function AdminStudentsPage() {
                   <select
                     value={formData.year}
                     onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:bg-white"
                   >
                     <option value="I Year">I Year</option>
                     <option value="II Year">II Year</option>
@@ -717,7 +726,7 @@ export default function AdminStudentsPage() {
                   <select
                     value={formData.semester}
                     onChange={(e) => setFormData({ ...formData, semester: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:bg-white"
                   >
                     {[1, 2, 3, 4, 5, 6, 7, 8].map((sem) => (
                       <option key={sem} value={sem}>
@@ -736,7 +745,7 @@ export default function AdminStudentsPage() {
                     value={formData.class}
                     onChange={(e) => setFormData({ ...formData, class: e.target.value })}
                     placeholder="e.g. II CSE - A"
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:bg-white"
                   />
                 </div>
                 <div>
@@ -746,7 +755,7 @@ export default function AdminStudentsPage() {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     placeholder="+91 ..."
-                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:bg-white"
                   />
                 </div>
               </div>
@@ -790,20 +799,23 @@ export default function AdminStudentsPage() {
             </h3>
 
             <p className="text-slate-500">
-              Reset login password for <strong className="text-slate-900">{passwordResetStudent.name}</strong> ({passwordResetStudent.regNo}).
+              A student signs in with their date of birth, which is also their password.
+              Resetting restores it for <strong className="text-slate-900">{passwordResetStudent.name}</strong>{" "}
+              ({passwordResetStudent.regNo}).
             </p>
 
             <form onSubmit={handleResetPassword} className="space-y-3">
               <div>
-                <label className="block text-slate-700 font-bold mb-1">New Password</label>
+                <label className="block text-slate-700 font-bold mb-1">Date of Birth (login password)</label>
                 <input
                   type="text"
-                  required
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password..."
-                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 focus:outline-none focus:border-amber-500 font-mono focus:bg-white"
+                  readOnly
+                  value={formatDate(passwordResetStudent.dateOfBirth)}
+                  className="w-full px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-slate-900 font-mono cursor-not-allowed"
                 />
+                <p className="mt-1 text-[11px] text-slate-500">
+                  To change it, edit the student's date of birth instead.
+                </p>
               </div>
 
               <div className="flex justify-end gap-2 pt-2">

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate, Outlet } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Layers,
@@ -18,8 +19,8 @@ import {
 import { useAuth } from "../context/AuthContext";
 import techverseLogoImg from "../assets/techverse-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
-
 import VcetBanner from "../components/VcetBanner";
+import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
 
 const getFacultyNav = (isHod) => {
   if (isHod) {
@@ -106,7 +107,14 @@ export default function FacultyLayout() {
     };
   }, [sidebarOpen]);
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    setShowLogoutConfirm(false);
     logout();
     navigate("/login");
   };
@@ -119,6 +127,11 @@ export default function FacultyLayout() {
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-vcet-blue selection:text-white font-sans">
       <ScrollToTop />
+      <LogoutConfirmationModal
+        isOpen={showLogoutConfirm}
+        onClose={() => setShowLogoutConfirm(false)}
+        onConfirm={confirmLogout}
+      />
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-vcet-blue focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white"
@@ -127,20 +140,12 @@ export default function FacultyLayout() {
       </a>
       {/* 1. Global Faculty Topbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden"
-            aria-label="Toggle Navigation"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
+        <div className="flex items-center gap-2.5 min-w-0">
           <Link to="/" className="flex items-center gap-2 group">
             <img
               src={techverseLogoImg}
               alt="TechVerse"
-              className="h-8 sm:h-9 w-auto max-w-[170px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
+              className="h-8 sm:h-9 w-auto max-w-[150px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
             />
             <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue font-bold border border-blue-200 uppercase tracking-wider">
               {isHod ? "HOD Portal" : user?.role === "admin" ? "Admin Hub" : "Faculty Hub"}
@@ -156,8 +161,8 @@ export default function FacultyLayout() {
           </span>
         </div>
 
-        {/* Topbar Right: Add Resource Quick Action, Notification, Profile */}
-        <div className="flex items-center gap-3">
+        {/* Topbar Right: Add Resource Quick Action, Notification, Profile, Mobile Menu */}
+        <div className="flex items-center gap-2 sm:gap-3">
           <Link
             to="/faculty/resources"
             className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white text-xs font-bold shadow-xs transition-colors"
@@ -182,11 +187,22 @@ export default function FacultyLayout() {
             </Link>
             <button
               onClick={handleLogout}
-              className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-1"
+              className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors ml-1 cursor-pointer"
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
             </button>
+
+            {/* Consistently Positioned Mobile Hamburger Button (Right Side) with Micro-Animation */}
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1.5 rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden cursor-pointer"
+              aria-label="Toggle Navigation"
+            >
+              <Menu className="w-5 h-5" />
+            </motion.button>
           </div>
         </div>
       </header>
@@ -196,42 +212,101 @@ export default function FacultyLayout() {
 
       {/* 2. Main Body with Sidebar + Dynamic Content */}
       <div className="flex-1 flex overflow-hidden relative">
-        {/* Mobile Backdrop Overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden transition-opacity"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
-          />
-        )}
-
-        {/* Sidebar Navigation */}
-        <aside
-          className={`fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-slate-200 transform transition-transform duration-200 ease-in-out lg:translate-x-0 lg:static lg:w-64 lg:z-auto flex flex-col justify-between shadow-2xl lg:shadow-none ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          {/* Mobile Drawer Header */}
-          <div className="lg:hidden flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/80">
-            <div className="flex items-center gap-2">
-              <img
-                src={techverseLogoImg}
-                alt="TechVerse"
-                className="h-7 w-auto object-contain"
+        {/* Mobile Backdrop & Drawer with Spring Animation */}
+        <AnimatePresence>
+          {sidebarOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
+                onClick={() => setSidebarOpen(false)}
+                aria-hidden="true"
               />
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-vcet-blue font-bold uppercase tracking-wider">
-                {isHod ? "HOD Portal" : "Faculty Portal"}
-              </span>
-            </div>
-            <button
-              onClick={() => setSidebarOpen(false)}
-              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors"
-              aria-label="Close navigation"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
 
+              <motion.aside
+                initial={{ x: "100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "100%" }}
+                transition={{ type: "spring", damping: 28, stiffness: 280 }}
+                className="fixed inset-y-0 right-0 z-50 w-72 max-w-[85vw] bg-white border-l border-slate-200 flex flex-col justify-between shadow-2xl overflow-y-auto"
+              >
+                {/* Mobile Drawer Header */}
+                <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/80 shrink-0">
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={techverseLogoImg}
+                      alt="TechVerse"
+                      className="h-7 w-auto object-contain"
+                    />
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-vcet-blue font-bold uppercase tracking-wider">
+                      {isHod ? "HOD Portal" : "Faculty Portal"}
+                    </span>
+                  </div>
+                  <motion.button
+                    whileHover={{ rotate: 90, scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setSidebarOpen(false)}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-200/60 transition-colors cursor-pointer"
+                    aria-label="Close navigation"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                </div>
+
+                <div className="p-3 space-y-1 overflow-y-auto flex-1">
+                  <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    {isHod ? "HOD Management" : "Faculty Management"}
+                  </div>
+                  {facultyNav.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.href);
+
+                    return (
+                      <Link
+                        key={item.name}
+                        to={item.href}
+                        onClick={() => setSidebarOpen(false)}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                          active
+                            ? "bg-vcet-blue-deep text-white shadow-sm"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-vcet-blue-deep"
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 ${active ? "text-white" : "text-slate-400"}`} />
+                        <span>{item.name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Mobile Drawer Footer */}
+                <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2 shrink-0">
+                  <Link
+                    to="/"
+                    onClick={() => setSidebarOpen(false)}
+                    className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue rounded-lg hover:bg-white"
+                  >
+                    <span>Main Portal</span>
+                    <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </motion.aside>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Desktop Fixed Sidebar */}
+        <aside className="hidden lg:flex w-64 shrink-0 border-r border-slate-200 bg-white flex-col justify-between shadow-none">
           <div className="p-3 space-y-1 overflow-y-auto flex-1">
             <div className="px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
               {isHod ? "HOD Management" : "Faculty Management"}
@@ -244,7 +319,6 @@ export default function FacultyLayout() {
                 <Link
                   key={item.name}
                   to={item.href}
-                  onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                     active
                       ? "bg-vcet-blue-deep text-white shadow-sm"
@@ -262,7 +336,6 @@ export default function FacultyLayout() {
           <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2">
             <Link
               to="/"
-              onClick={() => setSidebarOpen(false)}
               className="flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-600 hover:text-vcet-blue rounded-lg hover:bg-white"
             >
               <span>Main Portal</span>
@@ -270,7 +343,7 @@ export default function FacultyLayout() {
             </Link>
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
               <span>Sign Out</span>

@@ -66,7 +66,7 @@ export default function ResourceCard({
         <button
           onClick={() => canOpen && onOpenResource(resource)}
           disabled={!canOpen}
-          className="group/btn w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep focus-visible:ring-offset-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
+          className="group/btn w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white text-xs font-bold uppercase tracking-wider shadow-sm transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-vcet-blue-deep focus-visible:ring-offset-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed"
         >
           <CtaIcon size={13} className="transition-transform duration-200 group-hover/btn:translate-x-0.5" />
           <span>{canOpen ? ctaLabel : "NO FILE ATTACHED"}</span>

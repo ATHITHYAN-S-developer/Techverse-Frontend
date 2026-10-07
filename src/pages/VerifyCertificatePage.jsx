@@ -65,7 +65,7 @@ export default function VerifyCertificatePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Enter Certificate ID (e.g. VCET-CERT-2026-PY-0091)"
-              className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-2xl text-xs sm:text-sm border border-slate-200 text-slate-900 focus:outline-none focus:border-vcet-blue font-mono"
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 rounded-2xl text-xs sm:text-sm border border-slate-200 text-slate-900 focus:border-vcet-blue font-mono"
             />
           </div>
 

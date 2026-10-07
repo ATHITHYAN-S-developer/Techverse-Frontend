@@ -96,7 +96,7 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
     await page.goto("/login");
     await page.getByRole("button", { name: "Admin" }).click();
     await page.locator('input[name="adminUsername"]').fill("admin");
-    await page.locator('input[name="adminPassword"]').fill("admin123");
+    await page.locator('input[name="adminPassword"]').fill("VcetTech@123");
     await page.locator('button[type="submit"]').click();
 
     await expect(page).toHaveURL(/.*admin/, { timeout: 8000 });
@@ -113,7 +113,7 @@ test.describe("TechVerse Full E2E & Bug Regression Test Suite", () => {
 
     // Fill Admin Credentials
     await page.locator('input[name="adminUsername"]').fill("admin");
-    await page.locator('input[name="adminPassword"]').fill("admin123");
+    await page.locator('input[name="adminPassword"]').fill("VcetTech@123");
     await page.locator('button[type="submit"]').click();
 
     // Verify Admin Dashboard
