@@ -25,7 +25,6 @@ export const RESOURCE_TYPES = [
   { value: "reference", label: "Reference Material" },
   { value: "video", label: "Lecture Video Link" },
   { value: "website", label: "Website / External Link" },
-  { value: "updates", label: "Updates & Tech Feed" },
 ];
 
 function buildResourceFormData(payload) {
