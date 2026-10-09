@@ -13,15 +13,12 @@ import {
   ArrowRight,
   ArrowLeft,
   BookOpen,
-  ShieldAlert,
   ShieldCheck,
-  Clock,
   Maximize2,
   Minimize2,
   HelpCircle,
   Flame,
   Layers,
-  Award,
   ChevronDown,
   ChevronUp,
   Settings,
@@ -29,17 +26,13 @@ import {
   Cpu,
   RefreshCw,
   User,
-  Lock,
-  Unlock,
   AlertTriangle,
-  Search,
   Check,
   GraduationCap,
   Globe,
   FileCode,
   FileText,
   BarChart3,
-  X,
   Copy,
 } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -56,8 +49,6 @@ const SUPPORTED_LANGUAGES = [
   { id: "java", name: "Java (OpenJDK)", extension: ".java" },
   { id: "c", name: "C (GCC)", extension: ".c" },
 ];
-
-const LOCKOUT_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 export default function CodingPage() {
   const { user, refreshStreak } = useAuth();
@@ -79,33 +70,19 @@ export default function CodingPage() {
   const [viewMode, setViewMode] = useState("list");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
+  const [difficultyTabs, setDifficultyTabs] = useState(["All", "Easy", "Medium", "Hard"]);
 
   // Mobile Workspace Navigation: "specs" | "editor" | "output"
   const [mobileTab, setMobileTab] = useState("editor");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // Dynamic Per-Problem / Per-Test Timer & Proctoring
-  const [timeLeft, setTimeLeft] = useState(45 * 60);
-  const [isTestActive, setIsTestActive] = useState(false);
-  const [tabSwitchAlert, setTabSwitchAlert] = useState(null);
-  const [lockStatusMap, setLockStatusMap] = useState({}); // problemId -> { isLocked, remainingMs, unlockTime }
-
-  // Pre-Test Readiness & Fullscreen Confirmation Modal State
-  const [preTestModalProblem, setPreTestModalProblem] = useState(null);
-  const [agreedToGuidelines, setAgreedToGuidelines] = useState(false);
-
-  // Submission "END" confirmation & assessment flow states
-  const [showEndSubmitModal, setShowEndSubmitModal] = useState(false);
-  const [endInputText, setEndInputText] = useState("");
+  // Submission flow states
   const [submissionSummary, setSubmissionSummary] = useState(null);
-  const [showExitConfirmModal, setShowExitConfirmModal] = useState(false);
   const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(false);
   const [specTab, setSpecTab] = useState("description"); // "description" | "samples"
   const [copiedKey, setCopiedKey] = useState(null);
 
   const isTeacherOrAdmin = user?.role === "faculty" || user?.role === "teacher" || user?.role === "admin";
-  const timerRef = useRef(null);
-  const isSubmittingRef = useRef(false);
 
   // Sync fullscreen state with browser changes
   useEffect(() => {
@@ -136,95 +113,16 @@ export default function CodingPage() {
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
-  // Helper: Format duration minutes into user-friendly text (e.g. "45 Mins", "1 Hour", "2 Hours")
-  const formatDurationText = useCallback((mins) => {
-    const m = Number(mins) || 45;
-    if (m >= 60 && m % 60 === 0) {
-      const h = m / 60;
-      return `${h} Hour${h > 1 ? "s" : ""}`;
-    }
-    if (m >= 60) {
-      const h = Math.floor(m / 60);
-      const remM = m % 60;
-      return `${h}h ${remM}m`;
-    }
-    return `${m} Mins`;
-  }, []);
-
-  // Helper: Get effective time limit in minutes for a problem or test
-  const getEffectiveMinutes = useCallback(
-    (prob) => {
-      if (prob?.timeLimit && Number(prob.timeLimit) > 0) {
-        return Number(prob.timeLimit);
-      }
-      if (currentTest?.timeLimit && Number(currentTest.timeLimit) > 0) {
-        return Number(currentTest.timeLimit);
-      }
-      return 45;
-    },
-    [currentTest]
-  );
-
-  // Helper: Get lock key
-  const getLockKey = useCallback(
-    (problemId) => `techverse_lock_${user?._id || user?.id || "guest"}_${problemId}`,
-    [user]
-  );
-
-  // Helper: Refresh Lockouts
-  const refreshLockouts = useCallback(
-    (problemsList = []) => {
-      const now = Date.now();
-      const updatedMap = {};
-      const listToCheck = problemsList.length > 0 ? problemsList : currentTest?.problems || [];
-
-      listToCheck.forEach((prob) => {
-        if (!prob?._id) return;
-        const key = getLockKey(prob._id);
-        const storedTs = localStorage.getItem(key);
-        if (storedTs) {
-          const timestamp = parseInt(storedTs, 10);
-          const elapsed = now - timestamp;
-          if (elapsed < LOCKOUT_DURATION_MS) {
-            updatedMap[prob._id] = {
-              isLocked: true,
-              remainingMs: LOCKOUT_DURATION_MS - elapsed,
-              unlockTime: new Date(timestamp + LOCKOUT_DURATION_MS),
-            };
-          } else {
-            localStorage.removeItem(key);
-            updatedMap[prob._id] = { isLocked: false, remainingMs: 0 };
-          }
-        } else {
-          updatedMap[prob._id] = { isLocked: false, remainingMs: 0 };
-        }
-      });
-      setLockStatusMap(updatedMap);
-    },
-    [currentTest, getLockKey]
-  );
-
-  // Lock a problem for 24 Hours
-  const lockProblem = useCallback(
-    (problemId) => {
-      if (!problemId) return;
-      const key = getLockKey(problemId);
-      localStorage.setItem(key, Date.now().toString());
-      refreshLockouts();
-    },
-    [getLockKey, refreshLockouts]
-  );
-
   // Load coding tests from backend
   const loadTests = async () => {
     setLoading(true);
     try {
       const list = await codingService.getAllCodingTests();
       setTests(list);
+      setDifficultyTabs(["All", ...codingService.getDifficultyOptions()]);
       if (list.length > 0) {
         const testToSelect = currentTest ? list.find((t) => t._id === currentTest._id) || list[0] : list[0];
         setCurrentTest(testToSelect);
-        refreshLockouts(testToSelect.problems || []);
       }
     } catch (err) {
       console.error("Failed to load tests", err);
@@ -237,97 +135,23 @@ export default function CodingPage() {
     loadTests();
   }, []);
 
-  // Live timer interval for lockout countdown
-  useEffect(() => {
-    const interval = setInterval(() => {
-      refreshLockouts();
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [refreshLockouts]);
-
-  // Live Dynamic Timer for Active Test in Compiler Mode
-  useEffect(() => {
-    if (viewMode === "compiler" && isTestActive && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            // Auto submit on time out
-            handleFinalSubmit([], "time_expired");
-            showInfo("Exam time limit reached! Solution automatically submitted.");
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
-    return () => clearInterval(timerRef.current);
-  }, [viewMode, isTestActive, timeLeft]);
-
-  // Format seconds into HH:MM:SS or MM:SS
-  const formatExamTime = (secs) => {
-    const h = Math.floor(secs / 3600);
-    const m = Math.floor((secs % 3600) / 60);
-    const s = secs % 60;
-    if (h > 0) {
-      return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-    }
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
-  };
-
-  // Format lockout remaining time
-  const formatLockRemaining = (ms) => {
-    const totalSecs = Math.max(0, Math.floor(ms / 1000));
-    const h = Math.floor(totalSecs / 3600);
-    const m = Math.floor((totalSecs % 3600) / 60);
-    const s = totalSecs % 60;
-    if (h > 0) return `${h}h ${m}m ${s}s`;
-    return `${m}m ${s}s`;
-  };
-
-  // Prompt Readiness & Fullscreen Authorization Dialog before opening compiler
-  const handleRequestStartTest = (prob) => {
-    const lockInfo = lockStatusMap[prob._id];
-    if (lockInfo?.isLocked) {
-      showError(`This problem is locked for 24 hours. Retry available in ${formatLockRemaining(lockInfo.remainingMs)}.`);
-      return;
-    }
-    setPreTestModalProblem(prob);
-    setAgreedToGuidelines(false);
-  };
-
-  // User confirmed readiness and authorizes Fullscreen mode
-  const handleConfirmEnterTest = async () => {
-    if (!preTestModalProblem) return;
-    const prob = preTestModalProblem;
-
-    // Trigger Browser Fullscreen
-    try {
-      if (document.documentElement.requestFullscreen) {
-        await document.documentElement.requestFullscreen();
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        await document.documentElement.webkitRequestFullscreen();
-      }
-    } catch (err) {
-      console.warn("Fullscreen request was not granted by browser:", err);
-    }
-
-    const durationMins = getEffectiveMinutes(prob);
-    const durationSeconds = durationMins * 60;
-
+  // Open the compiler workspace for a problem directly (no timers, no proctoring)
+  const handleOpenCompiler = (prob, silent = false) => {
+    if (!prob) return;
     setSelectedProblem(prob);
     setCode(prob.starterCode?.[language] || prob.starterCode?.python || prob.starterCode?.javascript || "");
     setTestResults(null);
     setConsoleOutput("");
-    setTimeLeft(durationSeconds);
-    setIsTestActive(true);
-    setIsFullscreen(true);
     setMobileTab("editor");
     setViewMode("compiler");
-    setPreTestModalProblem(null);
-    showSuccess(`Assessment started in Fullscreen (${formatDurationText(durationMins)})`);
+    if (!silent) showSuccess(`Loaded "${prob.title}" in the compiler`);
+  };
+
+  // Open a whole module box (assessment track) straight into its compiler
+  const openModule = (test) => {
+    if (!test) return;
+    setCurrentTest(test);
+    handleOpenCompiler(test.problems?.[0], false);
   };
 
   // Toggle fullscreen mode
@@ -351,111 +175,20 @@ export default function CodingPage() {
     }
   };
 
-  // Request to exit assessment (asks for confirmation if test is active)
+  // Return to the problem list
   const handleExitAssessment = () => {
-    if (isTestActive) {
-      setShowExitConfirmModal(true);
-    } else {
-      setViewMode("list");
-      if (document.fullscreenElement) {
-        document.exitFullscreen().catch(() => {});
-      }
-      setIsFullscreen(false);
-    }
-  };
-
-  // User confirmed exit from active exam
-  const handleConfirmExit = () => {
-    setShowExitConfirmModal(false);
-    setIsTestActive(false);
     setViewMode("list");
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
     setIsFullscreen(false);
-    showInfo("Assessment session exited. Your progress was preserved.");
   };
 
-  // Trigger the "END" confirmation modal before submitting
-  const handleRequestSubmitSolution = () => {
+  // Submit the current solution directly (no END gate, no cooldown)
+  const handleSubmitSolution = () => {
     if (!currentTest || !selectedProblem || isSubmitting) return;
-    setEndInputText("");
-    setShowEndSubmitModal(true);
+    handleFinalSubmit();
   };
-
-  // Confirmed final submission after typing "END"
-  const handleConfirmEndSubmit = async () => {
-    if (endInputText.trim().toUpperCase() !== "END") return;
-    setShowEndSubmitModal(false);
-    setEndInputText("");
-    await handleFinalSubmit([], "manual_end");
-  };
-
-  // Handle Tab Switch Auto-Submit Execution
-  const handleTabSwitchAutoSubmit = useCallback(async () => {
-    if (isSubmittingRef.current || !selectedProblem || !currentTest || !isTestActive) return;
-
-    isSubmittingRef.current = true;
-    setIsSubmitting(true);
-    setIsTestActive(false);
-
-    // Apply 24-hour lockout immediately
-    lockProblem(selectedProblem._id);
-
-    setTabSwitchAlert({
-      problemTitle: selectedProblem.title,
-      reason: "Tab switch detected while solving this test problem.",
-      time: new Date().toLocaleTimeString(),
-    });
-
-    try {
-      const result = await codingService.submitCode(
-        currentTest._id,
-        selectedProblem._id,
-        language,
-        code,
-        {
-          violations: [{ type: "tab_switch", timestamp: new Date().toISOString() }],
-          submissionType: "tab_switch_auto_submit",
-        }
-      );
-      setTestResults(result);
-      setConsoleOutput(
-        `🚨 TEST AUTO-SUBMITTED (TAB SWITCH DETECTED)\n----------------------------------------\nYou switched tabs or minimized the browser window during testing.\nPer VCET examination regulations, your current code was automatically compiled and submitted.\n\n🔒 24-HOUR LOCKOUT ACTIVATED:\nYou can retry solving this problem after 24 hours.\n\nExecution Result:\nStatus: ${result.status}\nPassed Cases: ${result.passedCases || 0}/${result.totalCases || 0}`
-      );
-    } catch (err) {
-      console.error("Auto submit failed:", err);
-      setConsoleOutput("🚨 Test auto-submitted due to tab switch.\nProblem is locked for 24 hours.");
-    } finally {
-      setIsSubmitting(false);
-      isSubmittingRef.current = false;
-    }
-  }, [selectedProblem, currentTest, isTestActive, language, code, lockProblem]);
-
-  // Anti-Cheat Tab-Switch Detection Listener
-  useEffect(() => {
-    if (viewMode !== "compiler" || !isTestActive) return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        handleTabSwitchAutoSubmit();
-      }
-    };
-
-    const handleBlur = () => {
-      if (document.hidden) {
-        handleTabSwitchAutoSubmit();
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("blur", handleBlur);
-
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("blur", handleBlur);
-    };
-  }, [viewMode, isTestActive, handleTabSwitchAutoSubmit]);
 
   const handleLanguageChange = (lang) => {
     setLanguage(lang);
@@ -522,22 +255,14 @@ export default function CodingPage() {
     }
   };
 
-  // Final Manual / Auto Submit Handler
+  // Final Submit Handler
   const handleFinalSubmit = useCallback(
-    async (violationsList = [], submissionType = "manual_end") => {
+    async () => {
       if (!currentTest || !selectedProblem || isSubmitting) return;
       setIsSubmitting(true);
       setActiveOutputTab("console");
       setMobileTab("output");
       setConsoleOutput("Evaluating solution against all hidden server-side test cases...\n");
-
-      const isForcedEnd = submissionType === "time_expired" || submissionType === "tab_switch_auto_submit";
-      const isManualEnd = submissionType === "manual_end" || submissionType === "manual";
-
-      if (isForcedEnd || isManualEnd) {
-        setIsTestActive(false);
-        lockProblem(selectedProblem._id);
-      }
 
       try {
         const result = await codingService.submitCode(
@@ -545,34 +270,30 @@ export default function CodingPage() {
           selectedProblem._id,
           language,
           code,
-          { violations: violationsList, submissionType }
+          { submissionType: "manual" }
         );
 
         setTestResults(result);
 
-        if (isManualEnd || isForcedEnd) {
-          // Escape from the exam and return to problem list!
-          setIsTestActive(false);
-          lockProblem(selectedProblem._id);
-          if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
-          }
-          setIsFullscreen(false);
-          setViewMode("list");
-          setSubmissionSummary({
-            ...result,
-            problemTitle: selectedProblem.title,
-            problemId: selectedProblem._id,
-            language,
-          });
+        // Return to the problem list and surface the results
+        setViewMode("list");
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        }
+        setIsFullscreen(false);
+        setSubmissionSummary({
+          ...result,
+          problemTitle: selectedProblem.title,
+          problemId: selectedProblem._id,
+          language,
+        });
 
-          if (result.isAccepted || result.status === "Accepted") {
-            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-            showSuccess(`Accepted! All ${result.passedCases || result.totalCases}/${result.totalCases} test cases passed!`);
-            refreshStreak();
-          } else {
-            showInfo(`Assessment submitted! Passed ${result.passedCases || 0}/${result.totalCases || 0} test cases.`);
-          }
+        if (result.isAccepted || result.status === "Accepted") {
+          confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+          showSuccess(`Accepted! All ${result.passedCases || result.totalCases}/${result.totalCases} test cases passed!`);
+          refreshStreak();
+        } else {
+          showInfo(`Assessment submitted! Passed ${result.passedCases || 0}/${result.totalCases || 0} test cases.`);
         }
       } catch (err) {
         if (err?.busy) {
@@ -581,34 +302,20 @@ export default function CodingPage() {
         } else {
           showError("Submission failed. Please check network connection.");
         }
-        if (isManualEnd || isForcedEnd) {
-          setViewMode("list");
-          setIsTestActive(false);
-          if (document.fullscreenElement) {
-            document.exitFullscreen().catch(() => {});
-          }
-          setIsFullscreen(false);
-        }
+        setViewMode("list");
+        setIsFullscreen(false);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [currentTest, selectedProblem, isSubmitting, language, code, lockProblem, refreshStreak, showSuccess, showError, showInfo]
+    [currentTest, selectedProblem, isSubmitting, language, code, refreshStreak, showSuccess, showError, showInfo]
   );
 
-  // Filter problems for list view
+  // Problems for the currently selected module (used throughout the compiler)
   const allProblems = currentTest?.problems || [];
-  const filteredProblems = allProblems.filter((p) => {
-    const matchesSearch =
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (Array.isArray(p.tags) && p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())));
-    const matchesDiff = selectedDifficulty === "All" || p.difficulty === selectedDifficulty;
-    return matchesSearch && matchesDiff;
-  });
-
-  const activeTestDuration = currentTest?.timeLimit ? Number(currentTest.timeLimit) : 45;
-  const activeProblemDuration = selectedProblem ? getEffectiveMinutes(selectedProblem) : activeTestDuration;
+  const selectedIndex = allProblems.findIndex(
+    (p) => (p._id || p.title) === (selectedProblem?._id || selectedProblem?.title)
+  );
 
   if (loading && !currentTest) {
     return (
@@ -686,265 +393,58 @@ export default function CodingPage() {
                 </h1>
 
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                  Browse problem statements designed by department faculty. Click on any problem to launch the online
-                  compiler. Attempts feature a{" "}
-                  <strong className="text-slate-900 font-extrabold">
-                    {formatDurationText(activeTestDuration)} duration
-                  </strong>
-                  , strict <span className="text-rose-600 font-bold">anti-cheat tab-switching auto execution</span>, and
-                  a <strong className="text-amber-700 font-bold">24-hour retry cooldown</strong>.
+                  Browse problem statements designed by department faculty. Click on any problem to open the online
+                  compiler. No timers, no lockouts — solve at your own pace and submit whenever you're ready.
                 </p>
               </div>
-
-              {/* Assessment Track Switcher */}
-              {tests.length > 1 && (
-                <div className="bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shrink-0 w-full lg:w-80 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-vcet-blue" />
-                      <span>Assessment Track</span>
-                    </span>
-                    <span className="text-[10px] font-bold text-vcet-blue bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-                      {tests.length} Tracks Available
-                    </span>
-                  </div>
-
-                  <select
-                    value={currentTest?._id || ""}
-                    onChange={(e) => {
-                      const found = tests.find((t) => t._id === e.target.value);
-                      if (found) {
-                        setCurrentTest(found);
-                        refreshLockouts(found.problems || []);
-                      }
-                    }}
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-300 text-slate-900 text-xs font-bold rounded-xl focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-xs outline-none"
-                  >
-                    {tests.map((t) => {
-                      const isDept = t.targetAudience === "department" && t.department && t.department !== "ALL";
-                      return (
-                        <option key={t._id} value={t._id}>
-                          {t.title} ({formatDurationText(t.timeLimit || 45)}) {isDept ? `[${t.department} Only]` : "[All VCET]"}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Rules Banner (Fully Responsive 1-col on mobile, 3-col on desktop) */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 pt-6 border-t border-slate-100">
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-blue-50/60 border border-blue-100">
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-vcet-blue flex items-center justify-center shrink-0">
-                  <Clock className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-slate-900">
-                    {formatDurationText(activeTestDuration)} Test Timer
-                  </div>
-                  <div className="text-[11px] text-slate-500">Configured time per problem attempt</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-rose-50/60 border border-rose-100">
-                <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
-                  <ShieldAlert className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-rose-900">Auto-Submits on Tab Switch</div>
-                  <div className="text-[11px] text-rose-700">Switching tabs immediately submits test</div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-amber-50/60 border border-amber-100">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
-                  <Lock className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-amber-900">24-Hour Retry Cooldown</div>
-                  <div className="text-[11px] text-amber-700">Can retry solving after 1 day</div>
-                </div>
-              </div>
-            </div>
+</div>
           </div>
 
-          {/* Search & Filter Bar (Mobile Stacked, Desktop Inline) */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search problem statement by title, topic..."
-                className="w-full pl-10 pr-9 py-2.5 bg-white border border-slate-300 rounded-2xl text-xs text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 shadow-2xs outline-none"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-              <span className="text-xs font-bold text-slate-500 mr-1 shrink-0">Difficulty:</span>
-              {["All", "Easy", "Medium", "Hard"].map((diff) => (
-                <button
-                  key={diff}
-                  type="button"
-                  onClick={() => setSelectedDifficulty(diff)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
-                    selectedDifficulty === diff
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {diff}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Problem Cards Grid (1 col on mobile, 2 col on tablet, 3 col on desktop) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-            {filteredProblems.map((prob, idx) => {
-              const lockInfo = lockStatusMap[prob._id] || { isLocked: false };
-              const probDurationMins = getEffectiveMinutes(prob);
-              const creatorName =
-                prob.author ||
-                prob.createdByName ||
-                currentTest?.createdBy?.name ||
-                "Dr. S. K. Manikandan (Faculty / VCET)";
-
-              return (
-                <div
-                  key={prob._id || idx}
-                  className={`bg-white rounded-3xl border transition-all flex flex-col justify-between overflow-hidden shadow-xs hover:shadow-md ${
-                    lockInfo.isLocked
-                      ? "border-amber-200/90 bg-amber-50/20"
-                      : "border-slate-200/90 hover:border-vcet-blue"
-                  }`}
-                >
-                  <div className="p-5 sm:p-6 space-y-4">
-                    {/* Top Row: Difficulty & Dynamic Time Limit Badge */}
-                    <div className="flex items-center justify-between gap-2">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black border ${
-                          prob.difficulty === "Easy"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : prob.difficulty === "Hard"
-                            ? "bg-rose-50 text-rose-700 border-rose-200"
-                            : "bg-amber-50 text-amber-700 border-amber-200"
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            prob.difficulty === "Easy"
-                              ? "bg-emerald-500"
-                              : prob.difficulty === "Hard"
-                              ? "bg-rose-500"
-                              : "bg-amber-500"
-                          }`}
-                        />
-                        <span>{prob.difficulty || "Medium"}</span>
-                      </span>
-
-                      {/* Dynamic Time Limit Pill (Working per test/problem) */}
-                      <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-                        <Clock className="w-3.5 h-3.5 text-vcet-blue" />
-                        <span>{formatDurationText(probDurationMins)}</span>
-                      </div>
+{/* Module boxes: one box per assessment track (click to open its coding page) */}
+          <div className="space-y-4">
+            {[...tests]
+              .sort(
+                (a, b) =>
+                  ({ Easy: 0, Medium: 1, Hard: 2 }[a.difficulty] ?? 9) -
+                  ({ Easy: 0, Medium: 1, Hard: 2 }[b.difficulty] ?? 9)
+              )
+              .map((test, tIdx) => (
+              <div
+                key={test._id || tIdx}
+                role="button"
+                tabIndex={0}
+                onClick={() => openModule(test)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    openModule(test);
+                  }
+                }}
+                className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden cursor-pointer group hover:border-vcet-blue hover:shadow-md transition-all"
+              >
+                <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                      <Code2 className="w-6 h-6 text-emerald-400" />
                     </div>
-
-                    {/* Problem Title */}
-                    <div>
-                      <h3 className="text-base font-black text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-2">
-                        {prob.title}
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-2 line-clamp-3 leading-relaxed">
-                        {prob.description}
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-black text-slate-900 group-hover:text-vcet-blue transition-colors truncate">
+                        {test.title}
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
+                        {test.description || "Practice and solve coding problems in the online compiler"}
                       </p>
                     </div>
-
-                    {/* Problem Creator Badge */}
-                    <div className="pt-2 border-t border-slate-100">
-                      <div className="flex items-center gap-2.5 p-2.5 rounded-2xl bg-blue-50/70 border border-blue-100/80 text-vcet-blue">
-                        <div className="w-7 h-7 rounded-full bg-vcet-blue text-white flex items-center justify-center font-bold text-xs shrink-0">
-                          {((creatorName || "P")[0]).toUpperCase()}
-                        </div>
-                        <div className="text-[11px] leading-tight min-w-0">
-                          <span className="text-slate-500 block text-[10px] font-medium truncate">Problem Author:</span>
-                          <span className="font-bold text-slate-900 truncate block">{creatorName}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Company / Topic Tags */}
-                    {prob.tags && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {(Array.isArray(prob.tags) ? prob.tags : [prob.tags]).map((tag, tIdx) => (
-                          <span
-                            key={tIdx}
-                            className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[10px] font-semibold"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
-
-                  {/* Card Bottom / Action Area */}
-                  <div className="p-5 sm:p-6 pt-0">
-                    {lockInfo.isLocked ? (
-                      <div className="space-y-2">
-                        <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 font-bold">
-                            <Lock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                            <span>Locked for 24h</span>
-                          </div>
-                          <span className="font-mono text-[11px] font-bold text-amber-700">
-                            {formatLockRemaining(lockInfo.remainingMs)}
-                          </span>
-                        </div>
-                        <button
-                          type="button"
-                          disabled
-                          className="w-full py-2.5 rounded-2xl text-xs font-bold bg-slate-100 text-slate-400 cursor-not-allowed flex items-center justify-center gap-2"
-                        >
-                          <Lock className="w-4 h-4" />
-                          <span>Retry Available After 1 Day</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleRequestStartTest(prob)}
-                        className="w-full py-3 px-4 rounded-2xl text-xs font-black bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 active:scale-98 transition-all cursor-pointer"
-                      >
-                        <Play className="w-3.5 h-3.5 fill-white" />
-                        <span>Solve Problem in Compiler</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
+                  <span className="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-black bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 transition-all">
+                    <Play className="w-3.5 h-3.5 fill-white" />
+                    Open
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
-
-          {filteredProblems.length === 0 && (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3">
-              <Code2 className="w-10 h-10 text-slate-300 mx-auto" />
-              <h3 className="text-base font-bold text-slate-800">No problems match your search</h3>
-              <p className="text-xs text-slate-500">Try adjusting your search terms or difficulty filter.</p>
-            </div>
-          )}
         </div>
       )}
 
@@ -966,10 +466,10 @@ export default function CodingPage() {
                 type="button"
                 onClick={handleExitAssessment}
                 className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-slate-700/80 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold shrink-0"
-                title="Exit Assessment"
+                title="Back to problem list"
               >
                 <ArrowLeft className="w-4 h-4 text-slate-400" />
-                <span className="hidden sm:inline">Exit Exam</span>
+                <span className="hidden sm:inline">Back to Problems</span>
               </button>
 
               <div className="h-4 w-px bg-slate-800 hidden sm:block shrink-0" />
@@ -978,6 +478,12 @@ export default function CodingPage() {
                 <h2 className="text-sm sm:text-base font-bold text-white tracking-tight truncate max-w-[140px] sm:max-w-xs md:max-w-md">
                   {selectedProblem.title}
                 </h2>
+                <span
+                  className="md:hidden shrink-0 px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold"
+                  title="Question number out of total"
+                >
+                  Q{selectedIndex + 1}/{allProblems.length}
+                </span>
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 border ${
                     selectedProblem.difficulty === "Easy"
@@ -1005,34 +511,6 @@ export default function CodingPage() {
                     VCET Faculty
                   </span>
                 </div>
-              </div>
-            </div>
-
-            {/* Center: Live Countdown HUD & Anti-Cheat Badge */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-              {/* Dynamic Live Test Timer */}
-              <div
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border font-mono font-bold text-xs sm:text-sm tracking-wider transition-all ${
-                  timeLeft <= 60
-                    ? "bg-rose-950/80 text-rose-300 border-rose-700/80 shadow-md shadow-rose-950/50 animate-pulse"
-                    : timeLeft <= 300
-                    ? "bg-amber-950/80 text-amber-300 border-amber-700/80 animate-pulse"
-                    : "bg-slate-900/90 text-amber-400 border-slate-700/80 shadow-inner"
-                }`}
-                title="Continuous Proctored Exam Timer"
-              >
-                <Clock className={`w-3.5 h-3.5 shrink-0 ${timeLeft <= 300 ? "text-rose-400" : "text-amber-400"}`} />
-                <span>{formatExamTime(timeLeft)}</span>
-                <span className="text-[9px] font-sans uppercase font-bold text-slate-400 hidden sm:inline">
-                  Remaining
-                </span>
-              </div>
-
-              {/* Anti-Cheat Badge */}
-              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs font-semibold shrink-0">
-                <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
-                <span className="hidden md:inline text-[11px]">Anti-Cheat Active (Tab switch auto-submits)</span>
-                <span className="md:hidden text-[10px]">Proctored</span>
               </div>
             </div>
 
@@ -1115,6 +593,34 @@ export default function CodingPage() {
 
           {/* 2. MAIN WORKSPACE: SPLIT GRID LAYOUT */}
           <main className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-3 pt-2 bg-[#0A0E17] overflow-hidden">
+            {/* LEFT QUESTION RAIL: select any question number (vertical on desktop, horizontal scroll on mobile) */}
+            <div className="shrink-0 flex lg:flex-col items-center gap-1.5 p-1.5 bg-[#0F172A]/90 border border-slate-800/90 rounded-2xl overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto lg:w-12">
+              <span
+                className="hidden lg:block text-[9px] font-black tracking-[0.25em] text-slate-500 uppercase select-none mb-1 text-center leading-none"
+                style={{ writingMode: "vertical-rl" }}
+              >
+                Questions
+              </span>
+              {allProblems.map((p, i) => {
+                const isActive = (p._id || p.title) === (selectedProblem._id || selectedProblem.title);
+                return (
+                  <button
+                    key={p._id || i}
+                    type="button"
+                    onClick={() => handleOpenCompiler(p, true)}
+                    title={`Question ${i + 1}: ${p.title}`}
+                    className={`shrink-0 w-9 h-9 lg:w-10 lg:h-10 rounded-xl text-xs font-black flex items-center justify-center transition-all cursor-pointer border ${
+                      isActive
+                        ? "bg-sky-500/20 text-sky-300 border-sky-500/60 shadow-md shadow-sky-500/20"
+                        : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-600"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
+            </div>
+
             {/* LEFT PANEL: Problem Statement & Specifications */}
             <div
               className={`w-full lg:w-[42%] xl:w-[40%] flex flex-col bg-[#111827] border border-slate-800/90 rounded-2xl overflow-hidden shadow-2xl ${
@@ -1305,9 +811,6 @@ export default function CodingPage() {
                     <FileCode className="w-3.5 h-3.5 text-sky-400" />
                     <span>solution{SUPPORTED_LANGUAGES.find((l) => l.id === language)?.extension || ".py"}</span>
                   </span>
-                  <span className="hidden sm:inline-block text-[10px] text-slate-500 font-semibold px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800">
-                    VCET Online Sandbox Compiler
-                  </span>
                 </div>
 
                 {/* Run & Submit Actions */}
@@ -1325,7 +828,7 @@ export default function CodingPage() {
                   <button
                     type="button"
                     disabled={isSubmitting || isRunning}
-                    onClick={handleRequestSubmitSolution}
+                    onClick={handleSubmitSolution}
                     className="px-4 sm:px-5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white flex items-center gap-1.5 shadow-md shadow-emerald-950/70 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
                   >
                     <CheckCircle className="w-3.5 h-3.5" />
@@ -1489,7 +992,7 @@ export default function CodingPage() {
             <button
               type="button"
               disabled={isSubmitting || isRunning}
-              onClick={handleRequestSubmitSolution}
+              onClick={handleSubmitSolution}
               className="flex-1 py-2 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 text-white flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 active:scale-95 cursor-pointer disabled:opacity-50"
             >
               <CheckCircle className="w-3.5 h-3.5" />
@@ -1497,328 +1000,12 @@ export default function CodingPage() {
             </button>
           </div>
 
-          {/* ======================================================== */}
-          {/* THE "END" SUBMISSION CONFIRMATION MODAL                   */}
-          {/* User must type "END" to finalize and escape from the exam  */}
-          {/* ======================================================== */}
-          {showEndSubmitModal && (
-            <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-              <div className="bg-[#111827] border border-slate-700/80 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 text-slate-100 animate-scaleUp">
-                {/* Header */}
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-400 block">
-                      Assessment Submission
-                    </span>
-                    <h3 className="text-base sm:text-lg font-black text-white leading-tight">
-                      Finalize & Escape Exam
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Problem Info & Warning Notice */}
-                <div className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Problem:</span>
-                    <span className="font-bold text-white truncate max-w-[200px]">{selectedProblem.title}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Time Remaining:</span>
-                    <span className="font-mono font-bold text-amber-400">{formatExamTime(timeLeft)}</span>
-                  </div>
-                  <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed">
-                    Once submitted, your final code will be evaluated against all test cases, this problem will enter a 24-hour review cooldown, and you will escape the test environment.
-                  </div>
-                </div>
-
-                {/* Prompt & Input Box */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-300 block">
-                    To confirm and escape the exam, please type <strong className="text-emerald-400 font-mono">END</strong> below:
-                  </label>
-                  <input
-                    type="text"
-                    autoFocus
-                    value={endInputText}
-                    onChange={(e) => setEndInputText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && endInputText.trim().toUpperCase() === "END") {
-                        handleConfirmEndSubmit();
-                      }
-                    }}
-                    placeholder="Type END"
-                    className={`w-full text-center uppercase tracking-widest font-mono font-bold text-lg py-3 px-4 rounded-xl bg-slate-950 border-2 outline-none transition-all ${
-                      endInputText.trim().toUpperCase() === "END"
-                        ? "border-emerald-500 text-emerald-400 shadow-lg shadow-emerald-500/20"
-                        : "border-slate-700 text-slate-200 focus:border-sky-500"
-                    }`}
-                  />
-                  {endInputText.trim().toUpperCase() === "END" ? (
-                    <p className="text-[11px] text-emerald-400 text-center font-bold flex items-center justify-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> Ready to submit! Press Enter or click Confirm.
-                    </p>
-                  ) : (
-                    <p className="text-[11px] text-slate-500 text-center">
-                      Word must match "END" (case-insensitive) to enable submission.
-                    </p>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowEndSubmitModal(false);
-                      setEndInputText("");
-                    }}
-                    className="py-3 px-4 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                  >
-                    Cancel / Keep Coding
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={endInputText.trim().toUpperCase() !== "END" || isSubmitting}
-                    onClick={handleConfirmEndSubmit}
-                    className="py-3 px-4 rounded-xl text-xs font-black bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-lg shadow-emerald-500/25 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    <span>{isSubmitting ? "Submitting..." : "Confirm & Submit"}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ======================================================== */}
-          {/* EXIT CONFIRMATION MODAL                                  */}
-          {/* ======================================================== */}
-          {showExitConfirmModal && (
-            <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
-              <div className="bg-[#111827] border border-slate-700/80 rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl space-y-5 text-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
-                    <AlertTriangle className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 block">
-                      Exit Active Assessment
-                    </span>
-                    <h3 className="text-base sm:text-lg font-black text-white leading-tight">
-                      Leave Exam Session?
-                    </h3>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  You are currently taking a timed assessment. If you leave without clicking Submit Solution and typing END, your final evaluation will not be recorded.
-                </p>
-
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <button
-                    type="button"
-                    onClick={() => setShowExitConfirmModal(false)}
-                    className="py-3 px-4 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
-                  >
-                    Stay in Exam
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleConfirmExit}
-                    className="py-3 px-4 rounded-xl text-xs font-black bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-950 active:scale-95 transition-all cursor-pointer"
-                  >
-                    Exit to Problems List
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>,
+          </div>,
         document.body
       )}
 
       {/* ======================================================== */}
-      {/* TAB-SWITCH AUTO-SUBMITTED NOTIFICATION MODAL             */}
-      {/* ======================================================== */}
-      {tabSwitchAlert && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-rose-200 space-y-5 text-center">
-            <div className="w-14 h-14 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
-              <ShieldAlert className="w-8 h-8" />
-            </div>
-
-            <div className="space-y-2">
-              <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase bg-rose-50 text-rose-700 border border-rose-200">
-                Anti-Cheat Auto-Submission
-              </span>
-              <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                Tab Switch Detected — Test Auto-Submitted!
-              </h3>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                You navigated away or switched browser tabs while solving{" "}
-                <strong className="text-slate-900 font-bold">"{tabSwitchAlert.problemTitle}"</strong>.
-                Per VCET test solving protocols, your solution was automatically compiled and submitted to prevent unauthorized assistance.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-left space-y-1.5">
-              <div className="font-bold flex items-center gap-1.5">
-                <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>24-Hour (1 Day) Cooldown Activated</span>
-              </div>
-              <p className="text-slate-600 text-[11px]">
-                You can retry solving this problem statement after 24 hours. Your current attempt has been logged for evaluation.
-              </p>
-            </div>
-
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setTabSwitchAlert(null);
-                  setViewMode("list");
-                }}
-                className="w-full py-3 rounded-2xl text-xs font-black bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-md"
-              >
-                Return to Problem Statements
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* PRE-TEST READINESS & FULLSCREEN PERMISSION MODAL         */}
-      {/* ======================================================== */}
-      {preTestModalProblem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-7 shadow-2xl border border-slate-200/90 space-y-5 text-slate-800">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-blue-50 border border-blue-200 text-vcet-blue flex items-center justify-center shrink-0">
-                  <ShieldAlert className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-vcet-blue block">
-                    Assessment Authorization
-                  </span>
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight">
-                    Ready to Enter Test & Fullscreen?
-                  </h3>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPreTestModalProblem(null)}
-                className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Target Problem Info Card */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
-              <div className="min-w-0">
-                <span className="text-[10px] text-slate-500 font-semibold block uppercase tracking-wider">
-                  Selected Challenge
-                </span>
-                <h4 className="font-bold text-sm text-slate-900 truncate">
-                  {preTestModalProblem.title}
-                </h4>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-vcet-blue border border-blue-200">
-                  {formatDurationText(getEffectiveMinutes(preTestModalProblem))} Timer
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                  {preTestModalProblem.difficulty || "Medium"}
-                </span>
-              </div>
-            </div>
-
-            {/* Proctoring Protocol Guidelines */}
-            <div className="space-y-2.5 text-xs">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                Assessment Proctoring Guidelines:
-              </span>
-
-              <div className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100/90 flex items-start gap-2.5 text-slate-700">
-                <Clock className="w-4 h-4 text-vcet-blue shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-slate-900 block font-bold">Continuous Test Timer</strong>
-                  <span className="text-[11px] text-slate-600">
-                    The {formatDurationText(getEffectiveMinutes(preTestModalProblem))} timer starts immediately and continues running uninterrupted across submissions.
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-indigo-50/60 border border-indigo-100/90 flex items-start gap-2.5 text-slate-700">
-                <Maximize2 className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-slate-900 block font-bold">Automatic Fullscreen Requirement</strong>
-                  <span className="text-[11px] text-slate-600">
-                    Clicking Start will immediately open your browser in Fullscreen mode.
-                  </span>
-                </div>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-rose-50/60 border border-rose-100/90 flex items-start gap-2.5 text-rose-900">
-                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                <div>
-                  <strong className="text-rose-950 block font-bold">Anti-Cheat Auto-Submission</strong>
-                  <span className="text-[11px] text-rose-700">
-                    Switching browser tabs, minimizing the window, or navigating away will automatically submit your attempt and activate a 24-hour retry cooldown.
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Confirmation Checkbox */}
-            <label className="flex items-center gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={agreedToGuidelines}
-                onChange={(e) => setAgreedToGuidelines(e.target.checked)}
-                className="w-4 h-4 rounded text-vcet-blue focus:ring-blue-500 cursor-pointer"
-              />
-              <span className="text-xs font-bold text-slate-800">
-                I am ready and agree to enter the proctored test in Fullscreen
-              </span>
-            </label>
-
-            {/* Actions */}
-            <div className="grid grid-cols-2 gap-3 pt-1">
-              <button
-                type="button"
-                onClick={() => setPreTestModalProblem(null)}
-                className="py-3 px-4 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors cursor-pointer"
-              >
-                Cancel / Return
-              </button>
-
-              <button
-                type="button"
-                disabled={!agreedToGuidelines}
-                onClick={handleConfirmEnterTest}
-                className="py-3 px-4 rounded-xl text-xs font-black bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 text-white shadow-md shadow-blue-500/25 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Maximize2 className="w-4 h-4" />
-                <span>Start Fullscreen Test</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ======================================================== */}
-      {/* ASSESSMENT SUBMITTED RESULTS MODAL (ESCAPED FROM EXAM)   */}
-      {/* ======================================================== */}
+      {/* ASSESSMENT SUBMITTED RESULTS MODAL                     */}
       {submissionSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 text-center">
@@ -1880,17 +1067,6 @@ export default function CodingPage() {
                 <span className="text-[10px] uppercase font-bold text-slate-400 block">Runtime</span>
                 <span className="text-xs sm:text-sm font-mono font-bold text-slate-700">
                   {submissionSummary.executionTime || "0.00"}s
-                </span>
-              </div>
-            </div>
-
-            {/* 24-Hour Cooldown notice */}
-            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs text-left flex items-start gap-2.5">
-              <Lock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-              <div>
-                <strong className="block font-bold">24-Hour Review Cooldown Active</strong>
-                <span className="text-[11px] text-slate-600">
-                  Per VCET assessment policy, this challenge will unlock for re-attempt after 24 hours.
                 </span>
               </div>
             </div>

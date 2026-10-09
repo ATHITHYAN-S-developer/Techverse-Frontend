@@ -82,13 +82,21 @@ export const codingService = {
    */
   async getAllCodingTests() {
     let backendTests = [];
+    let difficultyOptions = null;
     try {
       const res = await api.get("/coding");
+      if (res.data?.difficultyOptions) {
+        difficultyOptions = res.data.difficultyOptions;
+      }
       if (res.data?.codingTests && res.data.codingTests.length > 0) {
         backendTests = res.data.codingTests;
       }
     } catch (err) {
       console.warn("Backend /api/coding offline or error, checking fallback:", err.message);
+    }
+
+    if (difficultyOptions) {
+      this.difficultyOptions = difficultyOptions;
     }
 
     const localTests = getLocalCustomTests();
@@ -106,6 +114,14 @@ export const codingService = {
     }
 
     return combined;
+  },
+
+  /**
+   * Get the difficulty tabs/modules supported by the backend
+   */
+  getDifficultyOptions() {
+    return (this.difficultyOptions && this.difficultyOptions.length > 0) ||
+      ["Easy", "Medium", "Hard"];
   },
 
   /**
@@ -374,27 +390,6 @@ export const codingService = {
           { testCaseNumber: 3, passed: true, isHidden: true, executionTime: 9 },
           { testCaseNumber: 4, passed: true, isHidden: true, executionTime: 7 },
         ],
-      };
-    }
-  },
-
-  /**
-   * Student: Report proctoring violation during exam mode
-   */
-  async reportViolation(testId, type, details, currentViolationCount) {
-    try {
-      const res = await api.post(`/coding/${testId}/violation`, {
-        type,
-        details,
-        currentViolationCount,
-      });
-      return res.data;
-    } catch (err) {
-      return {
-        success: true,
-        currentViolationCount,
-        maxViolations: 3,
-        shouldAutoSubmit: currentViolationCount >= 3,
       };
     }
   },
