@@ -457,29 +457,29 @@ export default function CodingPage() {
       {/* 100% viewport width/height, hiding all sidebars & banners */}
       {/* ======================================================== */}
       {viewMode === "compiler" && selectedProblem && createPortal(
-        <div className="fixed inset-0 z-[9999] w-screen h-screen bg-[#0A0E17] text-slate-100 flex flex-col overflow-hidden select-text font-sans antialiased">
+        <div className="fixed inset-0 z-[9999] w-screen h-screen bg-sky-50 text-slate-800 flex flex-col overflow-hidden select-text font-sans antialiased">
           {/* 1. TOP HEADER NAVIGATION BAR */}
-          <header className="h-14 bg-[#0D1322] border-b border-slate-800/90 px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 shadow-lg select-none">
+          <header className="h-14 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 shadow-lg select-none">
             {/* Left: Exit + Problem Title & Difficulty + Author */}
             <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
               <button
                 type="button"
                 onClick={handleExitAssessment}
-                className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 text-slate-300 hover:text-white border border-slate-700/80 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold shrink-0"
+                className="p-1.5 sm:px-3 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-sky-600 border border-slate-200 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold shrink-0"
                 title="Back to problem list"
               >
                 <ArrowLeft className="w-4 h-4 text-slate-400" />
                 <span className="hidden sm:inline">Back to Problems</span>
               </button>
 
-              <div className="h-4 w-px bg-slate-800 hidden sm:block shrink-0" />
+              <div className="h-4 w-px bg-slate-200 hidden sm:block shrink-0" />
 
               <div className="min-w-0 flex items-center gap-2 sm:gap-2.5">
                 <h2 className="text-sm sm:text-base font-bold text-white tracking-tight truncate max-w-[140px] sm:max-w-xs md:max-w-md">
                   {selectedProblem.title}
                 </h2>
                 <span
-                  className="md:hidden shrink-0 px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold"
+                  className="md:hidden shrink-0 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold"
                   title="Question number out of total"
                 >
                   Q{selectedIndex + 1}/{allProblems.length}
@@ -487,27 +487,27 @@ export default function CodingPage() {
                 <span
                   className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 border ${
                     selectedProblem.difficulty === "Easy"
-                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                       : selectedProblem.difficulty === "Hard"
-                      ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
-                      : "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                      ? "bg-rose-50 text-rose-700 border-rose-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
                   }`}
                 >
                   {selectedProblem.difficulty || "Medium"}
                 </span>
 
-                <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 pl-2 border-l border-slate-800 shrink-0 truncate">
-                  <User className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 pl-2 border-l border-slate-200 shrink-0 truncate">
+                  <User className="w-3.5 h-3.5 text-sky-600 shrink-0" />
                   <span className="truncate">
                     Author:{" "}
-                    <strong className="text-slate-200">
+                    <strong className="text-slate-700">
                       {selectedProblem.author ||
                         selectedProblem.createdByName ||
                         currentTest?.createdBy?.name ||
                         "Dr. S. K. Manikandan"}
                     </strong>
                   </span>
-                  <span className="text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-1.5 py-0.2 rounded-md">
+                  <span className="text-[10px] font-bold bg-sky-500/10 text-sky-600 border border-sky-500/20 px-1.5 py-0.2 rounded-md">
                     VCET Faculty
                   </span>
                 </div>
@@ -516,15 +516,15 @@ export default function CodingPage() {
 
             {/* Right: Language Dropdown, Reset, Fullscreen Toggle */}
             <div className="flex items-center gap-2 shrink-0">
-              <div className="flex items-center gap-1.5 bg-slate-900/90 border border-slate-700/80 rounded-xl px-2 sm:px-2.5 py-1">
+              <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 sm:px-2.5 py-1">
                 <span className="text-[10px] uppercase font-bold text-slate-400 hidden sm:inline">Lang:</span>
                 <select
                   value={language}
                   onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-100 outline-none cursor-pointer"
+                  className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
                 >
                   {SUPPORTED_LANGUAGES.map((l) => (
-                    <option key={l.id} value={l.id} className="bg-slate-900 text-white">
+                    <option key={l.id} value={l.id} className="bg-white text-slate-800">
                       {l.name}
                     </option>
                   ))}
@@ -534,7 +534,7 @@ export default function CodingPage() {
               <button
                 type="button"
                 onClick={handleResetCode}
-                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-sky-600 border border-slate-200 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
                 title="Reset code template"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
@@ -544,7 +544,7 @@ export default function CodingPage() {
               <button
                 type="button"
                 onClick={toggleFullscreen}
-                className="p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/80 transition-colors cursor-pointer"
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-sky-600 border border-slate-200 transition-colors cursor-pointer"
                 title={isFullscreen ? "Exit Fullscreen" : "Fullscreen Workspace"}
               >
                 {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -553,12 +553,12 @@ export default function CodingPage() {
           </header>
 
           {/* MOBILE SEGMENTED VIEW SWITCHER (< lg screens) */}
-          <div className="lg:hidden flex items-center p-1 bg-slate-900 border-b border-slate-800 shrink-0">
+          <div className="lg:hidden flex items-center p-1 bg-slate-100 border-b border-slate-200 shrink-0">
             <button
               type="button"
               onClick={() => setMobileTab("specs")}
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                mobileTab === "specs" ? "bg-slate-800 text-sky-400 shadow-xs" : "text-slate-400 hover:text-slate-200"
+                mobileTab === "specs" ? "bg-white text-sky-600 shadow-xs" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <FileText className="w-3.5 h-3.5" />
@@ -569,7 +569,7 @@ export default function CodingPage() {
               type="button"
               onClick={() => setMobileTab("editor")}
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                mobileTab === "editor" ? "bg-slate-800 text-sky-400 shadow-xs" : "text-slate-400 hover:text-slate-200"
+                mobileTab === "editor" ? "bg-white text-sky-600 shadow-xs" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <Code2 className="w-3.5 h-3.5" />
@@ -580,7 +580,7 @@ export default function CodingPage() {
               type="button"
               onClick={() => setMobileTab("output")}
               className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
-                mobileTab === "output" ? "bg-slate-800 text-sky-400 shadow-xs" : "text-slate-400 hover:text-slate-200"
+                mobileTab === "output" ? "bg-white text-sky-600 shadow-xs" : "text-slate-500 hover:text-slate-700"
               }`}
             >
               <Terminal className="w-3.5 h-3.5" />
@@ -592,9 +592,9 @@ export default function CodingPage() {
           </div>
 
           {/* 2. MAIN WORKSPACE: SPLIT GRID LAYOUT */}
-          <main className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-3 pt-2 bg-[#0A0E17] overflow-hidden">
+          <main className="flex-1 min-h-0 flex flex-col lg:flex-row gap-3 p-3 pt-2 bg-sky-50 overflow-hidden">
             {/* LEFT QUESTION RAIL: select any question number (vertical on desktop, horizontal scroll on mobile) */}
-            <div className="shrink-0 flex lg:flex-col items-center gap-1.5 p-1.5 bg-[#0F172A]/90 border border-slate-800/90 rounded-2xl overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto lg:w-12">
+            <div className="shrink-0 flex lg:flex-col items-center gap-1.5 p-1.5 bg-white border border-slate-200 rounded-2xl overflow-x-auto lg:overflow-x-hidden lg:overflow-y-auto lg:w-12">
               <span
                 className="hidden lg:block text-[9px] font-black tracking-[0.25em] text-slate-500 uppercase select-none mb-1 text-center leading-none"
                 style={{ writingMode: "vertical-rl" }}
@@ -612,7 +612,7 @@ export default function CodingPage() {
                     className={`shrink-0 w-9 h-9 lg:w-10 lg:h-10 rounded-xl text-xs font-black flex items-center justify-center transition-all cursor-pointer border ${
                       isActive
                         ? "bg-sky-500/20 text-sky-300 border-sky-500/60 shadow-md shadow-sky-500/20"
-                        : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:border-slate-600"
+                        : "bg-slate-100 text-slate-500 border-slate-200 hover:text-sky-600 hover:border-sky-300"
                     }`}
                   >
                     {i + 1}
@@ -623,20 +623,20 @@ export default function CodingPage() {
 
             {/* LEFT PANEL: Problem Statement & Specifications */}
             <div
-              className={`w-full lg:w-[42%] xl:w-[40%] flex flex-col bg-[#111827] border border-slate-800/90 rounded-2xl overflow-hidden shadow-2xl ${
+              className={`w-full lg:w-[42%] xl:w-[40%] flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl ${
                 mobileTab !== "specs" ? "hidden lg:flex" : "flex"
               }`}
             >
               {/* Left Panel Tabs Header */}
-              <div className="h-11 bg-[#0F172A] border-b border-slate-800 px-4 flex items-center justify-between shrink-0 select-none">
+              <div className="h-11 bg-white border-b border-slate-200 px-4 flex items-center justify-between shrink-0 select-none">
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
                     onClick={() => setSpecTab("description")}
                     className={`flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer py-2 ${
                       specTab === "description"
-                        ? "text-sky-400 border-b-2 border-sky-400"
-                        : "text-slate-400 hover:text-slate-200"
+                        ? "text-sky-600 border-b-2 border-sky-600"
+                        : "text-slate-400 hover:text-slate-700"
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
@@ -648,8 +648,8 @@ export default function CodingPage() {
                     onClick={() => setSpecTab("samples")}
                     className={`flex items-center gap-1.5 text-xs font-bold transition-colors cursor-pointer py-2 ${
                       specTab === "samples"
-                        ? "text-sky-400 border-b-2 border-sky-400"
-                        : "text-slate-400 hover:text-slate-200"
+                        ? "text-sky-600 border-b-2 border-sky-600"
+                        : "text-slate-400 hover:text-slate-700"
                     }`}
                   >
                     <Layers className="w-3.5 h-3.5" />
@@ -659,11 +659,11 @@ export default function CodingPage() {
               </div>
 
               {/* Left Panel Scrollable Content */}
-              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-5 text-slate-300 text-xs sm:text-sm">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-5 text-slate-600 text-xs sm:text-sm">
                 {specTab === "description" ? (
                   <>
                     {/* Faculty Attribution Pill */}
-                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-800 flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-slate-900/90 border border-slate-200 flex items-center justify-between">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-8 h-8 rounded-full bg-vcet-blue text-white flex items-center justify-center font-bold text-xs shrink-0">
                           {((selectedProblem.author || selectedProblem.createdByName || "P")[0]).toUpperCase()}
@@ -672,7 +672,7 @@ export default function CodingPage() {
                           <span className="text-[10px] text-slate-400 block uppercase font-bold tracking-wider">
                             Author & Faculty
                           </span>
-                          <span className="text-xs font-bold text-slate-200 truncate block">
+                          <span className="text-xs font-bold text-slate-700 truncate block">
                             {selectedProblem.author ||
                               selectedProblem.createdByName ||
                               currentTest?.createdBy?.name ||
@@ -680,7 +680,7 @@ export default function CodingPage() {
                           </span>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold bg-sky-500/10 text-sky-400 border border-sky-500/20 px-2 py-0.5 rounded-md shrink-0">
+                      <span className="text-[10px] font-bold bg-sky-500/10 text-sky-600 border border-sky-500/20 px-2 py-0.5 rounded-md shrink-0">
                         VCET Faculty
                       </span>
                     </div>
@@ -690,7 +690,7 @@ export default function CodingPage() {
                       <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         Problem Statement
                       </h3>
-                      <div className="text-slate-200 leading-relaxed font-sans whitespace-pre-line text-sm">
+                      <div className="text-slate-700 leading-relaxed font-sans whitespace-pre-line text-sm">
                         {selectedProblem.description}
                       </div>
                     </div>
@@ -701,7 +701,7 @@ export default function CodingPage() {
                         <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                           Input Format Specification
                         </h4>
-                        <pre className="p-3 rounded-xl bg-[#080C16] border border-slate-800 font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">
+                        <pre className="p-3 rounded-xl bg-sky-50 border border-slate-200 font-mono text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
                           {selectedProblem.inputFormat}
                         </pre>
                       </div>
@@ -713,7 +713,7 @@ export default function CodingPage() {
                         <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                           Output Format Specification
                         </h4>
-                        <pre className="p-3 rounded-xl bg-[#080C16] border border-slate-800 font-mono text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">
+                        <pre className="p-3 rounded-xl bg-sky-50 border border-slate-200 font-mono text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">
                           {selectedProblem.outputFormat}
                         </pre>
                       </div>
@@ -725,7 +725,7 @@ export default function CodingPage() {
                         <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                           Constraints
                         </h4>
-                        <div className="p-3 rounded-xl bg-[#080C16] border border-slate-800 space-y-1 font-mono text-xs text-amber-300">
+                        <div className="p-3 rounded-xl bg-sky-50 border border-slate-200 space-y-1 font-mono text-xs text-amber-700">
                           {Array.isArray(selectedProblem.constraints) ? (
                             selectedProblem.constraints.map((c, i) => (
                               <div key={i} className="flex items-center gap-2">
@@ -750,18 +750,18 @@ export default function CodingPage() {
                   </h4>
 
                   {(selectedProblem.publicTestCases || []).slice(0, 3).map((tc, idx) => (
-                    <div key={idx} className="p-3.5 rounded-xl bg-[#080C16] border border-slate-800 text-xs space-y-2">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 pb-1 border-b border-slate-800/80">
+                    <div key={idx} className="p-3.5 rounded-xl bg-sky-50 border border-slate-200 text-xs space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 pb-1 border-b border-slate-100">
                         <span>Sample #{idx + 1}</span>
                         <button
                           type="button"
                           onClick={() => handleCopyText(tc.input, `input_${idx}`)}
-                          className="flex items-center gap-1 text-[10px] text-sky-400 hover:text-sky-300 transition-colors cursor-pointer"
+                          className="flex items-center gap-1 text-[10px] text-sky-600 hover:text-sky-300 transition-colors cursor-pointer"
                         >
                           {copiedKey === `input_${idx}` ? (
                             <>
-                              <Check className="w-3 h-3 text-emerald-400" />
-                              <span className="text-emerald-400">Copied!</span>
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span className="text-emerald-600">Copied!</span>
                             </>
                           ) : (
                             <>
@@ -772,22 +772,22 @@ export default function CodingPage() {
                         </button>
                       </div>
 
-                      <div className="font-mono text-slate-200">
+                      <div className="font-mono text-slate-700">
                         <span className="text-slate-400 font-bold block text-[10px] uppercase">Input:</span>
-                        <pre className="mt-0.5 p-2 rounded-lg bg-[#04060A] border border-slate-800/60 overflow-x-auto whitespace-pre-wrap">
+                        <pre className="mt-0.5 p-2 rounded-lg bg-white border border-slate-100 overflow-x-auto whitespace-pre-wrap">
                           {tc.input}
                         </pre>
                       </div>
 
-                      <div className="font-mono text-emerald-400">
+                      <div className="font-mono text-emerald-600">
                         <span className="text-slate-400 font-bold block text-[10px] uppercase">Expected Output:</span>
-                        <pre className="mt-0.5 p-2 rounded-lg bg-[#04060A] border border-slate-800/60 overflow-x-auto whitespace-pre-wrap">
+                        <pre className="mt-0.5 p-2 rounded-lg bg-white border border-slate-100 overflow-x-auto whitespace-pre-wrap">
                           {tc.expectedOutput}
                         </pre>
                       </div>
 
                       {tc.explanation && (
-                        <div className="text-[11px] text-slate-400 italic pt-1 border-t border-slate-800/60">
+                        <div className="text-[11px] text-slate-400 italic pt-1 border-t border-slate-100">
                           Explanation: {tc.explanation}
                         </div>
                       )}
@@ -799,16 +799,16 @@ export default function CodingPage() {
 
             {/* RIGHT PANEL: Code Editor & Collapsible Terminal */}
             <div
-              className={`flex-1 min-h-0 flex flex-col bg-[#111827] border border-slate-800/90 rounded-2xl overflow-hidden shadow-2xl ${
+              className={`flex-1 min-h-0 flex flex-col bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-2xl ${
                 mobileTab === "specs" ? "hidden lg:flex" : "flex"
               }`}
             >
               {/* Top Editor Toolbar (Filename & Action Buttons) */}
-              <div className="h-12 bg-[#0F172A] border-b border-slate-800 px-3 sm:px-4 flex items-center justify-between shrink-0 select-none">
+              <div className="h-12 bg-white border-b border-slate-200 px-3 sm:px-4 flex items-center justify-between shrink-0 select-none">
                 {/* File Tab */}
                 <div className="flex items-center gap-2">
-                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#080C16] border border-slate-800 text-xs font-mono font-bold text-slate-200">
-                    <FileCode className="w-3.5 h-3.5 text-sky-400" />
+                  <span className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-sky-50 border border-slate-200 text-xs font-mono font-bold text-slate-700">
+                    <FileCode className="w-3.5 h-3.5 text-sky-600" />
                     <span>solution{SUPPORTED_LANGUAGES.find((l) => l.id === language)?.extension || ".py"}</span>
                   </span>
                 </div>
@@ -819,9 +819,9 @@ export default function CodingPage() {
                     type="button"
                     disabled={isRunning || isSubmitting}
                     onClick={handleRunPublicCases}
-                    className="px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white flex items-center gap-1.5 border border-slate-700/80 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
+                    className="px-3 sm:px-4 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-sky-600 flex items-center gap-1.5 border border-slate-200 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
                   >
-                    <Play className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+                    <Play className="w-3.5 h-3.5 text-emerald-600 fill-emerald-400" />
                     <span>{isRunning ? "Running..." : "Run Public Cases"}</span>
                   </button>
 
@@ -838,14 +838,14 @@ export default function CodingPage() {
               </div>
 
               {/* Code Editor Full Canvas */}
-              <div className="flex-1 min-h-0 relative bg-[#0F172A] overflow-hidden">
+              <div className="flex-1 min-h-0 relative bg-white overflow-hidden">
                 <Suspense
                   fallback={
                     <textarea
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
                       spellCheck="false"
-                      className="w-full h-full p-4 bg-transparent text-slate-100 font-mono text-xs sm:text-sm leading-relaxed resize-none selection:bg-blue-600/40"
+                      className="w-full h-full p-4 bg-transparent text-slate-800 font-mono text-xs sm:text-sm leading-relaxed resize-none selection:bg-blue-600/40"
                       placeholder="Loading editor..."
                     />
                   }
@@ -860,9 +860,9 @@ export default function CodingPage() {
               </div>
 
               {/* Collapsible Compiler Console & Test Results Drawer */}
-              <div className="shrink-0 flex flex-col bg-[#080C16] border-t border-slate-800/90 select-none">
+              <div className="shrink-0 flex flex-col bg-sky-50 border-t border-slate-200 select-none">
                 {/* Drawer Header Bar */}
-                <div className="h-9 bg-[#0B0F19] px-3 sm:px-4 flex items-center justify-between text-xs">
+                <div className="h-9 bg-slate-50 px-3 sm:px-4 flex items-center justify-between text-xs">
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
@@ -872,8 +872,8 @@ export default function CodingPage() {
                       }}
                       className={`flex items-center gap-1.5 font-bold transition-colors cursor-pointer py-1 ${
                         activeOutputTab === "console" && !isTerminalCollapsed
-                          ? "text-sky-400 border-b-2 border-sky-400"
-                          : "text-slate-400 hover:text-slate-200"
+                          ? "text-sky-600 border-b-2 border-sky-600"
+                          : "text-slate-400 hover:text-slate-700"
                       }`}
                     >
                       <Terminal className="w-3.5 h-3.5" />
@@ -888,8 +888,8 @@ export default function CodingPage() {
                       }}
                       className={`flex items-center gap-1.5 font-bold transition-colors cursor-pointer py-1 ${
                         activeOutputTab === "testcases" && !isTerminalCollapsed
-                          ? "text-sky-400 border-b-2 border-sky-400"
-                          : "text-slate-400 hover:text-slate-200"
+                          ? "text-sky-600 border-b-2 border-sky-600"
+                          : "text-slate-400 hover:text-slate-700"
                       }`}
                     >
                       <Layers className="w-3.5 h-3.5" />
@@ -904,7 +904,7 @@ export default function CodingPage() {
                     <button
                       type="button"
                       onClick={() => setConsoleOutput("")}
-                      className="text-[10px] text-slate-500 hover:text-slate-300 transition-colors cursor-pointer"
+                      className="text-[10px] text-slate-500 hover:text-slate-600 transition-colors cursor-pointer"
                       title="Clear terminal"
                     >
                       Clear
@@ -912,7 +912,7 @@ export default function CodingPage() {
                     <button
                       type="button"
                       onClick={() => setIsTerminalCollapsed(!isTerminalCollapsed)}
-                      className="p-1 rounded text-slate-400 hover:text-white transition-colors cursor-pointer"
+                      className="p-1 rounded text-slate-400 hover:text-sky-600 transition-colors cursor-pointer"
                       title={isTerminalCollapsed ? "Expand Terminal" : "Collapse Terminal"}
                     >
                       {isTerminalCollapsed ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -922,9 +922,9 @@ export default function CodingPage() {
 
                 {/* Drawer Body (When Expanded) */}
                 {!isTerminalCollapsed && (
-                  <div className="h-40 sm:h-52 overflow-hidden bg-[#04060A]">
+                  <div className="h-40 sm:h-52 overflow-hidden bg-white">
                     {activeOutputTab === "console" ? (
-                      <pre className="h-full p-3 sm:p-4 font-mono text-xs text-slate-300 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text">
+                      <pre className="h-full p-3 sm:p-4 font-mono text-xs text-slate-600 overflow-y-auto whitespace-pre-wrap leading-relaxed select-text">
                         {consoleOutput ||
                           "Compiler output and runtime logs will appear here after clicking 'Run Public Cases' or 'Submit Solution'."}
                       </pre>
@@ -936,16 +936,16 @@ export default function CodingPage() {
                               key={idx}
                               className={`p-2.5 rounded-xl border text-xs flex items-start justify-between gap-3 ${
                                 tr.passed
-                                  ? "bg-emerald-950/20 border-emerald-500/40 text-emerald-200"
-                                  : "bg-rose-950/20 border-rose-500/40 text-rose-200"
+                                  ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                                  : "bg-rose-50 border-rose-200 text-rose-800"
                               }`}
                             >
                               <div className="space-y-1 min-w-0">
                                 <div className="font-bold flex items-center gap-1.5">
                                   {tr.passed ? (
-                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                                   ) : (
-                                    <XCircle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                                    <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                   )}
                                   <span>
                                     Test Case #{tr.testCaseNumber} {tr.isHidden ? "(Hidden Evaluation)" : "(Public)"}
@@ -978,14 +978,14 @@ export default function CodingPage() {
           </main>
 
           {/* STICKY BOTTOM ACTION BAR ON MOBILE (< lg screens) */}
-          <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-[#0D1322]/95 backdrop-blur-md px-4 py-2.5 border-t border-slate-800 flex items-center justify-between gap-3 shadow-2xl">
+          <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md px-4 py-2.5 border-t border-slate-200 flex items-center justify-between gap-3 shadow-2xl">
             <button
               type="button"
               disabled={isRunning || isSubmitting}
               onClick={handleRunPublicCases}
-              className="flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-white flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
+              className="flex-1 py-2 px-3 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 text-white flex items-center justify-center gap-1.5 transition-all shadow-xs active:scale-95 cursor-pointer disabled:opacity-50"
             >
-              <Play className="w-3.5 h-3.5 text-emerald-400 fill-emerald-400" />
+              <Play className="w-3.5 h-3.5 text-emerald-600 fill-emerald-400" />
               <span>{isRunning ? "Running..." : "Run Cases"}</span>
             </button>
 
@@ -1074,7 +1074,7 @@ export default function CodingPage() {
             <button
               type="button"
               onClick={() => setSubmissionSummary(null)}
-              className="w-full py-3.5 rounded-2xl text-xs font-black bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-md active:scale-98"
+              className="w-full py-3.5 rounded-2xl text-xs font-black bg-slate-900 hover:bg-slate-100 text-white transition-all cursor-pointer shadow-md active:scale-98"
             >
               Back to Coding Arena
             </button>

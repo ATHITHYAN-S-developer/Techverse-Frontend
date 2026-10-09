@@ -20,20 +20,20 @@ import { python } from "@codemirror/lang-python";
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
 
-const ARENA_BG = "#0F172A";
-const ARENA_PLAIN = "#E2E8F0";
+const ARENA_BG = "#FFFFFF";
+const ARENA_PLAIN = "#1E293B";
 const ARENA_COMMENT = "#94A3B8";
-const ARENA_KEYWORD = "#38BDF8";
-const ARENA_TYPE = "#FBBF24";
-const ARENA_FUNCTION = "#A78BFA";
-const ARENA_STRING = "#86EFAC";
-const ARENA_NUMBER = "#F472B6";
-const ARENA_CONSTANT = "#F87171";
-const ARENA_OPERATOR = "#CBD5E1";
-const ARENA_LINE_NUMBER = "#475569";
-const ARENA_CURSOR = "#7DD3FC";
-const ARENA_SELECTION = "rgba(56,189,248,0.18)";
-const ARENA_ACTIVE_LINE = "rgba(56,189,248,0.06)";
+const ARENA_KEYWORD = "#0284C7";
+const ARENA_TYPE = "#B45309";
+const ARENA_FUNCTION = "#7C3AED";
+const ARENA_STRING = "#059669";
+const ARENA_NUMBER = "#DB2777";
+const ARENA_CONSTANT = "#DC2626";
+const ARENA_OPERATOR = "#475569";
+const ARENA_LINE_NUMBER = "#94A3B8";
+const ARENA_CURSOR = "#0284C7";
+const ARENA_SELECTION = "rgba(14,165,233,0.16)";
+const ARENA_ACTIVE_LINE = "rgba(14,165,233,0.08)";
 
 const arenaHighlightStyle = HighlightStyle.define([
   { tag: t.comment, color: ARENA_COMMENT, fontStyle: "italic" },
