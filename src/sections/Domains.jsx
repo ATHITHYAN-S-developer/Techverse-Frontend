@@ -1,7 +1,7 @@
 /**
  * Scrollytelling Vertically Stacked Sections for VCET Tech Hub (TechVerse)
  * 3 Curated alternating domain sections with uniform, balanced image sizing,
- * interactive 3D parallax hover, staggered keyword tags, and direct navigation.
+ * interactive 3D parallax hover, and direct navigation.
  * Palette: VCET Blue (#0062A8), Dark Gray (#444445), Light Gray (#C9C9C9), White (#FFFFFF)
  */
 
@@ -50,7 +50,7 @@ export default function Domains({ resources = [] }) {
                 </span>
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-vcet-blue/10 text-vcet-blue text-xs uppercase tracking-widest font-bold">
                   <FiBell size={13} />
-                  <span>Section 01 • Real-Time Feeds</span>
+                  <span>Section 01 • News & Updates</span>
                 </div>
               </motion.div>
 
@@ -65,40 +65,7 @@ export default function Domains({ resources = [] }) {
                 Tech Pulse — Apps for Tech Updates
               </motion.h2>
 
-              {/* 3. Description */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.3 }}
-                className="text-sm sm:text-base text-vcet-dark/80 leading-relaxed font-normal"
-              >
-                Catch the pulse of the tech industry. Access real-time technology news, AI breakthroughs, framework updates, open-source releases, and engaging engineering discussions in one unified stream.
-              </motion.p>
-
-              {/* 4. Tags / Keywords */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5, delay: 0.35 }}
-                className="flex flex-wrap gap-2 pt-1"
-              >
-                {["AI NEWS", "INDUSTRY TRENDS", "DEV DISCUSSIONS", "TECH ALERTS", "COMMUNITY"].map((tag, i) => (
-                  <motion.span
-                    key={tag}
-                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.4, delay: 0.4 + i * 0.08, ease: EASE_EXPO }}
-                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-white text-vcet-dark rounded-xl border border-vcet-gray-border/70 hover:border-vcet-blue hover:text-vcet-blue transition-colors shadow-2xs"
-                  >
-                    {tag}
-                  </motion.span>
-                ))}
-              </motion.div>
-
-              {/* 5. CTA Button */}
+              {/* 3. CTA Button */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -255,40 +222,7 @@ export default function Domains({ resources = [] }) {
                 Tech Vision — Tech YouTube Channels
               </motion.h2>
 
-              {/* 3. Description */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.3 }}
-                className="text-sm sm:text-base text-vcet-dark/80 leading-relaxed font-normal"
-              >
-                Learn through visual storytelling, animated deep-dives, paper breakdowns, research insights, and comprehensive programming masterclasses curated from the best engineering creators globally.
-              </motion.p>
-
-              {/* 4. Tags / Keywords */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5, delay: 0.35 }}
-                className="flex flex-wrap gap-2 pt-1"
-              >
-                {["AI SUMMARIES", "CODE TUTORIALS", "RESEARCH DEMOS", "DEEP DIVES", "ARCHITECTURE"].map((tag, i) => (
-                  <motion.span
-                    key={tag}
-                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.4, delay: 0.4 + i * 0.08, ease: EASE_EXPO }}
-                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-vcet-gray-light text-vcet-dark rounded-xl border border-vcet-gray-border/70 hover:border-vcet-blue hover:text-vcet-blue transition-colors"
-                  >
-                    {tag}
-                  </motion.span>
-                ))}
-              </motion.div>
-
-              {/* 5. CTA Button */}
+              {/* 3. CTA Button */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -355,40 +289,7 @@ export default function Domains({ resources = [] }) {
                 Skill Forge — Aptitude Preparation Apps
               </motion.h2>
 
-              {/* 3. Description */}
-              <motion.p
-                initial={{ opacity: 0, y: 25, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.3 }}
-                className="text-sm sm:text-base text-vcet-dark/80 leading-relaxed font-normal"
-              >
-                Sharpen your analytical acumen. Master quantitative ability, logical deduction, verbal reasoning, and company-specific recruitment mock tests with high-yield practice tools.
-              </motion.p>
-
-              {/* 4. Tags / Keywords */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5, delay: 0.35 }}
-                className="flex flex-wrap gap-2 pt-1"
-              >
-                {["QUANTITATIVE", "LOGICAL REASONING", "VERBAL PROFICIENCY", "MOCK DRILLS", "PLACEMENTS"].map((tag, i) => (
-                  <motion.span
-                    key={tag}
-                    initial={{ opacity: 0, scale: 0.8, y: 15 }}
-                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 16, delay: 0.4 + i * 0.08 }}
-                    className="text-xs uppercase tracking-wider font-bold px-3 py-1.5 bg-white text-vcet-dark rounded-xl border border-vcet-gray-border/70 hover:border-vcet-blue hover:text-vcet-blue transition-colors shadow-2xs"
-                  >
-                    {tag}
-                  </motion.span>
-                ))}
-              </motion.div>
-
-              {/* 5. CTA Button */}
+              {/* 3. CTA Button */}
               <motion.div
                 initial={{ opacity: 0, y: 25, scale: 0.95 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}

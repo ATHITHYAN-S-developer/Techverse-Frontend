@@ -15,7 +15,6 @@ import {
   COLLEGE_NAME,
   COLLEGE_LOCATION,
   COLLEGE_LINKS,
-  NAV_LINKS,
 } from "../config/site";
 import { recordAndGetVisitorCount } from "../services/visitorService";
 import techverseLogoImg from "../assets/techverse-logo.png";
@@ -61,7 +60,7 @@ export default function Footer() {
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-600 via-blue-400 to-blue-600" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 pb-14 border-b border-vcet-gray-border/20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12 pb-14 border-b border-vcet-gray-border/20">
           {/* Column 1: Brand & College Emblem */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -73,10 +72,6 @@ export default function Footer() {
                 />
               </div>
             </div>
-
-            <p className="text-xs text-vcet-gray leading-relaxed pt-1 font-normal">
-              A student-focused technology resource discovery hub created for the engineering scholars of {COLLEGE_NAME}.
-            </p>
 
             {/* 25 Years Silver Jubilee celebration emblem */}
             {!jubileeError && (
@@ -92,58 +87,6 @@ export default function Footer() {
                 </span>
               </div>
             )}
-          </div>
-
-          {/* Column 2: Quick Links */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-5 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-              QUICK LINKS
-            </h4>
-            <ul className="space-y-2.5 text-xs font-medium">
-              {NAV_LINKS.map((link) => (
-                <li key={link.name}>
-                  <Link
-                    to={link.href}
-                    className="group text-vcet-gray hover:text-white transition-colors inline-flex items-center gap-2"
-                  >
-                    <span className="text-blue-400 group-hover:translate-x-0.5 transition-transform duration-200">→</span>
-                    <span className="relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-400 after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-200">
-                      {link.name}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3: Resource Domains */}
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-white mb-5 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-              RESOURCE DOMAINS
-            </h4>
-            <ul className="space-y-2.5 text-xs font-medium">
-              {[
-                { name: "Department E-Resources", href: "/departments" },
-                { name: "Tech Pulse (App Updates)", href: "/updates" },
-                { name: "Tech Vision (YouTube)", href: "/youtube" },
-                { name: "Skill Forge (Aptitude)", href: "/aptitude" },
-                { name: "Institutional Notices", href: "/announcements" },
-              ].map((domain) => (
-                <li key={domain.name}>
-                  <Link
-                    to={domain.href}
-                    className="group text-vcet-gray hover:text-white transition-colors inline-flex items-center gap-2"
-                  >
-                    <span className="text-blue-400 group-hover:translate-x-0.5 transition-transform duration-200">→</span>
-                    <span className="relative inline-block after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-blue-400 after:origin-bottom-left hover:after:scale-x-100 after:transition-transform after:duration-200">
-                      {domain.name}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
           </div>
 
           {/* Column 4: College Institutional Connect */}

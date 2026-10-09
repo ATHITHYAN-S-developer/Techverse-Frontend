@@ -34,19 +34,7 @@ export default function Hero() {
             </span>
           </motion.h1>
 
-          {/* Refined, High-Contrast Description Paragraph */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, delay: 0.35 }}
-            style={{
-              fontFamily: "'Plus Jakarta Sans', 'Inter', sans-serif",
-              textShadow: "0 2px 10px rgba(0,0,0,0.85), 0 4px 20px rgba(0,0,0,0.70)",
-            }}
-            className="max-w-xl text-sm sm:text-base md:text-lg text-white/90 font-normal leading-relaxed px-4"
-          >
-            Your curated gateway to cutting-edge web platforms, real-time tech updates, world-class tutorials, and placement aptitude training.
-          </motion.p>
+
         </div>
       </section>
 

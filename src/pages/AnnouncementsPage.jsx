@@ -314,9 +314,6 @@ export default function AnnouncementsPage() {
               <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                 Campus Announcements &amp; Circulars
               </h1>
-              <p className="text-sm text-slate-500 max-w-2xl font-normal">
-                Stay updated with real-time institutional circulars, semester exam alerts, placement drives, hackathons, workshops, and departmental notifications.
-              </p>
             </div>
 
             <div className="flex items-center gap-3 self-start md:self-center">
@@ -439,9 +436,6 @@ export default function AnnouncementsPage() {
           <div className="text-center py-20 bg-white border border-vcet-line rounded-3xl p-8 shadow-xs">
             <Megaphone className="w-12 h-12 text-slate-300 mx-auto mb-3" />
             <h3 className="text-base sm:text-lg font-bold text-slate-900">No Circulars Found</h3>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1 max-w-sm mx-auto">
-              No matching circulars for the current filter. Try adjusting your search query or reset filters.
-            </p>
             <button
               onClick={() => {
                 setSelectedDept("All");

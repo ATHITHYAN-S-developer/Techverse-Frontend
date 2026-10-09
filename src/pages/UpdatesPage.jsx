@@ -51,7 +51,6 @@ export default function UpdatesPage() {
         resources={updateResources}
         pageTitle="Tech Pulse — Apps for Tech Updates"
         badgeText="REAL-TIME TECH FEEDS & APPS"
-        subtitle="Stay ahead with real-time news, curated engineering feeds, breaking startup developments, and community discussions."
         ctaText="VIEW ANNOUNCEMENTS"
         ctaLink="/announcements"
       />

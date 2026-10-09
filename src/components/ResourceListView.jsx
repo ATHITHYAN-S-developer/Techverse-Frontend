@@ -203,16 +203,7 @@ export default function ResourceListView({
                 delay={0.12}
               />
 
-              {subtitle && (
-                <motion.p
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
-                  className="mt-3 text-sm sm:text-base text-blue-100/90 leading-relaxed font-normal max-w-xl"
-                >
-                  {subtitle}
-                </motion.p>
-              )}
+
             </div>
 
             <motion.div

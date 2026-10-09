@@ -150,14 +150,6 @@ export default function CoursesPage() {
                 delay={0.12}
               />
 
-              <motion.p
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.1, ease: "easeOut" }}
-                className="mt-3 text-sm sm:text-base text-slate-600 leading-relaxed font-medium max-w-xl"
-              >
-                Gain industry-ready competencies in Full-Stack Development, AI & ML, Cloud Architecture, and DevOps with verified VCET credentials.
-              </motion.p>
             </div>
 
             <motion.div
@@ -341,9 +333,6 @@ export default function CoursesPage() {
               <h3 className="text-base sm:text-lg font-extrabold text-slate-800">
                 No Courses Available in Catalog
               </h3>
-              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                Technical courses published by faculty and administrators will automatically appear here for enrollment and learning.
-              </p>
             </div>
             <div className="pt-2">
               <Link

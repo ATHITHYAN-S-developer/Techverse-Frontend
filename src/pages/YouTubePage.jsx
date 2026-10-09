@@ -55,7 +55,6 @@ export default function YouTubePage() {
         resources={youtubeResources}
         pageTitle="Tech Vision — Tech YouTube Channels"
         badgeText="CURATED VIDEO REPOSITORIES"
-        subtitle="Explore high-impact video channels breaking down complex engineering principles, AI breakthroughs, and software development."
         ctaText="EXPLORE COURSES"
         ctaLink="/courses"
       />
