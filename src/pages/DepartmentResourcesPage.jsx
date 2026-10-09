@@ -268,12 +268,7 @@ export default function DepartmentResourcesPage() {
                 />
               </div>
 
-              {/* Subtitle with fade-in */}
-              <FadeInUp delay={0.25}>
-                <p className="mt-3 text-sm sm:text-base text-blue-100/80 leading-relaxed max-w-xl">
-                  Curated unit lecture notes, Anna University syllabus outlines, question banks, and licensed software across all engineering branches.
-                </p>
-              </FadeInUp>
+
             </div>
 
             {/* Quick Metrics Statistics (Only Total Items & Branches) */}

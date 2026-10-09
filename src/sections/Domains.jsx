@@ -45,10 +45,10 @@ export default function Domains({ resources = [] }) {
         id="section-updates"
         className="py-10 sm:py-14 lg:py-16 border-y border-slate-200/70 relative overflow-hidden bg-[#FAFAFA] shadow-xs"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12">
           {/* LEFT: Text Content with Padding */}
-          <div className="w-full lg:w-[52%] flex items-center">
-            <div className="max-w-xl mx-auto lg:mx-0 space-y-5">
+          <div className="w-full lg:w-[52%] flex flex-col justify-center items-start">
+            <div className="w-full max-w-xl space-y-4 sm:space-y-5 text-left">
               {/* 1. Section Number & Pill */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -72,7 +72,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.2 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
+                className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
               >
                 Tech Pulse — Apps for Tech Updates
               </motion.h2>
@@ -83,7 +83,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.6, ease: EASE_EXPO, delay: 0.5 }}
-                className="pt-2"
+                className="pt-2 hidden sm:block"
               >
                 <button
                   type="button"
@@ -106,7 +106,7 @@ export default function Domains({ resources = [] }) {
           {/* RIGHT: Uniform Framed Image */}
           <div
             onClick={() => navigate("/updates")}
-            className="w-full lg:w-[48%] h-[320px] sm:h-[380px] lg:h-[420px] relative group cursor-pointer overflow-hidden rounded-3xl shadow-lg border border-slate-200/80 flex shrink-0"
+            className="w-full lg:w-[48%] h-[220px] sm:h-[380px] lg:h-[420px] relative group cursor-pointer overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200/80 flex shrink-0"
           >
             <img
               src={techPulseImg}
@@ -125,23 +125,23 @@ export default function Domains({ resources = [] }) {
             />
 
             {/* Ambient Overlay & Badge */}
-            <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-6 sm:p-8 pointer-events-none">
-              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                <FiBell size={14} />
+            <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-4 sm:p-6 lg:p-8 pointer-events-none">
+              <div className="self-start px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 sm:gap-2 shadow-sm">
+                <FiBell size={13} className="sm:w-3.5 sm:h-3.5" />
                 <span>Real-Time Updates</span>
               </div>
 
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <span className="text-xs uppercase tracking-widest text-vcet-gray font-mono block">
+                  <span className="text-[10px] sm:text-xs uppercase tracking-widest text-vcet-gray font-mono block">
                     RESOURCE DOMAIN
                   </span>
-                  <h4 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  <h4 className="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight">
                     Tech Pulse
                   </h4>
                 </div>
 
-                <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
+                <span className="text-[11px] sm:text-xs font-bold px-2.5 py-1 sm:px-3.5 sm:py-1.5 bg-vcet-blue text-white rounded-lg sm:rounded-xl shadow-xs">
                   {pulseCount || 8}+ Feeds & Apps
                 </span>
               </div>
@@ -157,11 +157,11 @@ export default function Domains({ resources = [] }) {
         id="section-youtube"
         className="py-10 sm:py-14 lg:py-16 border-y border-slate-200/70 relative overflow-hidden bg-white shadow-xs"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12">
           {/* LEFT: Uniform Framed Image */}
           <div
             onClick={() => navigate("/youtube")}
-            className="w-full lg:w-[48%] h-[320px] sm:h-[380px] lg:h-[420px] relative group cursor-pointer overflow-hidden rounded-3xl shadow-lg border border-slate-200/80 flex shrink-0 order-2 lg:order-1"
+            className="w-full lg:w-[48%] h-[220px] sm:h-[380px] lg:h-[420px] relative group cursor-pointer overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200/80 flex shrink-0 order-2 lg:order-1"
           >
             <img
               src={techVisionImg}
@@ -180,23 +180,23 @@ export default function Domains({ resources = [] }) {
             />
 
             {/* Ambient Overlay & Badge */}
-            <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-6 sm:p-8 pointer-events-none">
-              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                <FiYoutube size={14} />
+            <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-4 sm:p-6 lg:p-8 pointer-events-none">
+              <div className="self-start px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 sm:gap-2 shadow-sm">
+                <FiYoutube size={13} className="sm:w-3.5 sm:h-3.5" />
                 <span>Video Channels</span>
               </div>
 
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <span className="text-xs uppercase tracking-widest text-vcet-gray font-mono block">
+                  <span className="text-[10px] sm:text-xs uppercase tracking-widest text-vcet-gray font-mono block">
                     RESOURCE DOMAIN
                   </span>
-                  <h4 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  <h4 className="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight">
                     Tech Vision
                   </h4>
                 </div>
 
-                <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
+                <span className="text-[11px] sm:text-xs font-bold px-2.5 py-1 sm:px-3.5 sm:py-1.5 bg-vcet-blue text-white rounded-lg sm:rounded-xl shadow-xs">
                   {getCount("youtube") || 6}+ Curated Channels
                 </span>
               </div>
@@ -204,8 +204,8 @@ export default function Domains({ resources = [] }) {
           </div>
 
           {/* RIGHT: Text Content with Padding */}
-          <div className="w-full lg:w-[52%] flex items-center order-1 lg:order-2">
-            <div className="max-w-xl mx-auto lg:mx-0 space-y-5">
+          <div className="w-full lg:w-[52%] flex flex-col justify-center items-start order-1 lg:order-2">
+            <div className="w-full max-w-xl space-y-4 sm:space-y-5 text-left">
               {/* 1. Section Number & Pill */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -229,7 +229,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.65, ease: EASE_EXPO, delay: 0.2 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
+                className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
               >
                 Tech Vision — Tech YouTube Channels
               </motion.h2>
@@ -240,7 +240,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.6, ease: EASE_EXPO, delay: 0.5 }}
-                className="pt-2"
+                className="pt-2 hidden sm:block"
               >
                 <button
                   type="button"
@@ -269,10 +269,10 @@ export default function Domains({ resources = [] }) {
         id="section-aptitude"
         className="py-10 sm:py-14 lg:py-16 border-y border-slate-200/70 relative overflow-hidden bg-[#FAFAFA] shadow-xs"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12">
           {/* LEFT: Text Content with Padding */}
-          <div className="w-full lg:w-[52%] flex items-center">
-            <div className="max-w-xl mx-auto lg:mx-0 space-y-5">
+          <div className="w-full lg:w-[52%] flex flex-col justify-center items-start">
+            <div className="w-full max-w-xl space-y-4 sm:space-y-5 text-left">
               {/* 1. Section Number & Pill */}
               <motion.div
                 initial={{ opacity: 0, y: 25, scale: 0.95 }}
@@ -296,7 +296,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.2 }}
-                className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
+                className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-vcet-dark tracking-tight leading-tight"
               >
                 Skill Forge — Aptitude Preparation Apps
               </motion.h2>
@@ -307,7 +307,7 @@ export default function Domains({ resources = [] }) {
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.5 }}
-                className="pt-2"
+                className="pt-2 hidden sm:block"
               >
                 <button
                   type="button"
@@ -330,7 +330,7 @@ export default function Domains({ resources = [] }) {
           {/* RIGHT: Uniform Framed Image */}
           <div
             onClick={() => navigate("/aptitude")}
-            className="w-full lg:w-[48%] h-[320px] sm:h-[380px] lg:h-[420px] relative group cursor-pointer overflow-hidden rounded-3xl shadow-lg border border-slate-200/80 flex shrink-0"
+            className="w-full lg:w-[48%] h-[220px] sm:h-[380px] lg:h-[420px] relative group cursor-pointer overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200/80 flex shrink-0"
           >
             <img
               src={skillForgeImg}
@@ -349,23 +349,23 @@ export default function Domains({ resources = [] }) {
             />
 
             {/* Ambient Overlay & Badge */}
-            <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-6 sm:p-8 pointer-events-none">
-              <div className="self-start px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-sm">
-                <FiAward size={14} />
+            <div className="absolute inset-0 z-20 bg-gradient-to-t from-black/80 via-black/25 to-transparent flex flex-col justify-between p-4 sm:p-6 lg:p-8 pointer-events-none">
+              <div className="self-start px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-white/90 backdrop-blur-md text-vcet-blue text-[11px] sm:text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 sm:gap-2 shadow-sm">
+                <FiAward size={13} className="sm:w-3.5 sm:h-3.5" />
                 <span>Aptitude Training</span>
               </div>
 
               <div className="flex items-center justify-between text-white">
                 <div>
-                  <span className="text-xs uppercase tracking-widest text-vcet-gray font-mono block">
+                  <span className="text-[10px] sm:text-xs uppercase tracking-widest text-vcet-gray font-mono block">
                     RESOURCE DOMAIN
                   </span>
-                  <h4 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+                  <h4 className="text-lg sm:text-2xl lg:text-3xl font-extrabold tracking-tight">
                     Skill Forge
                   </h4>
                 </div>
 
-                <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
+                <span className="text-[11px] sm:text-xs font-bold px-2.5 py-1 sm:px-3.5 sm:py-1.5 bg-vcet-blue text-white rounded-lg sm:rounded-xl shadow-xs">
                   {getCount("aptitude") || 6}+ Platforms & Drills
                 </span>
               </div>
