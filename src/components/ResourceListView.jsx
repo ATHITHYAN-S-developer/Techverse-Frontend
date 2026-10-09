@@ -304,7 +304,9 @@ export default function ResourceListView({
               key={resource.id}
               className={`resource-panel flex flex-col justify-between py-6 px-4 sm:px-6 relative transition-all duration-300 ${
                 isGrid
-                  ? `w-full ${isFeatured ? "bg-vcet-blue/[0.05] rounded-3xl" : ""}`
+                  ? `group/card w-full cursor-pointer ${
+                      isFeatured ? "bg-vcet-blue/[0.05] rounded-3xl" : ""
+                    }`
                   : `shrink-0 snap-start ${
                       isFeatured
                         ? "w-[88vw] sm:w-[54vw] lg:w-[42vw] bg-vcet-blue/[0.05] rounded-3xl"
@@ -317,12 +319,18 @@ export default function ResourceListView({
                 {String(index + 1).padStart(2, "0")}
               </div>
 
-              <div className="space-y-4 relative z-10">
+              {/* In grid mode the card body is left unpositioned so the title
+                  anchor's ::after stretches against the <article> itself and
+                  covers the whole card; z-0 still applies because it is a flex
+                  item. Scroll mode keeps the original z-10 lift. */}
+              <div className={isGrid ? "space-y-4 z-0" : "space-y-4 relative z-10"}>
                 {/* Top Row: Floating Logo & Category */}
                 <div className="flex items-center justify-between">
                   <div
-                    onClick={() => openUrl(resource.url)}
-                    className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform duration-200"
+                    onClick={isGrid ? undefined : () => openUrl(resource.url)}
+                    className={`w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center transition-transform duration-200 ${
+                      isGrid ? "group-hover/card:scale-105" : "cursor-pointer hover:scale-105"
+                    }`}
                   >
                     {logoSrc ? (
                       <img
@@ -356,12 +364,28 @@ export default function ResourceListView({
                   </div>
                 </div>
 
-                {/* Resource Name */}
+                {/* Resource Name — in grid mode this anchor stretches over the
+                    whole card via ::after so any click opens the link. */}
                 <h3
-                  onClick={() => openUrl(resource.url)}
-                  className="text-2xl sm:text-3xl font-extrabold text-vcet-dark tracking-tight leading-snug cursor-pointer hover:text-vcet-blue transition-colors"
+                  onClick={isGrid ? undefined : () => openUrl(resource.url)}
+                  className={`text-2xl sm:text-3xl font-extrabold text-vcet-dark tracking-tight leading-snug transition-colors ${
+                    isGrid
+                      ? "group-hover/card:text-vcet-blue"
+                      : "cursor-pointer hover:text-vcet-blue"
+                  }`}
                 >
-                  {resource.name}
+                  {isGrid ? (
+                    <a
+                      href={resource.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="after:absolute after:inset-0 after:content-[''] after:z-[1]"
+                    >
+                      {resource.name}
+                    </a>
+                  ) : (
+                    resource.name
+                  )}
                 </h3>
 
                 {/* Description in Plain Flow */}
@@ -386,8 +410,15 @@ export default function ResourceListView({
                 )}
               </div>
 
-              {/* Bottom Row: Platform & Plain Text Link with Animated Underline */}
-              <div className="pt-6 border-t border-vcet-gray-border/40 flex items-center justify-between mt-6 relative z-10">
+              {/* Bottom Row: Platform & Plain Text Link with Animated Underline.
+                  In grid mode the row sits under the stretched link (so the
+                  platform area still navigates) and only the button is lifted
+                  above the overlay to keep its own hover/click target. */}
+              <div
+                className={`pt-6 border-t border-vcet-gray-border/40 flex items-center justify-between mt-6 ${
+                  isGrid ? "" : "relative z-10"
+                }`}
+              >
                 <span className="text-[11px] text-vcet-dark/60 font-medium">
                   {resource.platform}
                 </span>
@@ -395,7 +426,9 @@ export default function ResourceListView({
                 <button
                   type="button"
                   onClick={() => openUrl(resource.url)}
-                  className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-vcet-blue hover:text-[#004e87] transition-colors cursor-pointer"
+                  className={`group inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-vcet-blue hover:text-[#004e87] transition-colors cursor-pointer ${
+                    isGrid ? "relative z-[2]" : ""
+                  }`}
                 >
                   <span className="border-b-2 border-vcet-blue group-hover:border-[#004e87] pb-0.5 transition-colors">
                     {getButtonLabel(resource.type)}
