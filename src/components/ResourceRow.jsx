@@ -39,17 +39,6 @@ import techcrunchLogo from "../assets/logos/techcrunch.jpg";
 import theVergeLogo from "../assets/logos/theverge.png";
 import tldrTechLogo from "../assets/logos/tldr.tech.png";
 
-// Import Tech Explore (Technology) Logos
-import aiStudioLogo from "../assets/logos/aistuido.jpg";
-import anthropicLogo from "../assets/logos/anthropic.png";
-import freecodecampLogo from "../assets/logos/freecodecamp.png";
-import googleSkillsLogo from "../assets/logos/google skills.jpg";
-import mitLogo from "../assets/logos/mit.png";
-import openaiLogo from "../assets/logos/openai.png";
-import techradarLogo from "../assets/logos/techradar.jpg";
-import tryhackmeLogo from "../assets/logos/tryhackme.png";
-import wiredLogo from "../assets/logos/wired.webp";
-
 // Import Tech Vision (YouTube) Logos
 import anastasiLogo from "../assets/logos/Anastasi In Tech.jpg";
 import deeplearningAiLogo from "../assets/logos/DeepLearningAI.jpg";
@@ -76,17 +65,6 @@ const LOGO_MAP = {
   "tldr-tech": tldrTechLogo,
   "the-verge": theVergeLogo,
   "product-hunt": productHuntLogo,
-
-  // Technology
-  "google-ai-studio": aiStudioLogo,
-  tryhackme: tryhackmeLogo,
-  wired: wiredLogo,
-  techradar: techradarLogo,
-  "mit-tech-review": mitLogo,
-  "anthropic-blog": anthropicLogo,
-  "openai-blog": openaiLogo,
-  freecodecamp: freecodecampLogo,
-  "cloud-skills-boost": googleSkillsLogo,
 
   // YouTube
   "matt-wolfe": mattWolfeLogo,

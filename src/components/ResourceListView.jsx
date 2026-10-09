@@ -33,17 +33,6 @@ import techcrunchLogo from "../assets/logos/techcrunch.jpg";
 import theVergeLogo from "../assets/logos/theverge.png";
 import tldrTechLogo from "../assets/logos/tldr.tech.png";
 
-// Import Tech Explore (Technology) Logos
-import aiStudioLogo from "../assets/logos/aistuido.jpg";
-import anthropicLogo from "../assets/logos/anthropic.png";
-import freecodecampLogo from "../assets/logos/freecodecamp.png";
-import googleSkillsLogo from "../assets/logos/google skills.jpg";
-import mitLogo from "../assets/logos/mit.png";
-import openaiLogo from "../assets/logos/openai.png";
-import techradarLogo from "../assets/logos/techradar.jpg";
-import tryhackmeLogo from "../assets/logos/tryhackme.png";
-import wiredLogo from "../assets/logos/wired.webp";
-
 // Import Tech Vision (YouTube) Logos
 import anastasiLogo from "../assets/logos/Anastasi In Tech.jpg";
 import deeplearningAiLogo from "../assets/logos/DeepLearningAI.jpg";
@@ -71,17 +60,6 @@ const LOGO_MAP = {
   "the-verge": theVergeLogo,
   "product-hunt": productHuntLogo,
 
-  // Technology
-  "google-ai-studio": aiStudioLogo,
-  tryhackme: tryhackmeLogo,
-  wired: wiredLogo,
-  techradar: techradarLogo,
-  "mit-tech-review": mitLogo,
-  "anthropic-blog": anthropicLogo,
-  "openai-blog": openaiLogo,
-  freecodecamp: freecodecampLogo,
-  "cloud-skills-boost": googleSkillsLogo,
-
   // YouTube
   "matt-wolfe": mattWolfeLogo,
   "ai-explained": aiExplainedLogo,
@@ -95,9 +73,9 @@ const LOGO_MAP = {
 
 export default function ResourceListView({
   resources = [],
-  pageTitle = "",
+  pageTitle = "Curated Resources",
   badgeText = "VCET ACADEMIC & TECH REPOSITORIES",
-  subtitle = "Access hand-picked technology portals, AI research hubs, cybersecurity platforms, and interactive engineering learning resources.",
+  subtitle = "",
   ctaText = "EXPLORE COURSES",
   ctaLink = "/courses",
 }) {
@@ -220,7 +198,7 @@ export default function ResourceListView({
               </motion.div>
 
               <TextReveal
-                text={pageTitle || "Tech Explorer — Websites to Improve Tech Knowledge"}
+                text={pageTitle}
                 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-white"
                 delay={0.12}
               />

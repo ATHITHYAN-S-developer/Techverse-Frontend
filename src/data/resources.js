@@ -1,10 +1,9 @@
 /**
  * Master Resources Dataset - TechVerse (VCET Tech Hub)
- * Organized across 4 Key Technology & Learning Domains:
+ * Organized across 3 Key Technology & Learning Domains:
  * 1. Aptitude Preparation Apps (#aptitude)
  * 2. Apps for Tech Updates (#updates)
- * 3. Websites to Improve Tech Knowledge (#technology)
- * 4. Tech YouTube Channels (#youtube)
+ * 3. Tech YouTube Channels (#youtube)
  */
 
 export const CATEGORIES = [
@@ -166,113 +165,7 @@ export const RESOURCES = [
   },
 
   // ==========================================
-  // 3. TECHNOLOGY WEBSITES (#technology)
-  // ==========================================
-  {
-    id: "google-ai-studio",
-    name: "Google AI Studio",
-    description:
-      "Fastest way to prototype and build production applications with Google Gemini models. Experiment with multimodal prompts, tune parameters, and export code.",
-    category: "AI",
-    type: "technology",
-    platform: "Web Platform",
-    url: "https://aistudio.google.com",
-    tags: ["AI", "Gemini", "Multimodal", "API", "Development"],
-    featured: true,
-  },
-  {
-    id: "tryhackme",
-    name: "TryHackMe",
-    description:
-      "Hands-on browser-based cybersecurity and ethical hacking training platform designed with gamified virtual machines and guided lab pathways.",
-    category: "Cybersecurity",
-    type: "technology",
-    platform: "Web Platform",
-    url: "https://tryhackme.com",
-    tags: ["Cybersecurity", "Ethical Hacking", "Networking", "Hands-on Labs"],
-    featured: true,
-  },
-  {
-    id: "wired",
-    name: "WIRED",
-    description:
-      "Long-form reporting and cultural analysis covering the frontier of science, artificial intelligence, biotechnology, cybersecurity, and digital business.",
-    category: "Research",
-    type: "technology",
-    platform: "Web",
-    url: "https://www.wired.com",
-    tags: ["Tech Journalism", "Science", "AI", "Cybersecurity"],
-  },
-  {
-    id: "techradar",
-    name: "TechRadar",
-    description:
-      "Global technology news, expert buying guides, in-depth hardware benchmarks, and comprehensive computing software reviews.",
-    category: "Technology News",
-    type: "technology",
-    platform: "Web",
-    url: "https://www.techradar.com",
-    tags: ["Hardware", "Reviews", "Software", "Benchmarks"],
-  },
-  {
-    id: "mit-tech-review",
-    name: "MIT Technology Review",
-    description:
-      "Authoritative world-class journalism examining commercial, political, and societal impacts of emerging tech and scientific breakthroughs.",
-    category: "Research",
-    type: "technology",
-    platform: "Web",
-    url: "https://www.technologyreview.com",
-    tags: ["MIT", "Deep Tech", "Biotech", "AI Research"],
-    featured: true,
-  },
-  {
-    id: "anthropic-blog",
-    name: "Anthropic Research & Blog",
-    description:
-      "Frontier research dispatches and safety alignment papers from the creators of Claude. Explore constitutional AI and interpretability research.",
-    category: "AI",
-    type: "technology",
-    platform: "Web",
-    url: "https://www.anthropic.com/research",
-    tags: ["AI", "Claude", "LLMs", "AI Safety", "Research"],
-  },
-  {
-    id: "openai-blog",
-    name: "OpenAI Research",
-    description:
-      "Official publication gateway for GPT model architectures, Sora video generation, robotics, reasoning models, and AI alignment methodologies.",
-    category: "AI",
-    type: "technology",
-    platform: "Web",
-    url: "https://openai.com/news",
-    tags: ["AI", "GPT", "Reasoning", "Machine Learning", "Research"],
-  },
-  {
-    id: "freecodecamp",
-    name: "freeCodeCamp",
-    description:
-      "Free interactive curriculum covering responsive web design, algorithms, Python, machine learning, and relational databases with verified certifications.",
-    category: "Programming",
-    type: "technology",
-    platform: "Web",
-    url: "https://www.freecodecamp.org",
-    tags: ["Programming", "Web Dev", "Python", "Certifications"],
-  },
-  {
-    id: "cloud-skills-boost",
-    name: "Google Cloud Skills Boost",
-    description:
-      "Hands-on labs and certification learning pathways for Google Cloud, Kubernetes, BigQuery data analytics, and generative AI infrastructure.",
-    category: "Cloud",
-    type: "technology",
-    platform: "Web Platform",
-    url: "https://www.cloudskillsboost.google",
-    tags: ["Cloud", "GCP", "Kubernetes", "DevOps", "Labs"],
-  },
-
-  // ==========================================
-  // 4. YOUTUBE CHANNELS (#youtube)
+  // 3. YOUTUBE CHANNELS (#youtube)
   // ==========================================
   {
     id: "matt-wolfe",

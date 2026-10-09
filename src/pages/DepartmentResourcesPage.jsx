@@ -120,8 +120,7 @@ export default function DepartmentResourcesPage() {
       t.includes("simulator") ||
       t.includes("license") ||
       t.includes("video") ||
-      t.includes("website") ||
-      t.includes("technology")
+      t.includes("website")
     );
   };
 

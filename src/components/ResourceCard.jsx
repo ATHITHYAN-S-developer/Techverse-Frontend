@@ -1,6 +1,6 @@
 /**
  * ResourceCard Component for VCET Tech Hub
- * Reusable card for Aptitude, Updates, Technology websites, and YouTube channels.
+ * Reusable card for Aptitude, Updates, and YouTube channels.
  * Strict Palette: White, #C9C9C9 border, #444445 text, #0062A8 blue accents.
  */
 

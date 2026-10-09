@@ -211,7 +211,12 @@ export default function AptitudePage() {
           })}
         </div>
       ) : (
-        <ResourceListView resources={aptitudeResources} pageTitle="Skill Forge — Aptitude Preparation Apps" />
+        <ResourceListView
+          resources={aptitudeResources}
+          pageTitle="Skill Forge — Aptitude Preparation Apps"
+          badgeText="APTITUDE & REASONING DRILLS"
+          subtitle="Sharpen your quantitative, verbal and logical reasoning skills with curated practice apps built for campus placements."
+        />
       )}
     </div>
   );

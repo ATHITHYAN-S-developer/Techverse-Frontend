@@ -40,10 +40,9 @@ main/
 │   │   └── CategoryFilter.jsx     → Category pill filter buttons
 │   │
 │   ├── 📁 pages/                  → Top-Level Application Pages & Views
-│   │   ├── HomePage.jsx           → Cinematic landing page with campus hero, 4 domains, and quick discovery
+│   │   ├── HomePage.jsx           → Cinematic landing page with campus hero, 3 domains, and quick discovery
 │   │   ├── DepartmentResourcesPage.jsx → Academic notes, 5-unit syllabus, question banks & free software across 7 branches
 │   │   ├── TrainingPage.jsx       → Placement training tracks, company crackers (Zoho, TCS, Infosys), bootcamps & PDFs
-│   │   ├── TechnologyPage.jsx     → Tech Explorer: Curated websites for AI, Web, DevOps & Cybersecurity
 │   │   ├── UpdatesPage.jsx        → Tech Pulse: Live developer news feeds (TLDR, Hacker News, Daily.dev)
 │   │   ├── YouTubePage.jsx        → Tech Vision: Curated engineering YouTube video channels
 │   │   ├── AptitudePage.jsx       → Skill Forge: Placement aptitude preparation & formulas
@@ -81,10 +80,9 @@ main/
 
 | Route | Component | Description |
 | :--- | :--- | :--- |
-| `/` | `HomePage` | Campus slideshow, hero search, and the 4 core learning pillars. |
+| `/` | `HomePage` | Campus slideshow, hero search, and the 3 core learning pillars. |
 | `/departments` | `DepartmentResourcesPage` | Subject notes, 5-unit syllabus outlines, question banks, and free software for 7 engineering branches. |
 | `/training` | `TrainingPage` | Placement bootcamps, company test series (Zoho, TCS, Infosys, Cognizant), and PDF toolkits. |
-| `/technology` | `TechnologyPage` | Tech Explorer: Curated websites for web, AI, cloud, and security. |
 | `/updates` | `UpdatesPage` | Tech Pulse: Curated daily developer news feeds. |
 | `/youtube` | `YouTubePage` | Tech Vision: Educational engineering YouTube channels. |
 | `/aptitude` | `AptitudePage` | Skill Forge: Quantitative aptitude and reasoning repositories. |

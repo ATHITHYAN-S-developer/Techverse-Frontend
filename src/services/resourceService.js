@@ -1,6 +1,6 @@
 /**
  * Resource Service
- * Manages academic notes, question banks, previous year papers, lab manuals, software, youtube, updates, technology, aptitude.
+ * Manages academic notes, question banks, previous year papers, lab manuals, software, youtube, updates, aptitude.
  * Uploads are sent as multipart/form-data so PDFs/docs/images land in the server folder, with JSON fallback.
  */
 
@@ -25,7 +25,6 @@ export const RESOURCE_TYPES = [
   { value: "reference", label: "Reference Material" },
   { value: "video", label: "Lecture Video Link" },
   { value: "website", label: "Website / External Link" },
-  { value: "technology", label: "Technology Portal / Website" },
   { value: "updates", label: "Updates & Tech Feed" },
 ];
 
