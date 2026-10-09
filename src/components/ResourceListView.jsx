@@ -276,7 +276,7 @@ export default function ResourceListView({
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {resources.map((resource, index) => {
-          const logoSrc = LOGO_MAP[resource.id];
+          const logoSrc = resource.logoUrl || LOGO_MAP[resource.id];
           const isFeatured = resource.featured;
 
           return (

@@ -1,11 +1,12 @@
 /**
  * Dedicated Page: Tech Pulse (Apps for Tech Updates)
  * Path: /updates
- * Horizontal Snap Showcase with direct app & feed links.
+ * Horizontal Snap Showcase driven by the admin-managed /api/tech-pulse feed,
+ * falling back to the curated local list when the API is unreachable.
  */
 
 import React, { useState, useEffect } from "react";
-import { resourceService } from "../services/resourceService";
+import { techPulseService } from "../services/techPulseService";
 import { RESOURCES } from "../data/resources";
 import ResourceListView from "../components/ResourceListView";
 
@@ -14,24 +15,28 @@ export default function UpdatesPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadResources() {
-      const fallbackUpdates = RESOURCES.filter((item) => item.type === "updates");
-      let list = fallbackUpdates;
-      try {
-        const all = await resourceService.getAllResources();
-        const dbUpdates = all.filter((item) => item.type === "updates");
+    let active = true;
 
-        if (dbUpdates && dbUpdates.length > 0) {
-          list = dbUpdates;
-        }
+    async function loadUpdates() {
+      const fallback = RESOURCES.filter((item) => item.type === "updates");
+      let list = fallback;
+      try {
+        const posts = await techPulseService.getPublished();
+        if (posts && posts.length > 0) list = posts;
       } catch (err) {
         console.warn("Using curated fallback for Tech Pulse resources:", err);
       } finally {
-        setUpdateResources(list);
-        setLoading(false);
+        if (active) {
+          setUpdateResources(list);
+          setLoading(false);
+        }
       }
     }
-    loadResources();
+
+    loadUpdates();
+    return () => {
+      active = false;
+    };
   }, []);
 
   if (loading) {

@@ -5,10 +5,11 @@
  * Palette: VCET Blue (#0062A8), Dark Gray (#444445), Light Gray (#C9C9C9), White (#FFFFFF)
  */
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { FiArrowRight, FiBell, FiYoutube, FiAward } from "react-icons/fi";
+import { techPulseService } from "../services/techPulseService";
 
 // Import High-Res 3 Domain Visuals
 import techPulseImg from "../assets/domains/Tech Pulse.jpg";
@@ -20,6 +21,17 @@ const EASE_EXPO = [0.16, 1, 0.3, 1];
 
 export default function Domains({ resources = [] }) {
   const navigate = useNavigate();
+  const [pulseCount, setPulseCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    techPulseService.getCount().then((count) => {
+      if (active) setPulseCount(count);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const getCount = (type) => resources.filter((r) => r.type === type).length;
 
@@ -130,7 +142,7 @@ export default function Domains({ resources = [] }) {
                 </div>
 
                 <span className="text-xs font-bold px-3.5 py-1.5 bg-vcet-blue text-white rounded-xl shadow-xs">
-                  {getCount("updates") || 8}+ Feeds & Apps
+                  {pulseCount || 8}+ Feeds & Apps
                 </span>
               </div>
             </div>
