@@ -110,8 +110,19 @@ export function AuthProvider({ children }) {
     }
   }, [user, refreshStreak]);
 
-  const login = async (credentials, secret, keepSignedIn = true, role = "student") => {
-    const authenticatedUser = await authLogin(credentials, secret, keepSignedIn, role);
+  const login = async (credentials, secret, keepSignedIn = true, role = null) => {
+    const effectiveRole =
+      (typeof credentials === "object" && credentials?.role) || role || "student";
+    const effectiveKeepSignedIn =
+      typeof credentials === "object" && credentials?.rememberMe !== undefined
+        ? credentials.rememberMe
+        : keepSignedIn;
+    const authenticatedUser = await authLogin(
+      credentials,
+      secret,
+      effectiveKeepSignedIn,
+      effectiveRole
+    );
     setUser(authenticatedUser);
     setGamification(normaliseGamification(authenticatedUser));
     setGamificationLoading(true);

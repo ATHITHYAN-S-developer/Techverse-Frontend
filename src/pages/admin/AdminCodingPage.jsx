@@ -34,6 +34,9 @@ import {
   Hash,
   Sliders,
   Cpu,
+  LayoutGrid,
+  List,
+  Info,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
@@ -130,9 +133,14 @@ export default function AdminCodingPage() {
 
   const [tests, setTests] = useState([]);
   const [selectedTestId, setSelectedTestId] = useState("");
+  const [openedTrackId, setOpenedTrackId] = useState(null);
+  const [trackSearchTerm, setTrackSearchTerm] = useState("");
+  const [deptFilter, setDeptFilter] = useState("ALL");
+  const [trackSortBy, setTrackSortBy] = useState("recent");
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [diffFilter, setDiffFilter] = useState("ALL");
+  const [viewMode, setViewMode] = useState("cards"); // "cards" | "table"
   const [departments, setDepartments] = useState(DEFAULT_DEPARTMENTS);
 
   // Problem Modal
@@ -221,8 +229,42 @@ export default function AdminCodingPage() {
     loadData();
   }, []);
 
-  const activeTest = tests.find((t) => t._id === selectedTestId) || tests[0];
+  const activeTest = tests.find((t) => t._id === (openedTrackId || selectedTestId)) || tests[0];
   const problemsList = activeTest?.problems || [];
+
+  const totalAllProblems = tests.reduce((acc, t) => acc + (t.problems?.length || 0), 0);
+  const totalAllCases = tests.reduce(
+    (acc, t) =>
+      acc +
+      (t.problems || []).reduce(
+        (pAcc, p) => pAcc + (p.publicTestCases?.length || 0) + (p.hiddenTestCases?.length || 0),
+        0
+      ),
+    0
+  );
+  const totalProctoredTracks = tests.filter((t) => t.fullscreenRequired !== false).length;
+
+  const filteredTracks = tests
+    .filter((t) => {
+      const matchesSearch =
+        t.title.toLowerCase().includes(trackSearchTerm.toLowerCase()) ||
+        (t.department && t.department.toLowerCase().includes(trackSearchTerm.toLowerCase())) ||
+        (t.description && t.description.toLowerCase().includes(trackSearchTerm.toLowerCase()));
+      const matchesDept =
+        deptFilter === "ALL" ||
+        (t.targetAudience === "department" && t.department === deptFilter) ||
+        (deptFilter === "ALL_VCET" && (t.targetAudience !== "department" || t.department === "ALL"));
+      return matchesSearch && matchesDept;
+    })
+    .sort((a, b) => {
+      if (trackSortBy === "problems") {
+        return (b.problems?.length || 0) - (a.problems?.length || 0);
+      }
+      if (trackSortBy === "name") {
+        return a.title.localeCompare(b.title);
+      }
+      return 0; // recent/default
+    });
 
   const filteredProblems = problemsList.filter((p) => {
     const matchesSearch =
@@ -430,6 +472,7 @@ export default function AdminCodingPage() {
       await codingService.deleteCodingTest(testId);
       showSuccess("Assessment deleted ✓");
       setSelectedTestId("");
+      if (openedTrackId === testId) setOpenedTrackId(null);
       loadData();
     } catch (err) {
       showError("Failed to delete assessment");
@@ -528,313 +571,678 @@ export default function AdminCodingPage() {
   const totalPublicCases = problemsList.reduce((acc, p) => acc + (p.publicTestCases?.length || 0), 0);
   const totalHiddenCases = problemsList.reduce((acc, p) => acc + (p.hiddenTestCases?.length || 0), 0);
 
+  const trackBadgeColors = [
+    { bg: "bg-emerald-600", border: "border-emerald-500/20", glyph: ">_" },
+    { bg: "bg-blue-600", border: "border-blue-500/20", glyph: "</>" },
+    { bg: "bg-purple-600", border: "border-purple-500/20", glyph: "{ }" },
+    { bg: "bg-amber-600", border: "border-amber-500/20", glyph: "λ" },
+    { bg: "bg-indigo-600", border: "border-indigo-500/20", glyph: "#!" },
+  ];
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto text-slate-800 pb-16">
-      {/* 1. Ultra-Modern Header Banner */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 border border-slate-800 p-6 sm:p-8 text-white shadow-xl overflow-hidden">
-        {/* Glow orb decorations */}
-        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/15 text-sky-300 text-xs font-bold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>VCET Algorithmic Assessment Studio v2.4</span>
+    <div className="space-y-7 max-w-7xl mx-auto text-slate-800 pb-16">
+      {!openedTrackId ? (
+        /* =========================================================================
+           CATALOG VIEW (Inspired directly by Examly My Courses & Courses & Badges)
+           ========================================================================= */
+        <div className="space-y-7">
+          {/* Top Search & Filter Bar */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={trackSearchTerm}
+                onChange={(e) => setTrackSearchTerm(e.target.value)}
+                placeholder="Search assessment tracks by title, department, or keywords..."
+                className="w-full pl-10 pr-10 py-2.5 bg-slate-50/80 rounded-xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-vcet-blue focus:bg-white transition-all outline-none"
+              />
+              {trackSearchTerm && (
+                <button
+                  onClick={() => setTrackSearchTerm("")}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
-              <Code2 className="w-7 h-7 text-sky-400" />
-              <span>Faculty Coding Engineering Studio</span>
-            </h1>
-            <p className="text-slate-300 text-xs sm:text-sm max-w-2xl leading-relaxed">
-              Design enterprise coding challenges, configure starter code templates in 5 programming languages, and build hidden verification test suites for automated student proctoring.
-            </p>
 
-            {/* Quick Metrics Chips */}
-            <div className="flex flex-wrap items-center gap-2.5 pt-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-slate-200">
-                <Hash className="w-3.5 h-3.5 text-sky-400" />
-                <span>{problemsList.length} Challenges</span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-slate-200">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{totalPublicCases + totalHiddenCases} Verification Test Cases</span>
-              </div>
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-slate-200">
-                {activeTest?.targetAudience === "department" && activeTest?.department !== "ALL" ? (
-                  <>
-                    <GraduationCap className="w-3.5 h-3.5 text-purple-400" />
-                    <span>{activeTest.department} Department Restricted</span>
-                  </>
-                ) : (
-                  <>
-                    <Globe className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Open to All VCETians</span>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <button
-              onClick={handleOpenAddTest}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs backdrop-blur-md transition-all cursor-pointer shadow-sm active:scale-95"
-            >
-              <FolderPlus className="w-4 h-4 text-sky-300" />
-              <span>New Assessment Track</span>
-            </button>
-
-            <button
-              onClick={handleOpenAddProblem}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-black text-xs shadow-lg shadow-blue-500/25 active:scale-95 transition-all cursor-pointer border border-blue-400/30"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Create Coding Problem</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Assessment Track Switcher Tabs */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Layers className="w-4 h-4 text-vcet-blue" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-slate-500">
-              Active Assessment Tracks ({tests.length})
-            </span>
-          </div>
-          <button
-            onClick={loadData}
-            className="text-xs text-vcet-blue font-bold hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Refresh</span>
-          </button>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          {tests.map((t) => {
-            const isSelected = activeTest?._id === t._id || activeTest?.slug === t.slug;
-            const isDept = t.targetAudience === "department" && t.department && t.department !== "ALL";
-            return (
-              <div
-                key={t._id}
-                className={`group flex items-center gap-2 px-4 py-2 rounded-2xl border text-xs font-bold transition-all cursor-pointer ${
-                  isSelected
-                    ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-blue-500/40"
-                    : "bg-slate-50 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:border-slate-300"
-                }`}
-                onClick={() => setSelectedTestId(t._id)}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <select
+                value={deptFilter}
+                onChange={(e) => setDeptFilter(e.target.value)}
+                className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 outline-none focus:border-vcet-blue cursor-pointer"
               >
-                <span>{t.title}</span>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                    isSelected
-                      ? "bg-white/20 text-white"
-                      : isDept
-                      ? "bg-purple-100 text-purple-700 border border-purple-200"
-                      : "bg-blue-50 text-blue-700 border border-blue-200"
-                  }`}
-                >
-                  {isDept ? `${t.department} Only` : "All VCET"}
-                </span>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
-                    isSelected ? "bg-white/15 text-slate-200" : "bg-slate-200 text-slate-600"
-                  }`}
-                >
-                  {t.problems?.length || 0} Probs
-                </span>
-                {isSelected && (
-                  <div className="flex items-center gap-1 ml-1 border-l border-white/20 pl-1.5">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenEditTest(t);
-                      }}
-                      className="opacity-75 hover:opacity-100 text-sky-300 hover:text-white p-1 rounded hover:bg-white/10 cursor-pointer"
-                      title="Edit Track & Scope"
-                    >
-                      <Edit className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteTest(t._id);
-                      }}
-                      className="opacity-75 hover:opacity-100 text-rose-300 hover:text-rose-100 p-1 rounded hover:bg-white/10 cursor-pointer"
-                      title="Delete Track"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                <option value="ALL">All Departments</option>
+                <option value="ALL_VCET">Open to All VCET</option>
+                {departments.map((d) => (
+                  <option key={d._id || d.code} value={d.code}>
+                    {d.name || d.code}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={loadData}
+                className="p-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-600 cursor-pointer transition-colors"
+                title="Refresh Tracks"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-vcet-blue" : ""}`} />
+              </button>
+
+              <button
+                onClick={handleOpenAddTest}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>New Assessment Track</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Section 1: Recently Active Tracks (Full Width) */}
+          <div className="space-y-3.5">
+            <div className="flex items-center justify-between px-1">
+              <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
+                Recently Active Tracks
+              </h2>
+              <span className="text-xs text-slate-400 font-semibold">
+                Showing top {Math.min(filteredTracks.length, 3)}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredTracks.slice(0, 3).map((t, idx) => {
+                const isDept = t.targetAudience === "department" && t.department && t.department !== "ALL";
+                const badgeStyle = trackBadgeColors[idx % trackBadgeColors.length];
+                return (
+                  <div
+                    key={t._id}
+                    onClick={() => {
+                      setSelectedTestId(t._id);
+                      setOpenedTrackId(t._id);
+                    }}
+                    className="group bg-white rounded-2xl border border-slate-200/80 p-5 hover:border-vcet-blue/60 hover:shadow-lg shadow-2xs transition-all cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Top row: square badge and info icon */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div
+                          className={`w-12 h-12 rounded-xl ${badgeStyle.bg} flex items-center justify-center font-mono font-black text-sm text-white shadow-xs tracking-tight shrink-0`}
+                        >
+                          {badgeStyle.glyph}
+                        </div>
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            showInfo(t.description || "Assessment track designed for algorithmic evaluation.");
+                          }}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                          title="Track Details"
+                        >
+                          <Info className="w-4 h-4" />
+                        </div>
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="font-extrabold text-sm sm:text-base text-slate-900 group-hover:text-vcet-blue transition-colors line-clamp-2 leading-snug">
+                        {t.title}
+                      </h3>
+
+                      {/* Subtitle / Scope Status */}
+                      <p className="mt-1 text-xs text-slate-500 font-medium">
+                        <span className={isDept ? "text-purple-600 font-bold" : "text-blue-600 font-bold"}>
+                          {isDept ? `${t.department} Department` : "All VCETians"}
+                        </span>
+                        {" • "}
+                        <span>{t.problems?.length || 0} Challenges Configured</span>
+                      </p>
+
+                      {/* 2x2 Metadata Grid (Examly Style) */}
+                      <div className="mt-4 pt-3.5 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                          <FileCode className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="truncate font-semibold">{t.problems?.length || 0} Assessment</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="truncate font-semibold">Proctored</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                          <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span className="truncate font-semibold">{t.timeLimit ? `${t.timeLimit} Mins` : "45 Mins"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-600 bg-slate-50 px-2.5 py-1.5 rounded-lg border border-slate-100">
+                          <GraduationCap className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                          <span className="truncate font-semibold">{isDept ? t.department : "All Batches"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer: Open Button */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-black text-vcet-blue group-hover:underline flex items-center gap-1">
+                        <span>Open Track & Problems</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleOpenEditTest(t)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-vcet-blue hover:bg-blue-50 transition-colors"
+                          title="Edit Track"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTest(t._id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          title="Delete Track"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 2: All Assessment Tracks (Matching "My Courses" in Examly) */}
+          <div className="space-y-4 pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/80 pb-3">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-black text-slate-900 tracking-tight">All Assessment Tracks</h2>
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold">
+                  {filteredTracks.length}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-400 font-semibold">Sort By:</span>
+                  <select
+                    value={trackSortBy}
+                    onChange={(e) => setTrackSortBy(e.target.value)}
+                    className="px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-vcet-blue cursor-pointer"
+                  >
+                    <option value="recent">Recently Added</option>
+                    <option value="problems">Most Challenges</option>
+                    <option value="name">Track Name (A-Z)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Grid of Track Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filteredTracks.map((t, idx) => {
+                const isDept = t.targetAudience === "department" && t.department && t.department !== "ALL";
+                const badgeStyle = trackBadgeColors[idx % trackBadgeColors.length];
+
+                return (
+                  <div
+                    key={t._id}
+                    onClick={() => {
+                      setSelectedTestId(t._id);
+                      setOpenedTrackId(t._id);
+                    }}
+                    className="group bg-white rounded-2xl border border-slate-200/80 p-5 hover:border-vcet-blue hover:shadow-lg shadow-2xs transition-all cursor-pointer flex flex-col justify-between"
+                  >
+                    <div>
+                      {/* Top row */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div
+                          className={`w-11 h-11 rounded-xl ${badgeStyle.bg} flex items-center justify-center font-mono font-black text-sm text-white shadow-xs tracking-tight shrink-0`}
+                        >
+                          {badgeStyle.glyph}
+                        </div>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
+                            isDept
+                              ? "bg-purple-50 text-purple-700 border border-purple-200"
+                              : "bg-blue-50 text-blue-700 border border-blue-200"
+                          }`}
+                        >
+                          {isDept ? t.department : "All VCET"}
+                        </span>
+                      </div>
+
+                      <h3 className="font-extrabold text-sm text-slate-900 group-hover:text-vcet-blue transition-colors line-clamp-2 leading-snug">
+                        {t.title}
+                      </h3>
+
+                      <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
+                        {t.description || "Algorithmic assessment track"}
+                      </p>
+
+                      {/* 2x2 Metadata Grid */}
+                      <div className="mt-4 pt-3.5 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100">
+                          <FileCode className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                          <span className="truncate font-semibold">{t.problems?.length || 0} Challenges</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="truncate font-semibold">Proctored</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100">
+                          <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span className="truncate font-semibold">{t.timeLimit ? `${t.timeLimit} Mins` : "45 Mins"}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-100">
+                          <GraduationCap className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                          <span className="truncate font-semibold">{isDept ? t.department : "All Batches"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-black text-vcet-blue group-hover:underline flex items-center gap-1">
+                        <span>Open Challenges</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </span>
+                      <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleOpenEditTest(t)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-vcet-blue hover:bg-blue-50 transition-colors"
+                          title="Edit Track"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTest(t._id)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          title="Delete Track"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Add New Track Dashed Card */}
+              <div
+                onClick={handleOpenAddTest}
+                className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-vcet-blue hover:bg-blue-50/20 p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all group min-h-[220px]"
+              >
+                <div className="w-12 h-12 rounded-xl bg-slate-100 group-hover:bg-blue-100 text-slate-500 group-hover:text-vcet-blue flex items-center justify-center mb-2.5 transition-colors">
+                  <Plus className="w-6 h-6" />
+                </div>
+                <h4 className="font-extrabold text-sm text-slate-700 group-hover:text-vcet-blue">
+                  Create Assessment Track
+                </h4>
+                <p className="text-xs text-slate-400 mt-1 max-w-[200px]">
+                  Add course modules, practice tests, or placement drives
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* =========================================================================
+           TRACK WORKSPACE VIEW (When a Track is Clicked / Opened)
+           ========================================================================= */
+        <div className="space-y-6">
+          {/* Breadcrumb & Back button */}
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setOpenedTrackId(null)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-bold text-xs transition-all cursor-pointer shadow-2xs group"
+            >
+              <ChevronLeft className="w-4 h-4 text-slate-400 group-hover:text-vcet-blue transition-colors" />
+              <span>Back to Assessment Tracks</span>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleOpenEditTest(activeTest)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition-all cursor-pointer"
+              >
+                <Edit className="w-3.5 h-3.5 text-vcet-blue" />
+                <span>Track Settings</span>
+              </button>
+              <Link
+                to="/student/coding"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition-all"
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                <span>Student Preview</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Focused Track Header Card */}
+          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start gap-4">
+              <div className="w-14 h-14 rounded-2xl bg-vcet-blue text-white flex items-center justify-center font-mono font-black text-lg shadow-md shadow-blue-500/20 shrink-0">
+                &gt;_
+              </div>
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-1">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-vcet-blue px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200">
+                    Active Assessment Track
+                  </span>
+                  <span className="text-xs text-slate-400">•</span>
+                  <span className="text-xs font-bold text-slate-600">
+                    {activeTest?.targetAudience === "department" && activeTest?.department !== "ALL"
+                      ? `${activeTest.department} Department Restricted`
+                      : "Open to All VCETians"}
+                  </span>
+                  <span className="text-xs text-slate-400">•</span>
+                  <span className="text-xs font-bold text-slate-600">
+                    {activeTest?.timeLimit || 45} Mins Duration
+                  </span>
+                </div>
+                <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                  {activeTest?.title}
+                </h1>
+                <p className="text-slate-500 text-xs sm:text-sm mt-0.5 max-w-3xl">
+                  {activeTest?.description ||
+                    "Design and manage algorithmic challenges, starter templates, and automated verification suites for this track."}
+                </p>
+              </div>
+            </div>
+
+            <div className="shrink-0">
+              <button
+                onClick={handleOpenAddProblem}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer w-full sm:w-auto justify-center"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Coding Problem</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Challenges Section */}
+          <div className="space-y-4">
+            {/* Search & Filters */}
+            <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
+              <div className="relative flex-1 w-full">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search challenges by title, tags (Zoho, Array, DP), or description..."
+                  className="w-full pl-9 pr-9 py-2 bg-slate-50/80 rounded-xl text-xs border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-vcet-blue focus:bg-white transition-all outline-none"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 )}
               </div>
-            );
-          })}
 
-          <button
-            onClick={handleOpenAddTest}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-2xl border border-dashed border-slate-300 text-slate-600 hover:text-vcet-blue hover:border-vcet-blue hover:bg-blue-50/50 text-xs font-bold transition-all cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Track</span>
-          </button>
-        </div>
-      </div>
+              <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+                <div className="flex items-center gap-1.5">
+                  {["ALL", "Easy", "Medium", "Hard"].map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setDiffFilter(d)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                        diffFilter === d
+                          ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                          : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                      }`}
+                    >
+                      {d === "ALL" ? "All Levels" : d}
+                    </button>
+                  ))}
+                </div>
 
-      {/* 3. Search & Filters Bar */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl p-4 shadow-xs flex flex-col md:flex-row items-center gap-3">
-        <div className="relative flex-1 w-full">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search problems by title, tags (Zoho, Array, DP), or description..."
-            className="w-full pl-10 pr-10 py-2.5 bg-slate-50/80 rounded-2xl text-xs sm:text-sm border border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-vcet-blue focus:bg-white transition-all outline-none"
-          />
-          {searchTerm && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+                {/* View Switcher */}
+                <div className="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200">
+                  <button
+                    onClick={() => setViewMode("cards")}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === "cards" ? "bg-white text-vcet-blue shadow-2xs font-bold" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("table")}
+                    className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                      viewMode === "table" ? "bg-white text-vcet-blue shadow-2xs font-bold" : "text-slate-500 hover:text-slate-700"
+                    }`}
+                    title="Table View"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          {["ALL", "Easy", "Medium", "Hard"].map((d) => (
-            <button
-              key={d}
-              onClick={() => setDiffFilter(d)}
-              className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer border ${
-                diffFilter === d
-                  ? "bg-slate-900 text-white border-slate-900 shadow-xs"
-                  : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
-              }`}
-            >
-              {d === "ALL" ? "All Levels" : d}
-            </button>
-          ))}
-        </div>
-      </div>
+            {/* Content: Cards or Table */}
+            {viewMode === "cards" ? (
+              filteredProblems.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredProblems.map((p) => {
+                    const badgeStyles =
+                      p.difficulty === "Easy"
+                        ? { bg: "bg-emerald-600", glyph: ">_" }
+                        : p.difficulty === "Medium"
+                        ? { bg: "bg-amber-600", glyph: "</>" }
+                        : { bg: "bg-rose-600", glyph: "{ }" };
 
-      {/* 4. Problems Studio Table */}
-      <div className="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-xs">
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-extrabold text-sm text-slate-900">Challenges in Track:</span>
-            <span className="px-2 py-0.5 rounded-lg bg-blue-50 text-vcet-blue text-xs font-black">
-              {activeTest?.title || "Default Track"}
-            </span>
-          </div>
-          <span className="text-xs font-semibold text-slate-400">
-            Showing {filteredProblems.length} of {problemsList.length} problems
-          </span>
-        </div>
+                    return (
+                      <div
+                        key={p._id || p.id}
+                        className="bg-white rounded-2xl border border-slate-200/80 p-4.5 shadow-2xs hover:shadow-md transition-all flex flex-col justify-between group"
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-3 mb-2.5">
+                            <div
+                              className={`w-10 h-10 rounded-xl ${badgeStyles.bg} text-white flex items-center justify-center font-mono font-bold text-xs shadow-2xs`}
+                            >
+                              {badgeStyles.glyph}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              {getDifficultyBadge(p.difficulty)}
+                              <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-md">
+                                /{p.slug || (p._id && p._id.slice(-5))}
+                              </span>
+                            </div>
+                          </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-700">
-            <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
-              <tr>
-                <th className="px-6 py-4">Challenge & Identifier</th>
-                <th className="px-4 py-4">Difficulty</th>
-                <th className="px-4 py-4">Topic / Companies</th>
-                <th className="px-4 py-4">Verification Suites</th>
-                <th className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filteredProblems.length > 0 ? (
-                filteredProblems.map((p) => (
-                  <tr key={p._id || p.id} className="hover:bg-blue-50/30 transition-colors group">
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-slate-900 text-sm group-hover:text-vcet-blue transition-colors">
-                        {p.title}
-                      </div>
-                      <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center gap-1.5">
-                        <span>/{p.slug || p._id}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-col gap-1 items-start">
-                        {getDifficultyBadge(p.difficulty)}
-                        <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md">
-                          <Clock className="w-3 h-3 text-vcet-blue" />
-                          <span>{p.timeLimit ? `${p.timeLimit} Mins` : `${activeTest?.timeLimit || 45} Mins`}</span>
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 font-medium text-slate-800">
-                      <div className="flex flex-wrap gap-1 max-w-xs">
-                        {(Array.isArray(p.tags) ? p.tags : [p.tags]).filter(Boolean).map((tg, i) => (
-                          <span
-                            key={i}
-                            className="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold border border-slate-200/70"
+                          <h3 className="font-extrabold text-sm text-slate-900 group-hover:text-vcet-blue transition-colors line-clamp-1">
+                            {p.title}
+                          </h3>
+
+                          <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                            {p.description || "Algorithmic challenge designed for automated verification."}
+                          </p>
+
+                          <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px]">
+                            <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                              <Eye className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                              <span className="truncate font-semibold">{p.publicTestCases?.length || 1} Public</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                              <Lock className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                              <span className="truncate font-semibold">{p.hiddenTestCases?.length || 2} Hidden</span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                              <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              <span className="truncate font-semibold">
+                                {p.timeLimit ? `${p.timeLimit}m` : `${activeTest?.timeLimit || 45}m`}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">
+                              <Terminal className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span className="truncate font-semibold">5 Languages</span>
+                            </div>
+                          </div>
+
+                          <div className="mt-2.5 flex flex-wrap gap-1">
+                            {(Array.isArray(p.tags) ? p.tags : [p.tags]).filter(Boolean).map((tg, i) => (
+                              <span
+                                key={i}
+                                className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-[10px] font-bold border border-slate-200/70"
+                              >
+                                {tg}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="mt-3.5 pt-2.5 border-t border-slate-100 flex items-center justify-between">
+                          <button
+                            onClick={() => setPreviewProblem(p)}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-vcet-blue hover:underline cursor-pointer"
                           >
-                            {tg}
-                          </span>
-                        ))}
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Preview Problem</span>
+                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handleOpenEditProblem(p)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-vcet-blue hover:bg-blue-50 transition-colors cursor-pointer"
+                              title="Edit Challenge"
+                            >
+                              <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteProblem(p._id || p.id)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                              title="Delete Challenge"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2 text-[11px]">
-                        <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
-                          <Eye className="w-3 h-3 text-emerald-600" />
-                          <span>{p.publicTestCases?.length || 1} Public</span>
-                        </span>
-                        <span className="text-rose-700 font-bold bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1">
-                          <Lock className="w-3 h-3 text-rose-600" />
-                          <span>{p.hiddenTestCases?.length || 2} Hidden</span>
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <button
-                          onClick={() => setPreviewProblem(p)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-vcet-blue transition-colors cursor-pointer"
-                          title="Preview Problem & Test Cases"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleOpenEditProblem(p)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-vcet-blue transition-colors cursor-pointer"
-                          title="Edit Challenge"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProblem(p._id || p.id)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 transition-colors cursor-pointer"
-                          title="Delete Challenge"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                    );
+                  })}
+                </div>
               ) : (
-                <tr>
-                  <td colSpan={5} className="text-center py-16 text-slate-400">
-                    <Code2 className="w-12 h-12 mx-auto text-slate-300 mb-2 stroke-[1.5]" />
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-12 text-center text-slate-400 space-y-3">
+                  <Code2 className="w-12 h-12 mx-auto text-slate-300 stroke-[1.5]" />
+                  <div>
                     <p className="font-bold text-slate-700 text-sm">No coding challenges found in this track.</p>
                     <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                      Click the "Create Coding Problem" button above to author your first algorithmic challenge with custom test suites.
+                      Click below to author your first algorithmic challenge with custom starter code and hidden test suites.
                     </p>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </div>
+                  <button
+                    onClick={handleOpenAddProblem}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-vcet-blue text-white font-bold text-xs shadow-md shadow-blue-500/20 cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Coding Problem</span>
+                  </button>
+                </div>
+              )
+            ) : (
+              <div className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-2xs">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-700">
+                    <thead className="bg-slate-50/80 text-slate-500 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
+                      <tr>
+                        <th className="px-5 py-3.5">Challenge & Identifier</th>
+                        <th className="px-4 py-3.5">Difficulty</th>
+                        <th className="px-4 py-3.5">Topic / Companies</th>
+                        <th className="px-4 py-3.5">Verification Suites</th>
+                        <th className="px-5 py-3.5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredProblems.length > 0 ? (
+                        filteredProblems.map((p) => (
+                          <tr key={p._id || p.id} className="hover:bg-blue-50/30 transition-colors group">
+                            <td className="px-5 py-3.5">
+                              <div className="font-bold text-slate-900 text-sm group-hover:text-vcet-blue transition-colors">
+                                {p.title}
+                              </div>
+                              <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                                /{p.slug || p._id}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <div className="flex flex-col gap-1 items-start">
+                                {getDifficultyBadge(p.difficulty)}
+                                <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md">
+                                  <Clock className="w-3 h-3 text-vcet-blue" />
+                                  <span>{p.timeLimit ? `${p.timeLimit} Mins` : `${activeTest?.timeLimit || 45} Mins`}</span>
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3.5 font-medium text-slate-800">
+                              <div className="flex flex-wrap gap-1 max-w-xs">
+                                {(Array.isArray(p.tags) ? p.tags : [p.tags]).filter(Boolean).map((tg, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 text-[10px] font-bold border border-slate-200/70"
+                                  >
+                                    {tg}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3.5">
+                              <div className="flex items-center gap-2 text-[11px]">
+                                <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex items-center gap-1">
+                                  <Eye className="w-3 h-3 text-emerald-600" />
+                                  <span>{p.publicTestCases?.length || 1} Public</span>
+                                </span>
+                                <span className="text-rose-700 font-bold bg-rose-50 px-2 py-0.5 rounded-md border border-rose-200 flex items-center gap-1">
+                                  <Lock className="w-3 h-3 text-rose-600" />
+                                  <span>{p.hiddenTestCases?.length || 2} Hidden</span>
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-5 py-3.5 text-right">
+                              <div className="flex items-center justify-end gap-1.5">
+                                <button
+                                  onClick={() => setPreviewProblem(p)}
+                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-sky-50 text-slate-700 hover:text-vcet-blue transition-colors cursor-pointer"
+                                  title="Preview Problem"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleOpenEditProblem(p)}
+                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-vcet-blue transition-colors cursor-pointer"
+                                  title="Edit Challenge"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteProblem(p._id || p.id)}
+                                  className="p-1.5 rounded-lg bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 transition-colors cursor-pointer"
+                                  title="Delete Challenge"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="text-center py-14 text-slate-400">
+                            <Code2 className="w-10 h-10 mx-auto text-slate-300 mb-2 stroke-[1.5]" />
+                            <p className="font-bold text-slate-700 text-sm">No coding challenges found in this track.</p>
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* =========================================================================
           5. ULTRA-ADVANCED PROBLEM AUTHORING SUITE MODAL

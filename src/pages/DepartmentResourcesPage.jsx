@@ -155,6 +155,10 @@ export default function DepartmentResourcesPage() {
 
   const filteredResources = useMemo(() => {
     let list = resources.filter((r) => {
+      // Only approved and published resources appear in student department area
+      if (r.isPublished === false) return false;
+      if (r.approvalStatus && r.approvalStatus !== "approved") return false;
+
       if (!categoryMatches(r)) return false;
       const matchDept =
         effectiveDeptId === "all" ||

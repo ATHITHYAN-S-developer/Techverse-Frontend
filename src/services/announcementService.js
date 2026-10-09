@@ -46,17 +46,11 @@ export const announcementService = {
   },
 
   async delete(id) {
-    try {
-      await apiRequest(`/announcements/${id}`, { method: "DELETE" });
-      return true;
-    } catch (err) {
-      // Local fallback
-    }
-
+    const res = await apiRequest(`/announcements/${id}`, { method: "DELETE" });
     let all = getStoredAnnouncements();
     all = all.filter((a) => a.id !== id && a._id !== id);
     saveAnnouncements(all);
-    return true;
+    return res;
   },
 
   async toggleLike(id) {

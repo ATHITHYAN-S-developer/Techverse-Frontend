@@ -169,37 +169,67 @@ export default function WelcomeHero({ user, streak }) {
               )}
             </motion.p>
 
-            <motion.div variants={fadeUp} className="mt-7 flex flex-wrap items-center gap-3">
+            <motion.div variants={fadeUp} className="mt-6 flex flex-wrap items-center gap-2.5">
               <Link
                 to="/courses"
-                className="group inline-flex items-center gap-2 rounded-full border border-white/25 px-5 py-2.5 text-xs font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/10"
+                className="group inline-flex items-center gap-2 rounded-full bg-white text-blue-900 px-4 py-2 text-xs font-bold transition-all shadow-sm hover:bg-blue-50"
               >
-                <PlayCircle className="h-3.5 w-3.5 transition-transform duration-300 group-hover:scale-110" />
-                Browse catalog
+                <PlayCircle className="h-3.5 w-3.5 text-blue-700 transition-transform duration-300 group-hover:scale-110" />
+                Browse Catalog
+              </Link>
+              <Link
+                to="/profile"
+                className="group inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition-colors hover:border-white/50 hover:bg-white/20"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-cyan-300" />
+                My Profile
               </Link>
             </motion.div>
           </motion.div>
 
-          {/* Streak dial. Reads as a real gauge rather than a number in a box. */}
+          {/* Streak Card with Dial and Mini Weekly Tracker */}
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.7, ease: EASE_OUT, delay: 0.25 }}
-            className="flex shrink-0 items-center gap-5 self-start rounded-2xl border border-white/15 bg-white/[0.07] p-5 backdrop-blur-md lg:self-auto"
+            className="flex shrink-0 flex-col sm:flex-row items-center gap-4 self-stretch sm:self-start lg:self-auto rounded-2xl border border-white/15 bg-white/[0.08] p-4 sm:p-5 backdrop-blur-md"
           >
             <StreakDial value={currentStreak} reduceMotion={reduceMotion} />
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-profile-paper/70">
-                Streak
+            <div className="text-center sm:text-left">
+              <div className="flex items-center justify-center sm:justify-start gap-1.5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-cyan-200">
+                  Learning Streak
+                </p>
+              </div>
+              <p className="mt-0.5 font-sans text-xl sm:text-2xl font-black tabular-nums text-white flex items-center justify-center sm:justify-start gap-1">
+                <span>{hasStreak ? `${currentStreak} Days` : "0 Days"}</span>
+                <Flame className="w-5 h-5 text-amber-400 fill-amber-400 inline" />
               </p>
-              <p className="mt-1 font-serif text-2xl font-semibold tabular-nums text-white">
-                {hasStreak ? `${currentStreak} days` : "Not started"}
-              </p>
-              <p className="mt-1 text-[11px] text-profile-paper/50">
-                {hasStreak
-                  ? "Keep it alive with one activity today"
-                  : "One test or module starts it"}
-              </p>
+
+              {/* Weekly Mini Tracker Dots */}
+              <div className="flex items-center justify-center sm:justify-start gap-1 mt-2">
+                {["M", "T", "W", "T", "F", "S", "S"].map((day, idx) => {
+                  const todayIndex = (new Date().getDay() + 6) % 7; // Monday = 0
+                  const isToday = idx === todayIndex;
+                  const isDone = isToday && hasStreak;
+
+                  return (
+                    <div
+                      key={idx}
+                      title={`Day ${day}`}
+                      className={`w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold transition-all ${
+                        isDone
+                          ? "bg-amber-400 text-blue-950 shadow-xs shadow-amber-400/50"
+                          : isToday
+                          ? "bg-white/30 text-white border border-white/40"
+                          : "bg-white/10 text-white/50"
+                      }`}
+                    >
+                      {day}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </motion.div>
         </div>

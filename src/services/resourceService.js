@@ -68,9 +68,15 @@ const normalizeResource = (r) => {
 };
 
 export const resourceService = {
-  async getAllResources({ all = false } = {}) {
+  async getAllResources({ all = false, includePending = false, approvalStatus = "", departmentId = "" } = {}) {
     try {
-      const res = await apiRequest(`/resources${all ? "?all=true" : ""}`);
+      const params = new URLSearchParams();
+      if (all) params.append("all", "true");
+      if (includePending) params.append("includePending", "true");
+      if (approvalStatus) params.append("approvalStatus", approvalStatus);
+      if (departmentId) params.append("departmentId", departmentId);
+      const queryStr = params.toString() ? `?${params.toString()}` : "";
+      const res = await apiRequest(`/resources${queryStr}`);
       const list = Array.isArray(res) ? res : res?.resources || res?.data || [];
       return list.map(normalizeResource);
     } catch (e) {
@@ -125,6 +131,16 @@ export const resourceService = {
   async deleteResource(resId) {
     await api.delete(`/resources/${resId}`);
     return true;
+  },
+
+  async approveResource(resId) {
+    const res = await api.patch(`/resources/${resId}/approve`);
+    return normalizeResource(res?.resource || res?.data || res);
+  },
+
+  async rejectResource(resId, reason = "") {
+    const res = await api.patch(`/resources/${resId}/reject`, { reason });
+    return normalizeResource(res?.resource || res?.data || res);
   },
 
   async trackDownload(resId) {

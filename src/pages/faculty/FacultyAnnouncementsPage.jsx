@@ -169,9 +169,11 @@ export default function FacultyAnnouncementsPage() {
       await announcementService.delete(deleteDialog.id);
       showSuccess("Circular removed ✓");
       setDeleteDialog({ open: false, id: null });
-      loadData();
-    } catch {
-      showError("Failed to delete circular");
+      await loadData();
+    } catch (err) {
+      console.error("Delete circular failed:", err);
+      showError(err?.message || "Failed to delete circular");
+      setDeleteDialog({ open: false, id: null });
     }
   };
 
@@ -199,7 +201,7 @@ export default function FacultyAnnouncementsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {announcements.map((item) => (
           <div
-            key={item.id}
+            key={item._id || item.id}
             className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div>
@@ -248,7 +250,7 @@ export default function FacultyAnnouncementsPage() {
                   <Edit className="w-3.5 h-3.5" />
                 </button>
                 <button
-                  onClick={() => setDeleteDialog({ open: true, id: item.id })}
+                  onClick={() => setDeleteDialog({ open: true, id: item._id || item.id })}
                   className="p-1.5 hover:text-rose-600 rounded hover:bg-rose-50"
                   title="Delete"
                 >

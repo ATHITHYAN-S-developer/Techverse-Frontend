@@ -33,9 +33,12 @@ export default function CircularsWidget({ announcements, loading }) {
           ))}
         </div>
       ) : announcements.length === 0 ? (
-        <div className="border-t border-profile-rule py-10 text-center">
-          <Megaphone className="mx-auto h-6 w-6 text-profile-ink/20" />
-          <p className="mt-2.5 text-xs text-profile-ink/40">No active circulars at this moment.</p>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-6 text-center shadow-xs mt-3">
+          <div className="mx-auto w-10 h-10 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center">
+            <Megaphone className="h-5 w-5" />
+          </div>
+          <p className="mt-2 text-xs font-bold text-slate-700">No active circulars</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">Department circulars and schedules will appear here.</p>
         </div>
       ) : (
         <motion.ul

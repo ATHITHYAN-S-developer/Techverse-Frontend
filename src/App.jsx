@@ -122,7 +122,7 @@ export default function App() {
               <Route path="/certificates" element={<CertificatesPage />} />
               <Route path="/coding" element={<CodingPage />} />
               <Route path="/bookmarks" element={<BookmarksPage />} />
-              <Route path="/profile" element={<Navigate to="/dashboard#profile" replace />} />
+              <Route path="/profile" element={<ProfilePage />} />
             </Route>
 
             {/* 3. Faculty Management Portal */}

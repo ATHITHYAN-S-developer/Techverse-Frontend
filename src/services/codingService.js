@@ -393,4 +393,17 @@ export const codingService = {
       };
     }
   },
+
+  /**
+   * Faculty / Admin / HOD: Get student submissions and attendance progress for a coding test
+   */
+  async getCodingProgress(testId) {
+    try {
+      const res = await api.get(`/coding/${testId}/progress`);
+      return res?.data || res;
+    } catch (err) {
+      console.warn(`Failed to fetch progress for coding test ${testId}:`, err);
+      return { success: false, problems: [], students: [] };
+    }
+  },
 };

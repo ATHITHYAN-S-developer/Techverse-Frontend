@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import techverseLogoImg from "../assets/techverse-logo.png";
+import TechVerseLogo from "../components/TechVerseLogo";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
 import VcetBanner from "../components/VcetBanner";
@@ -204,11 +205,7 @@ export default function AdminLayout() {
         {/* Left: Institutional Title */}
         <div className="flex items-center gap-2.5 min-w-0">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <img
-              src={techverseLogoImg}
-              alt="TechVerse"
-              className="h-8 sm:h-9 w-auto max-w-[150px] sm:max-w-[200px] object-contain transition-transform group-hover:scale-[1.02]"
-            />
+            <TechVerseLogo iconSize="h-9 w-9 sm:h-10 sm:w-10" textSize="text-lg sm:text-xl" />
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue font-extrabold border border-blue-200 uppercase tracking-wider">
               ADMIN
             </span>
@@ -316,11 +313,7 @@ export default function AdminLayout() {
                 {/* Mobile Drawer Header */}
                 <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-100 bg-slate-50/90 shrink-0">
                   <div className="flex items-center gap-2">
-                    <img
-                      src={techverseLogoImg}
-                      alt="TechVerse"
-                      className="h-7 w-auto object-contain"
-                    />
+                    <TechVerseLogo iconSize="h-8 w-8" textSize="text-base" />
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-vcet-blue font-bold uppercase tracking-wider">
                       Admin Control
                     </span>

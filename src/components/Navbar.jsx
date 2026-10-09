@@ -21,6 +21,7 @@ import {
   Users
 } from "lucide-react";
 import techverseLogoImg from "../assets/techverse-logo.png";
+import TechVerseLogo from "./TechVerseLogo";
 import vcetLogoImg from "../assets/vcet-logo.png";
 import { useAuth } from "../context/AuthContext";
 import LogoutConfirmationModal from "./LogoutConfirmationModal";
@@ -80,12 +81,7 @@ export default function Navbar() {
             className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep rounded-lg group"
             title="VCET TechVerse"
           >
-            <img
-              src={techverseLogoImg}
-              alt="TechVerse - Prestige Learning Initiative"
-              className="h-10 sm:h-11 w-auto max-w-[200px] sm:max-w-[240px] object-contain transition-transform group-hover:scale-[1.02]"
-              onError={() => setLogoError(true)}
-            />
+            <TechVerseLogo iconSize="h-10 w-10 sm:h-12 sm:w-12" textSize="text-[22px] sm:text-[25px]" />
           </Link>
 
           {/* 2. Center: Text-Forward Navigation with Shared Underline Slider */}

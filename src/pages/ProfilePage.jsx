@@ -1,5 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { Flame, Save, KeyRound, Eye, EyeOff, X, Lock, ShieldCheck } from "lucide-react";
+import {
+  Flame,
+  Save,
+  KeyRound,
+  Eye,
+  EyeOff,
+  X,
+  Lock,
+  ShieldCheck,
+  Copy,
+  Check,
+  Mail,
+  Phone,
+  FileText,
+  User,
+  GraduationCap,
+  Sparkles,
+  QrCode,
+  Building2,
+  Calendar,
+  Award,
+} from "lucide-react";
+import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
 import api from "../services/api";
@@ -8,15 +30,24 @@ export default function ProfilePage({ embedded = false }) {
   const { user, role, streak, updateProfile } = useAuth();
   const { showSuccess, showError } = useToast();
 
-  const isFaculty = role === "faculty" || role === "teacher" || role === "hod" || window.location.pathname.startsWith("/faculty");
+  const isFaculty =
+    role === "faculty" ||
+    role === "teacher" ||
+    role === "hod" ||
+    window.location.pathname.startsWith("/faculty");
+
+  // Faculty Password Reset
   const [resetModalOpen, setResetModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [resetting, setResetting] = useState(false);
 
+  // Form Fields
   const [phone, setPhone] = useState(user?.phone || user?.contactPhone || "+91 98421 54320");
-  const [bio, setBio] = useState(user?.bio || "Aspiring Software Engineer passionate about Cloud Systems, Python, and Full-Stack Development.");
+  const [bio, setBio] = useState(
+    user?.bio || "Aspiring Software Engineer passionate about Cloud Systems, Python, and Full-Stack Development."
+  );
   const [email, setEmail] = useState(() => {
     if (role === "student") {
       const savedCustom = localStorage.getItem(`student_custom_email_${user?._id || user?.id}`);
@@ -24,11 +55,13 @@ export default function ProfilePage({ embedded = false }) {
       if (user?.studentEnteredEmail || user?.hasCustomEmail) {
         return user.studentEnteredEmail || "";
       }
-      return ""; // Default to blank for any student as requested
+      return "";
     }
     return user?.email || "";
   });
+
   const [saving, setSaving] = useState(false);
+  const [copiedRegNo, setCopiedRegNo] = useState(false);
 
   useEffect(() => {
     if (role === "student") {
@@ -38,7 +71,7 @@ export default function ProfilePage({ embedded = false }) {
       } else if (user?.studentEnteredEmail || user?.hasCustomEmail) {
         setEmail(user.studentEnteredEmail || "");
       } else {
-        setEmail(""); // Keep blank for students
+        setEmail("");
       }
     } else {
       if (user?.email) setEmail(user.email);
@@ -46,6 +79,14 @@ export default function ProfilePage({ embedded = false }) {
     if (user?.phone || user?.contactPhone) setPhone(user.phone || user.contactPhone);
     if (user?.bio) setBio(user.bio);
   }, [user, role]);
+
+  const handleCopyRegNo = (val) => {
+    if (!val) return;
+    navigator.clipboard.writeText(val);
+    setCopiedRegNo(true);
+    showSuccess("Register number copied to clipboard");
+    setTimeout(() => setCopiedRegNo(false), 2000);
+  };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
@@ -88,8 +129,8 @@ export default function ProfilePage({ embedded = false }) {
         }
       }
       await updateProfile({
-        phone,
-        bio,
+        phone: phone.trim(),
+        bio: bio.trim(),
         email: email.trim(),
         hasCustomEmail: Boolean(email.trim()),
         studentEnteredEmail: email.trim(),
@@ -102,252 +143,251 @@ export default function ProfilePage({ embedded = false }) {
     }
   };
 
-  const staffId = String(user?.registerNumber || user?.staffId || user?.facultyId || "").toUpperCase();
+  const regOrStaffId =
+    user?.registerNumber ||
+    user?.staffId ||
+    user?.facultyId ||
+    user?.adminId ||
+    "732924CSR014";
 
-  const isHod =
-    staffId.includes("104") ||
-    staffId.includes("HOD") ||
-    role === "hod" ||
-    user?.role === "hod" ||
-    user?.designation?.toLowerCase().includes("hod") ||
-    user?.title?.toLowerCase().includes("hod") ||
-    user?.isHod === true;
+  const departmentName =
+    user?.departmentName ||
+    user?.department ||
+    user?.departmentCode ||
+    user?.courseName ||
+    "Computer Science & Engineering";
+
+  const yearDisplay = user?.year
+    ? `${user.year}${typeof user.year === "number" ? " Year" : ""}`
+    : "III Year";
+
+  const sectionDisplay = user?.section ? ` · Sec ${user.section}` : "";
 
   const roleLabel =
     role === "admin"
-      ? "Institutional Administrator"
-      : isHod
-        ? "Head of the Department (HOD)"
-        : role === "faculty" || role === "teacher"
-          ? "Faculty Member"
-          : "Enrolled Student";
+      ? "Institutional Admin"
+      : isFaculty
+      ? "Faculty Member"
+      : "Enrolled Student";
 
-  const labelCls =
-    "block font-body text-xs font-medium text-profile-ink/55";
-  const underlineBase =
-    "mt-1.5 block w-full border-0 border-b border-profile-rule bg-transparent px-0 py-2 font-body text-[15px] transition-colors focus:border-profile-main";
-  const saveButtonCls =
-    "group inline-flex items-center gap-2 border border-profile-main bg-profile-main px-6 py-2.5 font-body text-xs font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-transparent hover:text-profile-main";
+  const studentInitial = (user?.name?.charAt(0) || "A").toUpperCase();
 
   return (
     <section
       id={embedded ? "profile" : undefined}
-      className={`bg-profile-paper font-body text-profile-ink ${embedded ? "scroll-mt-20 border-t border-profile-rule" : "min-h-full"}`}
+      className={`font-body text-slate-800 ${
+        embedded ? "scroll-mt-20 py-8 sm:py-12" : "min-h-full py-8 sm:py-12"
+      }`}
     >
-      <div className="mx-auto w-full max-w-5xl px-6 py-10 sm:px-10 sm:py-16">
-        <header className="flex flex-col gap-9 border-b border-profile-rule pb-10 sm:flex-row sm:items-end sm:justify-between sm:pb-12">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
-            <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-profile-main font-serif text-3xl text-white ring-1 ring-profile-light">
-              {user?.name?.charAt(0) || "U"}
-            </span>
-
-            <div>
-              <span className="inline-flex w-fit items-center rounded-full border border-profile-rule px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-profile-main">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* SECTION HEADER (Minimal & Clean) */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/80">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
                 {roleLabel}
               </span>
-              <h1 className="mt-3 font-serif text-3xl font-medium leading-none tracking-tight text-profile-ink sm:text-4xl">
-                {user?.name || "Student User"}
-              </h1>
-              <p className="mt-2.5 font-body text-xs text-profile-ink/55">
-                <span className="font-mono tabular-nums">
-                  {user?.registerNumber || user?.staffId || user?.facultyId || user?.adminId || "732924CSE001"}
-                </span>
-                {" · "}
-                {user?.department || "Computer Science & Engineering"}
-              </p>
+              <span className="text-xs text-slate-400">• Institutional Profile</span>
             </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
+              {role === "student" ? "Student Profile & Preferences" : "Faculty Account & Credentials"}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Manage your personal contact details, email, and academic biography.
+            </p>
           </div>
 
           {role === "student" && (
-            <div className="flex shrink-0 items-center gap-7 sm:gap-9">
-              <div>
-                <span className="block font-body text-[10px] font-semibold uppercase tracking-[0.16em] text-profile-ink/40">
-                  Streak
-                </span>
-                <span className="mt-1 flex items-baseline gap-1.5">
-                  <Flame className="h-4 w-4 self-center text-profile-main" />
-                  <span className="font-serif text-2xl font-medium tabular-nums text-profile-ink">
-                    {streak?.currentStreak || 0}
-                  </span>
-                  <span className="text-xs text-profile-ink/45">days</span>
-                </span>
-              </div>
+            <div className="flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200/70 text-amber-800 text-xs font-bold shadow-xs">
+              <Flame className="w-4 h-4 text-amber-500 fill-amber-500 animate-pulse" />
+              <span>{streak?.currentStreak || 0} Day Streak</span>
             </div>
           )}
-        </header>
+        </div>
 
-        <form onSubmit={handleSave}>
-          <section className="border-b border-profile-rule py-10 sm:py-12">
-            <h2 className="font-serif text-2xl font-medium tracking-tight text-profile-ink sm:text-[1.7rem]">
-              Academic Identity &amp; Credentials
-            </h2>
-            <span aria-hidden="true" className="mt-3 block h-px w-12 bg-profile-main" />
-
-            <div className="mt-9 grid grid-cols-1 gap-x-12 gap-y-9 sm:grid-cols-2">
-              <div>
-                <label htmlFor="profile-name" className={labelCls}>
-                  Full Legal Name
-                </label>
-                <input
-                  id="profile-name"
-                  type="text"
-                  disabled
-                  value={user?.name || "Student"}
-                  className={`${underlineBase} cursor-not-allowed text-profile-ink/60 disabled:cursor-not-allowed`}
-                />
-                <span className="mt-1.5 block font-body text-[11px] italic text-profile-ink/40">
-                  Protected academic registration field.
-                </span>
+        {/* CLEAN MINIMAL PROFILE CARD (No Blue Box) */}
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm">
+            {/* Top Identity Summary */}
+            <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black text-xl flex items-center justify-center shadow-sm shrink-0">
+                {studentInitial}
               </div>
-
-              <div>
-                <label htmlFor="profile-reg" className={labelCls}>
-                  {role === "faculty" || role === "teacher" || role === "hod" ? "Faculty Staff ID" : "Register / Roll Number"}
-                </label>
-                <input
-                  id="profile-reg"
-                  type="text"
-                  disabled
-                  value={user?.registerNumber || user?.staffId || user?.facultyId || "732924CSE001"}
-                  className={`${underlineBase} font-mono tabular-nums text-profile-ink/60`}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="profile-dept" className={labelCls}>
-                  Department
-                </label>
-                <input
-                  id="profile-dept"
-                  type="text"
-                  disabled
-                  value={user?.department || "Computer Science & Engineering"}
-                  className={`${underlineBase} text-profile-ink/60`}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="profile-email" className={labelCls}>
-                  {role === "student" ? "Institutional / Contact Email (Optional)" : "Institutional Email"}
-                </label>
-                <input
-                  id="profile-email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={role === "student" ? "Enter your email ID" : "name@vcet.ac.in"}
-                  className={`${underlineBase} font-mono tabular-nums text-profile-ink`}
-                />
-                {role === "student" && (
-                  <span className="mt-1.5 block font-body text-[11px] italic text-profile-ink/40">
-                    Blank by default. Fill in with your student mail ID.
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 truncate">
+                    {user?.name || "Student User"}
+                  </h3>
+                  <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                    {roleLabel}
                   </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-mono flex-wrap">
+                  <span className="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md">
+                    {regOrStaffId}
+                  </span>
+                  <span>•</span>
+                  <span>{departmentName}</span>
+                  <span>•</span>
+                  <span>{yearDisplay} {sectionDisplay}</span>
+                </div>
+              </div>
+            </div>
+
+            <form onSubmit={handleSave} className="space-y-5 pt-6">
+              <div>
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <User className="w-4 h-4 text-blue-600" />
+                  <span>Contact Information &amp; Preferences</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Update your personal email, phone number, and brief technical bio.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Email Field */}
+                <div>
+                  <label
+                    htmlFor="profile-email"
+                    className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5"
+                  >
+                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Institutional or Personal Email</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="profile-email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder={
+                        role === "student"
+                          ? "Enter your email (e.g. yourname@gmail.com or @vcet.ac.in)"
+                          : "faculty@vcet.ac.in"
+                      }
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all placeholder:text-slate-400"
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-400 mt-1 block">
+                    Used for course certificates, contest notifications, and academic circulars.
+                  </span>
+                </div>
+
+                {/* Phone Field */}
+                <div>
+                  <label
+                    htmlFor="profile-phone"
+                    className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5"
+                  >
+                    <Phone className="w-3.5 h-3.5 text-slate-400" />
+                    <span>Contact Phone</span>
+                  </label>
+                  <input
+                    id="profile-phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+91 98421 XXXXX"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all"
+                  />
+                </div>
+
+                {/* Bio / About */}
+                <div>
+                  <label
+                    htmlFor="profile-bio"
+                    className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-slate-400" />
+                    <span>About / Bio</span>
+                  </label>
+                  <textarea
+                    id="profile-bio"
+                    rows={3}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Brief overview of your technical interests, coding journey, and goals..."
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none transition-all resize-none leading-relaxed placeholder:text-slate-400"
+                  />
+                  <div className="flex justify-between items-center text-[10px] text-slate-400 mt-1">
+                    <span>Markdown supported</span>
+                    <span>{bio.length} characters</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                {isFaculty ? (
+                  <button
+                    type="button"
+                    onClick={() => setResetModalOpen(true)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-2xs"
+                  >
+                    <KeyRound className="w-4 h-4 text-blue-600" />
+                    <span>Reset Password</span>
+                  </button>
+                ) : (
+                  <div />
                 )}
-              </div>
-            </div>
-          </section>
 
-          <section className="border-b border-profile-rule py-10 sm:py-12">
-            <h2 className="font-serif text-2xl font-medium tracking-tight text-profile-ink sm:text-[1.7rem]">
-              Contact &amp; Biography
-            </h2>
-            <span aria-hidden="true" className="mt-3 block h-px w-12 bg-profile-main" />
-
-            <div className="mt-9 max-w-lg space-y-9">
-              <div>
-                <label htmlFor="profile-phone" className={labelCls}>
-                  Contact Phone
-                </label>
-                <input
-                  id="profile-phone"
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className={`${underlineBase} text-profile-ink`}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="profile-bio" className={labelCls}>
-                  About / Bio
-                </label>
-                <textarea
-                  id="profile-bio"
-                  rows={3}
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className={`${underlineBase} resize-none leading-relaxed text-profile-ink`}
-                />
-              </div>
-            </div>
-
-            <div className="mt-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              {isFaculty ? (
                 <button
-                  type="button"
-                  onClick={() => setResetModalOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 px-5 py-2.5 font-body text-xs font-bold uppercase tracking-wider transition-all rounded-lg shadow-sm cursor-pointer self-start sm:self-auto"
+                  type="submit"
+                  disabled={saving}
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-all cursor-pointer"
                 >
-                  <KeyRound className="h-4 w-4 text-vcet-blue" />
-                  <span>Reset Password</span>
+                  {saving ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  <span>{saving ? "Saving Changes..." : "Save Profile Updates"}</span>
                 </button>
-              ) : <div />}
-
-              <button type="submit" disabled={saving} className={`${saveButtonCls} disabled:cursor-wait disabled:opacity-60`}>
-                <Save
-                  className="h-4 w-4 transition-colors group-hover:text-profile-main"
-                  aria-hidden="true"
-                />
-                <span>{saving ? "Saving..." : "Save Profile Updates"}</span>
-              </button>
-            </div>
-          </section>
-        </form>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
 
-      {/* Password Reset Modal for Faculty Only */}
-      {resetModalOpen && isFaculty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-blue-50 text-vcet-blue">
-                  <KeyRound className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-base text-slate-900">Reset Faculty Password</h3>
-                  <p className="text-xs text-slate-400">
-                    {user?.name} · {user?.staffId || user?.email}
-                  </p>
-                </div>
+      {/* ========================================================
+          FACULTY PASSWORD RESET MODAL
+      ======================================================== */}
+      {resetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+          <div className="w-full max-w-md bg-white rounded-3xl p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-slate-900 font-black text-lg">
+                <KeyRound className="w-5 h-5 text-blue-600" />
+                <span>Reset Account Password</span>
               </div>
               <button
-                type="button"
                 onClick={() => setResetModalOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleResetPassword} className="space-y-4">
+            <p className="text-xs text-slate-500">
+              Set a new secure password for staff ID <strong className="text-slate-800">{regOrStaffId}</strong>.
+            </p>
+
+            <form onSubmit={handleResetPassword} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  New Password
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">New Password</label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
-                    required
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password (min. 4 characters)"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500 pr-10"
+                    placeholder="Enter at least 4 characters"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -355,34 +395,30 @@ export default function ProfilePage({ embedded = false }) {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Confirm New Password
-                </label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Confirm New Password</label>
                 <input
                   type={showPassword ? "text" : "password"}
-                  required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter new password"
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-blue-500"
+                  placeholder="Re-enter password to confirm"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-900 focus:ring-2 focus:ring-blue-500/20 focus:outline-none"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3">
+              <div className="pt-2 flex items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setResetModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+                  className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
                   disabled={resetting}
-                  className="px-5 py-2 rounded-xl text-xs font-bold bg-vcet-blue hover:bg-[#004f88] text-white shadow-md active:scale-95 transition-all cursor-pointer disabled:opacity-50"
+                  className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-sm transition-all"
                 >
-                  {resetting ? "Resetting..." : "Confirm & Update Password"}
+                  {resetting ? "Resetting..." : "Update Password"}
                 </button>
               </div>
             </form>

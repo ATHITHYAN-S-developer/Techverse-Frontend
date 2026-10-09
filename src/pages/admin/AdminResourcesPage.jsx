@@ -11,9 +11,11 @@ import {
   Upload,
   CheckCircle2,
   AlertCircle,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
+import { API_BASE_URL } from "../../services/api";
 import { resourceService, RESOURCE_TYPES, resolveResourceUrl } from "../../services/resourceService";
 import { subjectService } from "../../services/subjectService";
 import { departmentService } from "../../services/departmentService";
@@ -64,7 +66,7 @@ export default function AdminResourcesPage() {
   const loadAll = async () => {
     try {
       const [resList, deptList] = await Promise.all([
-        resourceService.getAllResources({ all: true }),
+        resourceService.getAllResources({ all: true, includePending: true }),
         departmentService.getDepartments({ all: true }),
       ]);
       setResources(resList);
@@ -201,8 +203,19 @@ export default function AdminResourcesPage() {
     } catch {
       /* best-effort */
     }
-    const url = resolveResourceUrl(res.fileUrl || res.externalUrl || res.downloadUrl);
-    if (url) window.open(url, "_blank", "noopener,noreferrer");
+    const id = res._id || res.id;
+    let url = "";
+    if (id) {
+      const origin = API_BASE_URL.replace(/\/api\/?$/, "");
+      url = `${origin}/api/resources/${id}/view`;
+    } else {
+      url = resolveResourceUrl(res.fileUrl || res.externalUrl || res.downloadUrl);
+    }
+    if (url) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      showError("Resource file URL not available");
+    }
   };
 
   const managerName = (res) => {
@@ -393,6 +406,16 @@ export default function AdminResourcesPage() {
                       </td>
                       <td className="px-4 py-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleOpenFile(item)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/90 font-bold text-xs shadow-xs transition-all cursor-pointer"
+                            title="View resource material in another tab"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>View Resource</span>
+                            <ExternalLink className="w-3 h-3 opacity-60" />
+                          </button>
                           <button
                             onClick={() => handleOpenFile(item)}
                             className="p-1.5 rounded-lg text-slate-500 hover:text-vcet-blue hover:bg-slate-100"

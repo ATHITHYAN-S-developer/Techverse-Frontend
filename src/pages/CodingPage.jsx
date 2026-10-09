@@ -137,7 +137,10 @@ export default function CodingPage() {
 
   // Open the compiler workspace for a problem directly (no timers, no proctoring)
   const handleOpenCompiler = (prob, silent = false) => {
-    if (!prob) return;
+    if (!prob) {
+      showError("Problem statement not found to open.");
+      return;
+    }
     setSelectedProblem(prob);
     setCode(prob.starterCode?.[language] || prob.starterCode?.python || prob.starterCode?.javascript || "");
     setTestResults(null);
@@ -148,10 +151,15 @@ export default function CodingPage() {
   };
 
   // Open a whole module box (assessment track) straight into its compiler
-  const openModule = (test) => {
+  const openModule = (test, specificProblem = null) => {
     if (!test) return;
     setCurrentTest(test);
-    handleOpenCompiler(test.problems?.[0], false);
+    const target = specificProblem || test.problems?.[0];
+    if (!target) {
+      showInfo(`Assessment "${test.title}" does not have any questions authored yet.`);
+      return;
+    }
+    handleOpenCompiler(target, false);
   };
 
   // Toggle fullscreen mode
@@ -400,50 +408,129 @@ export default function CodingPage() {
 </div>
           </div>
 
-{/* Module boxes: one box per assessment track (click to open its coding page) */}
-          <div className="space-y-4">
+          {/* Module boxes: one box per assessment track */}
+          <div className="space-y-6">
             {[...tests]
               .sort(
                 (a, b) =>
                   ({ Easy: 0, Medium: 1, Hard: 2 }[a.difficulty] ?? 9) -
                   ({ Easy: 0, Medium: 1, Hard: 2 }[b.difficulty] ?? 9)
               )
-              .map((test, tIdx) => (
-              <div
-                key={test._id || tIdx}
-                role="button"
-                tabIndex={0}
-                onClick={() => openModule(test)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    openModule(test);
-                  }
-                }}
-                className="bg-white rounded-3xl border border-slate-200/90 shadow-xs overflow-hidden cursor-pointer group hover:border-vcet-blue hover:shadow-md transition-all"
-              >
-                <div className="p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0">
-                      <Code2 className="w-6 h-6 text-emerald-400" />
+              .map((test, tIdx) => {
+                const problemsList = test.problems || [];
+                const hasProblems = problemsList.length > 0;
+
+                return (
+                  <div
+                    key={test._id || tIdx}
+                    className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden hover:border-slate-300 transition-all"
+                  >
+                    {/* Track Header Card */}
+                    <div className="p-5 sm:p-7 bg-slate-50/70 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-start sm:items-center gap-3.5 min-w-0">
+                        <div className="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center shrink-0 shadow-sm">
+                          <Code2 className="w-5 h-5 text-emerald-400" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-base sm:text-lg font-black text-slate-900 truncate">
+                              {test.title}
+                            </h2>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
+                              {problemsList.length} {problemsList.length === 1 ? "Problem" : "Problems"}
+                            </span>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200 text-slate-700">
+                              {test.difficulty || "Medium"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
+                            {test.description || "Practice and solve coding problems in the online compiler"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {hasProblems && (
+                        <button
+                          type="button"
+                          onClick={() => openModule(test, problemsList[0])}
+                          className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all self-start sm:self-auto cursor-pointer"
+                        >
+                          <Play className="w-3.5 h-3.5 fill-white" />
+                          <span>Open Track</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                     </div>
-                    <div className="min-w-0">
-                      <h2 className="text-lg font-black text-slate-900 group-hover:text-vcet-blue transition-colors truncate">
-                        {test.title}
-                      </h2>
-                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
-                        {test.description || "Practice and solve coding problems in the online compiler"}
-                      </p>
+
+                    {/* Questions Inside This Track */}
+                    <div className="p-4 sm:p-5">
+                      {!hasProblems ? (
+                        <div className="py-6 text-center text-slate-400">
+                          <FileCode className="w-8 h-8 mx-auto mb-1.5 opacity-40 text-slate-500" />
+                          <p className="text-xs font-semibold text-slate-600">No problem statements published yet</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5">Faculty coordinator is authoring challenges for this track.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-400 px-2 mb-1">
+                            Available Challenges ({problemsList.length})
+                          </div>
+                          {problemsList.map((prob, pIdx) => {
+                            const diff = prob.difficulty || "Easy";
+                            const diffClass =
+                              diff === "Easy"
+                                ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                : diff === "Hard"
+                                ? "bg-rose-50 text-rose-700 border-rose-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200";
+
+                            return (
+                              <div
+                                key={prob._id || pIdx}
+                                onClick={() => openModule(test, prob)}
+                                className="group flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl border border-slate-200/70 hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer bg-white"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <span className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-blue-100 text-slate-600 group-hover:text-blue-700 font-mono text-xs font-bold flex items-center justify-center shrink-0 transition-colors">
+                                    Q{pIdx + 1}
+                                  </span>
+                                  <div className="min-w-0">
+                                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-blue-700 transition-colors truncate">
+                                      {prob.title}
+                                    </h3>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                      <span className={`px-2 py-0.2 rounded-md text-[10px] font-bold border ${diffClass}`}>
+                                        {diff}
+                                      </span>
+                                      {prob.tags && prob.tags.length > 0 && (
+                                        <span className="text-[10px] text-slate-400 truncate max-w-[180px]">
+                                          {prob.tags.join(" • ")}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openModule(test, prob);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-900 group-hover:bg-blue-600 text-white transition-all shrink-0 self-start sm:self-auto cursor-pointer"
+                                >
+                                  <span>Solve Question</span>
+                                  <ArrowRight className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <span className="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-black bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-md shadow-blue-500/20 transition-all">
-                    <Play className="w-3.5 h-3.5 fill-white" />
-                    Open
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
-            ))}
+                );
+              })}
           </div>
         </div>
       )}

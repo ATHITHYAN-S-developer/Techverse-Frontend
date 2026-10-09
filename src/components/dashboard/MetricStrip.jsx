@@ -67,7 +67,7 @@ export default function MetricStrip({
     <motion.section
       ref={ref}
       aria-label="Key metrics"
-      className="grid grid-cols-1 border-t border-b border-profile-rule sm:grid-cols-3"
+      className="grid grid-cols-3 gap-2.5 sm:gap-4 my-6 sm:my-8"
       variants={staggerParent(0.07)}
       initial="hidden"
       animate={inView ? "visible" : "hidden"}
@@ -95,57 +95,42 @@ function MetricCell({ metric, value, index, reduceMotion, inView }) {
     <motion.div variants={fadeUp}>
       <Container
         {...(isLink ? { to: metric.to } : {})}
-        className={`group relative block overflow-hidden px-5 py-6 transition-colors duration-300 ${
-          isLink ? "hover:bg-profile-alt cursor-pointer" : ""
-        } ${
-          index > 0 ? "border-t border-profile-rule sm:border-t-0 sm:border-l" : ""
-        } ${index > 0 ? "sm:border-profile-rule" : ""}`}
+        className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:border-blue-300 ${
+          isLink ? "cursor-pointer" : ""
+        }`}
       >
-        {/* Accent rail that wipes across on hover for actionable links */}
-        {isLink && (
-          <span
-            aria-hidden="true"
-            className="absolute inset-x-0 top-0 h-0.5 origin-left scale-x-0 bg-gradient-to-r from-profile-main to-profile-hover transition-transform duration-500 ease-out group-hover:scale-x-100"
-          />
-        )}
-
-        <div className="flex items-center gap-1.5">
-          <motion.span
-            className="inline-flex"
-            whileHover={reduceMotion ? undefined : { scale: 1.2, rotate: -7 }}
-            transition={{ type: "spring", stiffness: 400, damping: 14 }}
-          >
-            <Icon className={`h-3.5 w-3.5 ${metric.accent} ${metric.fill}`} />
-          </motion.span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-profile-ink/45">
+        <div className="flex items-center justify-between gap-1">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500 truncate">
             {metric.label}
+          </span>
+          <span className="p-1 sm:p-1.5 rounded-lg bg-slate-50 text-slate-600 group-hover:scale-110 transition-transform shrink-0">
+            <Icon className={`h-3 w-3 sm:h-4 sm:w-4 ${metric.accent} ${metric.fill}`} />
           </span>
         </div>
 
-        <p className="mt-2.5 font-serif text-3xl font-semibold tabular-nums text-profile-ink">
-          {value === null ? (
-            <span className="text-profile-ink/25">{"\u2014"}</span>
-          ) : (
-            <Counter
-              target={value}
-              startDelay={index * 90}
-              reduceMotion={reduceMotion}
-              inView={inView}
-            />
-          )}
-        </p>
+        <div className="mt-1.5 sm:mt-3">
+          <p className="font-sans text-xl sm:text-3xl font-black tabular-nums text-slate-900">
+            {value === null ? (
+              <span className="text-slate-300">{"\u2014"}</span>
+            ) : (
+              <Counter
+                target={value}
+                startDelay={index * 90}
+                reduceMotion={reduceMotion}
+                inView={inView}
+              />
+            )}
+          </p>
 
-        <p className="mt-0.5 text-[11px] text-profile-ink/40">
-          {value === null ? "loading" : metric.unit(value)}
-          {metric.showView && (
-            <>
-              {" \u00b7 "}
-              <span className="text-profile-ink transition-colors group-hover:text-profile-main">
-                view
+          <p className="text-[10px] sm:text-xs text-slate-400 font-medium truncate mt-0.5">
+            {value === null ? "loading" : metric.unit(value)}
+            {metric.showView && (
+              <span className="text-blue-600 ml-1 font-bold group-hover:underline">
+                →
               </span>
-            </>
-          )}
-        </p>
+            )}
+          </p>
+        </div>
       </Container>
     </motion.div>
   );

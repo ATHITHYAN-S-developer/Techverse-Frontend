@@ -136,21 +136,21 @@ function CourseRow({ course, index, reduceMotion }) {
 
 function EmptyCourses() {
   return (
-    <div className="border-t border-profile-rule py-14 text-center">
-      <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-profile-main/10">
-        <BookOpen className="h-5 w-5 text-profile-ink" />
-      </span>
-      <h3 className="mt-4 font-serif text-sm font-semibold text-profile-ink">
-        No enrolled courses yet
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-6 sm:p-8 text-center shadow-xs mt-3">
+      <div className="mx-auto w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-xs">
+        <BookOpen className="h-6 w-6" />
+      </div>
+      <h3 className="mt-3.5 font-sans text-sm sm:text-base font-bold text-slate-900">
+        No active course enrollments yet
       </h3>
-      <p className="mx-auto mt-1.5 max-w-xs text-xs text-profile-ink/45">
-        Explore institutional courses to start learning and earn certificates.
+      <p className="mx-auto mt-1 max-w-sm text-xs text-slate-500">
+        Choose from placement programming modules, algorithmic practice, and full-stack subjects to start earning institutional certificates.
       </p>
       <Link
         to="/courses"
-        className="group mt-5 inline-flex items-center gap-2 rounded-full bg-profile-main px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-profile-hover"
+        className="group mt-4 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-blue-700 shadow-sm"
       >
-        Explore course catalog
+        <span>Explore Course Catalog</span>
         <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
       </Link>
     </div>
