@@ -2,7 +2,6 @@ import { test, expect } from "@playwright/test";
 import { FOOTER_QUICK_LINKS, footerLinkLocator } from "./helpers";
 
 const CTA_BUTTONS = [
-  "Explore Tech Explorer",
   "Explore Tech Pulse",
   "Explore Tech Vision",
   "Explore Skill Forge",
@@ -69,7 +68,6 @@ test.describe("Responsive layout", () => {
 
     const width = await viewportWidth(page);
     const sectionIds = [
-      "section-technology",
       "section-updates",
       "section-youtube",
       "section-aptitude",

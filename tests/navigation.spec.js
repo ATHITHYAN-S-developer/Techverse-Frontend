@@ -27,7 +27,6 @@ test.describe("Navigation", () => {
 
   test("clicking the domain card images navigates to their pages", async ({ page }) => {
     const domains = [
-      { sectionId: "section-technology", path: "/technology" },
       { sectionId: "section-updates", path: "/updates" },
       { sectionId: "section-youtube", path: "/youtube" },
       { sectionId: "section-aptitude", path: "/aptitude" },

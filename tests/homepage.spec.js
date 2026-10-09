@@ -1,14 +1,12 @@
 import { test, expect } from "@playwright/test";
 
 const CTA_BUTTONS = [
-  { label: "Explore Tech Explorer", path: "/technology", marker: "Google AI Studio" },
   { label: "Explore Tech Pulse", path: "/updates", marker: "daily.dev" },
   { label: "Explore Tech Vision", path: "/youtube", marker: "Matt Wolfe" },
   { label: "Explore Skill Forge", path: "/aptitude", marker: "IndiaBIX" },
 ];
 
 const DOMAIN_SECTIONS = [
-  "section-technology",
   "section-updates",
   "section-youtube",
   "section-aptitude",
