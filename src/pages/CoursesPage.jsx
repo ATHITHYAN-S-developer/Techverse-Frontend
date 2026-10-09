@@ -176,16 +176,6 @@ export default function CoursesPage() {
                 </Link>
               )}
 
-              <Link
-                to="/prepzone"
-                className="group relative inline-flex items-center gap-2.5 px-6 py-3 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-md transition-all duration-150 cursor-pointer"
-              >
-                <span>PREPZONE TRAINING</span>
-                <ArrowRight
-                  size={15}
-                  className="transition-transform duration-150 group-hover:translate-x-1 text-white"
-                />
-              </Link>
             </motion.div>
           </div>
         </div>

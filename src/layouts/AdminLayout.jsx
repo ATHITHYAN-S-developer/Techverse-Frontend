@@ -31,7 +31,6 @@ import {
   Command,
   ChevronRight,
   Puzzle,
-  Briefcase,
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import techverseLogoImg from "../assets/techverse-logo.png";
@@ -46,7 +45,6 @@ const ADMIN_NAV_TREE = [
     items: [
       { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, badge: "Live" },
       { name: "Announcements", href: "/admin/announcements", icon: Megaphone },
-      { name: "Placement & Careers", href: "/admin/placement", icon: Briefcase, badge: "Drives" },
     ],
   },
   {

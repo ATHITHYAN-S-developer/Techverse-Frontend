@@ -7,7 +7,6 @@ import WelcomeHero from "../components/dashboard/WelcomeHero";
 import MetricStrip from "../components/dashboard/MetricStrip";
 import CourseLedger from "../components/dashboard/CourseLedger";
 import CircularsWidget from "../components/dashboard/CircularsWidget";
-import PrepZoneBand from "../components/dashboard/PrepZoneBand";
 import ProfilePage from "./ProfilePage";
 import { fadeUp } from "../components/dashboard/motion";
 
@@ -55,9 +54,6 @@ export default function DashboardPage() {
           >
             <motion.div variants={fadeUp}>
               <CourseLedger courses={courses} loading={loading} />
-            </motion.div>
-            <motion.div variants={fadeUp}>
-              <PrepZoneBand />
             </motion.div>
           </motion.div>
 

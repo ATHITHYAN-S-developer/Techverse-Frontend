@@ -9,7 +9,6 @@ import {
   Award,
   Megaphone,
   Layers,
-  Target,
   ArrowRight,
   User,
   Menu,
@@ -31,7 +30,6 @@ const NAV_LINKS = [
   { name: "Home", href: "/", icon: Home },
   { name: "Departments", href: "/departments", icon: Layers },
   { name: "PrepZone", href: "/courses", icon: BookOpen },
-  { name: "Placement", href: "/prepzone", icon: Target },
   { name: "Technology", href: "/technology", icon: Globe },
   { name: "Tech Pulse", href: "/updates", icon: Zap },
   {

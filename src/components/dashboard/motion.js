@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
  *
  * Everything here is deliberately declarative so the same entrance plays on
  * every card. The house easing is the one already used by the hero treatments
- * in AnnouncementsPage and PlacementEventsPage: a fast-out, slow-in curve that
+ * in AnnouncementsPage: a fast-out, slow-in curve that
  * lands softly instead of snapping.
  */
 

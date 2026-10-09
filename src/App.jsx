@@ -20,7 +20,6 @@ import AdminLayout from "./layouts/AdminLayout";
 import HomePage from "./pages/HomePage";
 import DepartmentResourcesPage from "./pages/DepartmentResourcesPage";
 import TrainingPage from "./pages/TrainingPage";
-import PlacementEventsPage from "./pages/PlacementEventsPage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseLearningPage from "./pages/CourseLearningPage";
@@ -56,7 +55,6 @@ import AdminClassesPage from "./pages/admin/AdminClassesPage";
 import AdminSubjectsPage from "./pages/admin/AdminSubjectsPage";
 import AdminResourcesPage from "./pages/admin/AdminResourcesPage";
 import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
-import AdminPlacementPage from "./pages/admin/AdminPlacementPage";
 import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
 import AdminCourseModulesPage from "./pages/admin/AdminCourseModulesPage";
 import AdminCodingPage from "./pages/admin/AdminCodingPage";
@@ -99,9 +97,7 @@ export default function App() {
               <Route path="/technology" element={<TechnologyPage />} />
               <Route path="/departments" element={<DepartmentResourcesPage />} />
               <Route path="/departments/:departmentId" element={<DepartmentResourcesPage />} />
-              <Route path="/prepzone" element={<PlacementEventsPage />} />
               <Route path="/training" element={<TrainingPage />} />
-              <Route path="/placement" element={<PlacementEventsPage />} />
               <Route path="/companies/:company" element={<CompanyDetailPage />} />
               <Route path="/updates" element={<UpdatesPage />} />
               <Route path="/youtube" element={<YouTubePage />} />
@@ -164,7 +160,6 @@ export default function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="announcements" element={<AdminAnnouncementsPage />} />
-              <Route path="placement" element={<AdminPlacementPage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="faculty" element={<AdminFacultyPage />} />
               <Route path="departments" element={<AdminDepartmentsPage />} />

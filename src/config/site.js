@@ -43,7 +43,6 @@ export const NAV_LINKS = [
   { name: "Home", href: "/" },
   { name: "Tech Explorer", href: "/technology" },
   { name: "Department E-Resources", href: "/departments" },
-  { name: "PrepZone", href: "/prepzone" },
   { name: "Tech Pulse", href: "/updates" },
   { name: "Tech Vision", href: "/youtube" },
   { name: "Skill Forge", href: "/aptitude" },

@@ -127,7 +127,6 @@ export default function Footer() {
               {[
                 { name: "Tech Explorer (Websites)", href: "/technology" },
                 { name: "Department E-Resources", href: "/departments" },
-                { name: "PrepZone Hub", href: "/prepzone" },
                 { name: "Tech Pulse (App Updates)", href: "/updates" },
                 { name: "Tech Vision (YouTube)", href: "/youtube" },
                 { name: "Skill Forge (Aptitude)", href: "/aptitude" },

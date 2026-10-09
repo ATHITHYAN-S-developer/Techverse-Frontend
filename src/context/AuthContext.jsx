@@ -6,15 +6,6 @@ const AuthContext = createContext(null);
 
 const DEFAULT_NOTIFICATIONS = [
   {
-    id: "notif-1",
-    title: "Zoho Campus Drive Registration Open",
-    message: "Pre-placement training registration is now open for III & IV Year CSE/IT/AI&DS.",
-    type: "placement",
-    time: "10 mins ago",
-    read: false,
-    link: "/placement",
-  },
-  {
     id: "notif-2",
     title: "New Course Module: Python Day 8",
     message: "Object-Oriented Programming module and hands-on quiz is live.",

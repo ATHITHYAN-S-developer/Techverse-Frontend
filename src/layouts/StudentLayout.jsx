@@ -39,7 +39,6 @@ const STUDENT_NAV = [
   {
     label: "Practice",
     items: [
-      { name: "PrepZone Hub", href: "/prepzone" },
       { name: "Coding Arena", href: "/coding" },
     ],
   },
