@@ -778,7 +778,7 @@ export default function LoginPage() {
           {/* Bottom Explore Link */}
           <div className="text-center mt-6 text-xs text-vcet-blue font-normal">
             New to TechVerse?{" "}
-            <Link to="/technology" className="font-bold text-vcet-blue hover:underline">
+            <Link to="/updates" className="font-bold text-vcet-blue hover:underline">
               Explore Resources
             </Link>
           </div>

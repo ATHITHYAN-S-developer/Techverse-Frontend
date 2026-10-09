@@ -346,7 +346,7 @@ export default function LoginForm() {
       >
         New to TechVerse?{" "}
         <Link
-          to="/technology"
+          to="/updates"
           className="text-vcet-blue-deep hover:text-[#063A75] font-black hover:underline transition-colors"
         >
           Explore resources

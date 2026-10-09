@@ -125,7 +125,6 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2.5 text-xs font-medium">
               {[
-                { name: "Tech Explorer (Websites)", href: "/technology" },
                 { name: "Department E-Resources", href: "/departments" },
                 { name: "Tech Pulse (App Updates)", href: "/updates" },
                 { name: "Tech Vision (YouTube)", href: "/youtube" },

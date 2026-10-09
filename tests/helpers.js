@@ -2,14 +2,12 @@ import { expect } from "@playwright/test";
 
 const FOOTER_QUICK_LINKS = [
   { label: "Home", href: "/" },
-  { label: "Tech Explorer", href: "/technology" },
   { label: "Tech Pulse", href: "/updates" },
   { label: "Tech Vision", href: "/youtube" },
   { label: "Skill Forge", href: "/aptitude" },
 ];
 
 const FOOTER_DOMAIN_LINKS = [
-  { label: "Tech Explorer (Websites)", href: "/technology" },
   { label: "Tech Pulse (App Updates)", href: "/updates" },
   { label: "Tech Vision (YouTube)", href: "/youtube" },
   { label: "Skill Forge (Aptitude)", href: "/aptitude" },
@@ -17,7 +15,6 @@ const FOOTER_DOMAIN_LINKS = [
 
 const PAGE_MARKERS = {
   "/": null,
-  "/technology": "Google AI Studio",
   "/updates": "daily.dev",
   "/youtube": "Matt Wolfe",
   "/aptitude": "IndiaBIX",

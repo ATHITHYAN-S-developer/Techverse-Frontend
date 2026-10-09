@@ -18,11 +18,6 @@ export const ABOUT_MISSION =
 
 export const ABOUT_DETAILS = [
   {
-    title: "Tech Explorer — Websites to Improve Tech Knowledge",
-    description:
-      "Discover websites that open the door to new technologies, AI, cybersecurity, innovation and more.",
-  },
-  {
     title: "Tech Pulse — Apps for Tech Updates",
     description:
       "Catch the latest technology news, AI developments, industry trends and innovations.",
@@ -41,7 +36,6 @@ export const ABOUT_DETAILS = [
 
 export const NAV_LINKS = [
   { name: "Home", href: "/" },
-  { name: "Tech Explorer", href: "/technology" },
   { name: "Department E-Resources", href: "/departments" },
   { name: "Tech Pulse", href: "/updates" },
   { name: "Tech Vision", href: "/youtube" },

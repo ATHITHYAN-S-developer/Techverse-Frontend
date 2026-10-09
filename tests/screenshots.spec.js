@@ -22,9 +22,9 @@ test.describe("Screenshots", () => {
   test("capture a subpage at the current viewport", async ({ page }, testInfo) => {
     const project = testInfo.project.name;
 
-    await page.goto("/technology");
-    await expect(page.getByText("Google AI Studio").first()).toBeVisible();
+    await page.goto("/updates");
+    await expect(page.getByText("daily.dev").first()).toBeVisible();
 
-    await page.screenshot({ path: screenshotPath(project, "technology"), fullPage: true });
+    await page.screenshot({ path: screenshotPath(project, "updates"), fullPage: true });
   });
 });

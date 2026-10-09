@@ -73,7 +73,6 @@ async function waitForAllImages(page) {
 }
 
 const SUBPAGES = [
-  { path: "/technology", marker: "Google AI Studio" },
   { path: "/updates", marker: "daily.dev" },
   { path: "/youtube", marker: "Matt Wolfe" },
   { path: "/aptitude", marker: "IndiaBIX" },

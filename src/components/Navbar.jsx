@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
-  Globe,
   Zap,
   PlayCircle,
   Award,
@@ -30,7 +29,6 @@ const NAV_LINKS = [
   { name: "Home", href: "/", icon: Home },
   { name: "Departments", href: "/departments", icon: Layers },
   { name: "PrepZone", href: "/courses", icon: BookOpen },
-  { name: "Technology", href: "/technology", icon: Globe },
   { name: "Tech Pulse", href: "/updates", icon: Zap },
   {
     name: "Announcements",

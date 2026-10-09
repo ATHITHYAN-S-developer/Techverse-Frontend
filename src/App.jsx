@@ -28,7 +28,6 @@ import CertificatesPage from "./pages/CertificatesPage";
 import VerifyCertificatePage from "./pages/VerifyCertificatePage";
 import CodingPage from "./pages/CodingPage";
 import CompanyDetailPage from "./pages/CompanyDetailPage";
-import TechnologyPage from "./pages/TechnologyPage";
 import UpdatesPage from "./pages/UpdatesPage";
 import YouTubePage from "./pages/YouTubePage";
 import AptitudePage from "./pages/AptitudePage";
@@ -94,7 +93,6 @@ export default function App() {
             {/* 1. Public Pages (Navbar + Footer) */}
             <Route element={<PublicLayout />}>
               <Route path="/" element={<HomePage />} />
-              <Route path="/technology" element={<TechnologyPage />} />
               <Route path="/departments" element={<DepartmentResourcesPage />} />
               <Route path="/departments/:departmentId" element={<DepartmentResourcesPage />} />
               <Route path="/training" element={<TrainingPage />} />
