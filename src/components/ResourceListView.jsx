@@ -1,10 +1,14 @@
 /**
- * Horizontal Snap-Scroll Edge-to-Edge Resource List View for VCET Tech Hub (TechVerse)
- * - Container-less, un-card-like design: No box borders, no rounded rectangle containers, no drop shadows.
- * - Horizontal swipe, drag-to-scroll, keyboard arrows, and minimal chevron navigation.
+ * Resource List View for VCET Tech Hub (TechVerse)
+ * Two layouts:
+ * - "scroll" (default): Horizontal Snap-Scroll Edge-to-Edge. Container-less, un-card-like
+ *   design: No box borders, no rounded rectangle containers, no drop shadows.
+ *   Horizontal swipe, drag-to-scroll, keyboard arrows, and minimal chevron navigation.
+ * - "grid": Cards stack full-width on mobile and form a 2/3 column grid on md+/lg+.
+ *   Scroll chrome (chevrons, drag-to-scroll, keyboard arrows, dash pager) is omitted.
  * - Icon floats top-left, large title, plain paragraph flow, tags separated by "·", plain text link CTA.
- * - Featured items get wider panel width & colored background wash bleeding off.
- * - Bottom story dashes progress indicator.
+ * - Featured items keep a colored background wash (and are wider in the scroll layout).
+ * - Bottom story dashes progress indicator (scroll layout only).
  */
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
@@ -78,7 +82,9 @@ export default function ResourceListView({
   subtitle = "",
   ctaText = "EXPLORE COURSES",
   ctaLink = "/courses",
+  layout = "scroll",
 }) {
+  const isGrid = layout === "grid";
   const scrollRef = useRef(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -97,14 +103,16 @@ export default function ResourceListView({
   }, [resources.length]);
 
   useEffect(() => {
+    if (isGrid) return;
     const el = scrollRef.current;
     if (!el) return;
     el.addEventListener("scroll", handleScroll, { passive: true });
     return () => el.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  }, [handleScroll, isGrid]);
 
   // Keyboard navigation
   useEffect(() => {
+    if (isGrid) return;
     const handleKeyDown = (e) => {
       if (e.key === "ArrowRight") {
         scrollToIndex(activeIndex + 1);
@@ -244,36 +252,48 @@ export default function ResourceListView({
         </span>
       </div>
 
-      {/* Minimal Floating Edge Navigation Arrows */}
-      <button
-        type="button"
-        onClick={() => scrollToIndex(activeIndex - 1)}
-        disabled={activeIndex === 0}
-        aria-label="Previous resource"
-        className="hidden md:flex absolute left-3 lg:left-6 top-1/2 -translate-y-1/2 z-30 p-2 text-vcet-dark/40 hover:text-vcet-blue transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-      >
-        <FiChevronLeft size={42} strokeWidth={1.5} />
-      </button>
+      {/* Minimal Floating Edge Navigation Arrows (scroll layout only) */}
+      {!isGrid && (
+        <>
+          <button
+            type="button"
+            onClick={() => scrollToIndex(activeIndex - 1)}
+            disabled={activeIndex === 0}
+            aria-label="Previous resource"
+            className="hidden md:flex absolute left-3 lg:left-6 top-1/2 -translate-y-1/2 z-30 p-2 text-vcet-dark/40 hover:text-vcet-blue transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
+          >
+            <FiChevronLeft size={42} strokeWidth={1.5} />
+          </button>
 
-      <button
-        type="button"
-        onClick={() => scrollToIndex(activeIndex + 1)}
-        disabled={activeIndex === resources.length - 1}
-        aria-label="Next resource"
-        className="hidden md:flex absolute right-3 lg:right-6 top-1/2 -translate-y-1/2 z-30 p-2 text-vcet-dark/40 hover:text-vcet-blue transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
-      >
-        <FiChevronRight size={42} strokeWidth={1.5} />
-      </button>
+          <button
+            type="button"
+            onClick={() => scrollToIndex(activeIndex + 1)}
+            disabled={activeIndex === resources.length - 1}
+            aria-label="Next resource"
+            className="hidden md:flex absolute right-3 lg:right-6 top-1/2 -translate-y-1/2 z-30 p-2 text-vcet-dark/40 hover:text-vcet-blue transition-all duration-200 cursor-pointer disabled:opacity-0 disabled:pointer-events-none"
+          >
+            <FiChevronRight size={42} strokeWidth={1.5} />
+          </button>
+        </>
+      )}
 
-      {/* Horizontal Scroll Track */}
+      {/* Resource Track: horizontal snap-scroll row, or responsive grid */}
       <div
         ref={scrollRef}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        className="w-full flex gap-10 sm:gap-14 lg:gap-16 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none px-6 sm:px-12 lg:px-20 cursor-grab active:cursor-grabbing py-6 my-auto"
-        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+        {...(isGrid
+          ? {}
+          : {
+              onMouseDown: handleMouseDown,
+              onMouseMove: handleMouseMove,
+              onMouseUp: handleMouseUp,
+              onMouseLeave: handleMouseUp,
+            })}
+        className={
+          isGrid
+            ? "w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 px-6 sm:px-10 lg:px-16 py-6"
+            : "w-full flex gap-10 sm:gap-14 lg:gap-16 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none px-6 sm:px-12 lg:px-20 cursor-grab active:cursor-grabbing py-6 my-auto"
+        }
+        style={isGrid ? undefined : { scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {resources.map((resource, index) => {
           const logoSrc = resource.logoUrl || LOGO_MAP[resource.id];
@@ -282,10 +302,14 @@ export default function ResourceListView({
           return (
             <article
               key={resource.id}
-              className={`resource-panel shrink-0 snap-start flex flex-col justify-between py-6 px-4 sm:px-6 relative transition-all duration-300 ${
-                isFeatured
-                  ? "w-[88vw] sm:w-[54vw] lg:w-[42vw] bg-vcet-blue/[0.05] rounded-3xl"
-                  : "w-[82vw] sm:w-[48vw] lg:w-[36vw]"
+              className={`resource-panel flex flex-col justify-between py-6 px-4 sm:px-6 relative transition-all duration-300 ${
+                isGrid
+                  ? `w-full ${isFeatured ? "bg-vcet-blue/[0.05] rounded-3xl" : ""}`
+                  : `shrink-0 snap-start ${
+                      isFeatured
+                        ? "w-[88vw] sm:w-[54vw] lg:w-[42vw] bg-vcet-blue/[0.05] rounded-3xl"
+                        : "w-[82vw] sm:w-[48vw] lg:w-[36vw]"
+                    }`
               }`}
             >
               {/* Huge Faint Background Numeral */}
@@ -387,8 +411,8 @@ export default function ResourceListView({
         })}
       </div>
 
-      {/* Bottom Story-Like Dashes Progress Track */}
-      <div className="max-w-xs mx-auto flex items-center justify-center gap-2 pt-6">
+      {/* Bottom Story-Like Dashes Progress Track (scroll layout only) */}
+      <div className={isGrid ? "hidden" : "max-w-xs mx-auto flex items-center justify-center gap-2 pt-6"}>
         {resources.map((_, idx) => {
           const isActive = activeIndex === idx;
           return (

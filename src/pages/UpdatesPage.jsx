@@ -58,6 +58,7 @@ export default function UpdatesPage() {
         badgeText="REAL-TIME TECH FEEDS & APPS"
         ctaText="VIEW ANNOUNCEMENTS"
         ctaLink="/announcements"
+        layout="grid"
       />
     </div>
   );
