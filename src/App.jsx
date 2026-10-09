@@ -54,6 +54,7 @@ import AdminClassesPage from "./pages/admin/AdminClassesPage";
 import AdminSubjectsPage from "./pages/admin/AdminSubjectsPage";
 import AdminResourcesPage from "./pages/admin/AdminResourcesPage";
 import AdminAnnouncementsPage from "./pages/admin/AdminAnnouncementsPage";
+import AdminTechPulsePage from "./pages/admin/AdminTechPulsePage";
 import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
 import AdminCourseModulesPage from "./pages/admin/AdminCourseModulesPage";
 import AdminCodingPage from "./pages/admin/AdminCodingPage";
@@ -158,6 +159,7 @@ export default function App() {
               <Route index element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="dashboard" element={<AdminDashboard />} />
               <Route path="announcements" element={<AdminAnnouncementsPage />} />
+              <Route path="tech-pulse" element={<AdminTechPulsePage />} />
               <Route path="students" element={<AdminStudentsPage />} />
               <Route path="faculty" element={<AdminFacultyPage />} />
               <Route path="departments" element={<AdminDepartmentsPage />} />

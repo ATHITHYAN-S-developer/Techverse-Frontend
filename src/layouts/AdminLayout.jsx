@@ -11,6 +11,7 @@ import {
   Award,
   CheckCircle2,
   Megaphone,
+  Newspaper,
   BarChart3,
   ShieldAlert,
   Settings,
@@ -45,6 +46,7 @@ const ADMIN_NAV_TREE = [
     items: [
       { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, badge: "Live" },
       { name: "Announcements", href: "/admin/announcements", icon: Megaphone },
+      { name: "Tech Pulse", href: "/admin/tech-pulse", icon: Newspaper },
     ],
   },
   {
