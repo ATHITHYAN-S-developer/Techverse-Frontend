@@ -126,6 +126,11 @@ export function AuthProvider({ children }) {
     setUser(authenticatedUser);
     setGamification(normaliseGamification(authenticatedUser));
     setGamificationLoading(true);
+    try {
+      await refreshStreak();
+    } catch {
+      // ignore
+    }
     return authenticatedUser;
   };
 
@@ -193,7 +198,17 @@ export function AuthProvider({ children }) {
     updateProfile,
     gamification,
     gamificationLoading,
-    streak: gamification.streak,
+    streak: {
+      ...gamification.streak,
+      currentStreak:
+        gamification.streak?.currentStreak ||
+        (typeof user?.streak === "object" ? user?.streak?.currentStreak : user?.streak) ||
+        0,
+      longestStreak:
+        gamification.streak?.longestStreak ||
+        (typeof user?.streak === "object" ? user?.streak?.longestStreak : user?.streak) ||
+        0,
+    },
     refreshStreak,
     bookmarks,
     toggleBookmark,

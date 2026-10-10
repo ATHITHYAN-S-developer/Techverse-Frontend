@@ -134,10 +134,10 @@ export default function Navbar() {
                 {role === "student" && (
                   <Link
                     to="/dashboard#profile"
-                    className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors"
-                    title={`${streak?.currentStreak || 0} Day Streak`}
+                    className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors shadow-xs"
+                    title={`${streak?.currentStreak || 0} Day Learning Streak`}
                   >
-                    <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
                     <span>{streak?.currentStreak || 0}d</span>
                   </Link>
                 )}

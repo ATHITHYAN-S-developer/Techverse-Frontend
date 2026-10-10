@@ -336,10 +336,11 @@ export default function CoursesPage() {
             </div>
             <div className="pt-2">
               <Link
-                to="/training"
+                to="/courses"
+                onClick={() => { setSelectedDepartment("ALL"); setSearchQuery(""); }}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-vcet-blue-deep text-white text-xs font-bold uppercase tracking-wider hover:bg-[#084282] transition-colors shadow-xs"
               >
-                <span>Explore Placement Tracks</span>
+                <span>View All Courses</span>
                 <ArrowRight size={14} />
               </Link>
             </div>

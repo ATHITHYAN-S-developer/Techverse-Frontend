@@ -43,6 +43,9 @@ export default function CourseDetailPage() {
       try {
         const data = await courseService.getCourseById(courseId);
         setCourse(data);
+        if (data.slug && data.slug !== courseId && decodeURIComponent(courseId).trim() !== data.slug) {
+          navigate(`/courses/${data.slug}`, { replace: true });
+        }
 
         const assessment = await courseAssessmentService.getCourseAssessmentForCourse(data.slug || courseId);
         setCourseTest(assessment);

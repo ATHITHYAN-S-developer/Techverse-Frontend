@@ -210,14 +210,14 @@ export default function StudentLayout() {
           <div className="flex items-center gap-2.5 sm:gap-4">
             <Link
               to="/dashboard#profile"
-              className="hidden sm:flex items-baseline gap-2 text-xs hover:opacity-70 transition-opacity"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors shadow-xs"
               title="Current learning streak"
             >
-              <span className="inline-flex items-center gap-1.5 font-display font-semibold text-profile-main tabular-nums">
-                <Flame className="w-3.5 h-3.5 fill-profile-main" />
+              <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse shrink-0" />
+              <span className="font-display font-bold text-amber-900 tabular-nums">
                 {streak?.currentStreak || 0}
-                <span className="font-sans font-normal text-profile-ink/70">day streak</span>
               </span>
+              <span className="text-[11px] font-medium text-amber-800 hidden xs:inline">day streak</span>
             </Link>
 
             <Link to="/dashboard#profile" className="flex items-center gap-2 group min-w-0" title="View Profile">

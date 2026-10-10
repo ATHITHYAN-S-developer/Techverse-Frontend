@@ -44,10 +44,10 @@ export default function CompanyDetailPage() {
   return (
     <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 space-y-6">
       <button
-        onClick={() => navigate("/training")}
+        onClick={() => navigate("/courses")}
         className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-vcet-blue transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" /> Back to Placement Training
+        <ArrowLeft className="w-4 h-4" /> Back to PrepZone Courses
       </button>
 
       {/* Header Banner */}

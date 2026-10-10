@@ -43,9 +43,11 @@ import { useToast } from "../../context/ToastContext";
  */
 function extractYouTubeId(url) {
   if (!url) return "";
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return match && match[2].length === 11 ? match[2] : "";
+  const trimmed = String(url).trim();
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+  const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=|shorts\/|live\/)([^#&?]*).*/;
+  const match = trimmed.match(regExp);
+  return match && match[2] && match[2].length === 11 ? match[2] : "";
 }
 
 export default function AdminCourseModulesPage() {
@@ -215,7 +217,7 @@ export default function AdminCourseModulesPage() {
     setFormData({
       title: `Module ${modules.length + 1}: `,
       description: "",
-      hasVideo: false,
+      hasVideo: true,
       isVideoMandatory: false,
       hasCoding: false,
       hasMCQ: false,
@@ -562,44 +564,124 @@ export default function AdminCourseModulesPage() {
       return;
     }
 
-    // 2. Content selection validation
-    if (!formData.hasVideo && !formData.hasCoding && !formData.hasMCQ) {
-      showError("❌ Please select at least one content option (Video, Coding, or MCQ).");
+    // Auto-commit any unsaved / in-progress Video form if user enabled video
+    let currentVideos = [...formData.videos];
+    if (formData.hasVideo) {
+      if (videoForm.youtubeUrl.trim()) {
+        const vUrl = videoForm.youtubeUrl.trim();
+        const vTitle = videoForm.title.trim() || `${formData.title.trim() || "Module"} - Lecture Video`;
+        const vId = extractYouTubeId(vUrl);
+        const autoVideo = {
+          title: vTitle,
+          youtubeUrl: vUrl,
+          youtubeVideoId: vId,
+          duration: videoForm.duration.trim() || "20 mins",
+          description: videoForm.description.trim(),
+        };
+        if (editingVideoIdx !== null) {
+          currentVideos[editingVideoIdx] = { ...currentVideos[editingVideoIdx], ...autoVideo };
+        } else {
+          currentVideos.push({ ...autoVideo, order: currentVideos.length + 1 });
+        }
+      }
+    }
+
+    // Auto-commit any unsaved / in-progress MCQ form if user enabled MCQ
+    let currentMCQs = [...formData.mcqs];
+    if (formData.hasMCQ) {
+      if (mcqForm.question.trim()) {
+        const autoMcq = {
+          question: mcqForm.question.trim(),
+          options: [
+            mcqForm.optionA.trim() || "Option A",
+            mcqForm.optionB.trim() || "Option B",
+            mcqForm.optionC.trim() || "Option C",
+            mcqForm.optionD.trim() || "Option D",
+          ],
+          correctAnswer: Number(mcqForm.correctAnswer) || 0,
+          explanation: mcqForm.explanation.trim(),
+          marks: Number(mcqForm.marks) || 1,
+        };
+        if (editingMCQIdx !== null) {
+          currentMCQs[editingMCQIdx] = { ...currentMCQs[editingMCQIdx], ...autoMcq };
+        } else {
+          currentMCQs.push(autoMcq);
+        }
+      }
+    }
+
+    // Auto-commit any unsaved / in-progress Coding form if user enabled Coding
+    let currentCoding = [...formData.codingProblems];
+    if (formData.hasCoding) {
+      if (codingForm.title.trim() || codingForm.description.trim()) {
+        const autoCoding = {
+          title: codingForm.title.trim() || "Coding Challenge",
+          description: codingForm.description.trim() || "Solve the problem according to the specifications.",
+          difficulty: codingForm.difficulty || "Medium",
+          constraints: codingForm.constraints || "1 <= N <= 10^5\nTime Limit: 2.0s",
+          inputFormat: codingForm.inputFormat || "Input format",
+          outputFormat: codingForm.outputFormat || "Output format",
+          starterCode: codingForm.starterCode || "function solution(input) {\n  return input;\n}",
+          testCases: [
+            {
+              input: codingForm.sampleInput || "5\n1 2 3 4 5",
+              output: codingForm.sampleOutput || "15",
+              isHidden: false,
+            },
+          ],
+        };
+        if (editingCodingIdx !== null) {
+          currentCoding[editingCodingIdx] = { ...currentCoding[editingCodingIdx], ...autoCoding };
+        } else {
+          currentCoding.push(autoCoding);
+        }
+      }
+    }
+
+    // 2. Validate enabled content
+    if (formData.hasVideo && currentVideos.length === 0) {
+      showError("❌ Video is enabled: please enter a YouTube URL or uncheck Video.");
       return;
     }
 
-    // 3. Video validation (if enabled)
-    if (formData.hasVideo && formData.videos.length === 0) {
-      showError(`❌ Video is enabled: please add at least one video below or uncheck Video.`);
+    if (formData.hasCoding && currentCoding.length === 0) {
+      showError("❌ Coding is enabled: please enter problem details or uncheck Coding.");
       return;
     }
 
-    // 4. Coding validation (if enabled)
-    if (formData.hasCoding && formData.codingProblems.length === 0) {
-      showError(`❌ Coding is enabled: please add at least one coding problem or uncheck Coding.`);
+    if (formData.hasMCQ && currentMCQs.length === 0) {
+      showError("❌ MCQ is enabled: please enter question and options or uncheck MCQ.");
       return;
     }
 
-    // 5. MCQ validation (if enabled)
-    if (formData.hasMCQ && formData.mcqs.length === 0) {
-      showError(`❌ MCQ is enabled: please add at least one MCQ question or uncheck MCQ.`);
+    const hasAnyContent = Boolean(
+      formData.hasVideo || formData.hasCoding || formData.hasMCQ || formData.description.trim()
+    );
+    if (!hasAnyContent) {
+      showError("❌ Please select at least one content option (Video, Coding, or MCQ) or enter a description.");
+      return;
+    }
+
+    const targetCourseId = selectedCourse?._id || selectedCourse?.id || selectedCourseId;
+    if (!targetCourseId) {
+      showError("❌ No course selected. Please select a course first.");
       return;
     }
 
     setSaving(true);
     try {
       const payload = {
-        courseId: selectedCourseId,
+        courseId: targetCourseId,
         title: formData.title.trim(),
         description: formData.description.trim(),
         hasVideo: Boolean(formData.hasVideo),
         isVideoMandatory: Boolean(formData.hasVideo && formData.isVideoMandatory),
         hasCoding: Boolean(formData.hasCoding),
         hasMCQ: Boolean(formData.hasMCQ),
-        videos: formData.hasVideo ? formData.videos : [],
-        codingProblems: formData.hasCoding ? formData.codingProblems : [],
-        mcqs: formData.hasMCQ ? formData.mcqs : [],
-        videoUrl: formData.hasVideo && formData.videos[0]?.youtubeUrl ? formData.videos[0].youtubeUrl : "",
+        videos: formData.hasVideo ? currentVideos : [],
+        codingProblems: formData.hasCoding ? currentCoding : [],
+        mcqs: formData.hasMCQ ? currentMCQs : [],
+        videoUrl: formData.hasVideo && currentVideos[0]?.youtubeUrl ? currentVideos[0].youtubeUrl : "",
         content: formData.description,
       };
 
@@ -612,7 +694,7 @@ export default function AdminCourseModulesPage() {
       }
 
       setModalOpen(false);
-      loadModules(selectedCourseId);
+      loadModules(targetCourseId);
     } catch (err) {
       const errMsg = err?.response?.data?.message || err?.message || "Failed to save module";
       showError(errMsg);
@@ -736,6 +818,18 @@ export default function AdminCourseModulesPage() {
                   Assigned to: {selectedCourse.assignedFacultyName}
                 </p>
               )}
+              <div className="mt-2.5">
+                <Link
+                  to={`/courses/${selectedCourse.slug || selectedCourse._id || selectedCourse.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-vcet-blue-deep bg-blue-50/80 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-xl transition-all"
+                  title="Open course in PrepZone to view syllabus and modules"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                  <span>Preview Course in PrepZone</span>
+                </Link>
+              </div>
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
