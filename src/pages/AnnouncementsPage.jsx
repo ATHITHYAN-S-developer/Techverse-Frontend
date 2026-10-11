@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Grid,
   Check,
+  Minimize2,
 } from "lucide-react";
 import { announcementService } from "../services/announcementService";
 import { API_BASE_URL } from "../services/api";
@@ -123,6 +124,16 @@ export default function AnnouncementsPage() {
     }
   });
   const [copiedId, setCopiedId] = useState(null);
+  const [fullImage, setFullImage] = useState(null);
+
+  useEffect(() => {
+    if (!fullImage) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setFullImage(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [fullImage]);
 
   useEffect(() => {
     async function fetchAnnouncements() {
@@ -662,14 +673,13 @@ export default function AnnouncementsPage() {
                   </div>
                 )}
                 {resolvePoster(selectedAnnouncement) && (
-                  <a
-                    href={resolvePoster(selectedAnnouncement)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="absolute bottom-3 left-3 px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 text-white text-xs font-bold backdrop-blur-md flex items-center gap-1.5 shadow-sm transition"
+                  <button
+                    type="button"
+                    onClick={() => setFullImage(resolvePoster(selectedAnnouncement))}
+                    className="absolute bottom-3 left-3 px-3 py-1.5 rounded-xl bg-black/70 hover:bg-black/90 text-white text-xs font-bold backdrop-blur-md flex items-center gap-1.5 shadow-sm transition cursor-pointer"
                   >
                     <ExternalLink className="w-3.5 h-3.5" /> Full Image
-                  </a>
+                  </button>
                 )}
               </div>
 
@@ -803,6 +813,36 @@ export default function AnnouncementsPage() {
               </div>
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── 5. IN-PAGE FULL IMAGE VIEWER ─── */}
+      <AnimatePresence>
+        {fullImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 p-3 sm:p-6"
+            onClick={() => setFullImage(null)}
+          >
+            <button
+              type="button"
+              onClick={() => setFullImage(null)}
+              title="Minimize (Esc)"
+              className="absolute top-3 right-3 z-10 px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold backdrop-blur-md flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Minimize2 className="w-4 h-4" /> Minimize
+            </button>
+
+            <img
+              src={fullImage}
+              alt="Announcement poster full view"
+              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-full object-contain select-none"
+            />
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
