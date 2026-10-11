@@ -20,8 +20,7 @@ import {
   Flame,
   Users
 } from "lucide-react";
-import techverseLogoImg from "../assets/techverse-logo.png";
-import TechVerseLogo from "./TechVerseLogo";
+
 import vcetLogoImg from "../assets/vcet-logo.png";
 import { useAuth } from "../context/AuthContext";
 import LogoutConfirmationModal from "./LogoutConfirmationModal";
@@ -45,7 +44,6 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [logoError, setLogoError] = useState(false);
   const { user, role, isAuthenticated, logout, streak } = useAuth();
 
   useEffect(() => {
@@ -81,7 +79,9 @@ export default function Navbar() {
             className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep rounded-lg group"
             title="VCET TechVerse"
           >
-            <TechVerseLogo iconSize="h-10 w-10 sm:h-12 sm:w-12" textSize="text-[22px] sm:text-[25px]" />
+<span className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-none group-hover:text-vcet-blue transition-colors">
+              Tech<span className="text-vcet-blue">Verse</span>
+            </span>
           </Link>
 
           {/* 2. Center: Text-Forward Navigation with Shared Underline Slider */}

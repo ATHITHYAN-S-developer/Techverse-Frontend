@@ -5,7 +5,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { FiExternalLink, FiCompass } from "react-icons/fi";
+import { FiExternalLink } from "react-icons/fi";
 import { FaGraduationCap } from "react-icons/fa";
 import {
   SITE_NAME,
@@ -16,11 +16,10 @@ import {
   COLLEGE_LINKS,
 } from "../config/site";
 import vcetLogoImg from "../assets/vcet-logo.png";
-import logoImg from "../assets/logo.png";
+
 
 export default function About() {
   const [vcetLogoError, setVcetLogoError] = useState(false);
-  const [logoError, setLogoError] = useState(false);
 
   return (
     <section
@@ -41,7 +40,7 @@ export default function About() {
               <span>About The Platform</span>
             </div>
 
-            {/* Dual Logo representation */}
+            {/* College Emblem */}
             <div className="flex items-center gap-3.5 p-2.5 bg-vcet-gray-light rounded-2xl border border-vcet-gray-border/60 w-fit">
               <div className="h-12 px-3 rounded-xl bg-white flex items-center justify-center shadow-xs">
                 {!vcetLogoError ? (
@@ -53,21 +52,6 @@ export default function About() {
                   />
                 ) : (
                   <FaGraduationCap className="w-7 h-7 text-vcet-blue" />
-                )}
-              </div>
-
-              <div className="w-[1px] h-6 bg-vcet-gray" />
-
-              <div className="h-12 px-3 rounded-xl bg-white flex items-center justify-center shadow-xs">
-                {!logoError ? (
-                  <img
-                    src={logoImg}
-                    alt="TechVerse Logo"
-                    className="h-8 w-auto max-w-[160px] object-contain"
-                    onError={() => setLogoError(true)}
-                  />
-                ) : (
-                  <FiCompass className="w-6 h-6 text-vcet-blue" />
                 )}
               </div>
             </div>

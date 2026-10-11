@@ -11,8 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import GlobalSearchModal from "../components/GlobalSearchModal";
-import techverseLogoImg from "../assets/techverse-logo.png";
-import TechVerseLogo from "../components/TechVerseLogo";
+
 import ScrollToTop from "../components/ScrollToTop";
 import VcetBanner from "../components/VcetBanner";
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
@@ -199,7 +198,9 @@ export default function StudentLayout() {
         <div className="px-4 sm:px-8 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <Link to="/" className="flex items-center gap-2.5 min-w-0 group">
-              <TechVerseLogo iconSize="h-9 w-9 sm:h-10 sm:w-10" textSize="text-lg sm:text-xl" />
+<span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none">
+                Tech<span className="text-vcet-blue">Verse</span>
+              </span>
               <span className="hidden md:inline-block text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold border border-slate-200 uppercase tracking-wider">
                 Student Portal
               </span>

@@ -17,7 +17,7 @@ import {
   COLLEGE_LINKS,
 } from "../config/site";
 import { recordAndGetVisitorCount } from "../services/visitorService";
-import techverseLogoImg from "../assets/techverse-logo.png";
+
 import vcetLogoImg from "../assets/vcet-empower-blue.png";
 import jubileeLogoImg from "../assets/25-years-white.png";
 
@@ -63,16 +63,6 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 lg:gap-12 pb-14 border-b border-vcet-gray-border/20">
           {/* Column 1: Brand & College Emblem */}
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-white/95 backdrop-blur-xs rounded-xl p-2 shadow-xs border border-white/20 inline-block">
-                <img
-                  src={techverseLogoImg}
-                  alt="TechVerse Logo"
-                  className="h-9 sm:h-10 w-auto max-w-[180px] object-contain"
-                />
-              </div>
-            </div>
-
             {/* 25 Years Silver Jubilee celebration emblem */}
             {!jubileeError && (
               <div className="pt-2 flex items-center gap-3">

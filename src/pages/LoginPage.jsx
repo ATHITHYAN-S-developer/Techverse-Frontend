@@ -23,7 +23,7 @@ import { getCurrentUser, isAuthenticated } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import loginIllustration from "../assets/login-illustration.jpg";
 import campusBg from "../assets/college/campus-aerial-bw.jpg";
-import techverseLogoImg from "../assets/techverse-logo.png";
+
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -290,11 +290,9 @@ export default function LoginPage() {
         {/* Header: Logo & Back Link */}
         <motion.div variants={itemVariants} className="relative z-10 flex items-center justify-between mb-6 md:mb-4">
           <Link to="/" className="inline-flex items-center gap-2.5 select-none group">
-            <img
-              src={techverseLogoImg}
-              alt="TechVerse Logo"
-              className="h-11 sm:h-12 w-auto max-w-[220px] object-contain transition-transform group-hover:scale-105"
-            />
+            <span className="font-display text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
+              Tech<span className="text-vcet-blue">Verse</span>
+            </span>
           </Link>
 
           <Link
