@@ -53,9 +53,12 @@ export const announcementService = {
     return res;
   },
 
-  async toggleLike(id) {
+  async toggleLike(id, action = "like") {
     try {
-      const res = await apiRequest(`/announcements/${id}/like`, { method: "POST" });
+      const res = await apiRequest(`/announcements/${id}/like`, {
+        method: "POST",
+        body: JSON.stringify({ action }),
+      });
       return res;
     } catch (err) {
       console.warn("Announcement like API fallback:", err);

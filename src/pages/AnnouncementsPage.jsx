@@ -151,6 +151,7 @@ export default function AnnouncementsPage() {
 
   const toggleLike = async (id) => {
     const isCurrentlyLiked = likedIds.includes(id);
+    const action = isCurrentlyLiked ? "unlike" : "like";
     const nextLiked = isCurrentlyLiked ? likedIds.filter((x) => x !== id) : [...likedIds, id];
     setLikedIds(nextLiked);
     try {
@@ -178,7 +179,7 @@ export default function AnnouncementsPage() {
     }
 
     try {
-      const res = await announcementService.toggleLike(id);
+      const res = await announcementService.toggleLike(id, action);
       if (res && res.likesCount !== undefined) {
         setAnnouncements((prev) =>
           prev.map((item) => ((item._id || item.id) === id ? { ...item, likesCount: res.likesCount } : item))
@@ -186,6 +187,17 @@ export default function AnnouncementsPage() {
         if (selectedAnnouncement && (selectedAnnouncement._id || selectedAnnouncement.id) === id) {
           setSelectedAnnouncement((prev) => (prev ? { ...prev, likesCount: res.likesCount } : prev));
         }
+      }
+      if (res && typeof res.isLiked === "boolean") {
+        setLikedIds((prev) => {
+          const synced = res.isLiked
+            ? prev.includes(id) ? prev : [...prev, id]
+            : prev.filter((x) => x !== id);
+          try {
+            localStorage.setItem("techverse_liked_circulars", JSON.stringify(synced));
+          } catch {}
+          return synced;
+        });
       }
     } catch (err) {
       console.warn("Like API sync warning:", err);
@@ -569,7 +581,7 @@ export default function AnnouncementsPage() {
                         title={isLiked ? "Unlike" : "Like"}
                       >
                         <Heart className={`w-4 h-4 ${isLiked ? "fill-rose-500 text-rose-500" : ""}`} />
-                        <span className="text-xs">{item.likesCount || (isLiked ? 1 : 0)}</span>
+                        <span className="text-xs">{item.likesCount ?? (isLiked ? 1 : 0)}</span>
                       </button>
 
                       <button
@@ -750,7 +762,7 @@ export default function AnnouncementsPage() {
                         }`}
                       />
                       <span className="text-xs">
-                        {selectedAnnouncement.likesCount ||
+                        {selectedAnnouncement.likesCount ??
                           (likedIds.includes(selectedAnnouncement._id || selectedAnnouncement.id) ? 1 : 0)}
                       </span>
                     </button>

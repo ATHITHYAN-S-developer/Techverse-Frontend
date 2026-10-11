@@ -10,7 +10,7 @@ export default function Hero() {
       <section
         id="home"
         style={{ clipPath: "inset(0)" }}
-        className="hero-section relative min-h-[82vh] lg:min-h-[86vh] flex items-center justify-center py-24 sm:py-32 px-6 sm:px-8 overflow-hidden select-none"
+        className="hero-section relative w-full aspect-[3/2] sm:aspect-auto sm:min-h-[82vh] lg:min-h-[86vh] flex items-center justify-center py-6 sm:py-32 px-6 sm:px-8 overflow-hidden select-none"
       >
         {/* Layer 1 & 2: Continuous Campus Background Slideshow + Contrast Overlay */}
         <CollegeBackground />

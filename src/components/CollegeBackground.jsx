@@ -50,8 +50,25 @@ const CAMPUS_IMAGES = [
 
 const SLIDE_INTERVAL_MS = 6500; // 6.5s per image as per prompt (5-7 seconds)
 
+function useIsMobile(breakpoint = 640) {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < breakpoint : false
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const handler = (e) => setIsMobile(e.matches);
+    handler(mq);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [breakpoint]);
+
+  return isMobile;
+}
+
 export default function CollegeBackground() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -66,13 +83,13 @@ export default function CollegeBackground() {
   return (
     <div className="absolute inset-0 [clip-path:inset(0)] overflow-hidden pointer-events-none select-none z-0">
       {/* Fixed Viewport Layer for Motionless Background while Scrolling */}
-      <div className="fixed inset-0 w-full h-full pointer-events-none">
+      <div className="absolute sm:fixed inset-0 w-full h-full pointer-events-none">
         {/* Layer 1: Continuous Crossfade + Slow Zoom Slideshow */}
         <AnimatePresence initial={false}>
           <motion.div
             key={currentIndex}
             initial={{ opacity: 0, scale: 1.0 }}
-            animate={{ opacity: 1, scale: 1.08 }}
+            animate={isMobile ? { opacity: 1, scale: 1.0 } : { opacity: 1, scale: 1.08 }}
             exit={{ opacity: 0 }}
             transition={{
               opacity: { duration: 2.2, ease: "easeInOut" },
