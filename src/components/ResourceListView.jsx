@@ -47,7 +47,9 @@ import twoMinutePapersLogo from "../assets/logos/Two Minute Papers.jpg";
 import aiExplainedLogo from "../assets/logos/ai explained.jpg";
 import mattWolfeLogo from "../assets/logos/mreflow.jpg";
 
-const LOGO_MAP = {
+// Exported so a page rendering its own cards (Tech Pulse) can resolve the same
+// local logos for its offline fallback list.
+export const LOGO_MAP = {
   // Aptitude
   indiabix: indiabixLogo,
   "pocket-aptitude": pocketAptitudeLogo,
@@ -83,6 +85,12 @@ export default function ResourceListView({
   ctaText = "EXPLORE COURSES",
   ctaLink = "/courses",
   layout = "scroll",
+  // Optional overrides: let a page render its own cards (Tech Pulse), pin a
+  // filter bar under the sub-bar, and show a global counter instead of the
+  // current list length.
+  renderCard = null,
+  toolbar = null,
+  countText = null,
 }) {
   const isGrid = layout === "grid";
   const scrollRef = useRef(null);
@@ -248,9 +256,15 @@ export default function ResourceListView({
         </Link>
 
         <span className="text-xs font-mono font-bold text-vcet-dark/60 uppercase tracking-widest">
-          {resources.length} Resources
+          {countText ?? `${resources.length} Resources`}
         </span>
       </div>
+
+      {/* Optional filter bar (Tech Pulse kind chips) — sits under the sub-bar
+          so it reads as part of the page chrome, not as a card. */}
+      {toolbar && (
+        <div className="max-w-7xl mx-auto w-full px-6 sm:px-10 lg:px-16 pt-4">{toolbar}</div>
+      )}
 
       {/* Minimal Floating Edge Navigation Arrows (scroll layout only) */}
       {!isGrid && (
@@ -290,12 +304,13 @@ export default function ResourceListView({
             })}
         className={
           isGrid
-            ? "w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 px-6 sm:px-10 lg:px-16 py-6"
+            ? "w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 px-6 sm:px-10 lg:px-16 py-6"
             : "w-full flex gap-10 sm:gap-14 lg:gap-16 overflow-x-auto scroll-smooth snap-x snap-mandatory scrollbar-none px-6 sm:px-12 lg:px-20 cursor-grab active:cursor-grabbing py-6 my-auto"
         }
         style={isGrid ? undefined : { scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {resources.map((resource, index) => {
+          if (renderCard) return renderCard(resource, index);
           const logoSrc = resource.logoUrl || LOGO_MAP[resource.id];
           const isFeatured = resource.featured;
 
