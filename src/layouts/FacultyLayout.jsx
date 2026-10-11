@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   Layers,
-  Megaphone,
   Users,
   PlusCircle,
   User,
@@ -27,12 +26,11 @@ const getFacultyNav = (isHod) => {
   if (isHod) {
     return [
       { name: "HOD Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
-      { name: "Create & Manage Courses", href: "/faculty/courses", icon: BookOpen },
-      { name: "All Course Modules", href: "/faculty/modules", icon: Layers },
+      { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
+      { name: "Create a Course", href: "/faculty/courses", icon: BookOpen },
+      { name: "Students Course Module", href: "/faculty/modules", icon: Layers },
       { name: "Course Students", href: "/faculty/modules/students", icon: GraduationCap },
       { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
-      { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
-      { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
       { name: "Student Directory", href: "/faculty/students", icon: Users },
       { name: "Profile & Account", href: "/faculty/profile", icon: User }
     ];
@@ -41,12 +39,11 @@ const getFacultyNav = (isHod) => {
   // Regular Faculty Navigation: cannot create courses, manages assigned courses and modules only
   return [
     { name: "Faculty Dashboard", href: "/faculty/dashboard", icon: LayoutDashboard },
+    { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
     { name: "My Assigned Courses", href: "/faculty/courses", icon: BookOpen },
-    { name: "Course Modules & Syllabus", href: "/faculty/modules", icon: Layers },
+    { name: "Students Course Module", href: "/faculty/modules", icon: Layers },
     { name: "Course Students", href: "/faculty/modules/students", icon: GraduationCap },
     { name: "Coding Arena", href: "/faculty/coding", icon: Code2 },
-    { name: "Manage Resources", href: "/faculty/resources", icon: Layers },
-    { name: "Department Circulars", href: "/faculty/announcements", icon: Megaphone },
     { name: "Student Directory", href: "/faculty/students", icon: Users },
     { name: "Profile & Account", href: "/faculty/profile", icon: User }
   ];
@@ -154,37 +151,54 @@ export default function FacultyLayout() {
       {/* 1. Global Faculty Topbar */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
-          <Link to="/" className="flex items-center gap-2 group">
-<span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none">
-              Tech<span className="text-vcet-blue">Verse</span>
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <span
+              className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              TechVerse
             </span>
-            <span className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue font-bold border border-blue-200 uppercase tracking-wider">
+            <span
+              className={`inline-block text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider ${
+                isHod
+                  ? "bg-slate-900 text-white border border-slate-800 shadow-2xs"
+                  : "bg-slate-100 text-slate-800 border border-slate-200"
+              }`}
+            >
               {isHod ? "HOD Portal" : user?.role === "admin" ? "Admin Hub" : "Faculty Hub"}
             </span>
           </Link>
         </div>
 
-        {/* Topbar Center: Dynamic Department Badge */}
+        {/* Topbar Center: Dynamic Department Badge - Clean Monochrome Executive styling */}
         <div className="hidden md:flex items-center">
-          <span className="px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-vcet-blue text-xs font-bold flex items-center gap-1.5">
-            <ShieldCheck className="w-3.5 h-3.5 text-vcet-blue" />
-            {displayDeptBadge}
-          </span>
+          {isHod ? (
+            <div className="flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-slate-950 border border-slate-800 text-white shadow-xs">
+              <div className="w-5 h-5 rounded-full bg-white/10 text-white flex items-center justify-center font-bold border border-white/10 shrink-0">
+                <ShieldCheck className="w-3.5 h-3.5 stroke-[2.5]" />
+              </div>
+              <div className="flex items-center gap-2 text-xs font-bold tracking-tight">
+                <span className="text-white">Head of the Department</span>
+                <span className="w-1 h-1 rounded-full bg-slate-400" />
+                <span className="px-2 py-0.5 rounded-md bg-white/10 text-white font-black text-[11px] tracking-wider border border-white/15 uppercase">
+                  {deptCode || "CSE"}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <span className="px-3.5 py-1.5 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-xs font-bold flex items-center gap-1.5 shadow-2xs">
+              <ShieldCheck className="w-3.5 h-3.5 text-slate-700" />
+              <span>{displayDeptBadge}</span>
+            </span>
+          )}
         </div>
 
-        {/* Topbar Right: Add Resource Quick Action, Notification, Profile, Mobile Menu */}
+        {/* Topbar Right: Profile, Mobile Menu */}
         <div className="flex items-center gap-2 sm:gap-3">
-          <Link
-            to="/faculty/resources"
-            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white text-xs font-bold shadow-xs transition-colors"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Upload Notes</span>
-          </Link>
 
           <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
             <Link to="/faculty/profile" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <div className="w-8 h-8 rounded-full bg-vcet-blue-deep text-white font-bold text-xs flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center shadow-sm">
                 {user?.name?.charAt(0) || "F"}
               </div>
               <div className="flex flex-col text-left hidden sm:flex">

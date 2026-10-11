@@ -22,6 +22,7 @@ import {
   AlertTriangle,
   ExternalLink,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Layers,
   Save,
@@ -33,6 +34,8 @@ import {
   EyeOff,
   Globe,
   Lock,
+  Search,
+  Info,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { courseService } from "../../services/courseService";
@@ -68,6 +71,28 @@ export default function AdminCourseModulesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expandedModules, setExpandedModules] = useState({});
+  const [showRulesInfo, setShowRulesInfo] = useState(false);
+
+  const toggleModuleExpand = (modId) => {
+    setExpandedModules((prev) => ({
+      ...prev,
+      [modId]: !prev[modId],
+    }));
+  };
+
+  const expandAll = () => {
+    const all = {};
+    modules.forEach((m) => {
+      all[m._id || m.id] = true;
+    });
+    setExpandedModules(all);
+  };
+
+  const collapseAll = () => {
+    setExpandedModules({});
+  };
 
   const selectedCourse =
     courses.find((c) => String(c._id || c.id || c.slug) === String(selectedCourseId)) || null;
@@ -714,42 +739,73 @@ export default function AdminCourseModulesPage() {
     }
   };
 
+  const filteredModules = modules.filter((m) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      (m.title && m.title.toLowerCase().includes(q)) ||
+      (m.description && m.description.toLowerCase().includes(q))
+    );
+  });
+
+  const totalVideos = modules.reduce(
+    (acc, m) => acc + (m.videos?.length || (m.videoUrl ? 1 : 0)),
+    0
+  );
+  const totalMandatoryVideos = modules.reduce(
+    (acc, m) =>
+      acc + (m.hasVideo && m.isVideoMandatory ? (m.videos?.length || (m.videoUrl ? 1 : 0)) : 0),
+    0
+  );
+  const totalCoding = modules.reduce(
+    (acc, m) => acc + (m.codingProblems?.length || 0),
+    0
+  );
+  const totalMCQs = modules.reduce((acc, m) => acc + (m.mcqs?.length || 0), 0);
+
   return (
     <div className="space-y-6 pb-16 select-none max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
       {/* 1. Header Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
+      <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="space-y-1.5">
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-blue-50 text-vcet-blue-deep">
-              <Layers className="w-5 h-5" />
+            <span className="p-2.5 rounded-2xl bg-blue-50 text-vcet-blue border border-blue-100 shadow-xs">
+              <Layers className="w-5 h-5 text-vcet-blue" />
             </span>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-              Course Module Content Manager
-            </h1>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-wider text-vcet-blue block">
+                CURRICULUM MANAGEMENT • PREPZONE
+              </span>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Students Course Module
+              </h1>
+            </div>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Define learning modules. Add video lectures, interactive coding problems, and MCQs.
+          <p className="text-xs sm:text-sm text-slate-500 max-w-2xl">
+            Design curriculum, manage interactive video lessons, coding challenges, and assessment quizzes for students.
           </p>
         </div>
 
-        {/* Course Select & Add Action */}
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-vcet-blue-deep/20 max-w-xs"
-          >
-            {courses.map((c) => (
-              <option key={c._id || c.id} value={c._id || c.id}>
-                {c.title} {c.isPublished ? "• (Live)" : "• [Draft]"}
-              </option>
-            ))}
-          </select>
+        {/* Course Select & Quick Actions */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="relative flex-1 sm:flex-initial">
+            <select
+              value={selectedCourseId}
+              onChange={(e) => setSelectedCourseId(e.target.value)}
+              className="w-full sm:w-auto pl-3.5 pr-8 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-vcet-blue/20 transition-all cursor-pointer"
+            >
+              {courses.map((c) => (
+                <option key={c._id || c.id} value={c._id || c.id}>
+                  {c.title} {c.isPublished ? "• (Live)" : "• [Draft]"}
+                </option>
+              ))}
+            </select>
+          </div>
 
           <button
             onClick={handleOpenAdd}
             disabled={!selectedCourseId}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-vcet-blue-deep hover:bg-[#084282] text-white font-bold text-xs sm:text-sm shadow-xs transition-colors cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs sm:text-sm shadow-xs hover:shadow-md transition-all cursor-pointer disabled:opacity-50 shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Add Module</span>
@@ -763,20 +819,33 @@ export default function AdminCourseModulesPage() {
               )
             }
             disabled={!selectedCourseId}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs sm:text-sm transition-colors cursor-pointer disabled:opacity-50"
-            title="View enrolled students & per-module status, export to Excel"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs sm:text-sm transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+            title="View enrolled students & per-module status"
           >
             <Users className="w-4 h-4" />
+            <span className="hidden sm:inline">Course</span>
             <span>Students</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => selectedCourseId && loadModules(selectedCourseId)}
+            disabled={loading || !selectedCourseId}
+            className="p-2.5 rounded-xl border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-50 shrink-0"
+            title="Reload Modules"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-vcet-blue" : ""}`} />
           </button>
         </div>
       </div>
 
-      {/* Empty State — faculty with no assigned courses */}
+      {/* Empty State — when no courses available */}
       {courses.length === 0 && (
-        <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center space-y-2 shadow-xs">
-          <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
-          <h3 className="text-base font-bold text-slate-800">No Courses Assigned to You Yet</h3>
+        <div className="bg-white border border-dashed border-slate-300 rounded-3xl p-12 text-center space-y-3 shadow-xs">
+          <div className="w-16 h-16 mx-auto rounded-3xl bg-blue-50 text-vcet-blue flex items-center justify-center">
+            <BookOpen className="w-8 h-8" />
+          </div>
+          <h3 className="text-base font-bold text-slate-800">No Courses Assigned Yet</h3>
           <p className="text-xs text-slate-500 max-w-md mx-auto">
             {isFacultyOnly
               ? "You will manage modules here once the Head of Department (HOD) assigns a course to you."
@@ -785,14 +854,18 @@ export default function AdminCourseModulesPage() {
         </div>
       )}
 
-      {/* 2. Course Overview & Rules Callout */}
+      {/* 2. Course Hero & Metrics Command Card */}
       {selectedCourse && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs space-y-5">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+            {/* Left: Active Course Info & Status Controls */}
+            <div className="space-y-2 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
                   Active Course
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-vcet-blue border border-blue-200">
+                  {selectedCourse.category || "General"}
                 </span>
                 {selectedCourse.isPublished ? (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -806,213 +879,493 @@ export default function AdminCourseModulesPage() {
                   </span>
                 )}
               </div>
-              <h3 className="text-base font-extrabold text-slate-800 mt-1 line-clamp-1">
+
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                 {selectedCourse.title}
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Category: {selectedCourse.category} • {modules.length} Modules
-              </p>
+              </h2>
+
               {selectedCourse.assignedFacultyName && (
-                <p className="text-[11px] font-semibold text-vcet-blue-deep mt-1.5 inline-flex items-center gap-1">
-                  <User className="w-3 h-3" />
-                  Assigned to: {selectedCourse.assignedFacultyName}
+                <p className="text-xs font-semibold text-slate-600 inline-flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-vcet-blue" />
+                  <span>Assigned Faculty:</span>
+                  <span className="text-vcet-blue font-bold">{selectedCourse.assignedFacultyName}</span>
                 </p>
               )}
-              <div className="mt-2.5">
+
+              {/* Action Buttons Row */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
                 <Link
                   to={`/courses/${selectedCourse.slug || selectedCourse._id || selectedCourse.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-[11px] font-bold text-vcet-blue-deep bg-blue-50/80 hover:bg-blue-100 border border-blue-200/80 px-2.5 py-1 rounded-xl transition-all"
-                  title="Open course in PrepZone to view syllabus and modules"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-vcet-blue bg-blue-50/80 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-xl transition-all"
+                  title="Open course in PrepZone"
                 >
-                  <ExternalLink className="w-3 h-3" />
-                  <span>Preview Course in PrepZone</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Preview in PrepZone</span>
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={handleTogglePublish}
+                  disabled={publishing}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs disabled:opacity-50 ${
+                    selectedCourse.isPublished
+                      ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
+                      : "bg-vcet-blue text-white hover:bg-vcet-blue-deep shadow-blue-500/20"
+                  }`}
+                  title={selectedCourse.isPublished ? "Unpublish course" : "Publish course to students"}
+                >
+                  {publishing ? (
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : selectedCourse.isPublished ? (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  ) : (
+                    <Globe className="w-3.5 h-3.5" />
+                  )}
+                  <span>
+                    {publishing
+                      ? "Updating..."
+                      : selectedCourse.isPublished
+                      ? "Unpublish"
+                      : "Publish to PrepZone"}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowRulesInfo(!showRulesInfo)}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                >
+                  <Info className="w-3.5 h-3.5 text-slate-500" />
+                  <span>{showRulesInfo ? "Hide Guidelines" : "Completion Guidelines"}</span>
+                </button>
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-              <span className="text-[11px] text-slate-500 font-medium">
-                {selectedCourse.isPublished ? "Visible to students" : "Publish when syllabus is ready"}
-              </span>
-              <button
-                type="button"
-                onClick={handleTogglePublish}
-                disabled={publishing}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs disabled:opacity-50 ${
-                  selectedCourse.isPublished
-                    ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                    : "bg-vcet-blue-deep text-white hover:bg-[#08386c] shadow-blue-500/20"
-                }`}
-                title={selectedCourse.isPublished ? "Unpublish course so students cannot see it" : "Publish course to student PrepZone"}
-              >
-                {publishing ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                ) : selectedCourse.isPublished ? (
-                  <EyeOff className="w-3.5 h-3.5" />
-                ) : (
-                  <Globe className="w-3.5 h-3.5" />
-                )}
-                <span>
-                  {publishing
-                    ? "Updating..."
-                    : selectedCourse.isPublished
-                    ? "Unpublish"
-                    : "Publish to PrepZone"}
+            {/* Right: Quick Stats Strip */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 lg:w-[480px]">
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                  Modules
                 </span>
-              </button>
+                <span className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
+                  {modules.length}
+                </span>
+                <span className="text-[10px] font-bold text-slate-500 mt-0.5">Total Chapters</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-200/70 flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-vcet-blue">
+                  Videos
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-vcet-blue-deep mt-1">
+                  {totalVideos}
+                </span>
+                <span className="text-[10px] font-bold text-blue-700 mt-0.5">
+                  {totalMandatoryVideos} Mandatory
+                </span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-purple-50/60 border border-purple-200/70 flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-purple-700">
+                  Coding
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-purple-900 mt-1">
+                  {totalCoding}
+                </span>
+                <span className="text-[10px] font-bold text-purple-700 mt-0.5">Challenges</span>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/70 flex flex-col justify-between">
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700">
+                  MCQs
+                </span>
+                <span className="text-xl sm:text-2xl font-black text-emerald-900 mt-1">
+                  {totalMCQs}
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 mt-0.5">Quiz Questions</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-600 text-white shrink-0">
-              <Video className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-800 block">
-                MODULAR CONTENT RULE
-              </span>
-              <p className="text-xs text-blue-950 font-medium mt-0.5">
-                Customize each module with Videos, Coding challenges, and MCQs as needed.
-              </p>
-            </div>
-          </div>
+          {/* Optional Guidelines Drawer */}
+          {showRulesInfo && (
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-2 gap-3 animate-in fade-in duration-200">
+              <div className="p-3.5 rounded-2xl bg-blue-50/70 border border-blue-200/80 flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-blue-600 text-white shrink-0">
+                  <Video className="w-4 h-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-blue-800">
+                    MODULAR CONTENT RULE
+                  </span>
+                  <p className="text-xs text-blue-950 font-medium">
+                    Customize each module with Videos, Coding challenges, and MCQs. Each can be toggled on or off per chapter.
+                  </p>
+                </div>
+              </div>
 
-          <div className="bg-emerald-50/70 border border-emerald-100 rounded-2xl p-5 shadow-xs flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-emerald-600 text-white shrink-0">
-              <Award className="w-5 h-5" />
+              <div className="p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-emerald-600 text-white shrink-0">
+                  <Award className="w-4 h-4" />
+                </div>
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                    STUDENT COMPLETION RULE
+                  </span>
+                  <p className="text-xs text-emerald-950 font-medium">
+                    Students must finish mandatory Videos + enabled Coding/MCQ to achieve 100% completion and earn their verified certificate.
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 block">
-                STUDENT COMPLETION RULE
-              </span>
-              <p className="text-xs text-emerald-950 font-medium mt-0.5">
-                Students must finish active Videos + enabled Coding/MCQ to achieve 100% completion.
-              </p>
-            </div>
-          </div>
+          )}
         </div>
       )}
 
-      {/* 3. Modules List */}
+      {/* 3. Modules Explorer & Content Section */}
       <div className="space-y-4">
+        {/* Explorer Sub-Bar: Search & Expand Controls */}
+        <div className="bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 flex-1 max-w-md">
+            <div className="relative w-full">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search modules by title or keywords..."
+                className="w-full pl-9 pr-8 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-vcet-blue/20"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between sm:justify-end gap-2 text-xs">
+            <span className="text-slate-500 font-semibold text-[11px] sm:text-xs">
+              Showing <strong className="text-slate-800">{filteredModules.length}</strong> of {modules.length} Modules
+            </span>
+
+            {modules.length > 0 && (
+              <div className="flex items-center gap-1.5 pl-2 border-l border-slate-200">
+                <button
+                  type="button"
+                  onClick={expandAll}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-[11px] transition-colors cursor-pointer"
+                  title="Expand all modules to view items"
+                >
+                  Expand All
+                </button>
+                <button
+                  type="button"
+                  onClick={collapseAll}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-600 font-bold text-[11px] transition-colors cursor-pointer"
+                  title="Collapse all modules"
+                >
+                  Collapse All
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Modules List View */}
         {loading ? (
-          <div className="p-12 text-center bg-white rounded-2xl border border-slate-200/80">
-            <RefreshCw className="w-6 h-6 animate-spin mx-auto text-vcet-blue-deep" />
-            <p className="text-xs text-slate-500 mt-2">Loading course syllabus modules...</p>
+          <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/80 shadow-xs space-y-2">
+            <RefreshCw className="w-7 h-7 animate-spin mx-auto text-vcet-blue" />
+            <p className="text-xs font-bold text-slate-600">Loading course curriculum modules...</p>
           </div>
         ) : modules.length === 0 ? (
-          <div className="p-12 sm:p-16 text-center bg-white rounded-2xl border border-slate-200/80 space-y-3">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-vcet-blue-deep flex items-center justify-center">
+          <div className="p-12 sm:p-16 text-center bg-white rounded-3xl border border-slate-200/80 space-y-3 shadow-xs">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-vcet-blue flex items-center justify-center">
               <BookOpen className="w-7 h-7" />
             </div>
             <h3 className="text-base font-extrabold text-slate-800">
               No Modules Created Yet
             </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Start structuring this course curriculum by clicking "Add Module".
+              Start structuring this course curriculum by clicking "Add Module" to add video lectures, coding exercises, or MCQs.
             </p>
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-vcet-blue-deep text-white font-bold text-xs shadow-xs"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-vcet-blue text-white font-bold text-xs shadow-xs hover:bg-vcet-blue-deep transition-all cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Create First Module
             </button>
           </div>
+        ) : filteredModules.length === 0 ? (
+          <div className="p-10 text-center bg-white rounded-3xl border border-slate-200/80 space-y-2 shadow-xs">
+            <p className="text-xs font-bold text-slate-500">
+              No modules match your search filter "{searchQuery}".
+            </p>
+            <button
+              type="button"
+              onClick={() => setSearchQuery("")}
+              className="text-xs font-bold text-vcet-blue hover:underline cursor-pointer"
+            >
+              Clear Search Filter
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {modules.map((mod, index) => {
+            {filteredModules.map((mod, index) => {
               const videoCount = mod.videos?.length || (mod.videoUrl ? 1 : 0);
               const codingCount = mod.codingProblems?.length || 0;
               const mcqCount = mod.mcqs?.length || 0;
+              const isExpanded = Boolean(expandedModules[mod._id || mod.id]);
 
               return (
                 <div
                   key={mod._id || mod.id}
-                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:border-vcet-blue-deep/40 transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                  className="bg-white rounded-3xl border border-slate-200/90 shadow-xs hover:border-vcet-blue/50 transition-all overflow-hidden"
                 >
-                  <div className="flex items-start gap-3.5 flex-1">
-                    <span className="w-9 h-9 rounded-xl bg-slate-100 text-slate-700 font-extrabold flex items-center justify-center text-sm shrink-0 border border-slate-200">
-                      {index + 1}
-                    </span>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-sm sm:text-base font-extrabold text-slate-900">
-                          {mod.title}
-                        </h4>
+                  {/* Module Card Header */}
+                  <div className="p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                      <div className="w-10 h-10 rounded-2xl bg-slate-100 text-slate-700 font-black flex items-center justify-center text-sm shrink-0 border border-slate-200">
+                        {String(index + 1).padStart(2, "0")}
                       </div>
-                      <p className="text-xs text-slate-500 line-clamp-1">
-                        {mod.description || "No description provided."}
-                      </p>
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
+                            {mod.title}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-slate-500 line-clamp-1">
+                          {mod.description || "No description provided."}
+                        </p>
 
-                      {/* Content Badges */}
-                      <div className="flex flex-wrap items-center gap-2 pt-1">
-                        {/* Video Badge */}
-                        {mod.hasVideo ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-vcet-blue-deep border border-blue-200/70">
-                            <Video className="w-3.5 h-3.5" />
-                            <span>{videoCount} Video{videoCount > 1 ? "s" : ""}</span>
-                            <span
-                              className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
-                                mod.isVideoMandatory
-                                  ? "bg-amber-100 text-amber-800 border border-amber-300"
-                                  : "bg-blue-100/70 text-vcet-blue-deep"
-                              }`}
-                            >
-                              {mod.isVideoMandatory ? "Mandatory" : "Optional"}
+                        {/* Content Badges */}
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          {/* Video Badge */}
+                          {mod.hasVideo ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-50 text-vcet-blue border border-blue-200/70">
+                              <Video className="w-3.5 h-3.5" />
+                              <span>{videoCount} Video{videoCount > 1 ? "s" : ""}</span>
+                              <span
+                                className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase tracking-wider ${
+                                  mod.isVideoMandatory
+                                    ? "bg-amber-100 text-amber-800 border border-amber-300"
+                                    : "bg-blue-100/70 text-vcet-blue"
+                                }`}
+                              >
+                                {mod.isVideoMandatory ? "Mandatory" : "Optional"}
+                              </span>
                             </span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200/50">
-                            Video Disabled
-                          </span>
-                        )}
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200/50">
+                              No Video
+                            </span>
+                          )}
 
-                        {/* Coding Badge */}
-                        {mod.hasCoding ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/70">
-                            <Code2 className="w-3.5 h-3.5" />
-                            <span>{codingCount} Coding Problem{codingCount > 1 ? "s" : ""}</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200/50">
-                            Coding Disabled
-                          </span>
-                        )}
+                          {/* Coding Badge */}
+                          {mod.hasCoding ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/70">
+                              <Code2 className="w-3.5 h-3.5" />
+                              <span>{codingCount} Coding Challenge{codingCount > 1 ? "s" : ""}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200/50">
+                              No Coding
+                            </span>
+                          )}
 
-                        {/* MCQ Badge */}
-                        {mod.hasMCQ ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
-                            <HelpCircle className="w-3.5 h-3.5" />
-                            <span>{mcqCount} MCQ Question{mcqCount > 1 ? "s" : ""}</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200/50">
-                            MCQ Disabled
-                          </span>
-                        )}
+                          {/* MCQ Badge */}
+                          {mod.hasMCQ ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                              <HelpCircle className="w-3.5 h-3.5" />
+                              <span>{mcqCount} MCQ Question{mcqCount > 1 ? "s" : ""}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200/50">
+                              No MCQ
+                            </span>
+                          )}
+                        </div>
                       </div>
+                    </div>
+
+                    {/* Card Actions */}
+                    <div className="flex items-center gap-1.5 shrink-0 self-end md:self-center">
+                      <button
+                        type="button"
+                        onClick={() => toggleModuleExpand(mod._id || mod.id)}
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+                          isExpanded
+                            ? "bg-blue-50 text-vcet-blue border-blue-200"
+                            : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        }`}
+                        title="Toggle Content Preview"
+                      >
+                        <span>{isExpanded ? "Hide Preview" : "Preview Content"}</span>
+                        {isExpanded ? (
+                          <ChevronDown className="w-3.5 h-3.5" />
+                        ) : (
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+
+                      <button
+                        onClick={() => handleOpenEdit(mod)}
+                        className="p-2 rounded-xl text-slate-600 hover:text-vcet-blue hover:bg-blue-50 transition-colors cursor-pointer"
+                        title="Edit Module Content"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteModule(mod)}
+                        className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                        title="Delete Module"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
-                    <button
-                      onClick={() => handleOpenEdit(mod)}
-                      className="p-2 rounded-xl text-slate-600 hover:text-vcet-blue-deep hover:bg-slate-100 transition-colors"
-                      title="Edit Module Content"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteModule(mod)}
-                      className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                      title="Delete Module"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {/* Inline Content Inspector (Expanded Accordion) */}
+                  {isExpanded && (
+                    <div className="p-5 bg-slate-50/70 border-t border-slate-100 space-y-4 animate-in fade-in duration-150">
+                      {/* 1. Videos Preview */}
+                      {mod.hasVideo && (mod.videos?.length > 0 || mod.videoUrl) && (
+                        <div className="space-y-2">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-vcet-blue flex items-center gap-1.5">
+                            <Video className="w-3.5 h-3.5" />
+                            <span>Lecture Video Playlist ({mod.videos?.length || (mod.videoUrl ? 1 : 0)})</span>
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                            {(mod.videos?.length > 0 ? mod.videos : [{ title: "Lecture Video", youtubeUrl: mod.videoUrl, duration: "30 mins" }]).map((v, vIdx) => (
+                              <div
+                                key={vIdx}
+                                className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col justify-between gap-2 shadow-2xs"
+                              >
+                                <div>
+                                  <span className="text-[10px] font-bold text-slate-400 block uppercase">
+                                    Video {vIdx + 1} • {v.duration || "20 mins"}
+                                  </span>
+                                  <h6 className="text-xs font-bold text-slate-900 line-clamp-1 mt-0.5">
+                                    {v.title}
+                                  </h6>
+                                </div>
+                                {v.youtubeUrl && (
+                                  <a
+                                    href={v.youtubeUrl}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[11px] font-bold text-blue-600 hover:underline inline-flex items-center gap-1"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                    <span>Watch on YouTube</span>
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 2. Coding Problems Preview */}
+                      {mod.hasCoding && mod.codingProblems?.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-purple-700 flex items-center gap-1.5">
+                            <Code2 className="w-3.5 h-3.5" />
+                            <span>Coding Challenges ({mod.codingProblems.length})</span>
+                          </span>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                            {mod.codingProblems.map((cp, cIdx) => (
+                              <div
+                                key={cIdx}
+                                className="p-3 bg-white rounded-xl border border-slate-200 flex flex-col justify-between gap-2 shadow-2xs"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className="text-[10px] font-bold text-purple-700 uppercase">
+                                      Problem {cIdx + 1}
+                                    </span>
+                                    <span
+                                      className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                                        cp.difficulty === "Easy"
+                                          ? "bg-emerald-100 text-emerald-800"
+                                          : cp.difficulty === "Hard"
+                                          ? "bg-rose-100 text-rose-800"
+                                          : "bg-amber-100 text-amber-800"
+                                      }`}
+                                    >
+                                      {cp.difficulty || "Medium"}
+                                    </span>
+                                  </div>
+                                  <h6 className="text-xs font-bold text-slate-900 line-clamp-1 mt-0.5">
+                                    {cp.title}
+                                  </h6>
+                                  {cp.description && (
+                                    <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                                      {cp.description}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 3. MCQ Questions Preview */}
+                      {mod.hasMCQ && mod.mcqs?.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-[11px] font-black uppercase tracking-wider text-emerald-700 flex items-center gap-1.5">
+                            <HelpCircle className="w-3.5 h-3.5" />
+                            <span>MCQ Assessment Questions ({mod.mcqs.length})</span>
+                          </span>
+                          <div className="space-y-2">
+                            {mod.mcqs.map((q, qIdx) => (
+                              <div
+                                key={qIdx}
+                                className="p-3 bg-white rounded-xl border border-slate-200 space-y-1.5 shadow-2xs"
+                              >
+                                <div className="flex items-start gap-2">
+                                  <span className="text-[10px] font-black text-emerald-700 uppercase">
+                                    Q{qIdx + 1}:
+                                  </span>
+                                  <p className="text-xs font-bold text-slate-900">
+                                    {q.question}
+                                  </p>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px] pt-1">
+                                  {q.options?.map((opt, oIdx) => (
+                                    <span
+                                      key={oIdx}
+                                      className={`px-2 py-0.5 rounded-lg border text-[10px] ${
+                                        oIdx === q.correctAnswer
+                                          ? "bg-emerald-100 border-emerald-300 text-emerald-900 font-bold"
+                                          : "bg-slate-50 border-slate-200 text-slate-600"
+                                      }`}
+                                    >
+                                      {String.fromCharCode(65 + oIdx)}. {opt}
+                                      {oIdx === q.correctAnswer && " ✓"}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {!mod.hasVideo && !mod.hasCoding && !mod.hasMCQ && (
+                        <p className="text-xs text-slate-500 italic">
+                          No active content items configured. Click "Edit" above to add videos, coding problems, or MCQs.
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1036,7 +1389,7 @@ export default function AdminCourseModulesPage() {
                   {editingModule ? "EDIT MODULE CONTENT" : "CREATE NEW MODULE"}
                 </span>
                 <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
-                  {editingModule ? `Editing: ${editingModule.title}` : "Course Module Builder"}
+                  {editingModule ? `Editing: ${editingModule.title}` : "Students Course Module Builder"}
                 </h3>
               </div>
               <button

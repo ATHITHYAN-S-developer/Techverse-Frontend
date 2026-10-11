@@ -1,423 +1,393 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Megaphone,
-  Plus,
   Search,
-  Trash2,
-  Edit,
   Eye,
   X,
-  AlertTriangle,
   Pin,
-  ImageIcon,
-  CalendarDays,
+  Calendar,
+  Building,
+  ShieldCheck,
+  AlertCircle,
+  FileText,
+  Clock,
+  Sparkles,
+  Filter,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { announcementService } from "../../services/announcementService";
-import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function FacultyAnnouncementsPage() {
   const { user } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const { showError } = useToast();
   const [announcements, setAnnouncements] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [deleteDialog, setDeleteDialog] = useState({ open: false, id: null });
-
-  const [formData, setFormData] = useState({
-    title: "",
-    category: "Academic",
-    priority: "Normal",
-    content: "",
-    expiryDate: "",
-    expiryTime: "23:59",
-    isPinned: false
-  });
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPriority, setSelectedPriority] = useState("all");
+  const [activeItem, setActiveItem] = useState(null);
 
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const data = await announcementService.getAll();
-      setAnnouncements(data);
+      setAnnouncements(Array.isArray(data) ? data : []);
     } catch {
       showError("Failed to load announcements");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleOpenCreate = () => {
-    setEditingItem(null);
-    setFormData({
-      title: "",
-      category: "Academic",
-      priority: "Normal",
-      content: "",
-      expiryDate: "",
-      expiryTime: "23:59",
-      isPinned: false
-    });
-    setImageFile(null);
-    setImagePreview(null);
-    setModalOpen(true);
-  };
+  const categories = [
+    { id: "all", label: "All Categories" },
+    { id: "Academic", label: "Academic" },
+    { id: "Exam", label: "Exam Schedule" },
+    { id: "Placement", label: "Placement & Drives" },
+    { id: "Hackathon", label: "Hackathons" },
+    { id: "Event", label: "Events" },
+  ];
 
-  const handleOpenEdit = (item) => {
-    setEditingItem(item);
-    let itemDate = "";
-    let itemTime = "23:59";
-    if (item.expiryDate) {
-      const dateObj = new Date(item.expiryDate);
-      if (!Number.isNaN(dateObj.getTime())) {
-        itemDate = dateObj.toISOString().slice(0, 10);
-        const hours = String(dateObj.getHours()).padStart(2, "0");
-        const minutes = String(dateObj.getMinutes()).padStart(2, "0");
-        itemTime = `${hours}:${minutes}`;
-      } else {
-        itemDate = String(item.expiryDate).slice(0, 10);
+  const filteredAnnouncements = useMemo(() => {
+    return announcements.filter((item) => {
+      // Category filter
+      if (selectedCategory !== "all" && item.category !== selectedCategory) {
+        return false;
       }
-    }
-    setFormData({
-      title: item.title,
-      category: item.category,
-      priority: item.priority || "Normal",
-      content: item.content || item.description || "",
-      expiryDate: itemDate,
-      expiryTime: itemTime,
-      isPinned: Boolean(item.isPinned)
-    });
-    setImageFile(null);
-    setImagePreview(item.imageUrl || null);
-    setModalOpen(true);
-  };
 
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!formData.title.trim()) {
-      showError("Please enter circular title");
-      return;
-    }
-
-    if (!formData.expiryDate) {
-      showError("Please select a deadline/end date.");
-      return;
-    }
-
-    try {
-      const combinedExpiry = formData.expiryTime
-        ? new Date(`${formData.expiryDate}T${formData.expiryTime}:00`).toISOString()
-        : new Date(`${formData.expiryDate}T23:59:59`).toISOString();
-
-      const userDept =
-        user?.departmentName ||
-        user?.department ||
-        (user?.departmentCode ? `${user.departmentCode} Department` : "") ||
-        user?.departmentId?.name ||
-        "General";
-
-      const payload = {
-        ...formData,
-        expiryDate: combinedExpiry,
-        department: userDept,
-        departments: JSON.stringify([userDept]),
-        departmentId: user?.departmentId?._id || user?.departmentId || undefined,
-      };
-
-      if (imageFile) {
-        const formPayload = new FormData();
-        Object.keys(payload).forEach((k) => {
-          if (payload[k] !== null && payload[k] !== undefined) {
-            formPayload.append(k, payload[k]);
-          }
-        });
-        formPayload.append("image", imageFile);
-        formPayload.append("file", imageFile);
-
-        if (editingItem) {
-          await announcementService.update(editingItem._id || editingItem.id, formPayload);
-          showSuccess("Circular updated successfully ✓");
-        } else {
-          await announcementService.create(formPayload);
-          showSuccess("Department circular published ✓");
-        }
-      } else {
-        if (editingItem) {
-          await announcementService.update(editingItem._id || editingItem.id, payload);
-          showSuccess("Circular updated successfully ✓");
-        } else {
-          await announcementService.create(payload);
-          showSuccess("Department circular published ✓");
+      // Priority filter
+      if (selectedPriority !== "all") {
+        const itemPri = (item.priority || "normal").toLowerCase();
+        if (itemPri !== selectedPriority.toLowerCase()) {
+          return false;
         }
       }
-      setModalOpen(false);
-      setImageFile(null);
-      setImagePreview(null);
-      loadData();
-    } catch (err) {
-      console.error("Save circular error:", err);
-      showError(err.message || "Failed to save circular");
-    }
-  };
 
-  const handleDelete = async () => {
-    if (!deleteDialog.id) return;
-    try {
-      await announcementService.delete(deleteDialog.id);
-      showSuccess("Circular removed ✓");
-      setDeleteDialog({ open: false, id: null });
-      await loadData();
-    } catch (err) {
-      console.error("Delete circular failed:", err);
-      showError(err?.message || "Failed to delete circular");
-      setDeleteDialog({ open: false, id: null });
-    }
-  };
+      // Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const title = (item.title || "").toLowerCase();
+        const content = (item.content || item.description || "").toLowerCase();
+        const author = (item.createdBy?.name || item.authorName || item.author || "").toLowerCase();
+        const dept = (item.department || item.authorDepartment || "").toLowerCase();
+        return title.includes(q) || content.includes(q) || author.includes(q) || dept.includes(q);
+      }
+
+      return true;
+    });
+  }, [announcements, selectedCategory, selectedPriority, searchQuery]);
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-            Department Circulars & Notices
+    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+      {/* Page Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-6 sm:p-8 rounded-3xl text-white shadow-xl">
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-semibold text-sky-200 border border-white/10">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Admin Broadcasts • Read Only</span>
+          </div>
+          <h1 className="text-xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-3">
+            <Megaphone className="w-7 h-7 text-sky-400" />
+            <span>Institutional & Department Circulars</span>
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Broadcast test schedules, assignment submissions, and review deadlines to students.
+          <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
+            Official announcements, examination schedules, college notifications, and academic circulars published exclusively by the Institutional Administration.
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs shadow-md transition-all self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Broadcast Notice</span>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {announcements.map((item) => (
-          <div
-            key={item._id || item.id}
-            className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
-          >
-            <div>
-              {item.imageUrl && (
-                <img
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="w-full h-32 object-cover rounded-xl mb-3"
-                />
-              )}
-              <div className="flex items-center justify-between gap-2 mb-2">
-
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                  item.priority === "Urgent"
-                    ? "bg-rose-100 text-rose-700"
-                    : item.priority === "Important"
-                    ? "bg-amber-100 text-amber-800"
-                    : "bg-blue-50 text-vcet-blue"
-                }`}>
-                  {item.priority || "Notice"}
-                </span>
-                <span className="text-[11px] text-slate-400">{item.date}</span>
-              </div>
-
-              <h3 className="text-sm font-bold text-slate-900 leading-snug">{item.title}</h3>
-              <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
-                {item.content}
-              </p>
-            </div>
-
-            <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-              <div className="flex flex-col">
-                <span className="font-semibold text-slate-800">
-                  {item.createdBy?.name || item.authorName || item.author || "VCET Faculty"}
-                </span>
-                <span className="text-[10px] text-slate-400">
-                  {item.authorDepartment || item.createdBy?.departmentName || item.createdBy?.departmentId?.name || item.department || ""}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => handleOpenEdit(item)}
-                  className="p-1.5 hover:text-vcet-blue rounded hover:bg-slate-50"
-                  title="Edit"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => setDeleteDialog({ open: true, id: item._id || item.id })}
-                  className="p-1.5 hover:text-rose-600 rounded hover:bg-rose-50"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
+        <div className="bg-white/5 border border-white/10 p-3.5 rounded-2xl flex items-center gap-3 backdrop-blur-sm self-start md:self-auto shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-lg">
+            {announcements.length}
           </div>
-        ))}
+          <div className="text-xs">
+            <div className="font-bold text-white">Active Circulars</div>
+            <div className="text-slate-400 text-[11px]">Synced with Admin portal</div>
+          </div>
+        </div>
       </div>
 
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900">
-                {editingItem ? "Edit Circular" : "Publish New Circular"}
-              </h3>
-              <button onClick={() => setModalOpen(false)} className="p-1 text-slate-400">
+      {/* Filter and Search Bar */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search circulars by title, topic, or admin officer..."
+              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-vcet-blue/30 focus:border-vcet-blue transition-all"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={selectedPriority}
+              onChange={(e) => setSelectedPriority(e.target.value)}
+              className="text-xs font-semibold px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-vcet-blue/30"
+            >
+              <option value="all">All Priorities</option>
+              <option value="urgent">Urgent Priority</option>
+              <option value="important">Important</option>
+              <option value="normal">Normal</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Categories Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCategory(c.id)}
+              className={`px-3 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
+                selectedCategory === c.id
+                  ? "bg-vcet-blue text-white shadow-xs"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200/80"
+              }`}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Announcements Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className="bg-white rounded-2xl border border-slate-200 p-5 space-y-3 animate-pulse">
+              <div className="h-4 bg-slate-100 rounded w-1/3" />
+              <div className="h-5 bg-slate-100 rounded w-3/4" />
+              <div className="h-16 bg-slate-100 rounded" />
+              <div className="h-4 bg-slate-100 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : filteredAnnouncements.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-slate-200/80 p-12 text-center space-y-3 max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+            <Megaphone className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-bold text-slate-800">No circulars match your filters</h3>
+          <p className="text-xs text-slate-500">
+            {searchQuery
+              ? "Try adjusting your search terms or clearing selected category filters."
+              : "No official circulars have been published by the administration yet."}
+          </p>
+          {(searchQuery || selectedCategory !== "all" || selectedPriority !== "all") && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setSelectedCategory("all");
+                setSelectedPriority("all");
+              }}
+              className="text-xs font-bold text-vcet-blue hover:underline pt-2 inline-block"
+            >
+              Clear all filters
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filteredAnnouncements.map((item) => {
+            const isUrgent = item.priority === "Urgent" || item.priority === "urgent";
+            const isImportant = item.priority === "Important" || item.priority === "important";
+            const author =
+              item.createdBy?.name ||
+              item.authorName ||
+              item.author ||
+              "College Administration";
+
+            const dept =
+              item.department ||
+              item.authorDepartment ||
+              item.createdBy?.departmentName ||
+              item.createdBy?.departmentId?.name ||
+              "Institution Wide";
+
+            return (
+              <div
+                key={item._id || item.id}
+                onClick={() => setActiveItem(item)}
+                className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md hover:border-slate-300 transition-all cursor-pointer flex flex-col justify-between group relative overflow-hidden"
+              >
+                {item.isPinned && (
+                  <div className="absolute top-0 right-0 bg-amber-500 text-white p-1 rounded-bl-xl shadow-xs">
+                    <Pin className="w-3.5 h-3.5" />
+                  </div>
+                )}
+
+                <div>
+                  {item.imageUrl && (
+                    <div className="relative rounded-xl overflow-hidden mb-3.5 bg-slate-100 h-36">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider ${
+                        isUrgent
+                          ? "bg-rose-100 text-rose-700"
+                          : isImportant
+                          ? "bg-amber-100 text-amber-800"
+                          : "bg-blue-50 text-vcet-blue"
+                      }`}
+                    >
+                      {item.priority || "Notice"}
+                    </span>
+
+                    {item.category && (
+                      <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                        {item.category}
+                      </span>
+                    )}
+                  </div>
+
+                  <h3 className="text-sm font-bold text-slate-900 group-hover:text-vcet-blue transition-colors line-clamp-2 leading-snug">
+                    {item.title}
+                  </h3>
+
+                  <p className="text-xs text-slate-600 mt-2 line-clamp-3 leading-relaxed">
+                    {item.content || item.description || "No description provided."}
+                  </p>
+                </div>
+
+                <div className="mt-4 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex flex-col truncate pr-2">
+                    <span className="font-bold text-slate-800 text-[11px] truncate flex items-center gap-1">
+                      <ShieldCheck className="w-3 h-3 text-emerald-600 shrink-0" />
+                      {author}
+                    </span>
+                    <span className="text-[10px] text-slate-400 truncate">
+                      {dept}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 text-vcet-blue font-bold text-xs shrink-0 group-hover:translate-x-0.5 transition-transform">
+                    <span>Read</span>
+                    <Eye className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Read Notice Modal */}
+      {activeItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto space-y-4">
+            <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${
+                      activeItem.priority === "Urgent" || activeItem.priority === "urgent"
+                        ? "bg-rose-100 text-rose-700"
+                        : activeItem.priority === "Important" || activeItem.priority === "important"
+                        ? "bg-amber-100 text-amber-800"
+                        : "bg-blue-50 text-vcet-blue"
+                    }`}
+                  >
+                    {activeItem.priority || "Notice"}
+                  </span>
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                    {activeItem.category || "General"}
+                  </span>
+                </div>
+                <h2 className="text-base sm:text-xl font-black text-slate-900 leading-snug">
+                  {activeItem.title}
+                </h2>
+              </div>
+              <button
+                onClick={() => setActiveItem(null)}
+                className="p-1.5 rounded-xl bg-slate-100 text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition-all shrink-0"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSave} className="space-y-4 mt-4 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="e.g. Model Practical Exam Schedule - II CSE A & B"
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
+            {activeItem.imageUrl && (
+              <div className="rounded-2xl overflow-hidden border border-slate-200 max-h-72 bg-slate-50 flex items-center justify-center">
+                <img
+                  src={activeItem.imageUrl}
+                  alt={activeItem.title}
+                  className="w-full h-full object-contain max-h-72"
                 />
               </div>
+            )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                  >
-                    <option value="Academic">Academic</option>
-                    <option value="Exam">Exam Schedule</option>
-                    <option value="Placement">Placement & Drives</option>
-                    <option value="Hackathon">Hackathon</option>
-                    <option value="Event">Department Event</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Priority Level</label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                  >
-                    <option value="Normal">Normal Notice</option>
-                    <option value="Important">Important</option>
-                    <option value="Urgent">Urgent Action Required</option>
-                  </select>
-                </div>
+            <div className="text-xs sm:text-sm text-slate-700 whitespace-pre-wrap leading-relaxed py-2">
+              {activeItem.content || activeItem.description || "No circular text available."}
+            </div>
+
+            {/* Metadata Footer */}
+            <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-slate-50/80 p-4 rounded-2xl">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                  Published By (Admin Authority)
+                </span>
+                <span className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  {activeItem.createdBy?.name || activeItem.authorName || activeItem.author || "Institutional Administration"}
+                </span>
+                <span className="text-[11px] text-slate-500 block">
+                  {activeItem.department || activeItem.authorDepartment || activeItem.createdBy?.departmentName || "Institution Wide"}
+                </span>
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Notice Description / Instructions</label>
-                <textarea
-                  rows={4}
-                  required
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Provide circular details, deadlines, and requirements..."
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl"
-                />
+                <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                  Timeline & Expiry
+                </span>
+                <span className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                  <Calendar className="w-3.5 h-3.5 text-vcet-blue shrink-0" />
+                  {activeItem.expiryDate
+                    ? `Valid until ${new Date(activeItem.expiryDate).toLocaleDateString("en-IN", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}`
+                    : "Open Notice / No deadline"}
+                </span>
+                <span className="text-[11px] text-slate-500 block">
+                  Published: {activeItem.date || (activeItem.createdAt ? new Date(activeItem.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "Active")}
+                </span>
               </div>
+            </div>
 
-              {/* Deadline / End Date */}
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Deadline / End Date *</label>
-                <div className="relative">
-                  <CalendarDays className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  <input
-                    type="date"
-                    required
-                    value={formData.expiryDate}
-                    onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })}
-                    className="w-full p-2.5 pl-9 bg-slate-50 border border-slate-200 rounded-xl"
-                  />
-                </div>
-                <p className="text-[10px] text-slate-400 mt-1">
-                  The announcement stays CURRENT / UPCOMING until this date, then automatically moves to past events.
-                </p>
-              </div>
-
-              {/* Image Upload */}
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Upload Image <span className="text-slate-400 font-normal">(optional)</span></label>
-                {imagePreview ? (
-                  <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
-                    <img src={imagePreview} alt="Preview" className="w-full h-36 object-cover" />
-                    <div className="flex items-center justify-between px-3 py-1.5 bg-white border-t border-slate-100">
-                      <span className="text-[11px] text-slate-500 truncate max-w-[80%]">{imageFile?.name || "Current image"}</span>
-                      <button
-                        type="button"
-                        onClick={() => { setImageFile(null); setImagePreview(null); }}
-                        className="text-rose-500 hover:text-rose-700 text-xs font-bold ml-2 flex items-center gap-1"
-                      >
-                        <X className="w-3.5 h-3.5" /> Remove
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center gap-1.5 w-full h-24 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 hover:bg-slate-100 cursor-pointer transition-colors">
-                    <ImageIcon className="w-6 h-6 text-slate-400" />
-                    <span className="text-xs text-slate-500 font-medium">Click to upload an image</span>
-                    <span className="text-[10px] text-slate-400">PNG, JPG, JPEG, WEBP • Max 5 MB</span>
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg,image/jpg,image/webp"
-                      className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (file.size > 5 * 1024 * 1024) {
-                          showError("Image must be under 5 MB");
-                          return;
-                        }
-                        setImageFile(file);
-                        const reader = new FileReader();
-                        reader.onload = (ev) => setImagePreview(ev.target.result);
-                        reader.readAsDataURL(file);
-                      }}
-                    />
-                  </label>
-                )}
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setModalOpen(false)}
-                  className="px-4 py-2 text-slate-600 font-semibold"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 bg-vcet-blue text-white font-bold rounded-xl shadow"
-                >
-                  Publish Notice
-                </button>
-              </div>
-            </form>
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setActiveItem(null)}
+                className="px-5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-all"
+              >
+                Close Circular
+              </button>
+            </div>
           </div>
         </div>
       )}
-
-      <ConfirmDialog
-        isOpen={deleteDialog.open}
-        title="Delete Circular?"
-        message="Are you sure you want to remove this announcement?"
-        confirmLabel="Delete"
-        confirmVariant="danger"
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteDialog({ open: false, id: null })}
-      />
     </div>
   );
 }

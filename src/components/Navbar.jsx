@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,7 +18,9 @@ import {
   ShieldCheck,
   LogOut,
   Flame,
-  Users
+  Users,
+  LayoutDashboard,
+  ChevronDown,
 } from "lucide-react";
 
 import vcetLogoImg from "../assets/vcet-logo.png";
@@ -42,6 +44,8 @@ export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const { user, role, isAuthenticated, logout, streak } = useAuth();
@@ -54,6 +58,25 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
+        setProfileMenuOpen(false);
+      }
+    };
+    if (profileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [profileMenuOpen]);
+
+  useEffect(() => {
+    setProfileMenuOpen(false);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const isTabActive = (path) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
@@ -63,6 +86,11 @@ export default function Navbar() {
     if (role === "admin") return "/admin/dashboard";
     if (role === "faculty" || role === "teacher" || role === "hod") return "/faculty/dashboard";
     return "/dashboard";
+  };
+
+  const getProfilePath = () => {
+    if (role === "student") return "/profile";
+    return "/faculty/profile";
   };
 
   return (
@@ -79,8 +107,11 @@ export default function Navbar() {
             className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep rounded-lg group"
             title="VCET TechVerse"
           >
-<span className="font-display text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-none group-hover:text-vcet-blue transition-colors">
-              Tech<span className="text-vcet-blue">Verse</span>
+            <span
+              className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-none group-hover:text-slate-800 transition-colors"
+              style={{ fontFamily: "'Manrope', sans-serif" }}
+            >
+              TechVerse
             </span>
           </Link>
 
@@ -142,28 +173,122 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                {/* Consistent User Profile Navigation - Displays Full Name on Desktop and Mobile */}
-                <Link
-                  to={role === "student" ? "/dashboard#profile" : getDashboardPath()}
-                  className="flex items-center gap-2 group min-w-0"
-                  title="View Profile & Dashboard"
-                >
-                  <span className="w-8 h-8 rounded-full bg-vcet-blue-deep text-white font-display text-xs font-semibold flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-                    {user?.name?.charAt(0) || "U"}
-                  </span>
-                  <span className="flex flex-col text-left min-w-0">
-                    <span className="text-xs font-semibold text-slate-800 leading-tight truncate max-w-[100px] sm:max-w-[140px] group-hover:text-vcet-blue transition-colors">
-                      {user?.name || "Student"}
+                {/* User Profile Menu Trigger */}
+                <div className="relative" ref={profileMenuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                    className="flex items-center gap-2 group min-w-0 p-1.5 sm:px-2 rounded-xl hover:bg-slate-100 transition-all cursor-pointer select-none border border-transparent hover:border-slate-200"
+                    title="Account & Profile Menu"
+                    aria-expanded={profileMenuOpen}
+                  >
+                    <span className="w-8 h-8 rounded-full bg-vcet-blue-deep text-white font-display text-xs font-semibold flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                      {user?.name?.charAt(0) || "U"}
                     </span>
-                    <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 tabular-nums truncate max-w-[100px] sm:max-w-[140px]">
-                      {role === "student"
-                        ? (user?.registerNumber || "Student")
-                        : role === "admin"
-                          ? "Administrator"
-                          : "Faculty"}
+                    <span className="flex flex-col text-left min-w-0">
+                      <span className="text-xs font-semibold text-slate-800 leading-tight truncate max-w-[100px] sm:max-w-[140px] group-hover:text-vcet-blue transition-colors">
+                        {user?.name || "Student"}
+                      </span>
+                      <span className="text-[10px] sm:text-[11px] font-medium text-slate-500 tabular-nums truncate max-w-[100px] sm:max-w-[140px]">
+                        {role === "student"
+                          ? (user?.registerNumber || "Student")
+                          : role === "admin"
+                            ? "Administrator"
+                            : "Faculty"}
+                      </span>
                     </span>
-                  </span>
-                </Link>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-transform duration-200 ${
+                        profileMenuOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Profile Dropdown Menu */}
+                  <AnimatePresence>
+                    {profileMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-xl border border-slate-200/90 py-2 z-50 overflow-hidden"
+                      >
+                        {/* Header preview */}
+                        <div className="px-4 py-3 bg-slate-50/90 border-b border-slate-100 flex items-center gap-3">
+                          <span className="w-10 h-10 rounded-full bg-vcet-blue-deep text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-xs">
+                            {user?.name?.charAt(0) || "U"}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-xs font-bold text-slate-900 truncate">
+                              {user?.name || "User Profile"}
+                            </p>
+                            <p className="text-[10px] font-semibold text-vcet-blue truncate mt-0.5">
+                              {role === "student"
+                                ? "Student"
+                                : role === "admin"
+                                ? "Administrator"
+                                : "Faculty / Teacher"}
+                            </p>
+                            <p className="text-[10px] text-slate-400 truncate">
+                              {user?.email || user?.staffId || user?.registerNumber || ""}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Navigation Options */}
+                        <div className="p-1.5 space-y-0.5">
+                          {/* Profile Option */}
+                          <Link
+                            to={getProfilePath()}
+                            onClick={() => setProfileMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-vcet-blue hover:bg-blue-50/70 transition-colors"
+                          >
+                            <div className="p-1.5 rounded-lg bg-blue-50 text-vcet-blue">
+                              <User className="w-4 h-4" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-800">Profile</span>
+                              <span className="text-[10px] text-slate-500 font-normal">View & manage profile</span>
+                            </div>
+                          </Link>
+
+                          {/* Dashboard Option */}
+                          <Link
+                            to={getDashboardPath()}
+                            onClick={() => setProfileMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 hover:text-vcet-blue hover:bg-blue-50/70 transition-colors"
+                          >
+                            <div className="p-1.5 rounded-lg bg-slate-100 text-slate-600">
+                              <LayoutDashboard className="w-4 h-4" />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-800">Dashboard</span>
+                              <span className="text-[10px] text-slate-500 font-normal">Go to main dashboard</span>
+                            </div>
+                          </Link>
+                        </div>
+
+                        {/* Divider & Sign Out */}
+                        <div className="pt-1 border-t border-slate-100 px-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setProfileMenuOpen(false);
+                              setShowLogoutConfirm(true);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer text-left"
+                          >
+                            <div className="p-1.5 rounded-lg bg-rose-50 text-rose-600">
+                              <LogOut className="w-4 h-4" />
+                            </div>
+                            <span>Sign Out</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             ) : (
               <Link
@@ -339,11 +464,19 @@ export default function Navbar() {
                 {isAuthenticated ? (
                   <div className="space-y-2">
                     <Link
+                      to={getProfilePath()}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-50 text-vcet-blue-deep border border-blue-200 text-xs font-bold hover:bg-blue-100 transition-colors"
+                    >
+                      <User size={14} />
+                      <span>My Profile</span>
+                    </Link>
+                    <Link
                       to={getDashboardPath()}
                       onClick={() => setMobileMenuOpen(false)}
                       className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-vcet-blue-deep text-white text-xs font-bold"
                     >
-                      <User size={14} />
+                      <LayoutDashboard size={14} />
                       <span>Open {role === "admin" ? "Admin Hub" : role === "faculty" ? "Faculty Hub" : "Student Dashboard"}</span>
                     </Link>
                     <button

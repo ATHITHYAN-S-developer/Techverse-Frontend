@@ -142,7 +142,7 @@ export default function App() {
               <Route path="coding" element={<AdminCodingPage />} />
               <Route path="resources" element={<FacultyResourcesPage />} />
               <Route path="subjects" element={<Navigate to="/faculty/dashboard" replace />} />
-              <Route path="announcements" element={<FacultyAnnouncementsPage />} />
+              <Route path="announcements" element={<Navigate to="/faculty/dashboard" replace />} />
               <Route path="students" element={<FacultyStudentsPage />} />
               <Route path="profile" element={<ProfilePage />} />
             </Route>
