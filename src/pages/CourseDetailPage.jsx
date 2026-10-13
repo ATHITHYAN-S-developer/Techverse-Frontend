@@ -247,8 +247,8 @@ export default function CourseDetailPage() {
               <span>{course.modules?.length || course.totalModules || 0} Modules</span>
             </div>
             <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-emerald-600" />
-              <span>Verified Certificate Included</span>
+              <Award className={`w-4 h-4 ${course.certificateEnabled !== false ? "text-emerald-600" : "text-slate-400"}`} />
+              <span>{course.certificateEnabled !== false ? "Verified Certificate Included" : "Certificate Not Included"}</span>
             </div>
           </div>
         </div>
@@ -267,18 +267,26 @@ export default function CourseDetailPage() {
               />
             </div>
             <p className="text-[11px] text-slate-500">
-              Pass benchmark: {course.passingPercentage || course.passingScore || 50}% on module assessments to unlock certificate.
+              Pass benchmark: {course.passingPercentage || course.passingScore || 50}% on module assessments
+              {course.certificateEnabled !== false ? " to unlock certificate." : "."}
             </p>
           </div>
 
           {userProgress >= 100 ? (
-            <Link
-              to="/certificates"
-              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              <Award className="w-4 h-4" />
-              <span>🏆 Course Completed • View Certificate</span>
-            </Link>
+            course.certificateEnabled !== false ? (
+              <Link
+                to="/certificates"
+                className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer"
+              >
+                <Award className="w-4 h-4" />
+                <span>🏆 Course Completed • View Certificate</span>
+              </Link>
+            ) : (
+              <div className="w-full py-3 bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                <span>🏆 Course Completed!</span>
+              </div>
+            )
           ) : firstIncompleteModule ? (
             <Link
               to={`/courses/${courseSlug}/module/${firstIncompleteModule.id || firstIncompleteModule._id}`}

@@ -21,6 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import ScrollToTop from "../components/ScrollToTop";
 import VcetBanner from "../components/VcetBanner";
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
+import TechVerseLogo from "../components/TechVerseLogo";
 
 const getFacultyNav = (isHod) => {
   if (isHod) {
@@ -152,12 +153,7 @@ export default function FacultyLayout() {
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-6 py-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
           <Link to="/" className="flex items-center gap-2.5 group">
-            <span
-              className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none"
-              style={{ fontFamily: "'Manrope', sans-serif" }}
-            >
-              TechVerse
-            </span>
+            <TechVerseLogo height="h-7 sm:h-8" />
             <span
               className={`inline-block text-[10px] px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider ${
                 isHod

@@ -101,6 +101,7 @@ export default function App() {
               <Route path="/updates" element={<UpdatesPage />} />
               <Route path="/youtube" element={<YouTubePage />} />
               <Route path="/aptitude" element={<AptitudePage />} />
+              <Route path="/fundamentals" element={<AptitudePage />} />
               <Route path="/announcements" element={<AnnouncementsPage />} />
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/courses/:courseId" element={<CourseDetailPage />} />

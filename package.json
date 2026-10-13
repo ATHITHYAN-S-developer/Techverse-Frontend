@@ -7,6 +7,8 @@
     "dev": "vite --port=5173 --host",
     "build": "vite build",
     "preview": "vite preview",
+    "stop": "npx pm2 stop techverse-frontend",
+    "restart": "npx pm2 restart techverse-frontend",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test:e2e": "playwright test",

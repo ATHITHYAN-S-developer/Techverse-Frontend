@@ -4,10 +4,20 @@
  */
 
 const getBackendHost = () => {
-  if (typeof window !== "undefined" && window.location && window.location.hostname) {
+  if (typeof window !== "undefined" && window.location) {
+    // When running under HTTPS or standard web ports (via Caddy or domain reverse proxy),
+    // always use relative '/api' to avoid Mixed Content security blocks.
+    if (
+      window.location.protocol === "https:" ||
+      !window.location.port ||
+      window.location.port === "80" ||
+      window.location.port === "443"
+    ) {
+      return "/api";
+    }
     return `http://${window.location.hostname}:5000/api`;
   }
-  return "http://localhost:5000/api";
+  return "/api";
 };
 
 export const API_BASE_URL =

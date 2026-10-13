@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import vcetLogoImg from "../assets/vcet-logo.png";
+import TechVerseLogo from "./TechVerseLogo";
 import { useAuth } from "../context/AuthContext";
 import LogoutConfirmationModal from "./LogoutConfirmationModal";
 
@@ -31,6 +32,7 @@ const NAV_LINKS = [
   { name: "Home", href: "/", icon: Home },
   { name: "Departments", href: "/departments", icon: Layers },
   { name: "PrepZone", href: "/courses", icon: BookOpen },
+  { name: "Fundamentals", href: "/fundamentals", icon: Award },
   { name: "Tech Pulse", href: "/updates", icon: Zap },
   {
     name: "Announcements",
@@ -101,18 +103,13 @@ export default function Navbar() {
         }`}
       >
         <div className="w-full max-w-[1500px] mx-auto px-3 sm:px-5 lg:px-8 flex items-center justify-between gap-3">
-          {/* 1. Left: Compact VCET Brand Wordmark */}
+          {/* 1. Left: Compact VCET Brand Logo */}
           <Link
             to="/"
             className="flex items-center gap-2.5 select-none shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-vcet-blue-deep rounded-lg group"
             title="VCET TechVerse"
           >
-            <span
-              className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 leading-none group-hover:text-slate-800 transition-colors"
-              style={{ fontFamily: "'Manrope', sans-serif" }}
-            >
-              TechVerse
-            </span>
+            <TechVerseLogo height="h-8 sm:h-9" />
           </Link>
 
           {/* 2. Center: Text-Forward Navigation with Shared Underline Slider */}
@@ -161,11 +158,11 @@ export default function Navbar() {
             {/* Authenticated State vs Public Login */}
             {isAuthenticated ? (
               <div className="flex items-center gap-2 sm:gap-3">
-                {/* Streak Badge for Students */}
-                {role === "student" && (
+                {/* Streak Badge for Students - Hidden on Home Screen */}
+                {role === "student" && location.pathname !== "/" && (
                   <Link
                     to="/dashboard#profile"
-                    className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors shadow-xs"
+                    className="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-xs font-bold hover:bg-amber-100 transition-colors shadow-xs shrink-0"
                     title={`${streak?.currentStreak || 0} Day Learning Streak`}
                   >
                     <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500 animate-pulse" />
@@ -174,18 +171,18 @@ export default function Navbar() {
                 )}
 
                 {/* User Profile Menu Trigger */}
-                <div className="relative" ref={profileMenuRef}>
+                <div className="relative shrink-0" ref={profileMenuRef}>
                   <button
                     type="button"
                     onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                    className="flex items-center gap-2 group min-w-0 p-1.5 sm:px-2 rounded-xl hover:bg-slate-100 transition-all cursor-pointer select-none border border-transparent hover:border-slate-200"
+                    className="flex items-center gap-1.5 sm:gap-2 group min-w-0 p-1 sm:px-2 rounded-xl hover:bg-slate-100 transition-all cursor-pointer select-none border border-transparent hover:border-slate-200"
                     title="Account & Profile Menu"
                     aria-expanded={profileMenuOpen}
                   >
                     <span className="w-8 h-8 rounded-full bg-vcet-blue-deep text-white font-display text-xs font-semibold flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                       {user?.name?.charAt(0) || "U"}
                     </span>
-                    <span className="flex flex-col text-left min-w-0">
+                    <span className="hidden sm:flex flex-col text-left min-w-0">
                       <span className="text-xs font-semibold text-slate-800 leading-tight truncate max-w-[100px] sm:max-w-[140px] group-hover:text-vcet-blue transition-colors">
                         {user?.name || "Student"}
                       </span>
@@ -198,7 +195,7 @@ export default function Navbar() {
                       </span>
                     </span>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-transform duration-200 ${
+                      className={`w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 transition-transform duration-200 shrink-0 ${
                         profileMenuOpen ? "rotate-180" : ""
                       }`}
                     />
@@ -309,10 +306,10 @@ export default function Navbar() {
               whileTap={{ scale: 0.9 }}
               whileHover={{ scale: 1.05 }}
               onClick={() => setMobileMenuOpen(true)}
-              className="p-1.5 rounded-lg text-slate-700 hover:bg-slate-100 lg:hidden cursor-pointer"
+              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 lg:hidden cursor-pointer shrink-0 border border-slate-200/80 bg-slate-50/70"
               aria-label="Open Navigation Drawer"
             >
-              <Menu size={22} />
+              <Menu size={20} />
             </motion.button>
           </div>
         </div>
@@ -321,7 +318,7 @@ export default function Navbar() {
       {/* Mobile Drawer */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 z-[70] lg:hidden">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}

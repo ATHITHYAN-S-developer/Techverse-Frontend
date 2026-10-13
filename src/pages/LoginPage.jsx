@@ -23,6 +23,7 @@ import { getCurrentUser, isAuthenticated } from "../services/authService";
 import { useAuth } from "../context/AuthContext";
 import loginIllustration from "../assets/login-illustration.jpg";
 import campusBg from "../assets/college/campus-aerial-bw.jpg";
+import TechVerseLogo from "../components/TechVerseLogo";
 
 
 export default function LoginPage() {
@@ -51,6 +52,31 @@ export default function LoginPage() {
   const [status, setStatus] = useState("idle"); // "idle" | "loading" | "success"
   const [serverError, setServerError] = useState("");
   const [isShaking, setIsShaking] = useState(false);
+  const datePickerRef = React.useRef(null);
+
+  const handleDobChange = (e) => {
+    let raw = e.target.value;
+    const digits = raw.replace(/\D/g, "");
+    // Auto-insert slash after day and month if typing forward
+    if (raw.length > studentDob.length) {
+      if (digits.length === 2 && !raw.includes("/")) {
+        raw = `${digits}/`;
+      } else if (digits.length === 4 && raw.split("/").length < 3) {
+        raw = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/`;
+      }
+    }
+    setStudentDob(raw);
+    if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
+  };
+
+  const handleCalendarPick = (e) => {
+    const isoVal = e.target.value; // yyyy-mm-dd
+    if (isoVal) {
+      const [y, m, d] = isoVal.split("-");
+      setStudentDob(`${d}/${m}/${y}`);
+      if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
+    }
+  };
 
   useEffect(() => {
     if (isAuthenticated()) {
@@ -78,15 +104,40 @@ export default function LoginPage() {
 
   const todayIso = toIsoDate(new Date());
 
-  const isValidIsoDate = (val) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(val)) return false;
-    const [year, month, day] = val.split("-").map(Number);
-    const probe = new Date(Date.UTC(year, month - 1, day));
-    return (
-      probe.getUTCFullYear() === year &&
-      probe.getUTCMonth() === month - 1 &&
-      probe.getUTCDate() === day
-    );
+  // Flexible Date of Birth Parser: supports DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD, or DDMMYYYY
+  const parseDobToIso = (val) => {
+    if (!val) return null;
+    const clean = String(val).trim();
+    // 1. Matches DD/MM/YYYY, DD-MM-YYYY, DD.MM.YYYY
+    let m = clean.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{4})$/);
+    if (m) {
+      const d = Number(m[1]);
+      const mo = Number(m[2]);
+      const y = Number(m[3]);
+      if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && y >= 1900 && y <= 2100) {
+        return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+    }
+    // 2. Matches YYYY-MM-DD
+    m = clean.match(/^(\d{4})[/\-.](\d{1,2})[/\-.](\d{1,2})$/);
+    if (m) {
+      const y = Number(m[1]);
+      const mo = Number(m[2]);
+      const d = Number(m[3]);
+      if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && y >= 1900 && y <= 2100) {
+        return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+    }
+    // 3. Matches 8 consecutive digits: DDMMYYYY
+    if (/^\d{8}$/.test(clean)) {
+      const d = Number(clean.slice(0, 2));
+      const mo = Number(clean.slice(2, 4));
+      const y = Number(clean.slice(4, 8));
+      if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31 && y >= 1900 && y <= 2100) {
+        return `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      }
+    }
+    return null;
   };
 
   const handleRoleChange = (role) => {
@@ -102,6 +153,7 @@ export default function LoginPage() {
     if (activeRole === "student") {
       const cleanReg = studentReg.trim().toUpperCase();
       const cleanDob = studentDob.trim();
+      const isoDob = parseDobToIso(cleanDob);
 
       const regPattern = /^[0-9]{2,6}[A-Z]{2,5}[0-9]{2,4}$/;
       const newErrors = {};
@@ -114,9 +166,9 @@ export default function LoginPage() {
 
       if (!cleanDob) {
         newErrors.studentDob = "Date of birth is required";
-      } else if (!isValidIsoDate(cleanDob)) {
-        newErrors.studentDob = "Select a valid date of birth from the calendar";
-      } else if (cleanDob > todayIso) {
+      } else if (!isoDob) {
+        newErrors.studentDob = "Enter a valid date in DD/MM/YYYY or DDMMYYYY format";
+      } else if (isoDob > todayIso) {
         newErrors.studentDob = "Date of birth cannot be in the future";
       }
 
@@ -131,7 +183,7 @@ export default function LoginPage() {
         await contextLogin({
           role: "student",
           identifier: cleanReg,
-          dateOfBirth: cleanDob,
+          dateOfBirth: isoDob,
           rememberMe,
         });
         setStatus("success");
@@ -290,9 +342,7 @@ export default function LoginPage() {
         {/* Header: Logo & Back Link */}
         <motion.div variants={itemVariants} className="relative z-10 flex items-center justify-between mb-6 md:mb-4">
           <Link to="/" className="inline-flex items-center gap-2.5 select-none group">
-            <span className="font-display text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
-              Tech<span className="text-vcet-blue">Verse</span>
-            </span>
+            <TechVerseLogo height="h-9 sm:h-10" />
           </Link>
 
           <Link
@@ -390,10 +440,10 @@ export default function LoginPage() {
                         setStudentReg(e.target.value.toUpperCase());
                         if (errors.studentReg) setErrors((prev) => ({ ...prev, studentReg: "" }));
                       }}
-                      placeholder="732924CSR014"
+                      placeholder="Register Number"
                       aria-invalid={Boolean(errors.studentReg)}
                       aria-describedby={errors.studentReg ? "studentReg-error" : undefined}
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60 tracking-wider font-mono uppercase"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60 tracking-wider font-mono uppercase placeholder:normal-case"
                     />
                   </motion.div>
                   {errors.studentReg && (
@@ -430,28 +480,44 @@ export default function LoginPage() {
                         errors.studentDob ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
                       }`}
                     />
-                    <input
-                      id="studentDob"
-                      name="studentDob"
-                      type="date"
-                      // The DOB is the student's password-equivalent secret, so it
-                      // has to carry a credential token. `bday` is an address-book
-                      // token, which left the form with no password field and Chrome
-                      // therefore never offered to save or autofill it. Chrome assigns
-                      // the stored "yyyy-mm-dd" straight onto the date input, which is
-                      // exactly the ISO shape isValidIsoDate and matchesDateOfBirth read.
-                      autoComplete="current-password"
-                      min="1900-01-01"
-                      max={todayIso}
-                      value={studentDob}
-                      aria-invalid={Boolean(errors.studentDob)}
-                      aria-describedby={errors.studentDob ? "studentDob-error" : undefined}
-                      onChange={(e) => {
-                        setStudentDob(e.target.value);
-                        if (errors.studentDob) setErrors((prev) => ({ ...prev, studentDob: "" }));
-                      }}
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue"
-                    />
+                    <div className="relative flex-1 flex items-center">
+                      <input
+                        id="studentDob"
+                        name="studentDob"
+                        type="text"
+                        maxLength={10}
+                        autoComplete="current-password"
+                        value={studentDob}
+                        aria-invalid={Boolean(errors.studentDob)}
+                        aria-describedby={errors.studentDob ? "studentDob-error" : undefined}
+                        onChange={handleDobChange}
+                        placeholder="DD/MM/YYYY"
+                        className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/50 tracking-wider font-mono"
+                      />
+                      <input
+                        ref={datePickerRef}
+                        type="date"
+                        max={todayIso}
+                        min="1900-01-01"
+                        tabIndex={-1}
+                        className="sr-only"
+                        onChange={handleCalendarPick}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          try {
+                            datePickerRef.current?.showPicker?.();
+                          } catch {
+                            datePickerRef.current?.focus?.();
+                          }
+                        }}
+                        title="Open visual calendar"
+                        className="p-1 text-slate-400 hover:text-vcet-blue transition-colors cursor-pointer rounded-lg hover:bg-slate-100 shrink-0"
+                      >
+                        <CalendarDays size={18} />
+                      </button>
+                    </div>
                   </motion.div>
                   {errors.studentDob && (
                     <p id="studentDob-error" role="alert" className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-red-600">
@@ -476,7 +542,7 @@ export default function LoginPage() {
                     htmlFor="facultyEmail"
                     className="block text-xs font-bold uppercase tracking-wider text-vcet-blue mb-1.5"
                   >
-                    FACULTY ID
+                    FACULTY ID / STAFF EMAIL
                   </label>
                   <motion.div
                     animate={errors.facultyEmail ? shakeAnimation : {}}
@@ -486,26 +552,26 @@ export default function LoginPage() {
                         : "border-gray-300 focus-within:border-vcet-blue focus-within:bg-white focus-within:ring-2 focus-within:ring-vcet-blue/20"
                     }`}
                   >
-<IdCard
-                    size={19}
-                    className={`transition-colors shrink-0 ${
-                      errors.facultyEmail ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
-                    }`}
-                  />
-                  <input
-                    id="facultyEmail"
-                    name="facultyEmail"
-                    type="text"
-                    autoComplete="username"
-                    value={facultyEmail}
+                    <IdCard
+                      size={19}
+                      className={`transition-colors shrink-0 ${
+                        errors.facultyEmail ? "text-red-500" : "text-slate-500 group-focus-within:text-vcet-blue"
+                      }`}
+                    />
+                    <input
+                      id="facultyEmail"
+                      name="facultyEmail"
+                      type="text"
+                      autoComplete="username"
+                      value={facultyEmail}
                       onChange={(e) => {
                         setFacultyEmail(e.target.value);
                         if (errors.facultyEmail) setErrors((prev) => ({ ...prev, facultyEmail: "" }));
                       }}
-                      placeholder="VCET-FAC-CSE-104"
+                      placeholder="Faculty ID"
                       aria-invalid={Boolean(errors.facultyEmail)}
                       aria-describedby={errors.facultyEmail ? "facultyEmail-error" : undefined}
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/50"
                     />
                   </motion.div>
                   {errors.facultyEmail && (
@@ -552,10 +618,10 @@ export default function LoginPage() {
                         setFacultyPassword(e.target.value);
                         if (errors.facultyPassword) setErrors((prev) => ({ ...prev, facultyPassword: "" }));
                       }}
-                      placeholder="••••••••"
+                      placeholder="Password"
                       aria-invalid={Boolean(errors.facultyPassword)}
                       aria-describedby={errors.facultyPassword ? "facultyPassword-error" : undefined}
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue/60"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue/50"
                     />
                     <button
                       type="button"
@@ -615,10 +681,10 @@ export default function LoginPage() {
                         setAdminUsername(e.target.value);
                         if (errors.adminUsername) setErrors((prev) => ({ ...prev, adminUsername: "" }));
                       }}
-                      placeholder="admin@vcet.ac.in"
+                      placeholder="Admin ID"
                       aria-invalid={Boolean(errors.adminUsername)}
                       aria-describedby={errors.adminUsername ? "adminUsername-error" : undefined}
-                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/60"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-semibold text-vcet-blue placeholder:text-vcet-blue/50"
                     />
                   </motion.div>
                   {errors.adminUsername && (
@@ -665,10 +731,10 @@ export default function LoginPage() {
                         setAdminPassword(e.target.value);
                         if (errors.adminPassword) setErrors((prev) => ({ ...prev, adminPassword: "" }));
                       }}
-                      placeholder="••••••••••••"
+                      placeholder="Password"
                       aria-invalid={Boolean(errors.adminPassword)}
                       aria-describedby={errors.adminPassword ? "adminPassword-error" : undefined}
-                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue/60"
+                      className="w-full border-0 outline-none bg-transparent text-sm font-medium text-vcet-blue placeholder:text-vcet-blue/50"
                     />
                     <button
                       type="button"

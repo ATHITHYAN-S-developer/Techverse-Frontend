@@ -39,6 +39,7 @@ import vcetLogoImg from "../assets/vcet-logo.png";
 import ScrollToTop from "../components/ScrollToTop";
 import VcetBanner from "../components/VcetBanner";
 import LogoutConfirmationModal from "../components/LogoutConfirmationModal";
+import TechVerseLogo from "../components/TechVerseLogo";
 
 const ADMIN_NAV_TREE = [
   {
@@ -204,9 +205,7 @@ export default function AdminLayout() {
         {/* Left: Institutional Title */}
         <div className="flex items-center gap-2.5 min-w-0">
           <Link to="/" className="flex items-center gap-2.5 group">
-<span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 leading-none">
-              Tech<span className="text-vcet-blue">Verse</span>
-            </span>
+            <TechVerseLogo height="h-7 sm:h-8" />
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-50 text-vcet-blue font-extrabold border border-blue-200 uppercase tracking-wider">
               ADMIN
             </span>

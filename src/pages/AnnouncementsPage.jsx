@@ -57,7 +57,8 @@ function resolvePoster(item) {
   }
 
   const cleanPath = raw.startsWith("/") ? raw : `/uploads/announcements/${raw}`;
-  return `http://${currentHost}:5000${cleanPath}`;
+  const isHttpsOrProxy = typeof window !== "undefined" && (window.location?.protocol === "https:" || !window.location?.port || window.location?.port === "80" || window.location?.port === "443");
+  return isHttpsOrProxy ? cleanPath : `http://${currentHost}:5000${cleanPath}`;
 }
 
 function formatDateDisplay(raw) {

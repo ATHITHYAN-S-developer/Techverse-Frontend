@@ -463,21 +463,27 @@ export default function CourseLearningPage() {
         const isCourseNowDone = otherModulesCompleted || Boolean(result.courseCertificate);
 
         if (isCourseNowDone) {
-          setIsCourseCompletedModal(true);
-          setRedirectCountdown(4);
-          setCertificate(
-            result.courseCertificate ||
-            result.certificate || {
-              studentName: user?.name,
-              registerNumber: user?.registerNumber,
-              courseName: course?.title,
-              score: result.scorePercentage,
-              certificateNumber: `VCET-CERT-${String(course?._id || "2026").slice(-6).toUpperCase()}`,
-              grade: result.scorePercentage >= 85 ? "Distinction" : "First Class",
-            }
-          );
-          setShowCertificateModal(true);
-          showSuccess(`🏆 Course Completed! Automatically redirecting to your certificate in 4s...`);
+          if (course?.certificateEnabled !== false) {
+            setIsCourseCompletedModal(true);
+            setRedirectCountdown(4);
+            setCertificate(
+              result.courseCertificate ||
+              result.certificate || {
+                studentName: user?.name,
+                registerNumber: user?.registerNumber,
+                courseName: course?.title,
+                score: result.scorePercentage,
+                certificateNumber: `VCET-CERT-${String(course?._id || "2026").slice(-6).toUpperCase()}`,
+                grade: result.scorePercentage >= 85 ? "Distinction" : "First Class",
+              }
+            );
+            setShowCertificateModal(true);
+            showSuccess(`🏆 Course Completed! Automatically redirecting to your certificate in 4s...`);
+          } else {
+            setIsCourseCompletedModal(false);
+            setRedirectCountdown(null);
+            showSuccess(`🏆 Course Completed! Congratulations on finishing all modules.`);
+          }
         } else {
           setIsCourseCompletedModal(false);
           setRedirectCountdown(null);

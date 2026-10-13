@@ -97,6 +97,24 @@ export default function AdminCourseModulesPage() {
   const selectedCourse =
     courses.find((c) => String(c._id || c.id || c.slug) === String(selectedCourseId)) || null;
 
+  const isAssignedFaculty =
+    Boolean(selectedCourse) &&
+    ((selectedCourse.assignedFacultyId &&
+      String(selectedCourse.assignedFacultyId._id || selectedCourse.assignedFacultyId) === String(user?._id || user?.id)) ||
+      (selectedCourse.assignedFacultyName &&
+        user?.name &&
+        selectedCourse.assignedFacultyName.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
+      (selectedCourse.instructor &&
+        user?.name &&
+        selectedCourse.instructor.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
+      (selectedCourse.createdBy &&
+        String(selectedCourse.createdBy._id || selectedCourse.createdBy) === String(user?._id || user?.id)));
+
+  const canPublishCourse =
+    user?.role === "admin" ||
+    isHod ||
+    isAssignedFaculty;
+
   // Main Module Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [editingModule, setEditingModule] = useState(null);
@@ -179,6 +197,10 @@ export default function AdminCourseModulesPage() {
 
   const handleTogglePublish = async () => {
     if (!selectedCourse) return;
+    if (!canPublishCourse) {
+      showError("Forbidden: Only the assigned faculty, HOD, or an administrator can publish or unpublish this course.");
+      return;
+    }
     setPublishing(true);
     try {
       const newStatus = !selectedCourse.isPublished;
@@ -908,16 +930,26 @@ export default function AdminCourseModulesPage() {
                 <button
                   type="button"
                   onClick={handleTogglePublish}
-                  disabled={publishing}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer shadow-xs disabled:opacity-50 ${
-                    selectedCourse.isPublished
-                      ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200"
-                      : "bg-vcet-blue text-white hover:bg-vcet-blue-deep shadow-blue-500/20"
+                  disabled={publishing || !canPublishCourse}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs transition-all shadow-xs ${
+                    !canPublishCourse
+                      ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                      : selectedCourse.isPublished
+                      ? "bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 cursor-pointer disabled:opacity-50"
+                      : "bg-vcet-blue text-white hover:bg-vcet-blue-deep shadow-blue-500/20 cursor-pointer disabled:opacity-50"
                   }`}
-                  title={selectedCourse.isPublished ? "Unpublish course" : "Publish course to students"}
+                  title={
+                    !canPublishCourse
+                      ? `Only the assigned faculty (${selectedCourse.assignedFacultyName || "Assigned Faculty"}) or HOD can publish this course`
+                      : selectedCourse.isPublished
+                      ? "Unpublish course"
+                      : "Publish course to students"
+                  }
                 >
                   {publishing ? (
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  ) : !canPublishCourse ? (
+                    <Lock className="w-3.5 h-3.5 text-slate-400" />
                   ) : selectedCourse.isPublished ? (
                     <EyeOff className="w-3.5 h-3.5" />
                   ) : (
@@ -926,6 +958,8 @@ export default function AdminCourseModulesPage() {
                   <span>
                     {publishing
                       ? "Updating..."
+                      : !canPublishCourse
+                      ? "Publish Restricted"
                       : selectedCourse.isPublished
                       ? "Unpublish"
                       : "Publish to PrepZone"}

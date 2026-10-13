@@ -26,6 +26,7 @@ import {
   Check,
   EyeOff,
   Users,
+  GraduationCap,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
@@ -140,6 +141,7 @@ export default function AdminCoursesPage() {
     description: "",
     targetAudience: "department", // "department" | "all"
     isDepartmentOnly: true,
+    certificateEnabled: true,
   });
 
   // Close faculty dropdown when clicking outside
@@ -246,6 +248,7 @@ export default function AdminCoursesPage() {
       description: "",
       targetAudience: "department",
       isDepartmentOnly: true,
+      certificateEnabled: true,
     });
     setModalOpen(true);
   };
@@ -272,6 +275,7 @@ export default function AdminCoursesPage() {
       description: course.description || "",
       targetAudience: course.targetAudience || (course.isDepartmentOnly ? "department" : "all"),
       isDepartmentOnly: course.isDepartmentOnly ?? (course.targetAudience === "department"),
+      certificateEnabled: course.certificateEnabled !== false, // default true if not set
     });
     setModalOpen(true);
   };
@@ -301,7 +305,7 @@ export default function AdminCoursesPage() {
       form.append("targetAudience", formData.targetAudience || "department");
       form.append("isDepartmentOnly", String(formData.isDepartmentOnly ?? true));
       form.append("instructor", formData.instructor || formData.assignedFacultyName || "VCET Faculty");
-      form.append("certificateEnabled", "true");
+      form.append("certificateEnabled", String(formData.certificateEnabled ?? true));
 
       if (!isFaculty && formData.assignedFacultyId) {
         form.append("assignedFacultyId", formData.assignedFacultyId);
@@ -493,6 +497,20 @@ export default function AdminCoursesPage() {
                 String(course.departmentId._id || course.departmentId) ===
                   String(user?.departmentId?._id || user?.departmentId));
 
+            const isAssignedFaculty =
+              Boolean(course.assignedFacultyId) &&
+              (String(course.assignedFacultyId?._id || course.assignedFacultyId) === String(user?._id || user?.id) ||
+                (course.assignedFacultyName &&
+                  user?.name &&
+                  course.assignedFacultyName.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
+                (course.instructor &&
+                  user?.name &&
+                  course.instructor.trim().toLowerCase() === user.name.trim().toLowerCase()) ||
+                (course.createdBy &&
+                  String(course.createdBy?._id || course.createdBy) === String(user?._id || user?.id)));
+
+            const canPublishThisCourse = canManageThisCourse || isAssignedFaculty;
+
             return (
               <div
                 key={course._id || course.id}
@@ -569,6 +587,12 @@ export default function AdminCoursesPage() {
                     <span className="text-slate-600">
                       Pass Benchmark: <strong className="text-emerald-600">{course.passingPercentage || course.passingScore || 50}%</strong>
                     </span>
+                    <span className="col-span-2 flex items-center gap-1.5 pt-1 border-t border-slate-200 mt-0.5">
+                      <GraduationCap className={`w-3 h-3 shrink-0 ${course.certificateEnabled !== false ? "text-emerald-500" : "text-slate-400"}`} />
+                      <span className={`font-semibold ${course.certificateEnabled !== false ? "text-emerald-600" : "text-slate-400"}`}>
+                        {course.certificateEnabled !== false ? "Certificate on Completion" : "No Certificate"}
+                      </span>
+                    </span>
                   </div>
                 </div>
 
@@ -593,8 +617,8 @@ export default function AdminCoursesPage() {
                   </div>
 
                   <div className="flex items-center gap-1 shrink-0">
-                    {/* Publish/Unpublish Toggle Button (HOD of dept / Admin only) */}
-                    {canManageThisCourse && (
+                    {/* Publish/Unpublish Toggle Button (Assigned faculty, HOD of dept, or Admin) */}
+                    {canPublishThisCourse && (
                     <button
                       type="button"
                       onClick={() => handleTogglePublish(course)}
@@ -848,7 +872,64 @@ export default function AdminCoursesPage() {
                 </p>
               </div>
 
+              {/* Certificate Issuance Toggle — HOD / Admin Only */}
+              {canCreateCourse && (
+                <div>
+                  <label className="block text-slate-700 font-bold mb-1.5">
+                    Course Completion Certificate
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, certificateEnabled: !prev.certificateEnabled }))
+                    }
+                    className={`w-full flex items-center justify-between gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
+                      formData.certificateEnabled
+                        ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                        : "bg-slate-50 border-slate-200 text-slate-500"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                          formData.certificateEnabled
+                            ? "bg-emerald-100 text-emerald-600"
+                            : "bg-slate-200 text-slate-400"
+                        }`}
+                      >
+                        <GraduationCap className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-xs">
+                          {formData.certificateEnabled
+                            ? "Certificate Enabled"
+                            : "No Certificate"}
+                        </div>
+                        <div className="text-[10px] opacity-70 mt-0.5">
+                          {formData.certificateEnabled
+                            ? "Students who complete this course will receive a verified certificate."
+                            : "No certificate will be issued. Students can still track their progress."}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Toggle pill */}
+                    <div
+                      className={`relative w-10 h-5 rounded-full transition-all shrink-0 ${
+                        formData.certificateEnabled ? "bg-emerald-500" : "bg-slate-300"
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${
+                          formData.certificateEnabled ? "left-5" : "left-0.5"
+                        }`}
+                      />
+                    </div>
+                  </button>
+                </div>
+              )}
+
               {/* Searchable Faculty Selector */}
+
               {canCreateCourse ? (
                 <div ref={facultyDropdownRef} className="space-y-1">
                   <div className="flex items-center justify-between mb-1">

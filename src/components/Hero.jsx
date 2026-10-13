@@ -10,7 +10,7 @@ export default function Hero() {
       <section
         id="home"
         style={{ clipPath: "inset(0)" }}
-        className="hero-section relative w-full aspect-[3/2] sm:aspect-auto sm:min-h-[82vh] lg:min-h-[86vh] flex items-center justify-center py-6 sm:py-32 px-6 sm:px-8 overflow-hidden select-none"
+        className="hero-section relative w-full min-h-[72vh] sm:min-h-[82vh] lg:min-h-[86vh] flex items-center justify-center py-12 sm:py-32 px-4 sm:px-8 overflow-hidden select-none"
       >
         {/* Layer 1 & 2: Continuous Campus Background Slideshow + Contrast Overlay */}
         <CollegeBackground />
@@ -26,7 +26,7 @@ export default function Hero() {
               fontFamily: "'Sora', 'Plus Jakarta Sans', sans-serif",
               letterSpacing: "-0.04em",
             }}
-            className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl leading-none mb-3 sm:mb-4 drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
+            className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl leading-tight sm:leading-none mb-3 sm:mb-4 drop-shadow-[0_4px_24px_rgba(0,0,0,0.6)]"
           >
             <span className="font-extrabold text-white">Tech</span>
             <span className="font-light bg-gradient-to-r from-white via-[#93c5fd] to-[#38bdf8] bg-clip-text text-transparent ml-0.5">

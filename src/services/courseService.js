@@ -13,7 +13,12 @@ export function getCourseImageUrl(thumbnailUrl, thumbnail) {
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:")) {
     return url;
   }
-  const backendBase = typeof window !== "undefined" && window.location?.hostname
+  const isProxyOrHttps =
+    typeof window !== "undefined" &&
+    (window.location?.protocol === "https:" || !window.location?.port || window.location?.port === "80" || window.location?.port === "443");
+  const backendBase = isProxyOrHttps
+    ? ""
+    : typeof window !== "undefined" && window.location?.hostname
     ? `http://${window.location.hostname}:5000`
     : "http://localhost:5000";
 
