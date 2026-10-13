@@ -282,8 +282,21 @@ export const courseService = {
   },
 
   async runModuleCode(courseSlug, moduleId, data) {
-    const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/run-code`, data);
-    return res?.data || res;
+    try {
+      const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/run-code`, data);
+      return res?.data || res;
+    } catch (err) {
+      if (err?.response?.status === 404 || err?.status === 404) {
+        try {
+          const directRes = await api.post(`/modules/${moduleId}/run-code`, data);
+          return directRes?.data || directRes;
+        } catch (innerErr) {
+          err.fallbackNeeded = true;
+          throw err;
+        }
+      }
+      throw err;
+    }
   },
 
   // ----------------------------------------------------------------
