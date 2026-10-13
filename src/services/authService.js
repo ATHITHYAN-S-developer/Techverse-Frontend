@@ -166,7 +166,7 @@ export async function login(credentialsOrIdentifier, secretParam, keepSignedIn =
       name: `Student (${reg})`,
       departmentId: "cse",
       classId: "cse_3a",
-      streak: { currentStreak: 12, longestStreak: 15 },
+      streak: { currentStreak: 0, longestStreak: 0 },
       title: "VCET Engineering Scholar",
     };
   } else if (normalizedRole === "teacher" || normalizedRole === "faculty" || normalizedRole === "hod") {

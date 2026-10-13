@@ -235,7 +235,7 @@ export default function AdminStudentsPage() {
           coursesCompleted: 0,
           testsAttempted: 0,
           averageScore: "N/A",
-          streak: 1,
+          streak: 0,
           certificates: 0
         },
         activity: [{ action: "Student account enrolled in registry", time: "Just now" }]

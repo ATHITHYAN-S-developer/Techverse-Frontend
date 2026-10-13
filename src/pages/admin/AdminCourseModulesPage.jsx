@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { useSearchParams, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
   Puzzle,
@@ -30,7 +30,6 @@ import {
   Award,
   ArrowLeft,
   User,
-  Users,
   EyeOff,
   Globe,
   Lock,
@@ -56,7 +55,6 @@ function extractYouTubeId(url) {
 export default function AdminCourseModulesPage() {
   const { showSuccess, showError, showInfo } = useToast();
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const paramCourseId = searchParams.get("courseId") || "";
   const isHod =
@@ -67,6 +65,9 @@ export default function AdminCourseModulesPage() {
 
   const [courses, setCourses] = useState([]);
   const [selectedCourseId, setSelectedCourseId] = useState(paramCourseId);
+  const [courseSearch, setCourseSearch] = useState("");
+  const [showCourseMenu, setShowCourseMenu] = useState(false);
+  const courseMenuRef = useRef(null);
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -96,6 +97,34 @@ export default function AdminCourseModulesPage() {
 
   const selectedCourse =
     courses.find((c) => String(c._id || c.id || c.slug) === String(selectedCourseId)) || null;
+
+  // Searchable course list for the header combobox.
+  const filteredCourses = courses.filter((c) => {
+    const q = courseSearch.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      (c.title || "").toLowerCase().includes(q) ||
+      (c.category || "").toLowerCase().includes(q)
+    );
+  });
+
+  const handleSelectCourse = (c) => {
+    setSelectedCourseId(c._id || c.id);
+    setShowCourseMenu(false);
+    setCourseSearch("");
+  };
+
+  // Close the course search dropdown when clicking outside it.
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (courseMenuRef.current && !courseMenuRef.current.contains(e.target)) {
+        setShowCourseMenu(false);
+        setCourseSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const isAssignedFaculty =
     Boolean(selectedCourse) &&
@@ -787,41 +816,83 @@ export default function AdminCourseModulesPage() {
 
   return (
     <div className="space-y-6 pb-16 select-none max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-      {/* 1. Header Banner */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2">
-            <span className="p-2.5 rounded-2xl bg-blue-50 text-vcet-blue border border-blue-100 shadow-xs">
-              <Layers className="w-5 h-5 text-vcet-blue" />
-            </span>
-            <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-vcet-blue block">
-                CURRICULUM MANAGEMENT • PREPZONE
-              </span>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                Students Course Module
-              </h1>
-            </div>
-          </div>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-2xl">
-            Design curriculum, manage interactive video lessons, coding challenges, and assessment quizzes for students.
-          </p>
+      {/* Header — search + actions sit at the top-right, below the college title */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="p-2.5 rounded-2xl bg-blue-50 text-vcet-blue border border-blue-100 shadow-xs">
+            <Layers className="w-5 h-5 text-vcet-blue" />
+          </span>
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Students Course Module
+          </h1>
         </div>
 
         {/* Course Select & Quick Actions */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          <div className="relative flex-1 sm:flex-initial">
-            <select
-              value={selectedCourseId}
-              onChange={(e) => setSelectedCourseId(e.target.value)}
-              className="w-full sm:w-auto pl-3.5 pr-8 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 focus:ring-2 focus:ring-vcet-blue/20 transition-all cursor-pointer"
-            >
-              {courses.map((c) => (
-                <option key={c._id || c.id} value={c._id || c.id}>
-                  {c.title} {c.isPublished ? "• (Live)" : "• [Draft]"}
-                </option>
-              ))}
-            </select>
+        <div className="flex flex-wrap items-center gap-2.5 sm:justify-end">
+          <div className="relative flex-1 sm:flex-initial" ref={courseMenuRef}>
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={showCourseMenu ? courseSearch : selectedCourse?.title || ""}
+                onChange={(e) => {
+                  setCourseSearch(e.target.value);
+                  setShowCourseMenu(true);
+                }}
+                onFocus={() => {
+                  setShowCourseMenu(true);
+                  setCourseSearch("");
+                }}
+                placeholder={courses.length ? "Search courses..." : "No courses available"}
+                disabled={courses.length === 0}
+                className="w-full sm:w-72 pl-9 pr-9 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-800 placeholder-slate-400 focus:ring-2 focus:ring-vcet-blue/20 transition-all disabled:opacity-60"
+              />
+              <ChevronDown
+                className={`w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none transition-transform ${
+                  showCourseMenu ? "rotate-180" : ""
+                }`}
+              />
+            </div>
+
+            {showCourseMenu && courses.length > 0 && (
+              <div className="absolute z-30 mt-1.5 w-full sm:w-72 max-h-72 overflow-y-auto bg-white border border-slate-200 rounded-2xl shadow-lg py-1.5">
+                {filteredCourses.length === 0 ? (
+                  <div className="px-4 py-3 text-xs font-semibold text-slate-400 text-center">
+                    No courses match &ldquo;{courseSearch}&rdquo;
+                  </div>
+                ) : (
+                  filteredCourses.map((c) => {
+                    const id = c._id || c.id;
+                    const isActive = String(id) === String(selectedCourseId);
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => handleSelectCourse(c)}
+                        className={`w-full flex items-center justify-between gap-2 px-3.5 py-2.5 text-left transition-colors cursor-pointer ${
+                          isActive ? "bg-blue-50" : "hover:bg-slate-50"
+                        }`}
+                      >
+                        <span className="min-w-0">
+                          <span
+                            className={`block text-xs sm:text-sm font-bold truncate ${
+                              isActive ? "text-vcet-blue" : "text-slate-800"
+                            }`}
+                          >
+                            {c.title}
+                          </span>
+                          <span className="block text-[10px] font-semibold text-slate-400 mt-0.5">
+                            {c.category || "General"} • {c.isPublished ? "Live in PrepZone" : "Draft"}
+                          </span>
+                        </span>
+                        {isActive && <Check className="w-4 h-4 text-vcet-blue shrink-0" />}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
 
           <button
@@ -831,22 +902,6 @@ export default function AdminCourseModulesPage() {
           >
             <Plus className="w-4 h-4" />
             <span>Add Module</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `${user?.role === "admin" ? "/admin" : "/faculty"}/modules/students?courseId=${selectedCourseId}`
-              )
-            }
-            disabled={!selectedCourseId}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 font-bold text-xs sm:text-sm transition-colors cursor-pointer disabled:opacity-50 shrink-0"
-            title="View enrolled students & per-module status"
-          >
-            <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">Course</span>
-            <span>Students</span>
           </button>
 
           <button

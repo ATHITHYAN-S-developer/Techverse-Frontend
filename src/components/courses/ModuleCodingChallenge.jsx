@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useRef, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Code2,
   Play,
   CheckCircle,
   AlertCircle,
+  AlertOctagon,
   Copy,
   Check,
   Terminal,
@@ -25,8 +27,11 @@ import {
 import confetti from "canvas-confetti";
 import { useToast } from "../../context/ToastContext";
 import { courseService } from "../../services/courseService";
+import ViolationWarningModal from "../exam/ViolationWarningModal";
 
 const CodeEditor = lazy(() => import("../exam/CodeEditor"));
+
+const MAX_PROCTOR_VIOLATIONS = 3;
 
 const SUPPORTED_LANGUAGES = [
   { id: "python", name: "Python 3", extension: ".py" },
@@ -106,12 +111,26 @@ function evaluateClientSide(sourceCode, language, testCases) {
 export default function ModuleCodingChallenge({
   module,
   courseSlug,
+  allowedLanguages,
   onProceedToTest,
   onCodingComplete,
 }) {
   const { showSuccess, showError } = useToast();
+  const navigate = useNavigate();
   const problems = module?.codingProblems || [];
   const containerRef = useRef(null);
+
+  // Only the languages the faculty selected for this course are offered.
+  // Falls back to every supported language when the course has none stored
+  // (e.g. courses created before the per-course language setting existed).
+  const availableLanguages = useMemo(() => {
+    if (!Array.isArray(allowedLanguages) || allowedLanguages.length === 0) {
+      return SUPPORTED_LANGUAGES;
+    }
+    const allowed = new Set(allowedLanguages.map((l) => String(l).toLowerCase()));
+    const filtered = SUPPORTED_LANGUAGES.filter((l) => allowed.has(l.id));
+    return filtered.length > 0 ? filtered : SUPPORTED_LANGUAGES;
+  }, [allowedLanguages]);
 
   const [activeProblemIdx, setActiveProblemIdx] = useState(0);
   const currentProblem = problems[activeProblemIdx] || null;
@@ -127,8 +146,28 @@ export default function ModuleCodingChallenge({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showExamRulesModal, setShowExamRulesModal] = useState(true);
 
-  // Proctoring tab switch counter
-  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  // Proctoring: unified violation counter (tab switches + fullscreen exits).
+  // Count is tracked internally and intentionally NOT shown on screen.
+  const [violations, setViolations] = useState(0);
+  const [latestViolation, setLatestViolation] = useState(null);
+  const [showViolationModal, setShowViolationModal] = useState(false);
+  const [terminated, setTerminated] = useState(false);
+  const [forceSubmitTick, setForceSubmitTick] = useState(0);
+
+  const autoSubmittingRef = useRef(false);
+  const suppressFsViolationRef = useRef(false);
+  const violationsRef = useRef(0);
+  // Proctoring only begins once the student actually starts the assessment.
+  const proctoringActiveRef = useRef(false);
+  // True once the solution has been submitted (or auto-submitted). Only then is
+  // the student allowed to leave full screen.
+  const submittedRef = useRef(false);
+
+  // Keyboard Lock (Chromium on a secure context) is what actually prevents ESC
+  // from leaving native fullscreen. When unavailable (e.g. Firefox, or the app
+  // served over plain http on a LAN IP) ESC will drop out to the violation gate.
+  const keyboardLockSupported =
+    typeof navigator !== "undefined" && !!navigator.keyboard?.lock;
 
   // Question Visibility States
   // On desktop: show/hide question panel
@@ -138,17 +177,53 @@ export default function ModuleCodingChallenge({
   // Question Quick-View Modal
   const [showQuestionModal, setShowQuestionModal] = useState(false);
 
+  // Keep the selected language within the course's allowed set.
+  useEffect(() => {
+    if (availableLanguages.length > 0 && !availableLanguages.some((l) => l.id === language)) {
+      setLanguage(availableLanguages[0].id);
+    }
+  }, [availableLanguages, language]);
+
+  // Record a proctoring violation. After MAX_PROCTOR_VIOLATIONS the assessment
+  // is submitted automatically (handled by the forceSubmitTick effect below).
+  const recordViolation = useCallback(
+    (type, details) => {
+      if (!proctoringActiveRef.current) return;
+      if (autoSubmittingRef.current) return;
+
+      const next = violationsRef.current + 1;
+      violationsRef.current = next;
+      setViolations(next);
+      setLatestViolation({
+        type,
+        count: next,
+        maxViolations: MAX_PROCTOR_VIOLATIONS,
+        details,
+      });
+
+      if (next >= MAX_PROCTOR_VIOLATIONS) {
+        autoSubmittingRef.current = true;
+        setShowViolationModal(false);
+        setTerminated(true);
+        setForceSubmitTick((t) => t + 1);
+        showError("🚫 Maximum violations reached. Your assessment is being submitted automatically.");
+      } else {
+        setShowViolationModal(true);
+      }
+    },
+    [showError]
+  );
+
   // Track browser tab switching strictly via visibilitychange
   // Note: mobile internal tab clicks (Question, Test Cases, Output) stay on this page
   // and NEVER set visibilityState to 'hidden'
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        setTabSwitchCount((prev) => {
-          const nextCount = prev + 1;
-          showError(`⚠️ Proctoring Warning: Tab switch detected (Count: ${nextCount}). Tab switching is strictly monitored.`);
-          return nextCount;
-        });
+        recordViolation(
+          "TAB_SWITCH",
+          "You switched away from the assessment window. Tab switching is strictly monitored."
+        );
       }
     };
 
@@ -156,7 +231,7 @@ export default function ModuleCodingChallenge({
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [showError]);
+  }, [recordViolation]);
 
   // Sync starter code when switching problems or languages
   useEffect(() => {
@@ -175,51 +250,221 @@ export default function ModuleCodingChallenge({
     }
   }, [activeProblemIdx, currentProblem, language]);
 
-  // Listen to escape key and browser fullscreen changes
+  // --- Native fullscreen helpers -------------------------------------------
+  // We use the real Fullscreen API so the browser tabs / address bar are hidden
+  // (like running a PowerPoint presentation) instead of the app overlay alone.
+  // The overlay is still shown on top of the fullscreen page so the assessment
+  // fills the screen. ESC and trackpad gestures are further neutralised with the
+  // Keyboard Lock API + an automatic "snap back" whenever fullscreen is lost.
+  const lockKeyboard = useCallback(() => {
+    // Keyboard Lock captures ESC (and F11) so the browser cannot leave
+    // fullscreen. Requires a Chromium browser on a secure context (https or
+    // localhost); elsewhere ESC still drops out to the violation gate.
+    try {
+      const p = navigator.keyboard?.lock?.(["Escape", "F11"]);
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    } catch {
+      /* unsupported browsers fall back to the snap-back handler */
+    }
+  }, []);
+
+  const unlockKeyboard = useCallback(() => {
+    try {
+      navigator.keyboard?.unlock?.();
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const requestNativeFullscreen = useCallback(() => {
+    const el = document.documentElement;
+    const req =
+      el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (!req) return Promise.resolve(false);
+
+    // Recommended order: request the keyboard lock first, then enter fullscreen.
+    lockKeyboard();
+
+    const afterEnter = () => {
+      lockKeyboard();
+      return true;
+    };
+
+    try {
+      // Ask for keyboard lock as part of the fullscreen request (modern API).
+      const p = req.call(el, { navigationUI: "hide", keyboardLock: "browser" });
+      if (p && typeof p.then === "function") {
+        return p.then(afterEnter).catch(() => {
+          // Some browsers reject the keyboardLock option — retry without it.
+          try {
+            const p2 = req.call(el, { navigationUI: "hide" });
+            if (p2 && typeof p2.then === "function") {
+              return p2.then(afterEnter).catch(() => false);
+            }
+          } catch {
+            /* ignore */
+          }
+          return false;
+        });
+      }
+      return Promise.resolve(afterEnter());
+    } catch {
+      /* ignore — overlay fallback still applies */
+      return Promise.resolve(false);
+    }
+  }, [lockKeyboard]);
+
+  const exitNativeFullscreen = useCallback(() => {
+    const exit =
+      document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+    if (!exit || !document.fullscreenElement) return;
+    try {
+      const p = exit.call(document);
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const enterFullscreen = useCallback(() => {
+    suppressFsViolationRef.current = false;
+    setIsFullscreen(true);
+    requestNativeFullscreen();
+  }, [requestNativeFullscreen]);
+
+  // The ONLY legitimate way to leave full screen: submit the solution (or an
+  // automatic submission after the violation limit is reached).
+  const finishAssessment = useCallback(() => {
+    submittedRef.current = true;
+    suppressFsViolationRef.current = true;
+    unlockKeyboard();
+    setIsFullscreen(false);
+    exitNativeFullscreen();
+  }, [unlockKeyboard, exitNativeFullscreen]);
+
+  const exitFullscreen = useCallback(
+    ({ silent = false } = {}) => {
+      setIsFullscreen(false);
+      unlockKeyboard();
+      if (silent) suppressFsViolationRef.current = true;
+      exitNativeFullscreen();
+    },
+    [unlockKeyboard, exitNativeFullscreen]
+  );
+
+  // Only the student's own submission (or an auto-submit) ends proctoring.
+  const isAssessmentOver = () => submittedRef.current || autoSubmittingRef.current;
+
+  // Timestamp of the last fullscreen violation so an ESC keydown + the browser's
+  // own fullscreenchange event (which can arrive together) are not double-counted.
+  const fsViolationAtRef = useRef(0);
+  const registerFullscreenExit = useCallback(
+    (details) => {
+      fsViolationAtRef.current = Date.now();
+      recordViolation("FULLSCREEN_EXIT", details);
+    },
+    [recordViolation]
+  );
+
+  // Whenever the browser leaves native fullscreen (ESC without keyboard lock,
+  // trackpad / mouse gestures, F11, etc.) log a violation and force the student
+  // straight back in. Fullscreen is never a valid exit path.
+  useEffect(() => {
+    const handler = () => {
+      const inNative = !!(
+        document.fullscreenElement || document.webkitFullscreenElement
+      );
+
+      if (inNative) {
+        lockKeyboard();
+        return;
+      }
+
+      if (suppressFsViolationRef.current) {
+        suppressFsViolationRef.current = false;
+        return;
+      }
+
+      if (!proctoringActiveRef.current || isAssessmentOver()) return;
+
+      // If the ESC handler already logged this exact exit, don't count twice.
+      if (Date.now() - fsViolationAtRef.current >= 800) {
+        registerFullscreenExit(
+          "You left full screen. Full screen is mandatory and cannot be exited during the assessment."
+        );
+      }
+
+      // Snap straight back. Chrome/Edge allow this immediately; where a click is
+      // required the violation modal's button re-enters using the student's tap.
+      requestNativeFullscreen();
+    };
+
+    document.addEventListener("fullscreenchange", handler);
+    document.addEventListener("webkitfullscreenchange", handler);
+    return () => {
+      document.removeEventListener("fullscreenchange", handler);
+      document.removeEventListener("webkitfullscreenchange", handler);
+    };
+  }, [lockKeyboard, registerFullscreenExit, requestNativeFullscreen]);
+
+  // ESC is always a violation, never an exit. Keyboard Lock stops the browser
+  // acting on it; this handler still records it and blocks any side effects.
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === "Escape" && isFullscreen) {
-        handleExitFullscreen();
-      }
-    };
-    const handleFsChange = () => {
-      if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-        setIsFullscreen(false);
-      }
+      if (e.key !== "Escape") return;
+      if (!isFullscreen) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (!proctoringActiveRef.current || isAssessmentOver()) return;
+      registerFullscreenExit(
+        "You pressed ESC. Leaving the assessment view is not allowed — full screen is mandatory."
+      );
+      // Snap straight back so the warning is shown while still full screen.
+      requestNativeFullscreen();
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("fullscreenchange", handleFsChange);
-    document.addEventListener("webkitfullscreenchange", handleFsChange);
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [isFullscreen, registerFullscreenExit, requestNativeFullscreen]);
 
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("fullscreenchange", handleFsChange);
-      document.removeEventListener("webkitfullscreenchange", handleFsChange);
-    };
-  }, [isFullscreen]);
+  const dismissViolation = useCallback(() => {
+    setShowViolationModal(false);
+    enterFullscreen();
+  }, [enterFullscreen]);
 
-  const handleEnterFullscreen = () => {
-    setIsFullscreen(true);
-    // Request true native fullscreen on device if supported
-    try {
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {});
-      } else if (document.documentElement.webkitRequestFullscreen) {
-        document.documentElement.webkitRequestFullscreen().catch(() => {});
-      }
-    } catch (e) {}
+  const handleEnterFullscreen = () => enterFullscreen();
+
+  // Only called by the rules modal — marks the assessment as started so
+  // proctoring (tab switches / fullscreen exits) begins counting.
+  const handleStartAssessment = () => {
+    proctoringActiveRef.current = true;
+    setShowExamRulesModal(false);
+    enterFullscreen();
+    if (keyboardLockSupported) {
+      console.info("[Proctoring] Keyboard Lock active — ESC/F11 are captured.");
+    } else {
+      console.warn(
+        "[Proctoring] Keyboard Lock unavailable — ESC will leave fullscreen.\n" +
+          `  secureContext=${typeof window !== "undefined" ? window.isSecureContext : "?"}, ` +
+          `navigator.keyboard=${typeof navigator !== "undefined" ? !!navigator.keyboard : "?"}.\n` +
+          "  Use Chrome/Edge on https or localhost. In Brave, lower Shields for this site " +
+          "(Brave blocks navigator.keyboard by default) to enable ESC capture."
+      );
+    }
   };
 
+  // The exit control never releases the student — it only records a violation.
+  // (After a submission it simply closes the view.)
   const handleExitFullscreen = () => {
-    setIsFullscreen(false);
-    try {
-      if (document.fullscreenElement && document.exitFullscreen) {
-        document.exitFullscreen().catch(() => {});
-      } else if (document.webkitFullscreenElement && document.webkitExitFullscreen) {
-        document.webkitExitFullscreen().catch(() => {});
-      }
-    } catch (e) {}
+    if (isAssessmentOver()) {
+      finishAssessment();
+      return;
+    }
+    registerFullscreenExit(
+      "You tried to exit full screen. Submitting your solution is the only way to finish."
+    );
   };
 
   const handleToggleFullscreen = () => {
@@ -240,6 +485,10 @@ export default function ModuleCodingChallenge({
   const handleRunCode = async (isSubmit = false) => {
     if (!code.trim()) {
       showError("Please write some code before executing.");
+      if (isSubmit && autoSubmittingRef.current) {
+        finishAssessment();
+        navigate("/courses", { replace: true });
+      }
       return;
     }
 
@@ -282,24 +531,60 @@ export default function ModuleCodingChallenge({
         );
 
         if (isSubmit) {
-          onCodingComplete?.(res);
+          if (!autoSubmittingRef.current) {
+            onCodingComplete?.(res);
+          }
         }
       } else {
         if (res.status === "Compilation Error") {
-          showError("Compilation error in your code. Check the console for details.");
+          showError(
+            res.compileErrorMessage ||
+              res.compileError ||
+              "Compilation error in your code. Check the output panel for details."
+          );
         } else if (res.status === "Time Limit Exceeded") {
           showError("Time limit exceeded. Optimize your solution.");
         } else {
           showError(`Failed: ${res.passedCases || 0}/${res.totalCases || 0} test cases passed.`);
         }
       }
+
+      // Submitting the solution (or an auto-submit after violations) is the only
+      // sanctioned way to leave the proctored fullscreen view.
+      if (isSubmit && autoSubmittingRef.current) {
+        // Violation limit reached: end proctoring and return the student to
+        // My Courses instead of leaving them on the question.
+        finishAssessment();
+        navigate("/courses", { replace: true });
+      } else if (isSubmit && res.allPassed) {
+        finishAssessment();
+      }
     } catch (err) {
       showError(err.message || "Failed to execute code.");
+      if (isSubmit && autoSubmittingRef.current) {
+        finishAssessment();
+        navigate("/courses", { replace: true });
+      }
     } finally {
       setIsRunning(false);
       setIsSubmitting(false);
     }
   };
+
+  // Auto-submit the assessment once the violation limit is reached
+  useEffect(() => {
+    if (forceSubmitTick > 0) {
+      handleRunCode(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forceSubmitTick]);
+
+  // Ensure we do not linger in fullscreen when leaving the challenge
+  useEffect(() => {
+    return () => {
+      exitFullscreen({ silent: true });
+    };
+  }, [exitFullscreen]);
 
   if (!currentProblem) {
     return (
@@ -485,21 +770,33 @@ export default function ModuleCodingChallenge({
             <span>{showQuestionPanel ? "Hide Split View" : "Show Split View"}</span>
           </button>
 
-          {/* Language Selector */}
+          {/* Language Selector — restricted to the languages allowed for this course */}
           <div className="flex items-center gap-1.5">
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className={`px-3 py-1.5 rounded-xl border text-xs font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer ${
-                inFullscreen ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-300 text-slate-800"
-              }`}
-            >
-              {SUPPORTED_LANGUAGES.map((lang) => (
-                <option key={lang.id} value={lang.id}>
-                  {lang.name}
-                </option>
-              ))}
-            </select>
+            {availableLanguages.length > 1 ? (
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value)}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer ${
+                  inFullscreen ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-300 text-slate-800"
+                }`}
+              >
+                {availableLanguages.map((lang) => (
+                  <option key={lang.id} value={lang.id}>
+                    {lang.name}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <div
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold select-none ${
+                  inFullscreen ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-300 text-slate-800"
+                }`}
+                title="This course allows only this language"
+              >
+                <Code2 className="w-3.5 h-3.5 opacity-70" />
+                <span>{availableLanguages[0]?.name || language}</span>
+              </div>
+            )}
           </div>
           {/* Proctoring Status Pill */}
           <div className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border ${
@@ -507,13 +804,8 @@ export default function ModuleCodingChallenge({
               ? "bg-slate-900 border-slate-700 text-slate-300"
               : "bg-slate-50 border-slate-200 text-slate-700"
           }`}>
-            <span className={`w-2 h-2 rounded-full shrink-0 ${tabSwitchCount > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
+            <span className={`w-2 h-2 rounded-full shrink-0 ${violations > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
             <span>Proctor Mode: No Paste</span>
-            {tabSwitchCount > 0 && (
-              <span className="text-amber-500 font-extrabold ml-1">
-                • Tab Switches: {tabSwitchCount}
-              </span>
-            )}
           </div>
         </div>
 
@@ -545,7 +837,7 @@ export default function ModuleCodingChallenge({
 
           <button
             type="button"
-            disabled={isRunning || isSubmitting}
+            disabled={isRunning || isSubmitting || terminated}
             onClick={() => handleRunCode(false)}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer disabled:opacity-50 ${
               inFullscreen
@@ -563,7 +855,7 @@ export default function ModuleCodingChallenge({
 
           <button
             type="button"
-            disabled={isRunning || isSubmitting}
+            disabled={isRunning || isSubmitting || terminated}
             onClick={() => handleRunCode(true)}
             className="px-4 py-1.5 rounded-xl text-xs font-bold bg-vcet-blue hover:bg-vcet-blue-deep text-white flex items-center gap-1.5 transition shadow-sm cursor-pointer disabled:opacity-50"
           >
@@ -847,6 +1139,36 @@ export default function ModuleCodingChallenge({
       {/* Portaled Full Screen Window */}
       {fullScreenModal}
 
+      {/* Proctoring Violation Warning (portaled above the fullscreen window) */}
+      {showViolationModal &&
+        latestViolation &&
+        createPortal(
+          <div className="fixed inset-0 z-[999999999]">
+            <ViolationWarningModal
+              isOpen={showViolationModal}
+              violation={latestViolation}
+              onDismiss={dismissViolation}
+            />
+          </div>,
+          document.body
+        )}
+
+      {/* Termination Banner */}
+      {terminated && (
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-bold text-rose-900">
+              Assessment Auto-Submitted
+            </h4>
+            <p className="text-xs text-rose-700">
+              The maximum number of proctoring violations was reached. Your latest
+              submission has been recorded and further runs are disabled.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Problem Selector Bar (if module contains multiple challenges) */}
       {problems.length > 1 && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1 bg-white p-2.5 rounded-2xl border border-slate-200">
@@ -1008,19 +1330,25 @@ export default function ModuleCodingChallenge({
               <div className="flex items-start gap-2.5">
                 <Maximize2 className="w-4 h-4 text-vcet-blue shrink-0 mt-0.5" />
                 <span>
-                  <strong>Full Screen:</strong> Recommended for an immersive, distraction-free environment.
+                  <strong>Full Screen (Mandatory):</strong> Browser tabs are hidden while you solve. Pressing ESC, swiping, or leaving full screen by any means is recorded as a violation and you are snapped back to full screen. Submitting your solution is the only way to exit.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <span>
-                  <strong>Tab Switch Monitoring:</strong> Navigating away to other browser tabs or windows is logged.
+                  <strong>Tab Switch Monitoring:</strong> Navigating away to other browser tabs or windows is recorded as a violation.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
                 <Lock className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                 <span>
                   <strong>Copy & Paste Blocked:</strong> Clipboard pasting is disabled in the code editor.
+                </span>
+              </div>
+              <div className="flex items-start gap-2.5 text-rose-700">
+                <AlertOctagon className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Auto-Submit on 3 Violations:</strong> Reaching 3 total violations automatically submits your current solution.
                 </span>
               </div>
               <div className="flex items-start gap-2.5 text-slate-500 text-[11px] pt-1 border-t border-slate-200">
@@ -1034,22 +1362,15 @@ export default function ModuleCodingChallenge({
             <div className="space-y-2 pt-1">
               <button
                 type="button"
-                onClick={() => {
-                  setShowExamRulesModal(false);
-                  handleEnterFullscreen();
-                }}
+                onClick={handleStartAssessment}
                 className="w-full py-2.5 px-4 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
               >
                 <Maximize2 className="w-4 h-4" />
-                <span>Enable Full Screen Automatically</span>
+                <span>Start Assessment in Full Screen</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setShowExamRulesModal(false)}
-                className="w-full py-2 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs border border-slate-200 transition cursor-pointer text-center"
-              >
-                Continue in Standard Window
-              </button>
+              <p className="text-[10px] text-slate-400 text-center">
+                Full screen is mandatory. Proctoring begins the moment you start.
+              </p>
             </div>
           </div>
         </div>

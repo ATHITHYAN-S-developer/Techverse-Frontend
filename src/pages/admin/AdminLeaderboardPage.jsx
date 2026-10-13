@@ -1,93 +1,65 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Trophy,
   Search,
-  Filter,
   Flame,
-  Award,
   Crown,
   Medal,
-  GraduationCap,
-  Sparkles,
-  RefreshCw
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
-
-const INITIAL_LEADERBOARD = [
-  {
-    rank: 1,
-    name: "Athithya V",
-    regNo: "732924CSE001",
-    department: "CSE",
-    year: "II Year",
-    streak: 28,
-    coursesCompleted: 4,
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    rank: 2,
-    name: "Karthik R",
-    regNo: "732922ADS018",
-    department: "AI&DS",
-    year: "III Year",
-    streak: 21,
-    coursesCompleted: 3,
-    avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    rank: 3,
-    name: "Dharshini K",
-    regNo: "732922CSE042",
-    department: "CSE",
-    year: "III Year",
-    streak: 15,
-    coursesCompleted: 3,
-    avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    rank: 4,
-    name: "Praveen Kumar S",
-    regNo: "732921IT054",
-    department: "IT",
-    year: "IV Year",
-    streak: 12,
-    coursesCompleted: 2,
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    rank: 5,
-    name: "Sneha M",
-    regNo: "732923ECE088",
-    department: "ECE",
-    year: "II Year",
-    streak: 14,
-    coursesCompleted: 2,
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
-  },
-  {
-    rank: 6,
-    name: "Vigneshwaran G",
-    regNo: "732923MECH025",
-    department: "MECH",
-    year: "II Year",
-    streak: 8,
-    coursesCompleted: 1,
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80"
-  }
-];
+import { api } from "../../services/api";
 
 const DEPARTMENTS = ["All Departments", "CSE", "AI&DS", "ECE", "IT", "EEE", "MECH", "CIVIL"];
+
+const FALLBACK_AVATAR =
+  "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80";
 
 const rankByStreak = (entries) =>
   [...entries]
     .sort((a, b) => b.streak - a.streak)
     .map((entry, index) => ({ ...entry, rank: index + 1 }));
 
+/** Map a leaderboard API entry onto the view model this page renders. */
+const toLeaderboardView = (entry, index) => ({
+  rank: entry.rank ?? index + 1,
+  id: entry._id,
+  name: entry.name || "Student",
+  regNo: entry.registerNumber || "—",
+  department: entry.department || "VCET",
+  streak: entry.streak ?? 0,
+  longestStreak: entry.longestStreak ?? 0,
+  certificatesEarned: entry.certificatesEarned ?? 0,
+  avatar: entry.profileImage || FALLBACK_AVATAR,
+});
+
 export default function AdminLeaderboardPage() {
-  const { showSuccess } = useToast();
-  const [leaderboard, setLeaderboard] = useState(() => rankByStreak(INITIAL_LEADERBOARD));
+  const { showSuccess, showError } = useToast();
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [deptFilter, setDeptFilter] = useState("All Departments");
+
+  const loadLeaderboard = async ({ announce = false } = {}) => {
+    try {
+      setLoading(true);
+      const res = await api.get("/users/leaderboard?limit=100");
+      const list = res?.leaderboard || res?.data?.leaderboard || [];
+      setLeaderboard(list.map(toLeaderboardView));
+      if (announce) showSuccess("Leaderboard refreshed from live streak data.");
+    } catch (err) {
+      console.debug("Load leaderboard note:", err);
+      setLeaderboard([]);
+      showError("Could not load the leaderboard. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadLeaderboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = leaderboard.filter((s) => {
     const matchesSearch =
@@ -136,55 +108,54 @@ export default function AdminLeaderboardPage() {
             Institutional Hall of Fame & Leaderboard
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Student rankings by current learning streak, with course completions for context.
+            Student rankings by current learning streak, with certificates earned for context.
           </p>
         </div>
 
         <button
-          onClick={() => {
-            setLeaderboard((current) => rankByStreak(current));
-            showSuccess("Leaderboard reordered by active streak.");
-          }}
+          onClick={() => loadLeaderboard({ announce: true })}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs shadow-xs transition-all border border-slate-200 self-start sm:self-auto"
         >
           <RefreshCw className="w-4 h-4 text-vcet-blue" />
-          <span>Recalculate Rankings</span>
+          <span>Refresh Rankings</span>
         </button>
       </div>
 
       {/* Top 3 Podium Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
-        {leaderboard.slice(0, 3).map((item, idx) => (
-          <div
-            key={item.regNo}
-            className={`rounded-2xl p-5 border relative overflow-hidden flex flex-col items-center text-center shadow-xs transition-all ${
-              idx === 0
-                ? "bg-gradient-to-b from-amber-50/60 via-white to-white border-amber-300 md:-translate-y-2 shadow-amber-500/5"
-                : idx === 1
-                ? "bg-gradient-to-b from-slate-50/80 via-white to-white border-slate-200"
-                : "bg-gradient-to-b from-amber-50/40 via-white to-white border-amber-200"
-            }`}
-          >
-            <div className="absolute top-3 right-3">{getRankBadge(item.rank)}</div>
+      {leaderboard.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-4">
+          {leaderboard.slice(0, 3).map((item, idx) => (
+            <div
+              key={item.id || item.regNo}
+              className={`rounded-2xl p-5 border relative overflow-hidden flex flex-col items-center text-center shadow-xs transition-all ${
+                idx === 0
+                  ? "bg-gradient-to-b from-amber-50/60 via-white to-white border-amber-300 md:-translate-y-2 shadow-amber-500/5"
+                  : idx === 1
+                  ? "bg-gradient-to-b from-slate-50/80 via-white to-white border-slate-200"
+                  : "bg-gradient-to-b from-amber-50/40 via-white to-white border-amber-200"
+              }`}
+            >
+              <div className="absolute top-3 right-3">{getRankBadge(item.rank)}</div>
 
-            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 mb-3 shadow-xs">
-              <img src={item.avatar} alt={item.name} className="w-full h-full object-cover" />
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 mb-3 shadow-xs">
+                <img src={item.avatar} alt={item.name} className="w-full h-full object-cover" />
+              </div>
+
+              <h3 className="text-base font-bold text-slate-900">{item.name}</h3>
+              <p className="text-xs text-slate-500 font-mono">
+                {item.regNo} • {item.department}
+              </p>
+
+              <div className="mt-3 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200">
+                  <Flame className="w-3.5 h-3.5" />
+                  {item.streak}d Streak
+                </span>
+              </div>
             </div>
-
-            <h3 className="text-base font-bold text-slate-900">{item.name}</h3>
-            <p className="text-xs text-slate-500 font-mono">
-              {item.regNo} • {item.department}
-            </p>
-
-            <div className="mt-3 flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-rose-700 font-bold text-xs border border-rose-200">
-                <Flame className="w-3.5 h-3.5" />
-                {item.streak}d Streak
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col md:flex-row items-center gap-3">
@@ -222,37 +193,50 @@ export default function AdminLeaderboardPage() {
               <tr>
                 <th className="px-5 py-3.5">Rank</th>
                 <th className="px-4 py-3.5">Student</th>
-                <th className="px-4 py-3.5">Department & Year</th>
+                <th className="px-4 py-3.5">Department</th>
                 <th className="px-4 py-3.5">Current Streak</th>
-                <th className="px-4 py-3.5">Courses</th>
+                <th className="px-4 py-3.5">Certificates</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filtered.map((s) => (
-                <tr key={s.regNo} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-5 py-3.5">{getRankBadge(s.rank)}</td>
-                  <td className="px-4 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <img src={s.avatar} alt={s.name} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
-                      <div>
-                        <div className="font-bold text-slate-900 text-sm">{s.name}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">{s.regNo}</div>
-                      </div>
-                    </div>
+              {loading ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-10 text-center text-slate-400 font-semibold">
+                    Loading leaderboard…
                   </td>
-                  <td className="px-4 py-3.5">
-                    <span className="font-bold text-vcet-blue">{s.department}</span>
-                    <span className="text-slate-400"> • {s.year}</span>
-                  </td>
-                  <td className="px-4 py-3.5">
-                    <span className="inline-flex items-center gap-1 font-bold text-rose-600">
-                      <Flame className="w-3.5 h-3.5" />
-                      {s.streak} Days
-                    </span>
-                  </td>
-                  <td className="px-4 py-3.5 font-mono text-slate-600">{s.coursesCompleted} completed</td>
                 </tr>
-              ))}
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-5 py-10 text-center text-slate-400 font-semibold">
+                    No students match your filters yet.
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((s) => (
+                  <tr key={s.id || s.regNo} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="px-5 py-3.5">{getRankBadge(s.rank)}</td>
+                    <td className="px-4 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <img src={s.avatar} alt={s.name} className="w-8 h-8 rounded-full object-cover border border-slate-200" />
+                        <div>
+                          <div className="font-bold text-slate-900 text-sm">{s.name}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">{s.regNo}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span className="font-bold text-vcet-blue">{s.department}</span>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span className="inline-flex items-center gap-1 font-bold text-rose-600">
+                        <Flame className="w-3.5 h-3.5" />
+                        {s.streak} Days
+                      </span>
+                    </td>
+                    <td className="px-4 py-3.5 font-mono text-slate-600">{s.certificatesEarned} earned</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

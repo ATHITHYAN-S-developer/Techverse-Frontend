@@ -27,6 +27,7 @@ import {
   EyeOff,
   Users,
   GraduationCap,
+  ChevronDown,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
@@ -81,6 +82,16 @@ async function compressImage(file, { maxWidth = 1280, maxHeight = 720, quality =
   });
 }
 
+const COURSE_LANGUAGES = [
+  { id: "python", name: "Python 3" },
+  { id: "javascript", name: "JavaScript (Node.js)" },
+  { id: "cpp", name: "C++ (GCC)" },
+  { id: "java", name: "Java (OpenJDK)" },
+  { id: "c", name: "C (GCC)" },
+];
+
+const ALL_LANGUAGE_IDS = COURSE_LANGUAGES.map((l) => l.id);
+
 export default function AdminCoursesPage() {
   const { showSuccess, showError } = useToast();
   const { user } = useAuth();
@@ -129,6 +140,10 @@ export default function AdminCoursesPage() {
   const [facultyDropdownOpen, setFacultyDropdownOpen] = useState(false);
   const facultyDropdownRef = useRef(null);
 
+  // Programming languages multi-select dropdown state
+  const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false);
+  const languageDropdownRef = useRef(null);
+
   const [formData, setFormData] = useState({
     title: "",
     category: "Programming",
@@ -142,18 +157,42 @@ export default function AdminCoursesPage() {
     targetAudience: "department", // "department" | "all"
     isDepartmentOnly: true,
     certificateEnabled: true,
+    languages: [...ALL_LANGUAGE_IDS],
   });
 
-  // Close faculty dropdown when clicking outside
+  // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (facultyDropdownRef.current && !facultyDropdownRef.current.contains(event.target)) {
         setFacultyDropdownOpen(false);
       }
+      if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target)) {
+        setLanguageDropdownOpen(false);
+      }
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const toggleLanguage = (langId) => {
+    setFormData((prev) => {
+      const current = Array.isArray(prev.languages) ? [...prev.languages] : [];
+      const next = current.includes(langId)
+        ? current.filter((id) => id !== langId)
+        : [...current, langId];
+      return { ...prev, languages: next };
+    });
+  };
+
+  const areAllLanguagesSelected =
+    Array.isArray(formData.languages) && formData.languages.length === ALL_LANGUAGE_IDS.length;
+
+  const toggleAllLanguages = () => {
+    setFormData((prev) => ({
+      ...prev,
+      languages: areAllLanguagesSelected ? [] : [...ALL_LANGUAGE_IDS],
+    }));
+  };
 
   useEffect(() => {
     loadCourses();
@@ -236,6 +275,7 @@ export default function AdminCoursesPage() {
     setSelectedFaculty(null);
     setFacultySearchQuery("");
     setFacultyDropdownOpen(false);
+    setLanguageDropdownOpen(false);
     setFormData({
       title: "",
       category: "Programming",
@@ -249,6 +289,7 @@ export default function AdminCoursesPage() {
       targetAudience: "department",
       isDepartmentOnly: true,
       certificateEnabled: true,
+      languages: [...ALL_LANGUAGE_IDS],
     });
     setModalOpen(true);
   };
@@ -263,6 +304,7 @@ export default function AdminCoursesPage() {
     setSelectedFaculty(matchedFaculty || (facId ? { _id: facId, name: course.assignedFacultyName } : null));
     setFacultySearchQuery("");
     setFacultyDropdownOpen(false);
+    setLanguageDropdownOpen(false);
     setFormData({
       title: course.title || "",
       category: course.category || "Programming",
@@ -276,6 +318,10 @@ export default function AdminCoursesPage() {
       targetAudience: course.targetAudience || (course.isDepartmentOnly ? "department" : "all"),
       isDepartmentOnly: course.isDepartmentOnly ?? (course.targetAudience === "department"),
       certificateEnabled: course.certificateEnabled !== false, // default true if not set
+      languages:
+        Array.isArray(course.languages) && course.languages.length
+          ? course.languages
+          : [...ALL_LANGUAGE_IDS],
     });
     setModalOpen(true);
   };
@@ -306,6 +352,12 @@ export default function AdminCoursesPage() {
       form.append("isDepartmentOnly", String(formData.isDepartmentOnly ?? true));
       form.append("instructor", formData.instructor || formData.assignedFacultyName || "VCET Faculty");
       form.append("certificateEnabled", String(formData.certificateEnabled ?? true));
+      if (formData.category === "Programming") {
+        form.append(
+          "languages",
+          JSON.stringify(Array.isArray(formData.languages) ? formData.languages : [])
+        );
+      }
 
       if (!isFaculty && formData.assignedFacultyId) {
         form.append("assignedFacultyId", formData.assignedFacultyId);
@@ -807,6 +859,96 @@ export default function AdminCoursesPage() {
                   </select>
                 </div>
               </div>
+
+              {/* Programming Languages Multi-Select (only for Programming category) */}
+              {formData.category === "Programming" && (
+                <div ref={languageDropdownRef} className="relative">
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-slate-700 font-bold">
+                      Programming Languages{" "}
+                      <span className="text-[10px] text-slate-400 font-medium">
+                        (Languages students can code in)
+                      </span>
+                    </label>
+                    <span className="text-[10px] font-bold text-vcet-blue bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                      {areAllLanguagesSelected
+                        ? "All languages"
+                        : formData.languages.length === 0
+                        ? "None selected"
+                        : `${formData.languages.length} of ${ALL_LANGUAGE_IDS.length} selected`}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setLanguageDropdownOpen((v) => !v)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 bg-slate-50 rounded-xl border border-slate-300 text-left focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                  >
+                    <span className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      {formData.languages.length === 0 ? (
+                        <span className="text-slate-400">Select languages...</span>
+                      ) : (
+                        COURSE_LANGUAGES.filter((l) => formData.languages.includes(l.id)).map((l) => (
+                          <span
+                            key={l.id}
+                            className="px-2 py-0.5 rounded-md bg-vcet-blue/10 text-vcet-blue text-[10px] font-bold border border-vcet-blue/20"
+                          >
+                            {l.name}
+                          </span>
+                        ))
+                      )}
+                    </span>
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${
+                        languageDropdownOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {languageDropdownOpen && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-xl z-30 p-2 space-y-0.5">
+                      <button
+                        type="button"
+                        onClick={toggleAllLanguages}
+                        className="w-full flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-slate-50 text-xs font-bold text-slate-700 cursor-pointer"
+                      >
+                        <span>{areAllLanguagesSelected ? "Clear all" : "Select all languages"}</span>
+                        <span className="text-[10px] text-slate-400">
+                          {formData.languages.length}/{ALL_LANGUAGE_IDS.length}
+                        </span>
+                      </button>
+                      <div className="h-px bg-slate-100 my-1" />
+                      {COURSE_LANGUAGES.map((lang) => {
+                        const selected = formData.languages.includes(lang.id);
+                        return (
+                          <button
+                            key={lang.id}
+                            type="button"
+                            onClick={() => toggleLanguage(lang.id)}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-sky-50/70 text-xs font-medium text-slate-700 cursor-pointer"
+                          >
+                            <span
+                              className={`w-4 h-4 rounded-md border flex items-center justify-center shrink-0 ${
+                                selected
+                                  ? "bg-vcet-blue border-vcet-blue text-white"
+                                  : "bg-white border-slate-300"
+                              }`}
+                            >
+                              {selected && <Check className="w-3 h-3" />}
+                            </span>
+                            <span>{lang.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Students can attempt coding challenges only in the selected languages. Keep all
+                    selected to allow every language.
+                  </p>
+                </div>
+              )}
 
               {/* Passing Score Benchmark */}
               <div>

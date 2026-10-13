@@ -929,6 +929,7 @@ export default function CourseLearningPage() {
                   <ModuleCodingChallenge
                     module={currentModule}
                     courseSlug={courseId}
+                    allowedLanguages={course?.languages}
                     onProceedToTest={() => {
                       setActiveTab("test");
                       if (!testStartTime) setTestStartTime(Date.now());
