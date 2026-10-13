@@ -32,6 +32,7 @@ import { courseService } from "../services/courseService";
 import { downloadCertificatePdf } from "../services/certificatePdfGenerator";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import ModuleCodingChallenge from "../components/courses/ModuleCodingChallenge";
 
 /**
  * Extract YouTube 11-char Video ID safely
@@ -638,44 +639,78 @@ export default function CourseLearningPage() {
         {/* Left / Main Learning Panel */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl mx-auto w-full">
           {/* TAB SWITCHER */}
-          <div className="flex items-center gap-3 border-b border-vcet-gray-border pb-4">
-            <button
-              onClick={() => setActiveTab("video")}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-                activeTab === "video"
-                  ? "bg-vcet-blue text-white shadow-sm"
-                  : "bg-white text-vcet-dark hover:bg-slate-50 border border-vcet-gray-border"
-              }`}
-            >
-              <Video className="w-4 h-4" />
-              <span>1. Tutorial Video</span>
-            </button>
+          {(() => {
+            const hasCoding = Boolean(
+              currentModule?.hasCoding ||
+              (currentModule?.codingProblems && currentModule.codingProblems.length > 0)
+            );
+            return (
+              <div className="flex items-center gap-3 border-b border-vcet-gray-border pb-4 overflow-x-auto">
+                <button
+                  onClick={() => setActiveTab("video")}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
+                    activeTab === "video"
+                      ? "bg-vcet-blue text-white shadow-sm"
+                      : "bg-white text-vcet-dark hover:bg-slate-50 border border-vcet-gray-border"
+                  }`}
+                >
+                  <Video className="w-4 h-4" />
+                  <span>1. Tutorial Video</span>
+                </button>
 
-            <button
-              onClick={() => {
-                if (testUnlocked || videoRequirementMet) {
-                  setActiveTab("test");
-                  if (!testStartTime) setTestStartTime(Date.now());
-                } else {
-                  showError("Please complete the tutorial video lesson to proceed to the assessment.");
-                }
-              }}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-                activeTab === "test"
-                  ? "bg-vcet-blue text-white shadow-sm"
-                  : testUnlocked || videoRequirementMet
-                  ? "bg-white text-vcet-blue hover:bg-slate-50 border border-vcet-blue/30"
-                  : "bg-slate-100 text-slate-400 cursor-not-allowed border border-vcet-gray-border"
-              }`}
-            >
-              {testUnlocked || videoRequirementMet ? (
-                <CheckCircle2 className="w-4 h-4 text-vcet-blue" />
-              ) : (
-                <Lock className="w-4 h-4" />
-              )}
-              <span>2. Knowledge Assessment Test</span>
-            </button>
-          </div>
+                {hasCoding && (
+                  <button
+                    onClick={() => {
+                      if (testUnlocked || videoRequirementMet) {
+                        setActiveTab("coding");
+                      } else {
+                        showError("Please complete the tutorial video lesson to proceed to the coding challenge.");
+                      }
+                    }}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
+                      activeTab === "coding"
+                        ? "bg-vcet-blue text-white shadow-sm"
+                        : testUnlocked || videoRequirementMet
+                        ? "bg-white text-vcet-blue hover:bg-slate-50 border border-vcet-blue/30"
+                        : "bg-slate-100 text-slate-400 cursor-not-allowed border border-vcet-gray-border"
+                    }`}
+                  >
+                    {testUnlocked || videoRequirementMet ? (
+                      <Code2 className="w-4 h-4 text-vcet-blue" />
+                    ) : (
+                      <Lock className="w-4 h-4" />
+                    )}
+                    <span>2. Coding Challenge</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (testUnlocked || videoRequirementMet) {
+                      setActiveTab("test");
+                      if (!testStartTime) setTestStartTime(Date.now());
+                    } else {
+                      showError("Please complete the tutorial video lesson to proceed to the assessment.");
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
+                    activeTab === "test"
+                      ? "bg-vcet-blue text-white shadow-sm"
+                      : testUnlocked || videoRequirementMet
+                      ? "bg-white text-vcet-blue hover:bg-slate-50 border border-vcet-blue/30"
+                      : "bg-slate-100 text-slate-400 cursor-not-allowed border border-vcet-gray-border"
+                  }`}
+                >
+                  {testUnlocked || videoRequirementMet ? (
+                    <CheckCircle2 className="w-4 h-4 text-vcet-blue" />
+                  ) : (
+                    <Lock className="w-4 h-4" />
+                  )}
+                  <span>{hasCoding ? "3. Knowledge Assessment Test" : "2. Knowledge Assessment Test"}</span>
+                </button>
+              </div>
+            );
+          })()}
 
           {/* TAB 1: TUTORIAL VIDEO VIEW */}
           {activeTab === "video" && (
@@ -708,19 +743,34 @@ export default function CourseLearningPage() {
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-vcet-dark">Video Lesson Completed</h4>
-                        <p className="text-xs text-vcet-dark">Complete the knowledge assessment test to earn your certificate and proceed.</p>
+                        <p className="text-xs text-vcet-dark">
+                          {currentModule?.hasCoding || currentModule?.codingProblems?.length > 0
+                            ? "Complete the practical coding challenge and assessment test to earn your certificate."
+                            : "Complete the knowledge assessment test to earn your certificate and proceed."}
+                        </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => {
-                        setActiveTab("test");
-                        if (!testStartTime) setTestStartTime(Date.now());
-                      }}
-                      className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
-                    >
-                      <span>Start Assessment</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {(currentModule?.hasCoding || currentModule?.codingProblems?.length > 0) && (
+                        <button
+                          onClick={() => setActiveTab("coding")}
+                          className="px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs transition cursor-pointer flex items-center gap-2 shadow-xs"
+                        >
+                          <Code2 className="w-4 h-4" />
+                          <span>Start Coding Challenge</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setActiveTab("test");
+                          if (!testStartTime) setTestStartTime(Date.now());
+                        }}
+                        className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
+                      >
+                        <span>Start Assessment</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-3.5 rounded-xl bg-white border border-vcet-gray-border flex items-center gap-2.5 text-vcet-dark text-xs">
@@ -729,6 +779,38 @@ export default function CourseLearningPage() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* TAB 2: PRACTICAL CODING CHALLENGE VIEW */}
+          {activeTab === "coding" && (
+            <div className="space-y-6">
+              {!testUnlocked && !videoRequirementMet ? (
+                <div className="bg-white border border-vcet-gray-border rounded-2xl p-10 text-center space-y-4">
+                  <div className="w-12 h-12 rounded-2xl bg-vcet-blue/10 text-vcet-blue border border-vcet-blue/20 flex items-center justify-center mx-auto">
+                    <Lock className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-vcet-dark">Coding Challenge is Locked</h3>
+                  <p className="text-sm text-vcet-dark max-w-md mx-auto">
+                    Please finish watching the tutorial video lesson to unlock this coding challenge.
+                  </p>
+                  <button
+                    onClick={() => setActiveTab("video")}
+                    className="px-6 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer"
+                  >
+                    Resume Tutorial Video
+                  </button>
+                </div>
+              ) : (
+                <ModuleCodingChallenge
+                  module={currentModule}
+                  courseSlug={courseId}
+                  onProceedToTest={() => {
+                    setActiveTab("test");
+                    if (!testStartTime) setTestStartTime(Date.now());
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -1009,6 +1091,24 @@ export default function CourseLearningPage() {
                   <h4 className="text-xs font-bold text-vcet-dark line-clamp-1">
                     {m.title}
                   </h4>
+
+                  <div className="flex items-center gap-2 pt-0.5 flex-wrap">
+                    {m.hasVideo !== false && (
+                      <span className="text-[10px] text-vcet-blue font-semibold flex items-center gap-1">
+                        <Video className="w-2.5 h-2.5" /> Video
+                      </span>
+                    )}
+                    {(m.hasCoding || (m.codingProblems && m.codingProblems.length > 0)) && (
+                      <span className="text-[10px] text-violet-600 font-semibold flex items-center gap-1">
+                        <Code2 className="w-2.5 h-2.5" /> Coding
+                      </span>
+                    )}
+                    {(m.hasMCQ || (m.mcqs && m.mcqs.length > 0)) && (
+                      <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
+                        <HelpCircle className="w-2.5 h-2.5" /> MCQ
+                      </span>
+                    )}
+                  </div>
                 </div>
               );
             })}

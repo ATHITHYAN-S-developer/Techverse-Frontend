@@ -281,6 +281,11 @@ export const courseService = {
     return res?.data || res;
   },
 
+  async runModuleCode(courseSlug, moduleId, data) {
+    const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/run-code`, data);
+    return res?.data || res;
+  },
+
   // ----------------------------------------------------------------
   // Course Students List & Excel Export (/api/courses/:courseId/students)
   // ----------------------------------------------------------------
