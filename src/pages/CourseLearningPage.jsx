@@ -329,8 +329,6 @@ export default function CourseLearningPage() {
   const loadModuleAndProgression = useCallback(async () => {
     try {
       setLoading(true);
-      // Reset module-level states on load
-      setActiveTab("video");
       setTestAnswers({});
       setTestResult(null);
       setTestStartTime(null);
@@ -341,8 +339,17 @@ export default function CourseLearningPage() {
       setCourse(courseData);
 
       const modulesList = res?.modules || courseData?.modules || [];
-      const isCourseDone = Boolean(courseData?.isCourseCompleted || (modulesList.length > 0 && modulesList.every((m) => m.completed || m.testPassed)));
-      setAllModulesMap(modulesList.map((m) => isCourseDone ? { ...m, isUnlocked: true, testUnlocked: true, videoRequirementMet: true } : m));
+      const isCourseDone = Boolean(
+        courseData?.isCourseCompleted ||
+        (modulesList.length > 0 && modulesList.every((m) => m.completed || m.testPassed || m.isCompleted))
+      );
+      setAllModulesMap(
+        modulesList.map((m) =>
+          isCourseDone
+            ? { ...m, isUnlocked: true, testUnlocked: true, videoRequirementMet: true, isCompleted: true }
+            : m
+        )
+      );
 
       // Find current active module
       let activeMod = null;
@@ -357,14 +364,34 @@ export default function CourseLearningPage() {
 
       setCurrentModule(activeMod);
 
+      // Dynamically select initial activeTab based on what the faculty enabled for this module
+      const hasVid = activeMod?.hasVideo !== undefined
+        ? Boolean(activeMod.hasVideo)
+        : Boolean(activeMod?.videoUrl || (activeMod?.videos && activeMod.videos.length > 0));
+      const hasCod = activeMod?.hasCoding !== undefined
+        ? Boolean(activeMod.hasCoding)
+        : Boolean(activeMod?.codingProblems && activeMod.codingProblems.length > 0);
+      const hasM = activeMod?.hasMCQ !== undefined
+        ? Boolean(activeMod.hasMCQ)
+        : Boolean(activeMod?.mcqs && activeMod.mcqs.length > 0);
+
+      const defaultTab = hasVid ? "video" : hasCod ? "coding" : hasM ? "test" : "video";
+      setActiveTab((prev) => {
+        if (prev === "video" && hasVid) return "video";
+        if (prev === "coding" && hasCod) return "coding";
+        if (prev === "test" && hasM) return "test";
+        return defaultTab;
+      });
+
       // Fetch progression data for this module
       if (activeMod && activeMod._id) {
         const progRes = await courseService.getModuleProgression(courseId, activeMod._id);
+        const isVidMandatory = Boolean(hasVid && activeMod.isVideoMandatory);
+
         if (progRes) {
           setProgression(progRes);
           setWatchPercentage(progRes.watchPercentage || (isCourseDone ? 100 : 0));
           setUniqueWatchedSeconds(progRes.uniqueWatchedSeconds || 0);
-          const isVidMandatory = Boolean(activeMod.hasVideo && activeMod.isVideoMandatory);
           setVideoRequirementMet(isCourseDone || !isVidMandatory || Boolean(progRes.videoRequirementMet));
           setTestUnlocked(isCourseDone || !isVidMandatory || Boolean(progRes.testUnlocked));
           setIsModuleLocked(isCourseDone ? false : !progRes.isUnlocked);
@@ -380,12 +407,11 @@ export default function CourseLearningPage() {
             setCertificate(progRes.certificate);
           }
         } else {
-          const isVidMandatory = Boolean(activeMod.hasVideo && activeMod.isVideoMandatory);
           setWatchPercentage(isCourseDone ? 100 : 0);
           setUniqueWatchedSeconds(0);
           setVideoRequirementMet(isCourseDone || !isVidMandatory);
           setTestUnlocked(isCourseDone || !isVidMandatory);
-          setIsModuleLocked(isCourseDone ? false : (activeMod.moduleNumber > 1));
+          setIsModuleLocked(isCourseDone ? false : activeMod.moduleNumber > 1);
         }
       }
     } catch (err) {
@@ -457,10 +483,23 @@ export default function CourseLearningPage() {
           origin: { y: 0.5 },
         });
 
+        const hasCoding = currentModule?.hasCoding !== undefined
+          ? Boolean(currentModule.hasCoding)
+          : Boolean(currentModule?.codingProblems && currentModule.codingProblems.length > 0);
+        const isCodingPassed = Boolean(progression?.codingPassed);
+
+        // If module also requires coding and it hasn't been passed yet
+        if (hasCoding && !isCodingPassed && !result.isCompleted) {
+          showSuccess(`✓ MCQ Assessment Passed with ${result.scorePercentage}%! Please complete the Coding Challenge to finish this module.`);
+          setActiveTab("coding");
+          loadModuleAndProgression();
+          return;
+        }
+
         // Check if completing this module finishes the entire course
         const otherModulesCompleted = allModulesMap
           .filter((m) => String(m._id) !== String(currentModule._id))
-          .every((m) => m.completed || m.testPassed);
+          .every((m) => m.completed || m.testPassed || m.isCompleted);
         const isCourseNowDone = otherModulesCompleted || Boolean(result.courseCertificate);
 
         if (isCourseNowDone) {
@@ -504,6 +543,60 @@ export default function CourseLearningPage() {
       showError(err.message || "Failed to submit test. Please complete the video lesson first.");
     } finally {
       setSubmittingTest(false);
+    }
+  };
+
+  // Handle Coding Challenge Completion Callback
+  const handleCodingComplete = (codeRes) => {
+    loadModuleAndProgression();
+    const hasMCQ = currentModule?.hasMCQ !== undefined
+      ? Boolean(currentModule.hasMCQ)
+      : Boolean(currentModule?.mcqs && currentModule.mcqs.length > 0);
+    const isTestPassed = Boolean(testResult?.passed || progression?.testPassed);
+
+    if (codeRes?.isCompleted || (!hasMCQ && codeRes?.codingPassed)) {
+      confetti({
+        particleCount: 160,
+        spread: 80,
+        origin: { y: 0.5 },
+      });
+
+      const otherModulesCompleted = allModulesMap
+        .filter((m) => String(m._id) !== String(currentModule._id))
+        .every((m) => m.completed || m.testPassed || m.isCompleted);
+      const isCourseNowDone = otherModulesCompleted || Boolean(codeRes.courseCertificate);
+
+      if (isCourseNowDone) {
+        if (course?.certificateEnabled !== false) {
+          setIsCourseCompletedModal(true);
+          setRedirectCountdown(4);
+          setCertificate(
+            codeRes.courseCertificate ||
+            codeRes.certificate || {
+              studentName: user?.name,
+              registerNumber: user?.registerNumber,
+              courseName: course?.title,
+              score: 100,
+              certificateNumber: `VCET-CERT-${String(course?._id || "2026").slice(-6).toUpperCase()}`,
+              grade: "Distinction",
+            }
+          );
+          setShowCertificateModal(true);
+          showSuccess("🏆 Course Completed! Automatically redirecting to your certificate in 4s...");
+        } else {
+          showSuccess("🏆 Course Completed! Congratulations on finishing all modules.");
+        }
+      } else {
+        if (codeRes.certificate) {
+          setCertificate(codeRes.certificate);
+          setShowCertificateModal(true);
+        }
+        showSuccess("🎉 Coding Challenge Passed! Module requirements completed.");
+      }
+    } else if (hasMCQ && !isTestPassed) {
+      showSuccess("🎉 Coding Challenge Accepted! Now complete the Knowledge Assessment Test to finish this module.");
+      setActiveTab("test");
+      if (!testStartTime) setTestStartTime(Date.now());
     }
   };
 
@@ -640,74 +733,81 @@ export default function CourseLearningPage() {
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6 max-w-5xl mx-auto w-full">
           {/* TAB SWITCHER */}
           {(() => {
-            const hasCoding = Boolean(
-              currentModule?.hasCoding ||
-              (currentModule?.codingProblems && currentModule.codingProblems.length > 0)
-            );
+            const hasVideo = currentModule?.hasVideo !== undefined
+              ? Boolean(currentModule.hasVideo)
+              : Boolean(currentModule?.videoUrl || (currentModule?.videos && currentModule.videos.length > 0));
+            const hasCoding = currentModule?.hasCoding !== undefined
+              ? Boolean(currentModule.hasCoding)
+              : Boolean(currentModule?.codingProblems && currentModule.codingProblems.length > 0);
+            const hasMCQ = currentModule?.hasMCQ !== undefined
+              ? Boolean(currentModule.hasMCQ)
+              : Boolean(currentModule?.mcqs && currentModule.mcqs.length > 0);
+
+            const isVideoMandatory = Boolean(hasVideo && currentModule?.isVideoMandatory);
+            const isUnlockedToProceed = !isVideoMandatory || testUnlocked || videoRequirementMet;
+
+            const tabs = [];
+            if (hasVideo) {
+              tabs.push({ id: "video", label: "Tutorial Video", icon: Video, locked: false });
+            }
+            if (hasCoding) {
+              tabs.push({
+                id: "coding",
+                label: "Coding Challenge",
+                icon: Code2,
+                locked: !isUnlockedToProceed,
+              });
+            }
+            if (hasMCQ) {
+              tabs.push({
+                id: "test",
+                label: "Knowledge Assessment Test",
+                icon: CheckCircle2,
+                locked: !isUnlockedToProceed,
+              });
+            }
+
+            if (tabs.length === 0) {
+              tabs.push({ id: "video", label: "Course Content", icon: BookOpen, locked: false });
+            }
+
             return (
               <div className="flex items-center gap-3 border-b border-vcet-gray-border pb-4 overflow-x-auto">
-                <button
-                  onClick={() => setActiveTab("video")}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
-                    activeTab === "video"
-                      ? "bg-vcet-blue text-white shadow-sm"
-                      : "bg-white text-vcet-dark hover:bg-slate-50 border border-vcet-gray-border"
-                  }`}
-                >
-                  <Video className="w-4 h-4" />
-                  <span>1. Tutorial Video</span>
-                </button>
+                {tabs.map((tab, idx) => {
+                  const IconComponent = tab.icon;
+                  const isActive = activeTab === tab.id;
+                  const isLocked = tab.locked;
 
-                {hasCoding && (
-                  <button
-                    onClick={() => {
-                      if (testUnlocked || videoRequirementMet) {
-                        setActiveTab("coding");
-                      } else {
-                        showError("Please complete the tutorial video lesson to proceed to the coding challenge.");
-                      }
-                    }}
-                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
-                      activeTab === "coding"
-                        ? "bg-vcet-blue text-white shadow-sm"
-                        : testUnlocked || videoRequirementMet
-                        ? "bg-white text-vcet-blue hover:bg-slate-50 border border-vcet-blue/30"
-                        : "bg-slate-100 text-slate-400 cursor-not-allowed border border-vcet-gray-border"
-                    }`}
-                  >
-                    {testUnlocked || videoRequirementMet ? (
-                      <Code2 className="w-4 h-4 text-vcet-blue" />
-                    ) : (
-                      <Lock className="w-4 h-4" />
-                    )}
-                    <span>2. Coding Challenge</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={() => {
-                    if (testUnlocked || videoRequirementMet) {
-                      setActiveTab("test");
-                      if (!testStartTime) setTestStartTime(Date.now());
-                    } else {
-                      showError("Please complete the tutorial video lesson to proceed to the assessment.");
-                    }
-                  }}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
-                    activeTab === "test"
-                      ? "bg-vcet-blue text-white shadow-sm"
-                      : testUnlocked || videoRequirementMet
-                      ? "bg-white text-vcet-blue hover:bg-slate-50 border border-vcet-blue/30"
-                      : "bg-slate-100 text-slate-400 cursor-not-allowed border border-vcet-gray-border"
-                  }`}
-                >
-                  {testUnlocked || videoRequirementMet ? (
-                    <CheckCircle2 className="w-4 h-4 text-vcet-blue" />
-                  ) : (
-                    <Lock className="w-4 h-4" />
-                  )}
-                  <span>{hasCoding ? "3. Knowledge Assessment Test" : "2. Knowledge Assessment Test"}</span>
-                </button>
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => {
+                        if (isLocked) {
+                          showError("Please complete the tutorial video lesson to proceed.");
+                          return;
+                        }
+                        setActiveTab(tab.id);
+                        if (tab.id === "test" && !testStartTime) {
+                          setTestStartTime(Date.now());
+                        }
+                      }}
+                      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
+                        isActive
+                          ? "bg-vcet-blue text-white shadow-sm"
+                          : !isLocked
+                          ? "bg-white text-vcet-dark hover:bg-slate-50 border border-vcet-gray-border"
+                          : "bg-slate-100 text-slate-400 cursor-not-allowed border border-vcet-gray-border"
+                      }`}
+                    >
+                      {isLocked ? (
+                        <Lock className="w-4 h-4" />
+                      ) : (
+                        <IconComponent className="w-4 h-4" />
+                      )}
+                      <span>{`${idx + 1}. ${tab.label}`}</span>
+                    </button>
+                  );
+                })}
               </div>
             );
           })()}
@@ -744,9 +844,14 @@ export default function CourseLearningPage() {
                       <div>
                         <h4 className="text-sm font-bold text-vcet-dark">Video Lesson Completed</h4>
                         <p className="text-xs text-vcet-dark">
-                          {currentModule?.hasCoding || currentModule?.codingProblems?.length > 0
-                            ? "Complete the practical coding challenge and assessment test to earn your certificate."
-                            : "Complete the knowledge assessment test to earn your certificate and proceed."}
+                          {(() => {
+                            const hasCod = Boolean(currentModule?.hasCoding || currentModule?.codingProblems?.length > 0);
+                            const hasM = Boolean(currentModule?.hasMCQ || currentModule?.mcqs?.length > 0);
+                            if (hasCod && hasM) return "Complete the practical coding challenge and assessment test to finish this module.";
+                            if (hasCod) return "Complete the practical coding challenge to finish this module.";
+                            if (hasM) return "Complete the knowledge assessment test to finish this module.";
+                            return "You have fulfilled all requirements for this module!";
+                          })()}
                         </p>
                       </div>
                     </div>
@@ -760,16 +865,24 @@ export default function CourseLearningPage() {
                           <span>Start Coding Challenge</span>
                         </button>
                       )}
-                      <button
-                        onClick={() => {
-                          setActiveTab("test");
-                          if (!testStartTime) setTestStartTime(Date.now());
-                        }}
-                        className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
-                      >
-                        <span>Start Assessment</span>
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                      {(currentModule?.hasMCQ || currentModule?.mcqs?.length > 0) && (
+                        <button
+                          onClick={() => {
+                            setActiveTab("test");
+                            if (!testStartTime) setTestStartTime(Date.now());
+                          }}
+                          className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
+                        >
+                          <span>Start Assessment</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      )}
+                      {!currentModule?.hasCoding && !currentModule?.codingProblems?.length && !currentModule?.hasMCQ && !currentModule?.mcqs?.length && (
+                        <span className="px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 font-bold text-xs border border-emerald-200 flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Module Completed</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -785,236 +898,266 @@ export default function CourseLearningPage() {
           {/* TAB 2: PRACTICAL CODING CHALLENGE VIEW */}
           {activeTab === "coding" && (
             <div className="space-y-6">
-              {!testUnlocked && !videoRequirementMet ? (
-                <div className="bg-white border border-vcet-gray-border rounded-2xl p-10 text-center space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-vcet-blue/10 text-vcet-blue border border-vcet-blue/20 flex items-center justify-center mx-auto">
-                    <Lock className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-vcet-dark">Coding Challenge is Locked</h3>
-                  <p className="text-sm text-vcet-dark max-w-md mx-auto">
-                    Please finish watching the tutorial video lesson to unlock this coding challenge.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab("video")}
-                    className="px-6 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer"
-                  >
-                    Resume Tutorial Video
-                  </button>
-                </div>
-              ) : (
-                <ModuleCodingChallenge
-                  module={currentModule}
-                  courseSlug={courseId}
-                  onProceedToTest={() => {
-                    setActiveTab("test");
-                    if (!testStartTime) setTestStartTime(Date.now());
-                  }}
-                />
-              )}
+              {(() => {
+                const hasVid = currentModule?.hasVideo !== undefined
+                  ? Boolean(currentModule.hasVideo)
+                  : Boolean(currentModule?.videoUrl || currentModule?.videos?.length > 0);
+                const isVidMandatory = Boolean(hasVid && currentModule?.isVideoMandatory);
+                const isLocked = isVidMandatory && !testUnlocked && !videoRequirementMet;
+
+                if (isLocked) {
+                  return (
+                    <div className="bg-white border border-vcet-gray-border rounded-2xl p-10 text-center space-y-4">
+                      <div className="w-12 h-12 rounded-2xl bg-vcet-blue/10 text-vcet-blue border border-vcet-blue/20 flex items-center justify-center mx-auto">
+                        <Lock className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-bold text-vcet-dark">Coding Challenge is Locked</h3>
+                      <p className="text-sm text-vcet-dark max-w-md mx-auto">
+                        Please finish watching the tutorial video lesson to unlock this coding challenge.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab("video")}
+                        className="px-6 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer"
+                      >
+                        Resume Tutorial Video
+                      </button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <ModuleCodingChallenge
+                    module={currentModule}
+                    courseSlug={courseId}
+                    onProceedToTest={() => {
+                      setActiveTab("test");
+                      if (!testStartTime) setTestStartTime(Date.now());
+                    }}
+                    onCodingComplete={handleCodingComplete}
+                  />
+                );
+              })()}
             </div>
           )}
 
-          {/* TAB 2: KNOWLEDGE ASSESSMENT TEST VIEW */}
+          {/* TAB 3: KNOWLEDGE ASSESSMENT TEST VIEW */}
           {activeTab === "test" && (
             <div className="space-y-6">
-              {!testUnlocked && !videoRequirementMet ? (
-                <div className="bg-white border border-vcet-gray-border rounded-2xl p-10 text-center space-y-4">
-                  <div className="w-12 h-12 rounded-2xl bg-vcet-blue/10 text-vcet-blue border border-vcet-blue/20 flex items-center justify-center mx-auto">
-                    <Lock className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-lg font-bold text-vcet-dark">Knowledge Assessment is Locked</h3>
-                  <p className="text-sm text-vcet-dark max-w-md mx-auto">
-                    Please finish watching the tutorial video lesson to unlock this assessment test.
-                  </p>
-                  <button
-                    onClick={() => setActiveTab("video")}
-                    className="px-6 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer"
-                  >
-                    Resume Tutorial Video
-                  </button>
-                </div>
-              ) : testResult ? (
-                /* Assessment Result Review Panel */
-                <div className="space-y-6">
-                  <div className="p-6 sm:p-8 rounded-2xl border border-vcet-gray-border bg-white text-center space-y-4">
-                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border border-vcet-blue/20 bg-vcet-blue/10 text-vcet-blue">
-                      <Award className="w-7 h-7" />
-                    </div>
+              {(() => {
+                const hasVid = currentModule?.hasVideo !== undefined
+                  ? Boolean(currentModule.hasVideo)
+                  : Boolean(currentModule?.videoUrl || currentModule?.videos?.length > 0);
+                const isVidMandatory = Boolean(hasVid && currentModule?.isVideoMandatory);
+                const isLocked = isVidMandatory && !testUnlocked && !videoRequirementMet;
 
-                    <div>
-                      <span className="text-xs uppercase font-bold tracking-wider text-vcet-dark">
-                        Assessment Result
-                      </span>
-                      <h2 className="text-2xl sm:text-3xl font-bold text-vcet-dark mt-1">
-                        Score: {testResult.scorePercentage}%
-                      </h2>
-                      <p className="text-sm text-vcet-dark mt-2">
-                        {testResult.passed
-                          ? `Passed! Appreciation Certificate is issued.`
-                          : `Score did not meet the 50% passing threshold. Please review and try again.`}
+                if (isLocked) {
+                  return (
+                    <div className="bg-white border border-vcet-gray-border rounded-2xl p-10 text-center space-y-4">
+                      <div className="w-12 h-12 rounded-2xl bg-vcet-blue/10 text-vcet-blue border border-vcet-blue/20 flex items-center justify-center mx-auto">
+                        <Lock className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-lg font-bold text-vcet-dark">Knowledge Assessment is Locked</h3>
+                      <p className="text-sm text-vcet-dark max-w-md mx-auto">
+                        Please finish watching the tutorial video lesson to unlock this assessment test.
                       </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                      {testResult.passed && certificate && (
-                        <button
-                          onClick={() => setShowCertificateModal(true)}
-                          className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
-                        >
-                          <Award className="w-4 h-4" />
-                          <span>View Appreciation Certificate</span>
-                        </button>
-                      )}
-
-                      {testResult.passed && nextModule && (
-                        <button
-                          onClick={() => navigate(`/courses/${courseId}/module/${nextModule._id || nextModule.moduleNumber}`)}
-                          className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
-                        >
-                          <span>Proceed to Module {nextModule.moduleNumber}</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </button>
-                      )}
-
                       <button
-                        onClick={handleRetryTest}
-                        className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-vcet-dark font-semibold text-xs transition border border-vcet-gray-border flex items-center gap-2"
+                        onClick={() => setActiveTab("video")}
+                        className="px-6 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer"
                       >
-                        <RotateCcw className="w-4 h-4" />
-                        <span>Retake Assessment</span>
+                        Resume Tutorial Video
                       </button>
                     </div>
-                  </div>
+                  );
+                }
 
-                  {/* Question Review Breakdown */}
-                  {testResult.questions && testResult.questions.length > 0 && (
-                    <div className="space-y-4">
-                      <h4 className="text-sm font-bold text-vcet-dark">Answer Status Review</h4>
-                      {testResult.questions.map((q, qIdx) => (
-                        <div
-                          key={qIdx}
-                          className="p-5 rounded-2xl border border-vcet-gray-border bg-white text-left space-y-3"
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="text-sm font-bold text-vcet-dark">
-                              {qIdx + 1}. {q.questionText}
+                return null;
+                   if (testResult) {
+                  return (
+                    /* Assessment Result Review Panel */
+                    <div className="space-y-6">
+                      <div className="p-6 sm:p-8 rounded-2xl border border-vcet-gray-border bg-white text-center space-y-4">
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border border-vcet-blue/20 bg-vcet-blue/10 text-vcet-blue">
+                          <Award className="w-7 h-7" />
+                        </div>
+
+                        <div>
+                          <span className="text-xs uppercase font-bold tracking-wider text-vcet-dark">
+                            Assessment Result
+                          </span>
+                          <h2 className="text-2xl sm:text-3xl font-bold text-vcet-dark mt-1">
+                            Score: {testResult.scorePercentage}%
+                          </h2>
+                          <p className="text-sm text-vcet-dark mt-2">
+                            {testResult.passed
+                              ? `Passed! Appreciation Certificate is issued.`
+                              : `Score did not meet the 50% passing threshold. Please review and try again.`}
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                          {testResult.passed && certificate && (
+                            <button
+                              onClick={() => setShowCertificateModal(true)}
+                              className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
+                            >
+                              <Award className="w-4 h-4" />
+                              <span>View Appreciation Certificate</span>
+                            </button>
+                          )}
+
+                          {testResult.passed && nextModule && (
+                            <button
+                              onClick={() => navigate(`/courses/${courseId}/module/${nextModule._id || nextModule.moduleNumber}`)}
+                              className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
+                            >
+                              <span>Proceed to Module {nextModule.moduleNumber}</span>
+                              <ArrowRight className="w-4 h-4" />
+                            </button>
+                          )}
+
+                          <button
+                            onClick={handleRetryTest}
+                            className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-vcet-dark font-semibold text-xs transition border border-vcet-gray-border flex items-center gap-2"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                            <span>Retake Assessment</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Question Review Breakdown */}
+                      {testResult.questions && testResult.questions.length > 0 && (
+                        <div className="space-y-4">
+                          <h4 className="text-sm font-bold text-vcet-dark">Answer Status Review</h4>
+                          {testResult.questions.map((q, qIdx) => (
+                            <div
+                              key={qIdx}
+                              className="p-5 rounded-2xl border border-vcet-gray-border bg-white text-left space-y-3"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <span className="text-sm font-bold text-vcet-dark">
+                                  {qIdx + 1}. {q.questionText}
+                                </span>
+                                {q.isCorrect ? (
+                                  <span className="px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
+                                    Correct ✓
+                                  </span>
+                                ) : (
+                                  <span className="px-2.5 py-0.5 rounded bg-red-50 text-red-700 text-xs font-bold border border-red-200">
+                                    Incorrect ✗
+                                  </span>
+                                )}
+                              </div>
+
+                              <div className="space-y-1.5 text-xs font-medium">
+                                {q.options?.map((opt, optIdx) => {
+                                  const isSelected = Number(q.selectedAnswer) === optIdx;
+                                  return (
+                                    <div
+                                      key={optIdx}
+                                      className={`p-2.5 rounded-xl border ${
+                                        isSelected
+                                          ? q.isCorrect
+                                            ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold"
+                                            : "bg-red-50 border-red-300 text-red-800 font-semibold"
+                                          : "bg-white border-vcet-gray-border text-vcet-dark"
+                                      }`}
+                                    >
+                                      {opt} {isSelected && (q.isCorrect ? " (Your Answer - Correct)" : " (Your Answer - Incorrect)")}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                return (
+                  /* Assessment Questions Form */
+                  <div className="space-y-6">
+                    <div className="bg-white border border-vcet-gray-border rounded-2xl p-5 flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-base font-bold text-vcet-dark">
+                          Module {currentModNumber} Knowledge Assessment
+                        </h3>
+                        <p className="text-xs text-vcet-dark">
+                          {currentModule?.mcqs?.length || 0} Questions • Minimum 50% score required to pass and unlock Module {currentModNumber + 1}.
+                        </p>
+                      </div>
+                      <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-slate-100 text-vcet-dark border border-vcet-gray-border">
+                        Answered: {Object.keys(testAnswers).length} / {currentModule?.mcqs?.length || 0}
+                      </span>
+                    </div>
+
+                    {/* Questions List */}
+                    <div className="space-y-6">
+                      {currentModule?.mcqs?.map((q, qIdx) => (
+                        <div key={qIdx} className="bg-white border border-vcet-gray-border rounded-2xl p-6 space-y-4">
+                          <div className="flex items-start gap-3">
+                            <span className="flex-shrink-0 w-7 h-7 rounded-xl bg-vcet-blue/10 text-vcet-blue font-bold text-xs flex items-center justify-center border border-vcet-blue/20">
+                              {qIdx + 1}
                             </span>
-                            {q.isCorrect ? (
-                              <span className="px-2.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-xs font-bold border border-emerald-200">
-                                Correct ✓
-                              </span>
-                            ) : (
-                              <span className="px-2.5 py-0.5 rounded bg-red-50 text-red-700 text-xs font-bold border border-red-200">
-                                Incorrect ✗
-                              </span>
-                            )}
+                            <h4 className="text-sm sm:text-base font-bold text-vcet-dark leading-snug">
+                              {q.question}
+                            </h4>
                           </div>
 
-                          <div className="space-y-1.5 text-xs font-medium">
+                          {/* Options */}
+                          <div className="space-y-2.5 pt-1">
                             {q.options?.map((opt, optIdx) => {
-                              const isSelected = Number(q.selectedAnswer) === optIdx;
+                              const isSelected = testAnswers[qIdx] === optIdx;
                               return (
-                                <div
+                                <button
                                   key={optIdx}
-                                  className={`p-2.5 rounded-xl border ${
+                                  type="button"
+                                  onClick={() => handleSelectAnswer(qIdx, optIdx)}
+                                  className={`w-full text-left p-3.5 sm:p-4 rounded-xl text-xs sm:text-sm transition cursor-pointer flex items-center justify-between border ${
                                     isSelected
-                                      ? q.isCorrect
-                                        ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold"
-                                        : "bg-red-50 border-red-300 text-red-800 font-semibold"
-                                      : "bg-white border-vcet-gray-border text-vcet-dark"
+                                      ? "bg-vcet-blue text-white border-vcet-blue font-semibold"
+                                      : "bg-white hover:bg-slate-50 text-vcet-dark border-vcet-gray-border"
                                   }`}
                                 >
-                                  {opt} {isSelected && (q.isCorrect ? " (Your Answer - Correct)" : " (Your Answer - Incorrect)")}
-                                </div>
+                                  <span>{opt}</span>
+                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                    isSelected ? "border-white bg-white text-vcet-blue" : "border-vcet-gray-border"
+                                  }`}>
+                                    {isSelected && <div className="w-2 h-2 rounded-full bg-vcet-blue" />}
+                                  </div>
+                                </button>
                               );
                             })}
                           </div>
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
-              ) : (
-                /* Assessment Questions Form */
-                <div className="space-y-6">
-                  <div className="bg-white border border-vcet-gray-border rounded-2xl p-5 flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h3 className="text-base font-bold text-vcet-dark">
-                        Module {currentModNumber} Knowledge Assessment
-                      </h3>
-                      <p className="text-xs text-vcet-dark">
-                        {currentModule?.mcqs?.length || 0} Questions • Minimum 50% score required to pass and unlock Module {currentModNumber + 1}.
-                      </p>
+
+                    {/* Submit Button */}
+                    <div className="pt-4 flex justify-end">
+                      <button
+                        onClick={handleSubmitTest}
+                        disabled={submittingTest}
+                        className="px-8 py-3 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-sm transition cursor-pointer shadow-sm disabled:opacity-50 flex items-center gap-2"
+                      >
+                        {submittingTest ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            <span>Evaluating Answers...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Submit Assessment</span>
+                          </>
+                        )}
+                      </button>
                     </div>
-                    <span className="text-xs font-mono font-bold px-3 py-1 rounded-lg bg-slate-100 text-vcet-dark border border-vcet-gray-border">
-                      Answered: {Object.keys(testAnswers).length} / {currentModule?.mcqs?.length || 0}
-                    </span>
                   </div>
-
-                  {/* Questions List */}
-                  <div className="space-y-6">
-                    {currentModule?.mcqs?.map((q, qIdx) => (
-                      <div key={qIdx} className="bg-white border border-vcet-gray-border rounded-2xl p-6 space-y-4">
-                        <div className="flex items-start gap-3">
-                          <span className="flex-shrink-0 w-7 h-7 rounded-xl bg-vcet-blue/10 text-vcet-blue font-bold text-xs flex items-center justify-center border border-vcet-blue/20">
-                            {qIdx + 1}
-                          </span>
-                          <h4 className="text-sm sm:text-base font-bold text-vcet-dark leading-snug">
-                            {q.question}
-                          </h4>
-                        </div>
-
-                        {/* Options */}
-                        <div className="space-y-2.5 pt-1">
-                          {q.options?.map((opt, optIdx) => {
-                            const isSelected = testAnswers[qIdx] === optIdx;
-                            return (
-                              <button
-                                key={optIdx}
-                                type="button"
-                                onClick={() => handleSelectAnswer(qIdx, optIdx)}
-                                className={`w-full text-left p-3.5 sm:p-4 rounded-xl text-xs sm:text-sm transition cursor-pointer flex items-center justify-between border ${
-                                  isSelected
-                                    ? "bg-vcet-blue text-white border-vcet-blue font-semibold"
-                                    : "bg-white hover:bg-slate-50 text-vcet-dark border-vcet-gray-border"
-                                }`}
-                              >
-                                <span>{opt}</span>
-                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                  isSelected ? "border-white bg-white text-vcet-blue" : "border-vcet-gray-border"
-                                }`}>
-                                  {isSelected && <div className="w-2 h-2 rounded-full bg-vcet-blue" />}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Submit Button */}
-                  <div className="pt-4 flex justify-end">
-                    <button
-                      onClick={handleSubmitTest}
-                      disabled={submittingTest}
-                      className="px-8 py-3 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-sm transition cursor-pointer shadow-sm disabled:opacity-50 flex items-center gap-2"
-                    >
-                      {submittingTest ? (
-                        <>
-                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>Evaluating Answers...</span>
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-4 h-4" />
-                          <span>Submit Assessment</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           )}
         </main>
@@ -1042,7 +1185,13 @@ export default function CourseLearningPage() {
             {allModulesMap.map((m, index) => {
               const mNum = m.moduleNumber || index + 1;
               const isCurrent = String(m._id) === String(currentModule?._id);
-              const isPassed = Boolean(m.testPassed || m.completed);
+              const isPassed = Boolean(
+                m.isCompleted ||
+                m.status === "module_completed" ||
+                m.testPassed ||
+                m.codingPassed ||
+                m.completed
+              );
               const isUnlocked = Boolean(m.isUnlocked);
 
               return (
@@ -1093,7 +1242,7 @@ export default function CourseLearningPage() {
                   </h4>
 
                   <div className="flex items-center gap-2 pt-0.5 flex-wrap">
-                    {m.hasVideo !== false && (
+                    {(m.hasVideo || m.videoUrl || (m.videos && m.videos.length > 0)) && (
                       <span className="text-[10px] text-vcet-blue font-semibold flex items-center gap-1">
                         <Video className="w-2.5 h-2.5" /> Video
                       </span>

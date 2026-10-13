@@ -32,7 +32,6 @@ const NAV_LINKS = [
   { name: "Home", href: "/", icon: Home },
   { name: "Departments", href: "/departments", icon: Layers },
   { name: "PrepZone", href: "/courses", icon: BookOpen },
-  { name: "Fundamentals", href: "/fundamentals", icon: Award },
   { name: "Tech Pulse", href: "/updates", icon: Zap },
   {
     name: "Announcements",

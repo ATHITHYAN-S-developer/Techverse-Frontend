@@ -20,6 +20,7 @@ import {
   X,
   Sparkles,
   Layout,
+  Lock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useToast } from "../../context/ToastContext";
@@ -106,6 +107,7 @@ export default function ModuleCodingChallenge({
   module,
   courseSlug,
   onProceedToTest,
+  onCodingComplete,
 }) {
   const { showSuccess, showError } = useToast();
   const problems = module?.codingProblems || [];
@@ -121,8 +123,12 @@ export default function ModuleCodingChallenge({
   const [executionResult, setExecutionResult] = useState(null);
   const [copiedKey, setCopiedKey] = useState(null);
 
-  // Full Screen State
+  // Full Screen State & Auto Full Screen Prompt
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showExamRulesModal, setShowExamRulesModal] = useState(true);
+
+  // Proctoring tab switch counter
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
 
   // Question Visibility States
   // On desktop: show/hide question panel
@@ -131,6 +137,26 @@ export default function ModuleCodingChallenge({
   const [mobileTab, setMobileTab] = useState("editor");
   // Question Quick-View Modal
   const [showQuestionModal, setShowQuestionModal] = useState(false);
+
+  // Track browser tab switching strictly via visibilitychange
+  // Note: mobile internal tab clicks (Question, Test Cases, Output) stay on this page
+  // and NEVER set visibilityState to 'hidden'
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        setTabSwitchCount((prev) => {
+          const nextCount = prev + 1;
+          showError(`⚠️ Proctoring Warning: Tab switch detected (Count: ${nextCount}). Tab switching is strictly monitored.`);
+          return nextCount;
+        });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [showError]);
 
   // Sync starter code when switching problems or languages
   useEffect(() => {
@@ -254,6 +280,10 @@ export default function ModuleCodingChallenge({
             ? "🎉 All test cases passed! Solution successfully accepted."
             : "✓ Public test cases passed!"
         );
+
+        if (isSubmit) {
+          onCodingComplete?.(res);
+        }
       } else {
         if (res.status === "Compilation Error") {
           showError("Compilation error in your code. Check the console for details.");
@@ -471,6 +501,20 @@ export default function ModuleCodingChallenge({
               ))}
             </select>
           </div>
+          {/* Proctoring Status Pill */}
+          <div className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border ${
+            inFullscreen
+              ? "bg-slate-900 border-slate-700 text-slate-300"
+              : "bg-slate-50 border-slate-200 text-slate-700"
+          }`}>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${tabSwitchCount > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
+            <span>Proctor Mode: No Paste</span>
+            {tabSwitchCount > 0 && (
+              <span className="text-amber-500 font-extrabold ml-1">
+                • Tab Switches: {tabSwitchCount}
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Right Toolbar Items: Fullscreen Toggle, Run Code, Submit */}
@@ -533,8 +577,29 @@ export default function ModuleCodingChallenge({
         </div>
       </div>
 
-      {/* Editor Canvas Container */}
+      {/* Editor Canvas Container (Blocked Copy/Paste & Proctor Monitored) */}
       <div
+        onPaste={(e) => {
+          e.preventDefault();
+          showError("Copy/Paste is disabled during this coding assessment.");
+        }}
+        onCopy={(e) => {
+          e.preventDefault();
+          showError("Copying code is disabled during this coding assessment.");
+        }}
+        onCut={(e) => {
+          e.preventDefault();
+          showError("Cutting code is prohibited during this coding assessment.");
+        }}
+        onKeyDownCapture={(e) => {
+          if (
+            (e.ctrlKey || e.metaKey) &&
+            ["c", "v", "x", "C", "V", "X"].includes(e.key)
+          ) {
+            e.preventDefault();
+            showError("Clipboard actions (Copy/Paste) are blocked during coding assessment.");
+          }
+        }}
         className={`border rounded-2xl overflow-hidden shadow-xs flex flex-col flex-1 min-h-[350px] ${
           inFullscreen ? "bg-slate-950 border-slate-800 h-[60vh]" : "bg-white border-slate-200 h-[450px]"
         }`}
@@ -915,6 +980,75 @@ export default function ModuleCodingChallenge({
                 className="px-5 py-2 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs transition cursor-pointer"
               >
                 Back to Code Editor
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EXAM RULES & FULL SCREEN AUTO-PROMPT MODAL */}
+      {showExamRulesModal && (
+        <div className="fixed inset-0 z-[99999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-vcet-blue/10 text-vcet-blue border border-vcet-blue/20 flex items-center justify-center shrink-0">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900">
+                  Coding Assessment Mode
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Proctored environment guidelines
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3 text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+              <div className="flex items-start gap-2.5">
+                <Maximize2 className="w-4 h-4 text-vcet-blue shrink-0 mt-0.5" />
+                <span>
+                  <strong>Full Screen:</strong> Recommended for an immersive, distraction-free environment.
+                </span>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Tab Switch Monitoring:</strong> Navigating away to other browser tabs or windows is logged.
+                </span>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <Lock className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Copy & Paste Blocked:</strong> Clipboard pasting is disabled in the code editor.
+                </span>
+              </div>
+              <div className="flex items-start gap-2.5 text-slate-500 text-[11px] pt-1 border-t border-slate-200">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Mobile Friendly:</strong> Switching between Question, Test Cases, or Output tabs within this page is completely allowed and will <em>not</em> count as a tab switch.
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowExamRulesModal(false);
+                  handleEnterFullscreen();
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+              >
+                <Maximize2 className="w-4 h-4" />
+                <span>Enable Full Screen Automatically</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowExamRulesModal(false)}
+                className="w-full py-2 px-4 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs border border-slate-200 transition cursor-pointer text-center"
+              >
+                Continue in Standard Window
               </button>
             </div>
           </div>
