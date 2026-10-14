@@ -212,42 +212,6 @@ export default function CoursesPage() {
           </div>
         )}
 
-        {/* Domain Category Selector Pills */}
-        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar pb-1">
-          {categories.map((cat) => {
-            const IconComponent = CATEGORY_ICONS[cat] || Layers;
-            const isSelected = categoryFilter === cat;
-            const count =
-              cat === "ALL"
-                ? courses.length
-                : courses.filter((c) => c.category?.toLowerCase() === cat.toLowerCase()).length;
-
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setCategoryFilter(cat)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm transition-all duration-150 cursor-pointer select-none shrink-0 ${
-                  isSelected
-                    ? "bg-sky-100 text-vcet-blue border-2 border-vcet-blue font-black shadow-2xs"
-                    : "bg-white text-slate-700 hover:bg-sky-50/70 border border-slate-200/90 font-semibold"
-                }`}
-              >
-                <IconComponent size={16} />
-                <span>{cat === "ALL" ? "All Domains" : cat}</span>
-                <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-black ${
-                    isSelected
-                      ? "bg-vcet-blue text-white"
-                      : "bg-slate-100 text-slate-600"
-                  }`}
-                >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
 
         {/* Search, Status Tabs & Filters Bar */}
         <div className="bg-white rounded-2xl shadow-xs border border-slate-200/80 p-4 sm:p-5">
