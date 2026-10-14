@@ -14,7 +14,6 @@ import {
   ChevronRight,
   RefreshCw,
   Maximize2,
-  Minimize2,
   Eye,
   EyeOff,
   BookOpen,
@@ -23,6 +22,7 @@ import {
   Sparkles,
   Layout,
   Lock,
+  LogOut,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useToast } from "../../context/ToastContext";
@@ -176,6 +176,8 @@ export default function ModuleCodingChallenge({
   const [mobileTab, setMobileTab] = useState("editor");
   // Question Quick-View Modal
   const [showQuestionModal, setShowQuestionModal] = useState(false);
+  // Exit-exam confirmation dialog (sanctioned way to leave the proctored view)
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
 
   // Keep the selected language within the course's allowed set.
   useEffect(() => {
@@ -563,16 +565,23 @@ export default function ModuleCodingChallenge({
     }
   };
 
-  // The exit control never releases the student — it only records a violation.
-  // (After a submission it simply closes the view.)
+  // The "Exit" control is a sanctioned way out: it asks for confirmation and,
+  // on approval, leaves the proctored view and returns to the course page.
+  // It is NOT counted as a proctoring violation.
   const handleExitFullscreen = () => {
-    if (isAssessmentOver()) {
-      finishAssessment();
-      return;
-    }
-    registerFullscreenExit(
-      "You tried to exit full screen. Submitting your solution is the only way to finish."
-    );
+    setShowExitConfirm(true);
+  };
+
+  const handleCancelExit = () => setShowExitConfirm(false);
+
+  const handleConfirmExit = () => {
+    setShowExitConfirm(false);
+    // Mark as a deliberate exit so the fullscreenchange handler stays silent.
+    suppressFsViolationRef.current = true;
+    unlockKeyboard();
+    setIsFullscreen(false);
+    exitNativeFullscreen();
+    navigate(`/courses/${courseSlug}`, { replace: true });
   };
 
   const handleToggleFullscreen = () => {
@@ -1203,8 +1212,8 @@ export default function ModuleCodingChallenge({
                 onClick={handleExitFullscreen}
                 className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
               >
-                <Minimize2 className="w-3.5 h-3.5" />
-                <span>Exit Full Screen (Esc)</span>
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Exit</span>
               </button>
             </div>
           </div>
@@ -1237,6 +1246,48 @@ export default function ModuleCodingChallenge({
               {renderEditorWorkspace(true)}
             </div>
           </div>
+
+          {/* EXIT EXAM CONFIRMATION DIALOG */}
+          {showExitConfirm && (
+            <div className="fixed inset-0 z-[99999999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0">
+                    <LogOut className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">Exit the exam?</h3>
+                    <p className="text-xs text-slate-500">
+                      You are about to leave the coding assessment.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  Leaving now returns you to the course page. Your code for this attempt
+                  will <strong>not</strong> be submitted, so the module stays incomplete
+                  until you come back and submit a passing solution.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={handleCancelExit}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
+                  >
+                    Stay in Exam
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirmExit}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition cursor-pointer shadow-sm"
+                  >
+                    Yes, Exit Exam
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>,
         document.body
       )
@@ -1438,7 +1489,7 @@ export default function ModuleCodingChallenge({
               <div className="flex items-start gap-2.5">
                 <Maximize2 className="w-4 h-4 text-vcet-blue shrink-0 mt-0.5" />
                 <span>
-                  <strong>Full Screen (Mandatory):</strong> Browser tabs are hidden while you solve. Pressing ESC, swiping, or leaving full screen by any means is recorded as a violation and you are snapped back to full screen. Submitting your solution is the only way to exit.
+                  <strong>Full Screen (Mandatory):</strong> Browser tabs are hidden while you solve. Pressing ESC, swiping, or leaving full screen by any means is recorded as a violation and you are snapped back to full screen. To leave the assessment deliberately, use the <strong>Exit</strong> button in the top bar and confirm.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
