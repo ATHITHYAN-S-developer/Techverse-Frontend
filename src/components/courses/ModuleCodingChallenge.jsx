@@ -788,20 +788,23 @@ export default function ModuleCodingChallenge({
             <span>View Question</span>
           </button>
 
-          {/* Toggle Question Panel Button (Desktop) */}
-          <button
-            type="button"
-            onClick={() => setShowQuestionPanel((prev) => !prev)}
-            className={`hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
-              showQuestionPanel
-                ? inFullscreen ? "bg-slate-700 border-slate-600 text-slate-300" : "bg-slate-100 border-slate-200 text-slate-700"
-                : "bg-emerald-50 border-emerald-200 text-emerald-700"
-            }`}
-            title={showQuestionPanel ? "Collapse Question to widen editor" : "Show Question alongside editor"}
-          >
-            <Layout className="w-3.5 h-3.5" />
-            <span>{showQuestionPanel ? "Hide Split View" : "Show Split View"}</span>
-          </button>
+          {/* Toggle Question Panel Button (Desktop) — hidden in fullscreen where
+              the problem panel has its own Collapse control */}
+          {!inFullscreen && (
+            <button
+              type="button"
+              onClick={() => setShowQuestionPanel((prev) => !prev)}
+              className={`hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer ${
+                showQuestionPanel
+                  ? "bg-slate-100 border-slate-200 text-slate-700"
+                  : "bg-emerald-50 border-emerald-200 text-emerald-700"
+              }`}
+              title={showQuestionPanel ? "Collapse Question to widen editor" : "Show Question alongside editor"}
+            >
+              <Layout className="w-3.5 h-3.5" />
+              <span>{showQuestionPanel ? "Hide Split View" : "Show Split View"}</span>
+            </button>
+          )}
 
           {/* Language Selector — restricted to the languages allowed for this course */}
           <div className="flex items-center gap-1.5">
@@ -844,29 +847,19 @@ export default function ModuleCodingChallenge({
 
         {/* Right Toolbar Items: Fullscreen Toggle, Run Code, Submit */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Full Screen Action Button (Labeled & Prominent) */}
-          <button
-            type="button"
-            onClick={handleToggleFullscreen}
-            className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer shadow-xs ${
-              inFullscreen
-                ? "bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border-rose-500/40"
-                : "bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300"
-            }`}
-            title={inFullscreen ? "Exit Fullscreen (Esc)" : "Expand to Full Screen"}
-          >
-            {inFullscreen ? (
-              <>
-                <Minimize2 className="w-3.5 h-3.5 text-rose-400" />
-                <span>Exit Full Screen</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-3.5 h-3.5 text-vcet-blue" />
-                <span>Full Screen</span>
-              </>
-            )}
-          </button>
+          {/* Enter Full Screen Button — hidden while already fullscreen where
+              the top Coding Arena bar provides the exit control */}
+          {!inFullscreen && (
+            <button
+              type="button"
+              onClick={handleToggleFullscreen}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold border transition cursor-pointer shadow-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300"
+              title="Expand to Full Screen"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-vcet-blue" />
+              <span>Full Screen</span>
+            </button>
+          )}
 
           <button
             type="button"
