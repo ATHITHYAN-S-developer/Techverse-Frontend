@@ -99,7 +99,7 @@ export default function App() {
               <Route path="/training" element={<Navigate to="/courses" replace />} />
               <Route path="/companies/:company" element={<CompanyDetailPage />} />
               <Route path="/updates" element={<UpdatesPage />} />
-              <Route path="/youtube" element={<YouTubePage />} />
+              <Route path="/youtube" element={<Navigate to="/updates?type=youtube" replace />} />
               <Route path="/aptitude" element={<AptitudePage />} />
               <Route path="/announcements" element={<AnnouncementsPage />} />
               <Route path="/courses" element={<CoursesPage />} />

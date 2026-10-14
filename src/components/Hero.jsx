@@ -34,7 +34,7 @@ export default function Hero() {
             </span>
           </motion.h1>
 
-          {/* Elegant Cursive Quote: "One Point ∞ Endless Knowledge" */}
+          {/* Elegant Cursive Quote: "One Portal ∞ Endless Knowledge" */}
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -47,7 +47,7 @@ export default function Hero() {
               }}
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl text-white/95 font-normal tracking-wide drop-shadow-[0_3px_16px_rgba(0,0,0,0.85)] px-4 py-1 flex items-center justify-center gap-2.5 sm:gap-4"
             >
-              <span>        One Point</span>
+              <span>        One Portal</span>
               <Infinity className="w-8 h-8 sm:w-11 sm:h-11 md:w-14 md:h-14 lg:w-16 lg:h-16 inline text-white drop-shadow-[0_3px_12px_rgba(255,255,255,0.35)] shrink-0 stroke-[2.3] mx-1" />
               <span>Endless Knowledge</span>
             </p>

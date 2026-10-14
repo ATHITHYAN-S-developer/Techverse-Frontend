@@ -823,7 +823,7 @@ export default function AdminCourseModulesPage() {
             <Layers className="w-5 h-5 text-vcet-blue" />
           </span>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Students Course Module
+            Course Module
           </h1>
         </div>
 
@@ -1174,23 +1174,7 @@ export default function AdminCourseModulesPage() {
             <p className="text-xs font-bold text-slate-600">Loading course curriculum modules...</p>
           </div>
         ) : modules.length === 0 ? (
-          <div className="p-12 sm:p-16 text-center bg-white rounded-3xl border border-slate-200/80 space-y-3 shadow-xs">
-            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-50 text-vcet-blue flex items-center justify-center">
-              <BookOpen className="w-7 h-7" />
-            </div>
-            <h3 className="text-base font-extrabold text-slate-800">
-              No Modules Created Yet
-            </h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              Start structuring this course curriculum by clicking "Add Module" to add video lectures, coding exercises, or MCQs.
-            </p>
-            <button
-              onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-vcet-blue text-white font-bold text-xs shadow-xs hover:bg-vcet-blue-deep transition-all cursor-pointer"
-            >
-              <Plus className="w-4 h-4" /> Create First Module
-            </button>
-          </div>
+          <div className="grid grid-cols-1 gap-4" />
         ) : filteredModules.length === 0 ? (
           <div className="p-10 text-center bg-white rounded-3xl border border-slate-200/80 space-y-2 shadow-xs">
             <p className="text-xs font-bold text-slate-500">
@@ -1478,7 +1462,7 @@ export default function AdminCourseModulesPage() {
                   {editingModule ? "EDIT MODULE CONTENT" : "CREATE NEW MODULE"}
                 </span>
                 <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-0.5">
-                  {editingModule ? `Editing: ${editingModule.title}` : "Students Course Module Builder"}
+                  {editingModule ? `Editing: ${editingModule.title}` : "Course Module Builder"}
                 </h3>
               </div>
               <button

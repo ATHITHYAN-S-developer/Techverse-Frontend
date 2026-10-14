@@ -160,7 +160,7 @@ export default function Domains({ resources = [] }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 lg:gap-12">
           {/* LEFT: Uniform Framed Image */}
           <div
-            onClick={() => navigate("/youtube")}
+            onClick={() => navigate("/updates?type=youtube")}
             className="w-full lg:w-[48%] h-[220px] sm:h-[380px] lg:h-[420px] relative group cursor-pointer overflow-hidden rounded-2xl sm:rounded-3xl shadow-lg border border-slate-200/80 flex shrink-0 order-2 lg:order-1"
           >
             <img
@@ -244,7 +244,7 @@ export default function Domains({ resources = [] }) {
               >
                 <button
                   type="button"
-                  onClick={() => navigate("/youtube")}
+                  onClick={() => navigate("/updates?type=youtube")}
                   className="group relative inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-vcet-blue hover:bg-vcet-blue-hover text-white text-xs sm:text-sm font-bold uppercase tracking-wider shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer focus:ring-2 focus:ring-vcet-blue focus:ring-offset-2"
                 >
                   <span>Explore Tech Vision</span>

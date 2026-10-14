@@ -70,7 +70,7 @@ const ADMIN_NAV_TREE = [
     category: "CONTENT",
     items: [
       { name: "Courses", href: "/admin/courses", icon: BookOpen },
-      { name: "Students Course Module", href: "/admin/modules", icon: Puzzle },
+      { name: "Course Module", href: "/admin/modules", icon: Puzzle },
       { name: "Course Students", href: "/admin/modules/students", icon: GraduationCap },
     ],
   },

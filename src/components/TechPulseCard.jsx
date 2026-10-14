@@ -73,7 +73,7 @@ function CardMedia({ post, kind }) {
           }}
           className={`absolute inset-0 h-full w-full transition-opacity duration-300 ${
             loaded ? "opacity-100" : "opacity-0"
-          } ${kind === "youtube" ? "object-cover" : "object-contain p-6"}`}
+          } ${kind === "youtube" && !post.isChannel ? "object-cover" : "object-contain p-6"}`}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -81,7 +81,7 @@ function CardMedia({ post, kind }) {
         </div>
       )}
 
-      {kind === "youtube" && (
+      {kind === "youtube" && !post.isChannel && (
         <span
           className="pointer-events-none absolute inset-0 flex items-center justify-center"
           aria-hidden="true"
@@ -89,6 +89,13 @@ function CardMedia({ post, kind }) {
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/65 backdrop-blur-sm ring-1 ring-white/40">
             <Play className="h-5 w-5 translate-x-px fill-white text-white" />
           </span>
+        </span>
+      )}
+
+      {post.isChannel && (
+        <span className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-red-600/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white backdrop-blur-sm flex items-center gap-1 shadow-xs">
+          <Youtube className="w-3 h-3 text-white" />
+          <span>Curated Channel</span>
         </span>
       )}
 
@@ -218,11 +225,11 @@ export default function TechPulseCard({ post, onOpenRoadmap }) {
           Decorative: the card's single interactive element already covers it. */}
       <div className="mt-auto flex items-center justify-between border-t border-slate-200/70 pt-4">
         <span className="text-[11px] text-slate-500">
-          {isRoadmap ? "Step-by-step path" : hostFromUrl(href) || KIND_LABELS[kind]}
+          {isRoadmap ? "Step-by-step path" : post.isChannel ? "YouTube Channel" : hostFromUrl(href) || KIND_LABELS[kind]}
         </span>
         <span className="pointer-events-none inline-flex items-center gap-1.5 text-xs font-bold text-vcet-blue">
           <span className="border-b-2 border-vcet-blue pb-0.5">
-            {isRoadmap ? "View roadmap" : "Open"}
+            {isRoadmap ? "View roadmap" : post.isChannel ? "Visit Channel" : "Open"}
           </span>
           <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
         </span>

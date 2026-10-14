@@ -38,7 +38,7 @@ export const NAV_LINKS = [
   { name: "Home", href: "/" },
   { name: "Department E-Resources", href: "/departments" },
   { name: "Tech Pulse", href: "/updates" },
-  { name: "Tech Vision", href: "/youtube" },
+  { name: "Tech Vision", href: "/updates?type=youtube" },
   { name: "Skill Forge", href: "/aptitude" },
   { name: "Announcements", href: "/announcements" },
 ];

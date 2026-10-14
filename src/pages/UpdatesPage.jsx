@@ -66,6 +66,24 @@ function StatusPanel({ icon: Icon, title, message, actionLabel, onAction, tone =
   );
 }
 
+const CURATED_YOUTUBE_CHANNELS = RESOURCES.filter((item) => item.type === "youtube").map((item) => ({
+  id: item.id,
+  title: item.name,
+  name: item.name,
+  description: item.description,
+  category: item.category || "AI",
+  kind: "youtube",
+  channelName: item.name,
+  duration: "Curated Channel",
+  platform: "YouTube",
+  url: item.url,
+  videoUrl: item.url,
+  logoUrl: LOGO_MAP[item.id] || item.logoUrl || "",
+  tags: item.tags || [],
+  featured: Boolean(item.featured),
+  isChannel: true,
+}));
+
 export default function UpdatesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { showInfo } = useToast();
@@ -93,30 +111,47 @@ export default function UpdatesPage() {
     async function load() {
       setLoading(true);
       try {
-        // Fetch-all-once: this feed is small (tens of posts), so one request
-        // for everything plus one for counts beats a refetch per chip click.
-        // If the post count grows past a few hundred, the next step is to pass
-        // ?kind= + ?page= to the API and paginate per filter instead.
         const [list, countsData] = await Promise.all([
           techPulseService.getPublished(),
           techPulseService.getCounts(),
         ]);
         if (!active) return;
-        setPosts(list);
-        setCounts(countsData);
+
+        // Merge published posts with the curated YouTube channels (no duplicate IDs)
+        const existingIds = new Set((list || []).map((p) => p.id || p._id || p.slug || p.title));
+        const mergedCurated = CURATED_YOUTUBE_CHANNELS.filter(
+          (ch) => !existingIds.has(ch.id) && !existingIds.has(ch.title)
+        );
+        const combinedPosts = [...(list || []), ...mergedCurated];
+
+        setPosts(combinedPosts);
+
+        // Derive counts including the curated channels
+        const combinedCounts = { ...EMPTY_COUNTS, all: combinedPosts.length };
+        for (const post of combinedPosts) {
+          const kind = FILTER_KINDS.includes(post.kind) ? post.kind : "website";
+          combinedCounts[kind] = (combinedCounts[kind] || 0) + 1;
+        }
+        setCounts(combinedCounts);
         setError(null);
       } catch (err) {
         if (!active) return;
-        // Backend unreachable: keep the page usable with the curated list and
-        // surface a Retry rather than failing silently.
         console.warn("Using curated fallback for Tech Pulse resources:", err);
-        const fallback = RESOURCES.filter((item) => item.type === "updates").map((item) => ({
+        const fallbackWebsites = RESOURCES.filter((item) => item.type === "updates").map((item) => ({
           ...item,
+          title: item.name,
           logoUrl: item.logoUrl || LOGO_MAP[item.id] || "",
           kind: "website",
         }));
-        setPosts(fallback);
-        setCounts(EMPTY_COUNTS);
+        const allFallback = [...fallbackWebsites, ...CURATED_YOUTUBE_CHANNELS];
+        setPosts(allFallback);
+
+        const fallbackCounts = { ...EMPTY_COUNTS, all: allFallback.length };
+        for (const post of allFallback) {
+          const kind = FILTER_KINDS.includes(post.kind) ? post.kind : "website";
+          fallbackCounts[kind] = (fallbackCounts[kind] || 0) + 1;
+        }
+        setCounts(fallbackCounts);
         setError("The live Tech Pulse feed is unavailable right now.");
       } finally {
         if (active) setLoading(false);
@@ -357,8 +392,16 @@ export default function UpdatesPage() {
     <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-vcet-blue selection:text-white select-none">
       <ResourceListView
         resources={loading || error ? [] : filteredPosts}
-        pageTitle="Tech Pulse — Apps for Tech Updates"
-        badgeText="REAL-TIME TECH FEEDS & APPS"
+        pageTitle={
+          activeKind === "youtube"
+            ? "Tech Vision — Tech YouTube Channels & Videos"
+            : "Tech Pulse — Apps for Tech Updates"
+        }
+        badgeText={
+          activeKind === "youtube"
+            ? "CURATED VIDEO CHANNELS & REPOSITORIES"
+            : "REAL-TIME TECH FEEDS & APPS"
+        }
         ctaText="VIEW ANNOUNCEMENTS"
         ctaLink="/announcements"
         layout="grid"
