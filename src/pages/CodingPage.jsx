@@ -26,7 +26,6 @@ import {
   Cpu,
   RefreshCw,
   User,
-  AlertTriangle,
   Check,
   GraduationCap,
   Globe,
@@ -81,6 +80,13 @@ export default function CodingPage() {
   const [isTerminalCollapsed, setIsTerminalCollapsed] = useState(false);
   const [specTab, setSpecTab] = useState("description"); // "description" | "samples"
   const [copiedKey, setCopiedKey] = useState(null);
+
+  // Arena section switch + combined test attendance tracking
+  const [section, setSection] = useState("coding"); // "coding" | "mcq"
+  const [mcqAnswers, setMcqAnswers] = useState({});
+  const [mcqSubmitted, setMcqSubmitted] = useState(false);
+  const [codingSubmitted, setCodingSubmitted] = useState(false);
+  const [codingResult, setCodingResult] = useState(null);
 
   const isTeacherOrAdmin = user?.role === "faculty" || user?.role === "teacher" || user?.role === "admin";
 
@@ -146,20 +152,53 @@ export default function CodingPage() {
     setTestResults(null);
     setConsoleOutput("");
     setMobileTab("editor");
+    setSection("coding");
     setViewMode("compiler");
     if (!silent) showSuccess(`Loaded "${prob.title}" in the compiler`);
   };
 
-  // Open a whole module box (assessment track) straight into its compiler
-  const openModule = (test, specificProblem = null) => {
+  // Open a whole module box (assessment track) straight into its workspace.
+  // startSection: "coding" (default) or "mcq" to jump straight to the MCQ section.
+  const openModule = (test, specificProblem = null, startSection = "coding") => {
     if (!test) return;
     setCurrentTest(test);
-    const target = specificProblem || test.problems?.[0];
-    if (!target) {
+    setMcqAnswers({});
+    setMcqSubmitted(false);
+    setCodingSubmitted(false);
+    setCodingResult(null);
+    setSubmissionSummary(null);
+
+    const problems = test.problems || [];
+    const hasMcqs = (test.mcqs || []).length > 0;
+    const target = specificProblem || problems[0];
+
+    if (!target && !hasMcqs) {
       showInfo(`Assessment "${test.title}" does not have any questions authored yet.`);
       return;
     }
+
+    if (startSection === "mcq" && hasMcqs) {
+      setSelectedProblem(target || null);
+      if (target) setCode(target.starterCode?.[language] || target.starterCode?.python || "");
+      setTestResults(null);
+      setConsoleOutput("");
+      setMobileTab("editor");
+      setSection("mcq");
+      setViewMode("compiler");
+      return;
+    }
+
+    if (!target) {
+      showInfo(`Assessment "${test.title}" does not have any coding problems authored yet.`);
+      return;
+    }
     handleOpenCompiler(target, false);
+  };
+
+  // Mark an MCQ option as chosen
+  const handleSelectMcq = (questionIndex, optionIndex) => {
+    if (mcqSubmitted) return;
+    setMcqAnswers((prev) => ({ ...prev, [questionIndex]: optionIndex }));
   };
 
   // Toggle fullscreen mode
@@ -282,26 +321,20 @@ export default function CodingPage() {
         );
 
         setTestResults(result);
-
-        // Return to the problem list and surface the results
-        setViewMode("list");
-        if (document.fullscreenElement) {
-          document.exitFullscreen().catch(() => {});
-        }
-        setIsFullscreen(false);
-        setSubmissionSummary({
-          ...result,
-          problemTitle: selectedProblem.title,
-          problemId: selectedProblem._id,
-          language,
-        });
+        setCodingResult(result);
+        setCodingSubmitted(true);
 
         if (result.isAccepted || result.status === "Accepted") {
           confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-          showSuccess(`Accepted! All ${result.passedCases || result.totalCases}/${result.totalCases} test cases passed!`);
+          showSuccess(`Accepted! All ${result.passedCases || result.totalCases}/${result.totalCases} test cases passed! Moving to the MCQ section.`);
           refreshStreak();
         } else {
-          showInfo(`Assessment submitted! Passed ${result.passedCases || 0}/${result.totalCases || 0} test cases.`);
+          showInfo(`Solution submitted! Passed ${result.passedCases || 0}/${result.totalCases || 0} test cases. Moving to the MCQ section.`);
+        }
+
+        // Automatically navigate the student to the MCQ section of the assessment
+        if ((currentTest?.mcqs || []).length > 0) {
+          setSection("mcq");
         }
       } catch (err) {
         if (err?.busy) {
@@ -310,8 +343,6 @@ export default function CodingPage() {
         } else {
           showError("Submission failed. Please check network connection.");
         }
-        setViewMode("list");
-        setIsFullscreen(false);
       } finally {
         setIsSubmitting(false);
       }
@@ -324,6 +355,50 @@ export default function CodingPage() {
   const selectedIndex = allProblems.findIndex(
     (p) => (p._id || p.title) === (selectedProblem?._id || selectedProblem?.title)
   );
+
+  // MCQ section derived state + combined test gating
+  const testMcqs = currentTest?.mcqs || [];
+  const answeredMcqCount = testMcqs.reduce(
+    (count, _q, i) => count + (mcqAnswers[i] !== undefined ? 1 : 0),
+    0
+  );
+  const allMcqsAnswered = testMcqs.length === 0 || answeredMcqCount === testMcqs.length;
+  // Coding is only required when the assessment actually has coding problems
+  const codingRequirementMet = codingSubmitted || allProblems.length === 0;
+  const canSubmitTest = codingRequirementMet && allMcqsAnswered;
+
+  // Finish the whole assessment: requires coding submitted AND every MCQ answered
+  const handleSubmitTest = () => {
+    if (!currentTest) return;
+    if (!codingRequirementMet) {
+      showError("Please submit at least one coding solution before finishing the test.");
+      return;
+    }
+    if (!allMcqsAnswered) {
+      showError(`Please answer all MCQ questions before submitting (${answeredMcqCount}/${testMcqs.length} done).`);
+      return;
+    }
+
+    let correct = 0;
+    testMcqs.forEach((q, i) => {
+      if (Number(mcqAnswers[i]) === Number(q.correctAnswer)) correct += 1;
+    });
+
+    setMcqSubmitted(true);
+    setSubmissionSummary({
+      kind: "test",
+      testTitle: currentTest.title,
+      mcqCorrect: correct,
+      mcqTotal: testMcqs.length,
+      codingPassed: codingResult?.passedCases ?? codingResult?.passed ?? 0,
+      codingTotal: codingResult?.totalCases ?? codingResult?.total ?? 0,
+      codingStatus: codingResult?.status || "Submitted",
+    });
+
+    if (testMcqs.length > 0 && correct === testMcqs.length) {
+      confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
+    }
+  };
 
   if (loading && !currentTest) {
     return (
@@ -419,6 +494,8 @@ export default function CodingPage() {
               .map((test, tIdx) => {
                 const problemsList = test.problems || [];
                 const hasProblems = problemsList.length > 0;
+                const mcqList = test.mcqs || [];
+                const hasMcqs = mcqList.length > 0;
 
                 return (
                   <div
@@ -439,6 +516,11 @@ export default function CodingPage() {
                             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-100 text-blue-700">
                               {problemsList.length} {problemsList.length === 1 ? "Problem" : "Problems"}
                             </span>
+                            {hasMcqs && (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-violet-100 text-violet-700">
+                                {mcqList.length} MCQ{mcqList.length === 1 ? "" : "s"}
+                              </span>
+                            )}
                             <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-200 text-slate-700">
                               {test.difficulty || "Medium"}
                             </span>
@@ -449,16 +531,30 @@ export default function CodingPage() {
                         </div>
                       </div>
 
-                      {hasProblems && (
-                        <button
-                          type="button"
-                          onClick={() => openModule(test, problemsList[0])}
-                          className="shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all self-start sm:self-auto cursor-pointer"
-                        >
-                          <Play className="w-3.5 h-3.5 fill-white" />
-                          <span>Open Track</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
+                      {(hasProblems || hasMcqs) && (
+                        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+                          {hasMcqs && (
+                            <button
+                              type="button"
+                              onClick={() => openModule(test, null, "mcq")}
+                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white shadow-sm transition-all cursor-pointer"
+                            >
+                              <HelpCircle className="w-3.5 h-3.5" />
+                              <span>MCQ Section</span>
+                            </button>
+                          )}
+                          {hasProblems && (
+                            <button
+                              type="button"
+                              onClick={() => openModule(test, problemsList[0])}
+                              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm transition-all cursor-pointer"
+                            >
+                              <Play className="w-3.5 h-3.5 fill-white" />
+                              <span>Open Track</span>
+                              <ArrowRight className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
 
@@ -543,7 +639,7 @@ export default function CodingPage() {
       {/* Rendered via portal directly to document.body to ensure   */}
       {/* 100% viewport width/height, hiding all sidebars & banners */}
       {/* ======================================================== */}
-      {viewMode === "compiler" && selectedProblem && createPortal(
+      {viewMode === "compiler" && (selectedProblem || section === "mcq") && createPortal(
         <div className="fixed inset-0 z-[9999] w-screen h-screen bg-sky-50 text-slate-800 flex flex-col overflow-hidden select-text font-sans antialiased">
           {/* 1. TOP HEADER NAVIGATION BAR */}
           <header className="h-14 bg-white border-b border-slate-200 px-3 sm:px-6 flex items-center justify-between gap-3 shrink-0 shadow-lg select-none">
@@ -562,71 +658,101 @@ export default function CodingPage() {
               <div className="h-4 w-px bg-slate-200 hidden sm:block shrink-0" />
 
               <div className="min-w-0 flex items-center gap-2 sm:gap-2.5">
-                <h2 className="text-sm sm:text-base font-bold text-white tracking-tight truncate max-w-[140px] sm:max-w-xs md:max-w-md">
-                  {selectedProblem.title}
+                <h2 className="text-sm sm:text-base font-bold text-slate-900 tracking-tight truncate max-w-[140px] sm:max-w-xs md:max-w-md">
+                  {section === "mcq"
+                    ? `${currentTest?.title || "Assessment"} — MCQ Section`
+                    : selectedProblem?.title || currentTest?.title}
                 </h2>
-                <span
-                  className="md:hidden shrink-0 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold"
-                  title="Question number out of total"
-                >
-                  Q{selectedIndex + 1}/{allProblems.length}
-                </span>
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 border ${
-                    selectedProblem.difficulty === "Easy"
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : selectedProblem.difficulty === "Hard"
-                      ? "bg-rose-50 text-rose-700 border-rose-200"
-                      : "bg-amber-50 text-amber-700 border-amber-200"
-                  }`}
-                >
-                  {selectedProblem.difficulty || "Medium"}
-                </span>
+                {section === "coding" && selectedProblem && (
+                  <span
+                    className="md:hidden shrink-0 px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-bold"
+                    title="Question number out of total"
+                  >
+                    Q{selectedIndex + 1}/{allProblems.length}
+                  </span>
+                )}
+                {section === "coding" && selectedProblem && (
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0 border ${
+                      selectedProblem.difficulty === "Easy"
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : selectedProblem.difficulty === "Hard"
+                        ? "bg-rose-50 text-rose-700 border-rose-200"
+                        : "bg-amber-50 text-amber-700 border-amber-200"
+                    }`}
+                  >
+                    {selectedProblem.difficulty || "Medium"}
+                  </span>
+                )}
 
-                <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 pl-2 border-l border-slate-200 shrink-0 truncate">
-                  <User className="w-3.5 h-3.5 text-sky-600 shrink-0" />
-                  <span className="truncate">
-                    Author:{" "}
-                    <strong className="text-slate-700">
-                      {selectedProblem.author ||
-                        selectedProblem.createdByName ||
-                        currentTest?.createdBy?.name ||
-                        "Dr. S. K. Manikandan"}
-                    </strong>
-                  </span>
-                  <span className="text-[10px] font-bold bg-sky-500/10 text-sky-600 border border-sky-500/20 px-1.5 py-0.2 rounded-md">
-                    VCET Faculty
-                  </span>
-                </div>
+                {section === "coding" && selectedProblem && (
+                  <div className="hidden xl:flex items-center gap-1.5 text-xs text-slate-400 pl-2 border-l border-slate-200 shrink-0 truncate">
+                    <User className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                    <span className="truncate">
+                      Author:{" "}
+                      <strong className="text-slate-700">
+                        {selectedProblem.author ||
+                          selectedProblem.createdByName ||
+                          currentTest?.createdBy?.name ||
+                          "Dr. S. K. Manikandan"}
+                      </strong>
+                    </span>
+                    <span className="text-[10px] font-bold bg-sky-500/10 text-sky-600 border border-sky-500/20 px-1.5 py-0.2 rounded-md">
+                      VCET Faculty
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right: Language Dropdown, Reset, Fullscreen Toggle */}
+            {/* Right: Section Dropdown, Language Dropdown, Reset, Fullscreen Toggle */}
             <div className="flex items-center gap-2 shrink-0">
+              {/* Coding / MCQ Section switcher */}
               <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 sm:px-2.5 py-1">
-                <span className="text-[10px] uppercase font-bold text-slate-400 hidden sm:inline">Lang:</span>
+                <Layers className="w-3.5 h-3.5 text-violet-500" />
+                <span className="text-[10px] uppercase font-bold text-slate-400 hidden sm:inline">Section:</span>
                 <select
-                  value={language}
-                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  value={section}
+                  onChange={(e) => setSection(e.target.value)}
                   className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
                 >
-                  {SUPPORTED_LANGUAGES.map((l) => (
-                    <option key={l.id} value={l.id} className="bg-white text-slate-800">
-                      {l.name}
-                    </option>
-                  ))}
+                  <option value="coding" className="bg-white text-slate-800">
+                    Coding
+                  </option>
+                  <option value="mcq" className="bg-white text-slate-800">
+                    MCQ{testMcqs.length > 0 ? ` (${testMcqs.length})` : ""}
+                  </option>
                 </select>
               </div>
 
-              <button
-                type="button"
-                onClick={handleResetCode}
-                className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-sky-600 border border-slate-200 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
-                title="Reset code template"
-              >
-                <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
-                <span className="hidden lg:inline">Reset</span>
-              </button>
+              {section === "coding" && (
+                <>
+                  <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-2 sm:px-2.5 py-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 hidden sm:inline">Lang:</span>
+                    <select
+                      value={language}
+                      onChange={(e) => handleLanguageChange(e.target.value)}
+                      className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer"
+                    >
+                      {SUPPORTED_LANGUAGES.map((l) => (
+                        <option key={l.id} value={l.id} className="bg-white text-slate-800">
+                          {l.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleResetCode}
+                    className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-sky-600 border border-slate-200 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+                    title="Reset code template"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-slate-400" />
+                    <span className="hidden lg:inline">Reset</span>
+                  </button>
+                </>
+              )}
 
               <button
                 type="button"
@@ -639,6 +765,140 @@ export default function CodingPage() {
             </div>
           </header>
 
+          {/* ======================================================== */}
+          {/* SECTION: MCQ WORKSPACE                                    */}
+          {/* ======================================================== */}
+          {section === "mcq" && (
+            <main className="flex-1 min-h-0 overflow-y-auto bg-sky-50 p-3 sm:p-6">
+              <div className="max-w-3xl mx-auto space-y-4 pb-6">
+                {/* Section header card */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-violet-100 text-violet-700 flex items-center justify-center">
+                        <HelpCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-black text-slate-900">Multiple Choice Questions</h2>
+                        <p className="text-xs text-slate-500">{currentTest?.title}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600">
+                        {answeredMcqCount}/{testMcqs.length} answered
+                      </span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                          codingSubmitted
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}
+                      >
+                        {codingSubmitted ? "Coding submitted" : "Coding pending"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {testMcqs.length === 0 ? (
+                  <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center">
+                    <HelpCircle className="w-10 h-10 mx-auto text-slate-300 mb-2" />
+                    <p className="text-sm font-bold text-slate-700">No MCQs authored for this assessment</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Switch back to the Coding section using the Section dropdown above.
+                    </p>
+                  </div>
+                ) : (
+                  testMcqs.map((q, qi) => (
+                    <div
+                      key={q._id || qi}
+                      className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-sm font-bold text-slate-900 flex gap-2">
+                          <span className="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 text-xs font-black flex items-center justify-center shrink-0">
+                            {qi + 1}
+                          </span>
+                          <span>{q.question}</span>
+                        </h3>
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 shrink-0">
+                          {(q.marks || 1)} mark{(q.marks || 1) > 1 ? "s" : ""}
+                        </span>
+                      </div>
+
+                      <div className="grid gap-2">
+                        {(q.options || []).map((opt, oi) => {
+                          const chosen = mcqAnswers[qi] === oi;
+                          const isCorrect = mcqSubmitted && Number(q.correctAnswer) === oi;
+                          const isWrong = mcqSubmitted && chosen && Number(q.correctAnswer) !== oi;
+                          return (
+                            <button
+                              key={oi}
+                              type="button"
+                              onClick={() => handleSelectMcq(qi, oi)}
+                              disabled={mcqSubmitted}
+                              className={`w-full text-left px-3.5 py-2.5 rounded-xl border text-xs font-semibold flex items-center gap-3 transition-all ${
+                                isCorrect
+                                  ? "bg-emerald-50 border-emerald-300 text-emerald-800"
+                                  : isWrong
+                                  ? "bg-rose-50 border-rose-300 text-rose-800"
+                                  : chosen
+                                  ? "bg-violet-50 border-violet-300 text-violet-800"
+                                  : "bg-white border-slate-200 hover:border-violet-300 hover:bg-violet-50/40 text-slate-700"
+                              } ${mcqSubmitted ? "cursor-default" : "cursor-pointer"}`}
+                            >
+                              <span
+                                className={`w-6 h-6 rounded-lg flex items-center justify-center text-[11px] font-black shrink-0 ${
+                                  chosen || isCorrect ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-500"
+                                }`}
+                              >
+                                {String.fromCharCode(65 + oi)}
+                              </span>
+                              <span className="flex-1">{opt}</span>
+                              {isCorrect && <Check className="w-4 h-4 text-emerald-600 shrink-0" />}
+                              {isWrong && <XCircle className="w-4 h-4 text-rose-600 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {mcqSubmitted && q.explanation && (
+                        <p className="text-[11px] text-slate-500 bg-slate-50 border border-slate-100 rounded-xl p-3">
+                          <strong className="text-slate-700">Explanation:</strong> {q.explanation}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+
+                {/* Submit Test bar */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+                  <p className="text-xs text-slate-500 text-center sm:text-left">
+                    {!codingRequirementMet
+                      ? "Submit at least one coding solution to unlock the test submission."
+                      : !allMcqsAnswered
+                      ? `Answer all MCQs to finish the test (${answeredMcqCount}/${testMcqs.length} done).`
+                      : "All sections attended. You can submit the test."}
+                  </p>
+                  <button
+                    type="button"
+                    disabled={!canSubmitTest || mcqSubmitted}
+                    onClick={handleSubmitTest}
+                    className="shrink-0 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-md flex items-center gap-2 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    <span>{mcqSubmitted ? "Test Submitted" : "Submit Test"}</span>
+                  </button>
+                </div>
+              </div>
+            </main>
+          )}
+
+          {/* ======================================================== */}
+          {/* SECTION: CODING WORKSPACE                                 */}
+          {/* ======================================================== */}
+          {section === "coding" && (
+            <>
           {/* MOBILE SEGMENTED VIEW SWITCHER (< lg screens) */}
           <div className="lg:hidden flex items-center p-1 bg-slate-100 border-b border-slate-200 shrink-0">
             <button
@@ -1086,82 +1346,58 @@ export default function CodingPage() {
               <span>{isSubmitting ? "Testing..." : "Submit Solution"}</span>
             </button>
           </div>
+            </>
+          )}
 
           </div>,
         document.body
       )}
 
       {/* ======================================================== */}
-      {/* ASSESSMENT SUBMITTED RESULTS MODAL                     */}
+      {/* COMBINED TEST SUBMITTED RESULTS MODAL                    */}
       {submissionSummary && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 space-y-6 text-center">
-            <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-inner ${
-                submissionSummary.isAccepted || submissionSummary.status === "Accepted"
-                  ? "bg-emerald-100 text-emerald-600"
-                  : "bg-amber-100 text-amber-600"
-              }`}
-            >
-              {submissionSummary.isAccepted || submissionSummary.status === "Accepted" ? (
-                <CheckCircle className="w-9 h-9" />
-              ) : (
-                <AlertTriangle className="w-9 h-9" />
-              )}
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-inner bg-emerald-100 text-emerald-600">
+              <CheckCircle className="w-9 h-9" />
             </div>
 
             <div className="space-y-2">
-              <span
-                className={`px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase border ${
-                  submissionSummary.isAccepted || submissionSummary.status === "Accepted"
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-amber-50 text-amber-700 border-amber-200"
-                }`}
-              >
-                {submissionSummary.isAccepted || submissionSummary.status === "Accepted"
-                  ? "Assessment Concluded — Passed"
-                  : "Assessment Concluded — Evaluated"}
+              <span className="px-3 py-1 rounded-full text-[11px] font-black tracking-wider uppercase border bg-emerald-50 text-emerald-700 border-emerald-200">
+                Test Concluded — Submitted
               </span>
               <h3 className="text-xl sm:text-2xl font-black text-slate-900">
-                {submissionSummary.problemTitle || "Solution Submitted"}
+                {submissionSummary.testTitle || "Assessment Submitted"}
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed">
-                Your examination session has concluded and your solution was compiled against the evaluation test suite.
+                You attended both the coding and MCQ sections. Here is your combined assessment summary.
               </p>
             </div>
 
             {/* Score & Metrics Grid */}
-            <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Status</span>
-                <span
-                  className={`text-xs sm:text-sm font-black ${
-                    submissionSummary.isAccepted || submissionSummary.status === "Accepted"
-                      ? "text-emerald-600"
-                      : "text-amber-600"
-                  }`}
-                >
-                  {submissionSummary.status || "Evaluated"}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">MCQ Score</span>
+                <span className="text-lg font-black text-violet-600">
+                  {submissionSummary.mcqCorrect ?? 0} / {submissionSummary.mcqTotal ?? 0}
                 </span>
               </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Test Cases</span>
-                <span className="text-xs sm:text-sm font-mono font-black text-slate-900">
-                  {submissionSummary.passedCases ?? 0} / {submissionSummary.totalCases ?? 0}
-                </span>
-              </div>
-              <div>
-                <span className="text-[10px] uppercase font-bold text-slate-400 block">Runtime</span>
-                <span className="text-xs sm:text-sm font-mono font-bold text-slate-700">
-                  {submissionSummary.executionTime || "0.00"}s
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block">Coding Test Cases</span>
+                <span className="text-lg font-black text-emerald-600">
+                  {submissionSummary.codingPassed ?? 0} / {submissionSummary.codingTotal ?? 0}
                 </span>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={() => setSubmissionSummary(null)}
-              className="w-full py-3.5 rounded-2xl text-xs font-black bg-slate-900 hover:bg-slate-100 text-white transition-all cursor-pointer shadow-md active:scale-98"
+              onClick={() => {
+                setSubmissionSummary(null);
+                handleExitAssessment();
+                showSuccess("Test concluded. Great work!");
+              }}
+              className="w-full py-3.5 rounded-2xl text-xs font-black bg-slate-900 hover:bg-slate-800 text-white transition-all cursor-pointer shadow-md active:scale-98"
             >
               Back to Coding Arena
             </button>

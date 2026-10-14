@@ -925,17 +925,55 @@ export default function CourseLearningPage() {
                   );
                 }
 
+                const hasMCQ = currentModule?.hasMCQ !== undefined
+                  ? Boolean(currentModule.hasMCQ)
+                  : Boolean(currentModule?.mcqs && currentModule.mcqs.length > 0);
+
                 return (
-                  <ModuleCodingChallenge
-                    module={currentModule}
-                    courseSlug={courseId}
-                    allowedLanguages={course?.languages}
-                    onProceedToTest={() => {
-                      setActiveTab("test");
-                      if (!testStartTime) setTestStartTime(Date.now());
-                    }}
-                    onCodingComplete={handleCodingComplete}
-                  />
+                  <>
+                    {hasMCQ && (
+                      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-vcet-gray-border rounded-2xl p-4">
+                        <div className="flex items-center gap-2.5">
+                          <Code2 className="w-4 h-4 text-violet-600 shrink-0" />
+                          <div>
+                            <h4 className="text-xs font-bold text-vcet-dark">Section Switcher</h4>
+                            <p className="text-[11px] text-vcet-dark">
+                              Prefer theory first? Take the MCQ assessment now, then come back to coding anytime.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <HelpCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <select
+                            value="coding"
+                            onChange={(e) => {
+                              if (e.target.value === "test") {
+                                setActiveTab("test");
+                                if (!testStartTime) setTestStartTime(Date.now());
+                              }
+                            }}
+                            className="px-3 py-1.5 rounded-xl border border-vcet-gray-border bg-white text-xs font-bold text-vcet-dark focus:ring-2 focus:ring-vcet-blue cursor-pointer"
+                          >
+                            <option value="coding">Coding Challenge</option>
+                            <option value="test">
+                              Knowledge Assessment Test ({currentModule?.mcqs?.length || 0} MCQ)
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                    <ModuleCodingChallenge
+                      module={currentModule}
+                      courseSlug={courseId}
+                      allowedLanguages={course?.languages}
+                      onProceedToTest={() => {
+                        setActiveTab("test");
+                        if (!testStartTime) setTestStartTime(Date.now());
+                      }}
+                      onCodingComplete={handleCodingComplete}
+                    />
+                  </>
                 );
               })()}
             </div>
@@ -971,8 +1009,7 @@ export default function CourseLearningPage() {
                   );
                 }
 
-                return null;
-                   if (testResult) {
+                if (testResult) {
                   return (
                     /* Assessment Result Review Panel */
                     <div className="space-y-6">

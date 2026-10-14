@@ -196,6 +196,7 @@ export default function AdminCodingPage() {
     department: "ALL",
     departmentId: "",
     departmentName: "All VCETians",
+    mcqs: [],
   });
 
   useEffect(() => {
@@ -394,6 +395,7 @@ export default function AdminCodingPage() {
       department: userDept,
       departmentId: foundDept?._id || "",
       departmentName: foundDept?.name || "All VCETians",
+      mcqs: [],
     });
     setTestModalOpen(true);
   };
@@ -418,6 +420,14 @@ export default function AdminCodingPage() {
       department: deptCode,
       departmentId: t.departmentId || foundDept?._id || "",
       departmentName: t.departmentName || foundDept?.name || "All VCETians",
+      mcqs: (t.mcqs || []).map((q) => ({
+        question: q.question || "",
+        options: Array.isArray(q.options) && q.options.length ? [...q.options] : ["", ""],
+        correctAnswer: q.correctAnswer ?? 0,
+        explanation: q.explanation || "",
+        difficulty: q.difficulty || "Medium",
+        marks: q.marks || 1,
+      })),
     });
     setTestModalOpen(true);
   };
@@ -537,6 +547,62 @@ export default function AdminCodingPage() {
     setProblemForm({
       ...problemForm,
       tags: existing.filter((t) => t !== tagToRemove).join(", "),
+    });
+  };
+
+  // MCQ Authoring Helpers
+  const addMcq = () => {
+    setTestForm((prev) => ({
+      ...prev,
+      mcqs: [
+        ...(prev.mcqs || []),
+        { question: "", options: ["", "", "", ""], correctAnswer: 0, explanation: "", difficulty: "Medium", marks: 1 },
+      ],
+    }));
+  };
+
+  const removeMcq = (idx) => {
+    setTestForm((prev) => ({
+      ...prev,
+      mcqs: (prev.mcqs || []).filter((_, i) => i !== idx),
+    }));
+  };
+
+  const updateMcq = (idx, field, val) => {
+    setTestForm((prev) => {
+      const mcqs = [...(prev.mcqs || [])];
+      mcqs[idx] = { ...mcqs[idx], [field]: val };
+      return { ...prev, mcqs };
+    });
+  };
+
+  const updateMcqOption = (idx, optIdx, val) => {
+    setTestForm((prev) => {
+      const mcqs = [...(prev.mcqs || [])];
+      const options = [...(mcqs[idx].options || [])];
+      options[optIdx] = val;
+      mcqs[idx] = { ...mcqs[idx], options };
+      return { ...prev, mcqs };
+    });
+  };
+
+  const addMcqOption = (idx) => {
+    setTestForm((prev) => {
+      const mcqs = [...(prev.mcqs || [])];
+      mcqs[idx] = { ...mcqs[idx], options: [...(mcqs[idx].options || []), ""] };
+      return { ...prev, mcqs };
+    });
+  };
+
+  const removeMcqOption = (idx, optIdx) => {
+    setTestForm((prev) => {
+      const mcqs = [...(prev.mcqs || [])];
+      const options = (mcqs[idx].options || []).filter((_, i) => i !== optIdx);
+      let correctAnswer = mcqs[idx].correctAnswer ?? 0;
+      if (correctAnswer === optIdx) correctAnswer = 0;
+      else if (correctAnswer > optIdx) correctAnswer -= 1;
+      mcqs[idx] = { ...mcqs[idx], options, correctAnswer };
+      return { ...prev, mcqs };
     });
   };
 
@@ -2148,6 +2214,133 @@ export default function AdminCodingPage() {
                     <span>Anti-Copy / Paste</span>
                   </label>
                 </div>
+              </div>
+
+              {/* MCQ Authoring */}
+              <div className="p-4 rounded-2xl bg-violet-50/60 border border-violet-200 space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                    <Layers className="w-4 h-4 text-violet-600" />
+                    Multiple Choice Questions ({testForm.mcqs?.length || 0})
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addMcq}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold shadow-sm cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add MCQ</span>
+                  </button>
+                </div>
+
+                {(!testForm.mcqs || testForm.mcqs.length === 0) ? (
+                  <p className="text-[11px] text-slate-500 italic">
+                    No MCQs yet. Students will see the MCQ section empty until you add questions here.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {testForm.mcqs.map((q, qi) => (
+                      <div key={qi} className="p-3 rounded-xl bg-white border border-violet-200 space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="w-6 h-6 rounded-lg bg-violet-100 text-violet-700 text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
+                            {qi + 1}
+                          </span>
+                          <textarea
+                            rows={2}
+                            value={q.question}
+                            onChange={(e) => updateMcq(qi, "question", e.target.value)}
+                            placeholder="Enter the MCQ question..."
+                            className="flex-1 px-3 py-2 bg-slate-50 rounded-lg border border-slate-300 text-slate-900 focus:bg-white outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeMcq(qi)}
+                            className="p-1.5 rounded-lg text-rose-500 hover:bg-rose-50 cursor-pointer shrink-0"
+                            title="Remove MCQ"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="pl-8 space-y-1.5">
+                          {(q.options || []).map((opt, oi) => (
+                            <div key={oi} className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => updateMcq(qi, "correctAnswer", oi)}
+                                className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 cursor-pointer transition-all ${
+                                  Number(q.correctAnswer) === oi
+                                    ? "bg-emerald-500 border-emerald-500 text-white"
+                                    : "bg-white border-slate-300 text-transparent hover:border-emerald-400"
+                                }`}
+                                title="Mark as correct answer"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                              <span className="text-[11px] font-bold text-slate-400 w-4">
+                                {String.fromCharCode(65 + oi)}
+                              </span>
+                              <input
+                                type="text"
+                                value={opt}
+                                onChange={(e) => updateMcqOption(qi, oi, e.target.value)}
+                                placeholder={`Option ${String.fromCharCode(65 + oi)}`}
+                                className="flex-1 px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-300 text-slate-900 focus:bg-white outline-none"
+                              />
+                              {(q.options || []).length > 2 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeMcqOption(qi, oi)}
+                                  className="p-1 rounded text-slate-400 hover:text-rose-500 cursor-pointer"
+                                  title="Remove option"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => addMcqOption(qi)}
+                            className="text-[11px] font-bold text-violet-600 hover:text-violet-700 cursor-pointer mt-0.5"
+                          >
+                            + Add option
+                          </button>
+                        </div>
+
+                        <div className="pl-8 grid grid-cols-2 gap-2">
+                          <input
+                            type="number"
+                            min="1"
+                            value={q.marks}
+                            onChange={(e) => updateMcq(qi, "marks", Number(e.target.value))}
+                            placeholder="Marks"
+                            className="px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-300 text-slate-900 focus:bg-white outline-none"
+                          />
+                          <select
+                            value={q.difficulty}
+                            onChange={(e) => updateMcq(qi, "difficulty", e.target.value)}
+                            className="px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-300 text-slate-900 focus:bg-white cursor-pointer outline-none"
+                          >
+                            <option value="Easy">Easy</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Hard">Hard</option>
+                          </select>
+                        </div>
+
+                        <div className="pl-8">
+                          <input
+                            type="text"
+                            value={q.explanation}
+                            onChange={(e) => updateMcq(qi, "explanation", e.target.value)}
+                            placeholder="Explanation (shown after submission)"
+                            className="w-full px-3 py-1.5 bg-slate-50 rounded-lg border border-slate-300 text-slate-900 focus:bg-white outline-none"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-200">

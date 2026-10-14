@@ -74,6 +74,35 @@ const DEFAULT_PLACEMENT_TEST = {
       expectedOutput: tc.expected || tc.expectedOutput,
     })),
   })),
+  mcqs: [
+    {
+      _id: "placement-mcq-1",
+      question: "What is the average-case time complexity of binary search on a sorted array of n elements?",
+      options: ["O(n)", "O(log n)", "O(n log n)", "O(1)"],
+      correctAnswer: 1,
+      explanation: "Binary search halves the search space each step, giving O(log n) comparisons.",
+      difficulty: "Easy",
+      marks: 1,
+    },
+    {
+      _id: "placement-mcq-2",
+      question: "Which data structure follows the First-In-First-Out (FIFO) principle?",
+      options: ["Stack", "Queue", "Binary Search Tree", "Heap"],
+      correctAnswer: 1,
+      explanation: "A queue inserts at the rear and removes from the front, so it is FIFO.",
+      difficulty: "Easy",
+      marks: 1,
+    },
+    {
+      _id: "placement-mcq-3",
+      question: "A hash table with separate chaining has a worst-case lookup time of:",
+      options: ["O(1)", "O(log n)", "O(n)", "O(n log n)"],
+      correctAnswer: 2,
+      explanation: "If all keys collide into one bucket, lookups degrade to a linear scan, i.e. O(n).",
+      difficulty: "Medium",
+      marks: 1,
+    },
+  ],
 };
 
 export const codingService = {

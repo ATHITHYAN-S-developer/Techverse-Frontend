@@ -214,24 +214,53 @@ export default function ModuleCodingChallenge({
     [showError]
   );
 
-  // Track browser tab switching strictly via visibilitychange
-  // Note: mobile internal tab clicks (Question, Test Cases, Output) stay on this page
-  // and NEVER set visibilityState to 'hidden'
+  // Timestamp of the last "left the assessment window" strike so that a single
+  // Alt+Tab (which fires window blur AND visibilitychange almost together) is
+  // only ever counted as one violation.
+  const lastWindowAwayAtRef = useRef(0);
+
+  const registerWindowAway = useCallback(
+    (type, details) => {
+      if (!proctoringActiveRef.current || autoSubmittingRef.current) return;
+      const now = Date.now();
+      if (now - lastWindowAwayAtRef.current < 1200) return;
+      lastWindowAwayAtRef.current = now;
+      recordViolation(type, details);
+    },
+    [recordViolation]
+  );
+
+  // Track the student leaving the assessment window:
+  //  - visibilitychange: switching browser tabs / minimising the window
+  //  - window blur: switching to another application with Alt+Tab, clicking the
+  //    taskbar, or focusing any other window/application.
+  // Alt+Tab fires both events, which registerWindowAway collapses into a single
+  // strike. Internal mobile tab clicks (Question, Test Cases, Output) stay on
+  // this page and never trigger either event.
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
-        recordViolation(
+        registerWindowAway(
           "TAB_SWITCH",
-          "You switched away from the assessment window. Tab switching is strictly monitored."
+          "You switched away from the assessment window. Tab and window switching is strictly monitored."
         );
       }
     };
 
+    const handleWindowBlur = () => {
+      registerWindowAway(
+        "WINDOW_BLUR",
+        "The assessment window lost focus. Switching to another window or application (e.g. Alt+Tab) is not allowed."
+      );
+    };
+
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
     };
-  }, [recordViolation]);
+  }, [registerWindowAway]);
 
   // Sync starter code when switching problems or languages
   useEffect(() => {
@@ -257,11 +286,15 @@ export default function ModuleCodingChallenge({
   // fills the screen. ESC and trackpad gestures are further neutralised with the
   // Keyboard Lock API + an automatic "snap back" whenever fullscreen is lost.
   const lockKeyboard = useCallback(() => {
-    // Keyboard Lock captures ESC (and F11) so the browser cannot leave
-    // fullscreen. Requires a Chromium browser on a secure context (https or
-    // localhost); elsewhere ESC still drops out to the violation gate.
+    // Keyboard Lock captures reserved keys so the browser/OS cannot act on them
+    // while the assessment is running. Calling lock() with NO arguments asks the
+    // user agent to capture every capturable key — this is what suppresses OS
+    // task switching (Alt+Tab / Alt+F4) in addition to Escape and F11. Requires
+    // a Chromium browser on a secure context (https or localhost) in
+    // JavaScript-initiated fullscreen; elsewhere Alt+Tab falls back to the blur
+    // detector below. The 2-second Escape hold remains as the user's escape hatch.
     try {
-      const p = navigator.keyboard?.lock?.(["Escape", "F11"]);
+      const p = navigator.keyboard?.lock?.();
       if (p && typeof p.catch === "function") p.catch(() => {});
     } catch {
       /* unsupported browsers fall back to the snap-back handler */
