@@ -462,6 +462,42 @@ export default function ModuleCodingChallenge({
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [isFullscreen, registerFullscreenExit, requestNativeFullscreen]);
 
+  // Neutralise trackpad / touchpad gestures that the browser would otherwise
+  // turn into history navigation (two-finger horizontal swipe), overscroll
+  // bounce, or pinch-zoom while the assessment is running. Touchpad gestures
+  // are delivered as `wheel` events (not touch), so overscroll-behavior /
+  // touch-action on the overlay alone is not enough — the real scroll container
+  // is <html>/<body>, so we lock those too and cancel the wheel gestures.
+  useEffect(() => {
+    if (!isFullscreen) return;
+
+    const rootEl = document.documentElement;
+    const bodyEl = document.body;
+    const prevRootOverscroll = rootEl.style.overscrollBehavior;
+    const prevBodyOverscroll = bodyEl.style.overscrollBehavior;
+    const prevRootOverflowX = rootEl.style.overflowX;
+    rootEl.style.overscrollBehavior = "none";
+    bodyEl.style.overscrollBehavior = "none";
+    rootEl.style.overflowX = "hidden";
+
+    const handleWheel = (e) => {
+      if (!proctoringActiveRef.current || isAssessmentOver()) return;
+      // Horizontal two-finger swipe → history navigation; ctrl+wheel → pinch.
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      rootEl.style.overscrollBehavior = prevRootOverscroll;
+      bodyEl.style.overscrollBehavior = prevBodyOverscroll;
+      rootEl.style.overflowX = prevRootOverflowX;
+    };
+  }, [isFullscreen]);
+
   const dismissViolation = useCallback(() => {
     setShowViolationModal(false);
     enterFullscreen();
