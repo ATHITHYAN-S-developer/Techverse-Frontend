@@ -1076,7 +1076,14 @@ export default function ModuleCodingChallenge({
   // FULL SCREEN VIEW (Rendered via React Portal at body root)
   const fullScreenModal = isFullscreen
     ? createPortal(
-        <div className="fixed inset-0 z-[999999] bg-slate-900 text-white flex flex-col w-screen h-screen overflow-hidden p-3 sm:p-5 select-none">
+        <div
+          className="fixed inset-0 z-[999999] bg-slate-900 text-white flex flex-col w-screen h-screen overflow-hidden p-3 sm:p-5 select-none"
+          style={{
+            overscrollBehaviorX: "none",
+            overscrollBehaviorY: "contain",
+            touchAction: "none",
+          }}
+        >
           {/* Top Fullscreen Header */}
           <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-800 border border-slate-700 shadow-md mb-3 shrink-0">
             <div className="flex items-center gap-3">
