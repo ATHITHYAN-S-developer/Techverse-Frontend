@@ -473,30 +473,69 @@ export default function ModuleCodingChallenge({
 
     const rootEl = document.documentElement;
     const bodyEl = document.body;
-    const prevRootOverscroll = rootEl.style.overscrollBehavior;
-    const prevBodyOverscroll = bodyEl.style.overscrollBehavior;
-    const prevRootOverflowX = rootEl.style.overflowX;
+    const prev = {
+      rootOverscroll: rootEl.style.overscrollBehavior,
+      bodyOverscroll: bodyEl.style.overscrollBehavior,
+      rootOverflowX: rootEl.style.overflowX,
+      rootTouchAction: rootEl.style.touchAction,
+      bodyTouchAction: bodyEl.style.touchAction,
+    };
     rootEl.style.overscrollBehavior = "none";
     bodyEl.style.overscrollBehavior = "none";
     rootEl.style.overflowX = "hidden";
+    rootEl.style.touchAction = "none";
+    bodyEl.style.touchAction = "none";
 
     const handleWheel = (e) => {
       if (!proctoringActiveRef.current || isAssessmentOver()) return;
       // Horizontal two-finger swipe → history navigation; ctrl+wheel → pinch.
-      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      if (e.ctrlKey || Math.abs(e.deltaX) > 0) {
         e.preventDefault();
+        e.stopPropagation();
       }
     };
 
-    window.addEventListener("wheel", handleWheel, { passive: false });
+    // Windows/Chrome sometimes ignores overscroll-behavior for the touchpad
+    // swipe-to-navigate gesture. Seed an extra history entry so the first back
+    // swipe pops an identical assessment URL (keeping us in place); every
+    // subsequent pop re-seeds and logs a strike. React Router's own state is
+    // preserved so its history bookkeeping stays intact.
+    const seedHistoryGuard = () => {
+      try {
+        const state = window.history.state;
+        window.history.pushState(
+          { ...(state || {}), __proctorGuard: true },
+          "",
+          window.location.href
+        );
+      } catch {
+        /* history API unavailable */
+      }
+    };
+
+    const handlePopState = () => {
+      if (!proctoringActiveRef.current || isAssessmentOver()) return;
+      seedHistoryGuard();
+      registerWindowAway(
+        "TAB_SWITCH",
+        "Browser back / touchpad swipe navigation is disabled during the assessment."
+      );
+    };
+
+    seedHistoryGuard();
+    window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
+    window.addEventListener("popstate", handlePopState);
 
     return () => {
-      window.removeEventListener("wheel", handleWheel);
-      rootEl.style.overscrollBehavior = prevRootOverscroll;
-      bodyEl.style.overscrollBehavior = prevBodyOverscroll;
-      rootEl.style.overflowX = prevRootOverflowX;
+      window.removeEventListener("wheel", handleWheel, { capture: true });
+      window.removeEventListener("popstate", handlePopState);
+      rootEl.style.overscrollBehavior = prev.rootOverscroll;
+      bodyEl.style.overscrollBehavior = prev.bodyOverscroll;
+      rootEl.style.overflowX = prev.rootOverflowX;
+      rootEl.style.touchAction = prev.rootTouchAction;
+      bodyEl.style.touchAction = prev.bodyTouchAction;
     };
-  }, [isFullscreen]);
+  }, [isFullscreen, registerWindowAway]);
 
   const dismissViolation = useCallback(() => {
     setShowViolationModal(false);
