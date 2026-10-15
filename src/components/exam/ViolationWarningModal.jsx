@@ -36,19 +36,19 @@ export default function ViolationWarningModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-150">
       <div className={`relative w-full max-w-md rounded-3xl p-6 sm:p-8 bg-white shadow-2xl border ${
-        isFinalStrike ? "border-rose-300" : "border-amber-300"
+        isFinalStrike ? "border-slate-300" : "border-sky-200"
       }`}>
         <div className="text-center space-y-4">
           {/* Warning Icon */}
           <div className={`w-16 h-16 mx-auto rounded-3xl flex items-center justify-center shadow-xs ${
-            isFinalStrike ? "bg-rose-100 text-rose-600 border border-rose-200 animate-bounce" : "bg-amber-100 text-amber-600 border border-amber-200"
+            isFinalStrike ? "bg-slate-100 text-slate-700 border border-slate-200" : "bg-sky-50 text-sky-600 border border-sky-200"
           }`}>
             {isFinalStrike ? <AlertOctagon className="w-8 h-8" /> : <ShieldAlert className="w-8 h-8" />}
           </div>
 
           <div>
             <span className={`inline-block px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider mb-1.5 ${
-              isFinalStrike ? "bg-rose-100 text-rose-800 border border-rose-300" : "bg-amber-100 text-amber-800 border border-amber-300"
+              isFinalStrike ? "bg-slate-100 text-slate-700 border border-slate-300" : "bg-sky-50 text-sky-700 border border-sky-200"
             }`}>
               Strike {count} of {maxViolations}
             </span>
@@ -73,8 +73,8 @@ export default function ViolationWarningModal({
                   className={`h-full flex-1 rounded-full transition-all duration-300 ${
                     idx < count
                       ? isFinalStrike
-                        ? "bg-rose-500"
-                        : "bg-amber-500"
+                        ? "bg-slate-500"
+                        : "bg-sky-500"
                       : "bg-slate-200"
                   }`}
                 />
@@ -84,12 +84,12 @@ export default function ViolationWarningModal({
 
           {/* Action notice */}
           {isFinalStrike ? (
-            <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800">
-              <AlertTriangle className="w-4 h-4 inline-block mr-1.5 -mt-0.5 text-rose-600" />
+            <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
+              <AlertTriangle className="w-4 h-4 inline-block mr-1.5 -mt-0.5 text-slate-500" />
               Maximum allowed violations reached. Your assessment is now being submitted automatically to the evaluation server.
             </div>
           ) : (
-            <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-xs text-amber-900">
+            <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 text-xs text-slate-700">
               Please maintain fullscreen and stay within this window. Another violation may result in automatic test termination.
             </div>
           )}

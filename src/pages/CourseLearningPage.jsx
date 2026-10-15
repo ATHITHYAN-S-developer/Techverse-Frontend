@@ -972,6 +972,17 @@ export default function CourseLearningPage() {
                         if (!testStartTime) setTestStartTime(Date.now());
                       }}
                       onCodingComplete={handleCodingComplete}
+                      onExitArena={() => {
+                        const hasVid = currentModule?.hasVideo !== undefined
+                          ? Boolean(currentModule.hasVideo)
+                          : Boolean(currentModule?.videoUrl || currentModule?.videos?.length > 0);
+                        const hasMCQ = currentModule?.hasMCQ !== undefined
+                          ? Boolean(currentModule.hasMCQ)
+                          : Boolean(currentModule?.mcqs && currentModule.mcqs.length > 0);
+                        if (hasVid) setActiveTab("video");
+                        else if (hasMCQ) setActiveTab("test");
+                        else navigate(`/courses/${courseId}`);
+                      }}
                     />
                   </>
                 );

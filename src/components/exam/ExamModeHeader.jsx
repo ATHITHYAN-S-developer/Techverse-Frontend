@@ -37,11 +37,11 @@ export default function ExamModeHeader({
           <div
             className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
               violationCount > 0
-                ? "bg-rose-50 border-rose-300 text-rose-700 animate-pulse"
+                ? "bg-slate-100 border-slate-300 text-slate-700"
                 : "bg-sky-50/70 border-sky-200 text-slate-700"
             }`}
           >
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+            <AlertTriangle className="w-3.5 h-3.5 text-slate-500" />
             <span>
               {violationCount} / {maxViolations} <span className="hidden sm:inline">Strikes</span>
             </span>
@@ -51,11 +51,11 @@ export default function ExamModeHeader({
           <div
             className={`hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border ${
               isFullscreen
-                ? "bg-emerald-50 border-emerald-300 text-emerald-800"
-                : "bg-amber-50 border-amber-300 text-amber-800"
+                ? "bg-sky-50 border-sky-200 text-sky-700"
+                : "bg-slate-100 border-slate-300 text-slate-700"
             }`}
           >
-            <Maximize2 className="w-3.5 h-3.5 text-emerald-600" />
+            <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
             <span>{isFullscreen ? "Fullscreen ON" : "Fullscreen Alert"}</span>
           </div>
 
@@ -63,7 +63,7 @@ export default function ExamModeHeader({
           <div
             className={`flex items-center gap-2 px-3 sm:px-4 py-1.5 rounded-xl font-mono text-xs sm:text-sm font-black border transition-all ${
               isTimeCritical
-                ? "bg-rose-600 text-white border-rose-500 animate-bounce shadow-md shadow-rose-600/30"
+                ? "bg-slate-700 text-white border-slate-600 shadow-sm"
                 : "bg-sky-50 border-sky-200 text-vcet-blue-deep"
             }`}
           >

@@ -28,6 +28,7 @@ import confetti from "canvas-confetti";
 import { useToast } from "../../context/ToastContext";
 import { courseService } from "../../services/courseService";
 import ViolationWarningModal from "../exam/ViolationWarningModal";
+import { isBraveBrowser } from "../../utils/browserDetect";
 
 const CodeEditor = lazy(() => import("../exam/CodeEditor"));
 
@@ -114,6 +115,7 @@ export default function ModuleCodingChallenge({
   allowedLanguages,
   onProceedToTest,
   onCodingComplete,
+  onExitArena,
 }) {
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
@@ -145,6 +147,24 @@ export default function ModuleCodingChallenge({
   // Full Screen State & Auto Full Screen Prompt
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showExamRulesModal, setShowExamRulesModal] = useState(true);
+
+  // Brave Browser is blocked from the proctored fullscreen exam: Brave's
+  // Shields strip the Keyboard Lock API and interfere with the fullscreen
+  // proctoring contract. The rest of the site still works normally on Brave.
+  const [isBrave, setIsBrave] = useState(false);
+  const [showBraveBlockModal, setShowBraveBlockModal] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    isBraveBrowser()
+      .then((brave) => {
+        if (active) setIsBrave(brave);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // Proctoring: unified violation counter (tab switches + fullscreen exits).
   // Count is tracked internally and intentionally NOT shown on screen.
@@ -544,11 +564,21 @@ export default function ModuleCodingChallenge({
     enterFullscreen();
   }, [enterFullscreen]);
 
-  const handleEnterFullscreen = () => enterFullscreen();
+  const handleEnterFullscreen = () => {
+    if (isBrave) {
+      setShowBraveBlockModal(true);
+      return;
+    }
+    enterFullscreen();
+  };
 
   // Only called by the rules modal — marks the assessment as started so
   // proctoring (tab switches / fullscreen exits) begins counting.
   const handleStartAssessment = () => {
+    if (isBrave) {
+      setShowBraveBlockModal(true);
+      return;
+    }
     proctoringActiveRef.current = true;
     setShowExamRulesModal(false);
     enterFullscreen();
@@ -582,6 +612,18 @@ export default function ModuleCodingChallenge({
     setIsFullscreen(false);
     exitNativeFullscreen();
     navigate(`/courses/${courseSlug}`, { replace: true });
+  };
+
+  // Dismiss the "switch browser" notice and leave the coding arena so the
+  // student lands back on the course module page instead of the same warning.
+  const handleBraveBlockDismiss = () => {
+    setShowBraveBlockModal(false);
+    setShowExamRulesModal(false);
+    if (typeof onExitArena === "function") {
+      onExitArena();
+    } else {
+      navigate(`/courses/${courseSlug}`, { replace: true });
+    }
   };
 
   const handleToggleFullscreen = () => {
@@ -857,7 +899,7 @@ export default function ModuleCodingChallenge({
     <div className="flex-1 flex flex-col space-y-3 min-h-0">
       {/* Top Editor Toolbar */}
       <div className={`border rounded-2xl p-3 sm:px-4 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0 ${
-        inFullscreen ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-200"
+        inFullscreen ? "bg-white border-slate-200" : "bg-white border-slate-200"
       }`}>
         {/* Left Toolbar Items: Language, View Question, Show/Hide Panel */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -897,7 +939,7 @@ export default function ModuleCodingChallenge({
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
                 className={`px-3 py-1.5 rounded-xl border text-xs font-bold focus:ring-2 focus:ring-blue-500 cursor-pointer ${
-                  inFullscreen ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-300 text-slate-800"
+                  inFullscreen ? "bg-slate-50 border-slate-300 text-slate-800" : "bg-slate-50 border-slate-300 text-slate-800"
                 }`}
               >
                 {availableLanguages.map((lang) => (
@@ -909,7 +951,7 @@ export default function ModuleCodingChallenge({
             ) : (
               <div
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-bold select-none ${
-                  inFullscreen ? "bg-slate-900 border-slate-700 text-white" : "bg-slate-50 border-slate-300 text-slate-800"
+                  inFullscreen ? "bg-slate-50 border-slate-300 text-slate-800" : "bg-slate-50 border-slate-300 text-slate-800"
                 }`}
                 title="This course allows only this language"
               >
@@ -921,7 +963,7 @@ export default function ModuleCodingChallenge({
           {/* Proctoring Status Pill */}
           <div className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold border ${
             inFullscreen
-              ? "bg-slate-900 border-slate-700 text-slate-300"
+              ? "bg-slate-50 border-slate-200 text-slate-700"
               : "bg-slate-50 border-slate-200 text-slate-700"
           }`}>
             <span className={`w-2 h-2 rounded-full shrink-0 ${violations > 0 ? "bg-amber-500 animate-pulse" : "bg-emerald-500"}`} />
@@ -951,7 +993,7 @@ export default function ModuleCodingChallenge({
             onClick={() => handleRunCode(false)}
             className={`px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer disabled:opacity-50 ${
               inFullscreen
-                ? "bg-slate-700 hover:bg-slate-600 text-white border-slate-600"
+                ? "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
             }`}
           >
@@ -1003,11 +1045,11 @@ export default function ModuleCodingChallenge({
           }
         }}
         className={`border rounded-2xl overflow-hidden shadow-xs flex flex-col flex-1 min-h-[350px] ${
-          inFullscreen ? "bg-slate-950 border-slate-800 h-[60vh]" : "bg-white border-slate-200 h-[450px]"
+          inFullscreen ? "bg-white border-slate-200 h-[60vh]" : "bg-white border-slate-200 h-[450px]"
         }`}
       >
         <div className={`px-4 py-2 border-b flex items-center justify-between text-xs font-mono select-none ${
-          inFullscreen ? "bg-slate-900 border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-slate-600"
+          inFullscreen ? "bg-slate-50 border-slate-200 text-slate-600" : "bg-slate-50 border-slate-200 text-slate-600"
         }`}>
           <span className="flex items-center gap-1.5 font-bold">
             <FileCode className="w-3.5 h-3.5 text-vcet-blue" />
@@ -1051,10 +1093,10 @@ export default function ModuleCodingChallenge({
       {/* Terminal / Test Case Output Console */}
       {executionResult && (
         <div className={`border rounded-2xl p-4 sm:p-5 shadow-xs space-y-3 shrink-0 ${
-          inFullscreen ? "bg-slate-800 border-slate-700 text-white" : "bg-white border-slate-200"
+          inFullscreen ? "bg-white border-slate-200" : "bg-white border-slate-200"
         }`}>
           <div className={`flex items-center justify-between border-b pb-2 ${
-            inFullscreen ? "border-slate-700" : "border-slate-100"
+            inFullscreen ? "border-slate-100" : "border-slate-100"
           }`}>
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-vcet-blue" />
@@ -1096,12 +1138,8 @@ export default function ModuleCodingChallenge({
                   key={i}
                   className={`p-3 rounded-xl border text-xs font-mono space-y-1 ${
                     tr.passed
-                      ? inFullscreen
-                        ? "bg-emerald-950/40 border-emerald-700 text-emerald-200"
-                        : "bg-emerald-50/60 border-emerald-200 text-emerald-900"
-                      : inFullscreen
-                        ? "bg-rose-950/40 border-rose-700 text-rose-200"
-                        : "bg-rose-50/60 border-rose-200 text-rose-900"
+                      ? "bg-emerald-50/60 border-emerald-200 text-emerald-900"
+                      : "bg-rose-50/60 border-rose-200 text-rose-900"
                   }`}
                 >
                   <div className="flex items-center justify-between font-bold text-[11px]">
@@ -1124,7 +1162,7 @@ export default function ModuleCodingChallenge({
                   )}
 
                   {tr.errorMessage && (
-                    <div className="text-rose-400 text-[11px] bg-rose-950/60 p-2 rounded-lg border border-rose-800">
+                    <div className="text-rose-600 text-[11px] bg-rose-50 p-2 rounded-lg border border-rose-200">
                       Error: {tr.errorMessage}
                     </div>
                   )}
@@ -1161,7 +1199,7 @@ export default function ModuleCodingChallenge({
   const fullScreenModal = isFullscreen
     ? createPortal(
         <div
-          className="fixed inset-0 z-[999999] bg-slate-900 text-white flex flex-col w-screen h-screen overflow-hidden p-3 sm:p-5 select-none"
+          className="fixed inset-0 z-[999999] bg-slate-50 text-slate-900 flex flex-col w-screen h-screen overflow-hidden p-3 sm:p-5 select-none"
           style={{
             overscrollBehaviorX: "none",
             overscrollBehaviorY: "contain",
@@ -1169,13 +1207,13 @@ export default function ModuleCodingChallenge({
           }}
         >
           {/* Top Fullscreen Header */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-800 border border-slate-700 shadow-md mb-3 shrink-0">
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-sm mb-3 shrink-0">
             <div className="flex items-center gap-3">
               <span className="p-2 rounded-xl bg-vcet-blue text-white font-bold text-xs flex items-center gap-1.5">
                 <Code2 className="w-4 h-4" />
                 <span>Coding Arena</span>
               </span>
-              <span className="text-sm font-bold text-white truncate max-w-xs sm:max-w-md">
+              <span className="text-sm font-bold text-slate-900 truncate max-w-xs sm:max-w-md">
                 {currentProblem?.title || module?.title}
               </span>
               {problems.length > 1 && (
@@ -1188,7 +1226,7 @@ export default function ModuleCodingChallenge({
                       className={`px-2.5 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                         activeProblemIdx === idx
                           ? "bg-vcet-blue text-white"
-                          : "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                       }`}
                     >
                       #{idx + 1}
@@ -1202,15 +1240,15 @@ export default function ModuleCodingChallenge({
               <button
                 type="button"
                 onClick={() => setShowQuestionModal(true)}
-                className="px-3 py-1.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-slate-600"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-slate-300"
               >
-                <BookOpen className="w-3.5 h-3.5 text-sky-400" />
+                <BookOpen className="w-3.5 h-3.5 text-sky-600" />
                 <span>View Question</span>
               </button>
               <button
                 type="button"
                 onClick={handleExitFullscreen}
-                className="px-3.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+                className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-slate-300"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Exit</span>
@@ -1222,22 +1260,22 @@ export default function ModuleCodingChallenge({
           <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
             {/* Left Panel: Question Specs (Toggleable) */}
             {showQuestionPanel && (
-              <div className="w-[38%] bg-slate-800 border border-slate-700 rounded-2xl p-5 overflow-y-auto hidden lg:block">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-700 mb-2">
-                  <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-sky-400" />
+              <div className="w-[38%] bg-white border border-slate-200 rounded-2xl p-5 overflow-y-auto hidden lg:block">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-2">
+                  <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                    <BookOpen className="w-4 h-4 text-sky-600" />
                     <span>Problem Statement</span>
                   </span>
                   <button
                     type="button"
                     onClick={() => setShowQuestionPanel(false)}
-                    className="text-xs text-slate-400 hover:text-white cursor-pointer flex items-center gap-1"
+                    className="text-xs text-slate-500 hover:text-slate-900 cursor-pointer flex items-center gap-1"
                   >
                     <EyeOff className="w-3 h-3" />
                     <span>Collapse</span>
                   </button>
                 </div>
-                {renderProblemDetails(true)}
+                {renderProblemDetails(false)}
               </div>
             )}
 
@@ -1252,7 +1290,7 @@ export default function ModuleCodingChallenge({
             <div className="fixed inset-0 z-[99999999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
               <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center shrink-0">
                     <LogOut className="w-6 h-6" />
                   </div>
                   <div>
@@ -1280,7 +1318,7 @@ export default function ModuleCodingChallenge({
                   <button
                     type="button"
                     onClick={handleConfirmExit}
-                    className="flex-1 py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs transition cursor-pointer shadow-sm"
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-vcet-blue-deep hover:bg-vcet-blue text-white font-bold text-xs transition cursor-pointer shadow-sm"
                   >
                     Yes, Exit Exam
                   </button>
@@ -1298,6 +1336,49 @@ export default function ModuleCodingChallenge({
       {/* Portaled Full Screen Window */}
       {fullScreenModal}
 
+      {/* Brave Browser Block (portaled above the fullscreen window) */}
+      {showBraveBlockModal &&
+        createPortal(
+          <div className="fixed inset-0 z-[999999999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white border border-sky-200 rounded-3xl p-6 sm:p-7 space-y-5 shadow-2xl relative">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 border border-sky-200 flex items-center justify-center shrink-0">
+                  <AlertOctagon className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Brave Browser Not Supported
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Coding Arena cannot run in Brave
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-xs text-slate-600 leading-relaxed bg-sky-50 border border-sky-200 p-4 rounded-2xl">
+                <strong className="text-sky-700">
+                  You cannot attend this coding assessment in Brave Browser.
+                </strong>{" "}
+                Brave blocks the keyboard-lock and fullscreen proctoring
+                features this test depends on. Please open this course in{" "}
+                <strong>Microsoft Edge</strong> or <strong>Google Chrome</strong>{" "}
+                and start the assessment there. The rest of the website works
+                normally in Brave.
+              </div>
+
+              <button
+                type="button"
+                onClick={handleBraveBlockDismiss}
+                className="w-full py-2.5 px-4 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+                <span>OK, I Will Switch Browser</span>
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
       {/* Proctoring Violation Warning (portaled above the fullscreen window) */}
       {showViolationModal &&
         latestViolation &&
@@ -1314,13 +1395,13 @@ export default function ModuleCodingChallenge({
 
       {/* Termination Banner */}
       {terminated && (
-        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-300 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+        <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
           <div>
-            <h4 className="text-sm font-bold text-rose-900">
+            <h4 className="text-sm font-bold text-slate-900">
               Assessment Auto-Submitted
             </h4>
-            <p className="text-xs text-rose-700">
+            <p className="text-xs text-slate-600">
               The maximum number of proctoring violations was reached. Your latest
               submission has been recorded and further runs are disabled.
             </p>
@@ -1493,19 +1574,19 @@ export default function ModuleCodingChallenge({
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span>
                   <strong>Tab Switch Monitoring:</strong> Navigating away to other browser tabs or windows is recorded as a violation.
                 </span>
               </div>
               <div className="flex items-start gap-2.5">
-                <Lock className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                <Lock className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span>
                   <strong>Copy & Paste Blocked:</strong> Clipboard pasting is disabled in the code editor.
                 </span>
               </div>
-              <div className="flex items-start gap-2.5 text-rose-700">
-                <AlertOctagon className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 text-slate-600">
+                <AlertOctagon className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                 <span>
                   <strong>Auto-Submit on 3 Violations:</strong> Reaching 3 total violations automatically submits your current solution.
                 </span>
@@ -1518,14 +1599,33 @@ export default function ModuleCodingChallenge({
               </div>
             </div>
 
+            {isBrave && (
+              <div className="p-3.5 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-2.5">
+                <AlertOctagon className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
+                <span className="text-xs text-slate-700 leading-relaxed">
+                  <strong className="text-sky-700">Brave Browser detected.</strong> This coding assessment cannot be
+                  attended in Brave. Please switch to <strong>Microsoft Edge</strong> or{" "}
+                  <strong>Google Chrome</strong> to start the test.
+                </span>
+              </div>
+            )}
+
             <div className="space-y-2 pt-1">
               <button
                 type="button"
                 onClick={handleStartAssessment}
-                className="w-full py-2.5 px-4 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"
+                className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer ${
+                  isBrave
+                    ? "bg-slate-600 hover:bg-slate-700 text-white"
+                    : "bg-vcet-blue hover:bg-vcet-blue-deep text-white"
+                }`}
               >
-                <Maximize2 className="w-4 h-4" />
-                <span>Start Assessment in Full Screen</span>
+                {isBrave ? <AlertOctagon className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                <span>
+                  {isBrave
+                    ? "Brave Not Supported — Switch Browser"
+                    : "Start Assessment in Full Screen"}
+                </span>
               </button>
               <p className="text-[10px] text-slate-400 text-center">
                 Full screen is mandatory. Proctoring begins the moment you start.

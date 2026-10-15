@@ -52,7 +52,7 @@ export default function ExamRulesModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Rule 1: Fullscreen */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-blue-100 text-blue-700 shrink-0">
+              <div className="p-2 rounded-xl bg-sky-50 text-sky-600 shrink-0 border border-sky-100">
                 <Maximize2 className="w-4 h-4" />
               </div>
               <div>
@@ -65,7 +65,7 @@ export default function ExamRulesModal({
 
             {/* Rule 2: Tab Switching */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-amber-100 text-amber-700 shrink-0">
+              <div className="p-2 rounded-xl bg-slate-100 text-slate-600 shrink-0 border border-slate-200">
                 <EyeOff className="w-4 h-4" />
               </div>
               <div>
@@ -78,7 +78,7 @@ export default function ExamRulesModal({
 
             {/* Rule 3: Clipboard Restrictions */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-rose-100 text-rose-700 shrink-0">
+              <div className="p-2 rounded-xl bg-slate-100 text-slate-600 shrink-0 border border-slate-200">
                 <CopyX className="w-4 h-4" />
               </div>
               <div>
@@ -91,7 +91,7 @@ export default function ExamRulesModal({
 
             {/* Rule 4: Timer & Auto-Submit */}
             <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-start gap-3">
-              <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700 shrink-0">
+              <div className="p-2 rounded-xl bg-slate-100 text-slate-600 shrink-0 border border-slate-200">
                 <Clock className="w-4 h-4" />
               </div>
               <div>
@@ -104,10 +104,10 @@ export default function ExamRulesModal({
           </div>
 
           {/* Important Notice Callout */}
-          <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-            <div className="text-xs text-amber-900 leading-relaxed">
-              <strong>Violation Policy:</strong> 1st & 2nd violations will trigger warnings. If <strong>{maxViolations} security violations</strong> are recorded, your assessment will be <strong>automatically terminated and submitted</strong>.
+          <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+            <div className="text-xs text-slate-700 leading-relaxed">
+              <strong className="text-sky-700">Violation Policy:</strong> 1st & 2nd violations will trigger warnings. If <strong>{maxViolations} security violations</strong> are recorded, your assessment will be <strong>automatically terminated and submitted</strong>.
             </div>
           </div>
 

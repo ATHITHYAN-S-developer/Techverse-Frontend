@@ -497,19 +497,19 @@ export default function CourseAssessmentPage() {
                 <div className="text-[11px] text-slate-600 space-y-1.5">
                   <div className="flex justify-between">
                     <span>Fullscreen:</span>
-                    <span className={isFullscreen ? "text-emerald-600 font-bold" : "text-amber-600 font-bold"}>
+                    <span className={isFullscreen ? "text-sky-700 font-bold" : "text-slate-600 font-bold"}>
                       {isFullscreen ? "Locked" : "Warning"}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Strikes:</span>
-                    <span className={violationCount > 0 ? "text-rose-600 font-bold" : "text-slate-700 font-bold"}>
+                    <span className={violationCount > 0 ? "text-slate-700 font-bold" : "text-slate-700 font-bold"}>
                       {violationCount} / {test.maxViolations || 3}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Clipboard:</span>
-                    <span className="text-emerald-600 font-bold">Protected</span>
+                    <span className="text-sky-700 font-bold">Protected</span>
                   </div>
                 </div>
               </div>
