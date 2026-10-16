@@ -9,7 +9,7 @@ export default function Hero() {
       {/* 1. Hero Showcase Section with Campus Slideshow */}
       <section
         id="home"
-        style={{ clipPath: "inset(0)" }}
+        style={{ clipPath: "inset(0)", WebkitClipPath: "inset(0)" }}
         className="hero-section relative w-full min-h-[72vh] sm:min-h-[82vh] lg:min-h-[86vh] flex items-center justify-center py-12 sm:py-32 px-4 sm:px-8 overflow-hidden select-none"
       >
         {/* Layer 1 & 2: Continuous Campus Background Slideshow + Contrast Overlay */}

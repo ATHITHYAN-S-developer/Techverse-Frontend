@@ -81,9 +81,12 @@ export default function CollegeBackground() {
   const currentImage = CAMPUS_IMAGES[currentIndex];
 
   return (
-    <div className="absolute inset-0 [clip-path:inset(0)] overflow-hidden pointer-events-none select-none z-0">
+    <div
+      style={{ clipPath: "inset(0)", WebkitClipPath: "inset(0)" }}
+      className="absolute inset-0 [clip-path:inset(0)] overflow-hidden pointer-events-none select-none z-0"
+    >
       {/* Fixed Viewport Layer for Motionless Background while Scrolling */}
-      <div className="absolute sm:fixed inset-0 w-full h-full pointer-events-none">
+      <div className="fixed inset-0 w-full h-full pointer-events-none">
         {/* Layer 1: Continuous Crossfade + Slow Zoom Slideshow */}
         <AnimatePresence initial={false}>
           <motion.div
