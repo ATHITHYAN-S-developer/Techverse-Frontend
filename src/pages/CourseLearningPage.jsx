@@ -291,11 +291,13 @@ export default function CourseLearningPage() {
   const [currentModule, setCurrentModule] = useState(null);
   const [progression, setProgression] = useState(null);
   const [allModulesMap, setAllModulesMap] = useState([]);
+  const [gradedAttemptRecorded, setGradedAttemptRecorded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Active View Tab: "video" | "test"
   const [activeTab, setActiveTab] = useState("video");
+  const currentModNumber = currentModule?.moduleNumber || 1;
 
   // Progression & Watch Tracking State
   const [watchPercentage, setWatchPercentage] = useState(0);
@@ -486,6 +488,7 @@ export default function CourseLearningPage() {
       setTestStartTime(null);
       setModuleTestExamStarted(false);
       setShowCertificateModal(false);
+      setGradedAttemptRecorded(false);
 
       const res = await courseService.getCourseBySlug(courseId);
       const courseData = res?.course || res;
@@ -566,6 +569,10 @@ export default function CourseLearningPage() {
             });
           }
 
+          if (Number(progRes.testAttemptsCount || 0) > 0) {
+            setGradedAttemptRecorded(true);
+          }
+
           if (progRes.certificate) {
             setCertificate(progRes.certificate);
           }
@@ -612,6 +619,61 @@ export default function CourseLearningPage() {
     }));
   };
 
+  // Unified handler for successful assessment completion (congratulates student and shows certificate)
+  const handleTestCompleteResult = useCallback((result) => {
+    if (!result) return;
+    setTestResult(result);
+    loadModuleAndProgression();
+
+    if (result.passed) {
+      confetti({
+        particleCount: 160,
+        spread: 80,
+        origin: { y: 0.5 },
+      });
+
+      // Check if completing this module finishes the entire course
+      const otherModulesCompleted = allModulesMap
+        .filter((m) => String(m._id) !== String(currentModule._id))
+        .every((m) => m.completed || m.testPassed || m.isCompleted);
+      const isCourseNowDone = otherModulesCompleted || Boolean(result.courseCertificate);
+
+      const certData =
+        result.courseCertificate ||
+        result.certificate || {
+          studentName: user?.name,
+          registerNumber: user?.registerNumber,
+          courseName: course?.title,
+          moduleNumber: currentModNumber,
+          score: result.scorePercentage,
+          certificateNumber: `VCET-CERT-${String(course?._id || "2026").slice(-6).toUpperCase()}`,
+          grade: result.scorePercentage >= 85 ? "Distinction" : "First Class",
+        };
+
+      setCertificate(certData);
+
+      if (isCourseNowDone) {
+        if (course?.certificateEnabled !== false) {
+          setIsCourseCompletedModal(true);
+          setRedirectCountdown(4);
+          setShowCertificateModal(true);
+          showSuccess(`🏆 Congratulations! Course Completed! Automatically opening your certificate in 4s...`);
+        } else {
+          setIsCourseCompletedModal(false);
+          setRedirectCountdown(null);
+          showSuccess(`🏆 Congratulations! Course Completed! All modules mastered.`);
+        }
+      } else {
+        setIsCourseCompletedModal(false);
+        setRedirectCountdown(null);
+        setShowCertificateModal(true);
+        showSuccess(`🎉 Congratulations! Module passed with ${result.scorePercentage}%. Appreciation Certificate issued!`);
+      }
+    } else {
+      showError(`Score: ${result.scorePercentage}%. Passing requires at least 50%. Please review and try again.`);
+    }
+  }, [allModulesMap, currentModNumber, currentModule, course, user, showSuccess, showError, loadModuleAndProgression]);
+
   // Submit Test for Server-Side Grading
   const handleSubmitTest = async (submissionType = "manual", violationsList = []) => {
     const questions = currentModule?.mcqs || [];
@@ -649,6 +711,11 @@ export default function CourseLearningPage() {
 
       setTestResult(result);
 
+      // Remember that the graded attempt is now on record (subsequent submits are practice).
+      if (!result?.practice) {
+        setGradedAttemptRecorded(true);
+      }
+
       // Automatic submission triggered by security violations: leave the exam for the course page
       if (submissionType === "auto_violation") {
         showError(
@@ -660,13 +727,20 @@ export default function CourseLearningPage() {
         return;
       }
 
-      if (result.passed) {
-        confetti({
-          particleCount: 160,
-          spread: 80,
-          origin: { y: 0.5 },
-        });
+      // Practice-only retake: the first attempt is the graded one. Show this score to the
+      // student for their own satisfaction, but never treat it as completion or certificate-worthy.
+      if (result?.practice) {
+        showInfo(
+          `Practice attempt complete — ${result.scorePercentage}%. This does not change your official recorded score${
+            result.officialScore !== null && result.officialScore !== undefined
+              ? ` (${result.officialScore}%)`
+              : ""
+          }.`
+        );
+        return;
+      }
 
+      if (result.passed) {
         const hasCoding = currentModule?.hasCoding !== undefined
           ? Boolean(currentModule.hasCoding)
           : Boolean(currentModule?.codingProblems && currentModule.codingProblems.length > 0);
@@ -674,51 +748,12 @@ export default function CourseLearningPage() {
 
         // If module also requires coding and it hasn't been passed yet
         if (hasCoding && !isCodingPassed && !result.isCompleted) {
-          showSuccess(`✓ MCQ Assessment Passed with ${result.scorePercentage}%! Please complete the Coding Challenge to finish this module.`);
-          setActiveTab("coding");
+          showSuccess(`✓ MCQ Assessment Passed with ${result.scorePercentage}%! You can now attend the Coding Challenge using the dropdown.`);
           loadModuleAndProgression();
           return;
         }
 
-        // Check if completing this module finishes the entire course
-        const otherModulesCompleted = allModulesMap
-          .filter((m) => String(m._id) !== String(currentModule._id))
-          .every((m) => m.completed || m.testPassed || m.isCompleted);
-        const isCourseNowDone = otherModulesCompleted || Boolean(result.courseCertificate);
-
-        if (isCourseNowDone) {
-          if (course?.certificateEnabled !== false) {
-            setIsCourseCompletedModal(true);
-            setRedirectCountdown(4);
-            setCertificate(
-              result.courseCertificate ||
-              result.certificate || {
-                studentName: user?.name,
-                registerNumber: user?.registerNumber,
-                courseName: course?.title,
-                score: result.scorePercentage,
-                certificateNumber: `VCET-CERT-${String(course?._id || "2026").slice(-6).toUpperCase()}`,
-                grade: result.scorePercentage >= 85 ? "Distinction" : "First Class",
-              }
-            );
-            setShowCertificateModal(true);
-            showSuccess(`🏆 Course Completed! Automatically redirecting to your certificate in 4s...`);
-          } else {
-            setIsCourseCompletedModal(false);
-            setRedirectCountdown(null);
-            showSuccess(`🏆 Course Completed! Congratulations on finishing all modules.`);
-          }
-        } else {
-          setIsCourseCompletedModal(false);
-          setRedirectCountdown(null);
-          if (result.certificate) {
-            setCertificate(result.certificate);
-            setShowCertificateModal(true);
-          }
-          showSuccess(`Congratulations! Module passed with ${result.scorePercentage}%.`);
-        }
-
-        loadModuleAndProgression();
+        handleTestCompleteResult(result);
       } else {
         showError(`Score: ${result.scorePercentage}%. Passing requires at least 50%. Please review and try again.`);
       }
@@ -745,11 +780,17 @@ export default function CourseLearningPage() {
 
   // Handle Coding Challenge Completion Callback
   const handleCodingComplete = (codeRes) => {
-    loadModuleAndProgression();
     const hasMCQ = currentModule?.hasMCQ !== undefined
       ? Boolean(currentModule.hasMCQ)
       : Boolean(currentModule?.mcqs && currentModule.mcqs.length > 0);
     const isTestPassed = Boolean(testResult?.passed || progression?.testPassed);
+
+    // If the module has MCQs and MCQ is not yet passed, submitting code does NOT complete the module!
+    if (hasMCQ && !isTestPassed) {
+      return;
+    }
+
+    loadModuleAndProgression();
 
     if (codeRes?.isCompleted || (!hasMCQ && codeRes?.codingPassed)) {
       confetti({
@@ -791,8 +832,7 @@ export default function CourseLearningPage() {
         showSuccess("🎉 Coding Challenge Passed! Module requirements completed.");
       }
     } else if (hasMCQ && !isTestPassed) {
-      showSuccess("🎉 Coding Challenge Accepted! Now complete the Knowledge Assessment Test to finish this module.");
-      activateModuleExam();
+      showSuccess("🎉 Coding Challenge Accepted! Select Knowledge Assessment in the top dropdown to complete this module.");
     }
   };
 
@@ -866,8 +906,10 @@ export default function CourseLearningPage() {
     );
   }
 
-  const currentModNumber = currentModule?.moduleNumber || 1;
   const nextModule = allModulesMap.find((m) => m.moduleNumber === currentModNumber + 1);
+  // A graded attempt is the student's first submission. Everything after it is practice-only.
+  const testAttemptsCount = Number(progression?.testAttemptsCount || 0);
+  const hasGradedAttempt = gradedAttemptRecorded || testAttemptsCount > 0 || Boolean(testResult && !testResult.practice);
 
   return (
     <div className="min-h-screen bg-white text-vcet-dark flex flex-col font-sans">
@@ -1011,6 +1053,49 @@ export default function CourseLearningPage() {
             );
           })()}
 
+          {/* SECTION SWITCHER: jump between Coding Challenge and Knowledge Assessment in any order */}
+          {(activeTab === "coding" || activeTab === "test") && (() => {
+            const hasCod = currentModule?.hasCoding !== undefined
+              ? Boolean(currentModule.hasCoding)
+              : Boolean(currentModule?.codingProblems && currentModule.codingProblems.length > 0);
+            const hasM = currentModule?.hasMCQ !== undefined
+              ? Boolean(currentModule.hasMCQ)
+              : Boolean(currentModule?.mcqs && currentModule.mcqs.length > 0);
+
+            if (!(hasCod && hasM)) return null;
+
+            return (
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-vcet-gray-border rounded-2xl p-4">
+                <div className="flex items-center gap-2.5">
+                  <Code2 className="w-4 h-4 text-violet-600 shrink-0" />
+                  <div>
+                    <h4 className="text-xs font-bold text-vcet-dark">Assessment Section</h4>
+                    <p className="text-[11px] text-vcet-dark">
+                      Complete the Coding Challenge or the Knowledge Assessment first — whichever you prefer.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <HelpCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <select
+                    value={activeTab === "coding" ? "coding" : "test"}
+                    onChange={(e) => {
+                      if (e.target.value === "coding") {
+                        setActiveTab("coding");
+                      } else {
+                        activateModuleExam();
+                      }
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-vcet-gray-border bg-white text-xs font-bold text-vcet-dark focus:ring-2 focus:ring-vcet-blue cursor-pointer"
+                  >
+                    <option value="coding">Coding Challenge</option>
+                    <option value="test">Knowledge Assessment</option>
+                  </select>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* TAB 1: TUTORIAL VIDEO VIEW */}
           {activeTab === "video" && (
             <div className="space-y-6">
@@ -1121,51 +1206,19 @@ export default function CourseLearningPage() {
                   );
                 }
 
-                const hasMCQ = currentModule?.hasMCQ !== undefined
-                  ? Boolean(currentModule.hasMCQ)
-                  : Boolean(currentModule?.mcqs && currentModule.mcqs.length > 0);
-
                 return (
                   <>
-                    {hasMCQ && (
-                      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-vcet-gray-border rounded-2xl p-4">
-                        <div className="flex items-center gap-2.5">
-                          <Code2 className="w-4 h-4 text-violet-600 shrink-0" />
-                          <div>
-                            <h4 className="text-xs font-bold text-vcet-dark">Section Switcher</h4>
-                            <p className="text-[11px] text-vcet-dark">
-                              Prefer theory first? Take the MCQ assessment now, then come back to coding anytime.
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <HelpCircle className="w-4 h-4 text-emerald-600 shrink-0" />
-                          <select
-                            value="coding"
-                            onChange={(e) => {
-                            if (e.target.value === "test") {
-                              activateModuleExam();
-                            }
-                            }}
-                            className="px-3 py-1.5 rounded-xl border border-vcet-gray-border bg-white text-xs font-bold text-vcet-dark focus:ring-2 focus:ring-vcet-blue cursor-pointer"
-                          >
-                            <option value="coding">Coding Challenge</option>
-                            <option value="test">
-                              Knowledge Assessment Test ({currentModule?.mcqs?.length || 0} MCQ)
-                            </option>
-                          </select>
-                        </div>
-                      </div>
-                    )}
-
                     <ModuleCodingChallenge
                       module={currentModule}
                       courseSlug={courseId}
                       allowedLanguages={course?.languages}
-                      onProceedToTest={() => {
-                        activateModuleExam();
-                      }}
+                      initialSection="coding"
+                      initialProgression={progression}
+                      initialTestResult={testResult}
+                      onProceedToTest={() => {}}
                       onCodingComplete={handleCodingComplete}
+                      onTestComplete={handleTestCompleteResult}
+                      onViewCertificate={() => setShowCertificateModal(true)}
                       onExitArena={() => {
                         const hasVid = currentModule?.hasVideo !== undefined
                           ? Boolean(currentModule.hasVideo)
@@ -1176,6 +1229,12 @@ export default function CourseLearningPage() {
                         if (hasVid) setActiveTab("video");
                         else if (hasMCQ) setActiveTab("test");
                         else navigate(`/courses/${courseId}`);
+                      }}
+                      nextModule={nextModule}
+                      onProceedToNextModule={() => {
+                        if (nextModule) {
+                          navigate(`/courses/${courseId}/module/${nextModule._id || nextModule.moduleNumber}`);
+                        }
                       }}
                     />
                   </>
@@ -1261,31 +1320,73 @@ export default function CourseLearningPage() {
                   );
                 }
 
+                // If module contains coding problems, unify Coding and Knowledge Assessment in single page with dropdown
+                const hasCoding = currentModule?.hasCoding !== undefined
+                  ? Boolean(currentModule.hasCoding)
+                  : Boolean(currentModule?.codingProblems && currentModule.codingProblems.length > 0);
+
+                if (hasCoding) {
+                  return (
+                    <ModuleCodingChallenge
+                      module={currentModule}
+                      courseSlug={courseId}
+                      allowedLanguages={course?.languages}
+                      initialSection="mcq"
+                      initialProgression={progression}
+                      initialTestResult={testResult}
+                      onProceedToTest={() => {}}
+                      onCodingComplete={handleCodingComplete}
+                      onTestComplete={handleTestCompleteResult}
+                      onViewCertificate={() => setShowCertificateModal(true)}
+                      onExitArena={() => {
+                        const hasVid = currentModule?.hasVideo !== undefined
+                          ? Boolean(currentModule.hasVideo)
+                          : Boolean(currentModule?.videoUrl || currentModule?.videos?.length > 0);
+                        if (hasVid) setActiveTab("video");
+                        else navigate(`/courses/${courseId}`);
+                      }}
+                      nextModule={nextModule}
+                      onProceedToNextModule={() => {
+                        if (nextModule) {
+                          navigate(`/courses/${courseId}/module/${nextModule._id || nextModule.moduleNumber}`);
+                        }
+                      }}
+                    />
+                  );
+                }
+
                 if (testResult) {
                   return (
                     /* Assessment Result Review Panel */
                     <div className="space-y-6">
                       <div className="p-6 sm:p-8 rounded-2xl border border-vcet-gray-border bg-white text-center space-y-4">
-                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border border-vcet-blue/20 bg-vcet-blue/10 text-vcet-blue">
-                          <Award className="w-7 h-7" />
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border ${testResult.practice ? "border-amber-200 bg-amber-50 text-amber-600" : "border-vcet-blue/20 bg-vcet-blue/10 text-vcet-blue"}`}>
+                          {testResult.practice ? <RotateCcw className="w-7 h-7" /> : <Award className="w-7 h-7" />}
                         </div>
 
                         <div>
                           <span className="text-xs uppercase font-bold tracking-wider text-vcet-dark">
-                            Assessment Result
+                            {testResult.practice ? "Practice Attempt" : "Assessment Result"}
                           </span>
                           <h2 className="text-2xl sm:text-3xl font-bold text-vcet-dark mt-1">
-                            Score: {testResult.scorePercentage}%
+                            {testResult.practice ? "Practice Score: " : "Score: "}
+                            {testResult.scorePercentage}%
                           </h2>
-                          <p className="text-sm text-vcet-dark mt-2">
-                            {testResult.passed
-                              ? `Passed! Appreciation Certificate is issued.`
-                              : `Score did not meet the 50% passing threshold. Please review and try again.`}
+                          <p className="text-sm text-vcet-dark mt-2 max-w-lg mx-auto">
+                            {testResult.practice
+                              ? `This retake is for your own satisfaction only. It does not change your official recorded score${
+                                  testResult.officialScore !== null && testResult.officialScore !== undefined
+                                    ? ` (${testResult.officialScore}%)`
+                                    : ""
+                                } and is not used for any certificate.`
+                              : testResult.passed
+                              ? "Passed! Your official score has been recorded and the Appreciation Certificate is issued."
+                              : "Your official score did not meet the 50% passing threshold. Retakes are practice-only and will not change this recorded score."}
                           </p>
                         </div>
 
                         <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-                          {testResult.passed && certificate && (
+                          {!testResult.practice && testResult.passed && certificate && (
                             <button
                               onClick={() => setShowCertificateModal(true)}
                               className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
@@ -1295,7 +1396,7 @@ export default function CourseLearningPage() {
                             </button>
                           )}
 
-                          {testResult.passed && nextModule && (
+                          {!testResult.practice && testResult.passed && nextModule && (
                             <button
                               onClick={() => navigate(`/courses/${courseId}/module/${nextModule._id || nextModule.moduleNumber}`)}
                               className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
@@ -1310,7 +1411,7 @@ export default function CourseLearningPage() {
                             className="px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-vcet-dark font-semibold text-xs transition border border-vcet-gray-border flex items-center gap-2"
                           >
                             <RotateCcw className="w-4 h-4" />
-                            <span>Retake Assessment</span>
+                            <span>{hasGradedAttempt || testResult.practice ? "Retake (Practice Only)" : "Retake Assessment"}</span>
                           </button>
                         </div>
                       </div>
@@ -1373,6 +1474,19 @@ export default function CourseLearningPage() {
                 return (
                   /* Assessment Questions Form */
                   <div className="space-y-6">
+                    {hasGradedAttempt && (
+                      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                        <RotateCcw className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+                        <div>
+                          <h4 className="text-xs font-bold text-amber-800">Practice Retake</h4>
+                          <p className="text-[11px] text-amber-700">
+                            You have already completed your graded attempt. This retake is for your own satisfaction and
+                            will not change your official recorded score or affect any certificate.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Exam Mode Monitor */}
                     <div className="bg-white border border-vcet-gray-border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
@@ -1587,7 +1701,7 @@ export default function CourseLearningPage() {
 
       {/* 3. Certificate & Course Completion Celebration Modal */}
       {showCertificateModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[99999999] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
           <div className="max-w-2xl w-full bg-[#FFFFFF] border border-vcet-line rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative text-center">
             <button
               onClick={() => {

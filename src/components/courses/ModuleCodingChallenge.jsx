@@ -23,6 +23,13 @@ import {
   Layout,
   Lock,
   LogOut,
+  Layers,
+  Award,
+  HelpCircle,
+  CheckCheck,
+  RotateCcw,
+  ArrowRight,
+  ArrowLeft,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { useToast } from "../../context/ToastContext";
@@ -113,13 +120,175 @@ export default function ModuleCodingChallenge({
   module,
   courseSlug,
   allowedLanguages,
+  initialSection = "coding",
+  initialProgression = null,
+  initialTestResult = null,
   onProceedToTest,
   onCodingComplete,
+  onTestComplete,
+  onViewCertificate = null,
   onExitArena,
+  nextModule = null,
+  onProceedToNextModule = null,
 }) {
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showInfo } = useToast();
   const navigate = useNavigate();
   const problems = module?.codingProblems || [];
+  const mcqs = useMemo(() => module?.mcqs || [], [module]);
+  const hasCoding = problems.length > 0;
+  const hasMCQ = mcqs.length > 0;
+  const hasBothSections = hasCoding && hasMCQ;
+
+  // Active section: "coding" or "mcq"
+  const [activeSection, setActiveSection] = useState(() => {
+    if (initialSection === "mcq" && hasMCQ) return "mcq";
+    if (hasCoding) return "coding";
+    if (hasMCQ) return "mcq";
+    return "coding";
+  });
+
+  const [mcqAnswers, setMcqAnswers] = useState({});
+  const [isSubmittingMcq, setIsSubmittingMcq] = useState(false);
+  const [mcqResult, setMcqResult] = useState(null);
+  const [codingResult, setCodingResult] = useState(
+    initialProgression?.codingPassed
+      ? { status: "Accepted", allPassed: true, passedCases: 1, totalCases: 1, scorePercentage: 100 }
+      : null
+  );
+  const [showScorecardModal, setShowScorecardModal] = useState(false);
+  const [testStartTime] = useState(() => Date.now());
+
+  // Sync coding passed from parent
+  useEffect(() => {
+    if (initialProgression?.codingPassed && !codingResult) {
+      setCodingResult({ status: "Accepted", allPassed: true, passedCases: 1, totalCases: 1, scorePercentage: 100 });
+    }
+  }, [initialProgression, codingResult]);
+
+  // Sync section only when parent changes initialSection prop
+  const prevInitialSectionRef = useRef(initialSection);
+  useEffect(() => {
+    if (prevInitialSectionRef.current !== initialSection) {
+      prevInitialSectionRef.current = initialSection;
+      if (initialSection === "mcq" && hasMCQ) {
+        setActiveSection("mcq");
+      } else if (initialSection === "coding" && hasCoding) {
+        setActiveSection("coding");
+      }
+    }
+  }, [initialSection, hasMCQ, hasCoding]);
+
+  // Calculate section scores and total combined score
+  const codingScore = useMemo(() => {
+    if (codingResult?.allPassed || codingResult?.codingPassed || initialProgression?.codingPassed) return 100;
+    if (codingResult?.passedCases !== undefined && codingResult?.totalCases) {
+      return Math.round((codingResult.passedCases / codingResult.totalCases) * 100);
+    }
+    return null;
+  }, [codingResult, initialProgression]);
+
+  const mcqScore = useMemo(() => {
+    if (mcqResult?.scorePercentage !== undefined && mcqResult?.scorePercentage !== null) {
+      return Number(mcqResult.scorePercentage);
+    }
+    return null;
+  }, [mcqResult]);
+
+  const totalScore = useMemo(() => {
+    if (hasCoding && hasMCQ) {
+      if (codingScore !== null && mcqScore !== null) {
+        return Math.round((codingScore + mcqScore) / 2);
+      }
+      if (codingScore !== null) return codingScore;
+      if (mcqScore !== null) return mcqScore;
+      return null;
+    }
+    if (hasCoding) return codingScore;
+    if (hasMCQ) return mcqScore;
+    return null;
+  }, [hasCoding, hasMCQ, codingScore, mcqScore]);
+
+  const isBothCompleted = useMemo(() => {
+    const codDone = !hasCoding || codingScore !== null;
+    const mcqDone = !hasMCQ || mcqScore !== null;
+    return codDone && mcqDone;
+  }, [hasCoding, hasMCQ, codingScore, mcqScore]);
+
+  const handleSelectAnswer = (qIdx, optIdx) => {
+    setMcqAnswers((prev) => ({
+      ...prev,
+      [qIdx]: optIdx,
+    }));
+  };
+
+  const handleSubmitMcq = async () => {
+    if (mcqs.length === 0) return;
+    const answeredCount = Object.keys(mcqAnswers).length;
+    if (answeredCount < mcqs.length) {
+      const confirmSubmit = window.confirm(
+        `You have answered ${answeredCount} of ${mcqs.length} questions. Submit the entire assessment anyway?`
+      );
+      if (!confirmSubmit) return;
+    }
+
+    setIsSubmittingMcq(true);
+    try {
+      // If code was edited but student hasn't clicked "Submit Code" yet, submit their code as part of whole assessment
+      if (hasCoding && !codingResult && code.trim()) {
+        try {
+          const autoCodeRes = await courseService.runModuleCode(courseSlug, module._id || module.id, {
+            problemId: currentProblem?._id || currentProblem?.id,
+            language,
+            sourceCode: code,
+            isSubmit: true,
+          });
+          setCodingResult(autoCodeRes);
+          onCodingComplete?.(autoCodeRes);
+        } catch (cErr) {
+          console.warn("Auto-evaluating code during full assessment submission:", cErr);
+        }
+      }
+
+      const timeSpent = Math.round((Date.now() - testStartTime) / 1000) || 45;
+      const result = await courseService.submitModuleTest(courseSlug, module._id || module.id, {
+        answers: mcqAnswers,
+        timeSpentSeconds: timeSpent,
+        submissionType: "manual",
+        violations: [],
+      });
+
+      setMcqResult(result);
+
+      if (result?.passed) {
+        confetti({
+          particleCount: 160,
+          spread: 80,
+          origin: { y: 0.5 },
+        });
+        showSuccess(`🎉 Congratulations! Assessment Passed with ${result.scorePercentage}%! Certificate issued.`);
+
+        if (isFullscreen) {
+          finishAssessment();
+        }
+      } else {
+        showError(`Assessment Submitted. Score: ${result.scorePercentage}%. (50% needed to pass)`);
+        setShowScorecardModal(true);
+      }
+
+      onTestComplete?.(result);
+    } catch (err) {
+      console.error("Failed to submit assessment:", err);
+      showError(err?.response?.data?.message || err.message || "Failed to submit assessment.");
+    } finally {
+      setIsSubmittingMcq(false);
+    }
+  };
+
+  const handleResetMcq = () => {
+    setMcqAnswers({});
+    setMcqResult(null);
+  };
+
   const containerRef = useRef(null);
 
   // Only the languages the faculty selected for this course are offered.
@@ -690,11 +859,30 @@ export default function ModuleCodingChallenge({
         );
 
         if (isSubmit) {
-          if (!autoSubmittingRef.current) {
-            onCodingComplete?.(res);
+          setCodingResult(res);
+          if (hasMCQ) {
+            showSuccess("✓ Code submitted! Taking you to Knowledge Assessment...");
+            setActiveSection("mcq");
+          } else {
+            if (!autoSubmittingRef.current) {
+              onCodingComplete?.(res);
+            }
+            setShowScorecardModal(true);
           }
         }
       } else {
+        if (isSubmit) {
+          setCodingResult(res);
+          if (hasMCQ) {
+            showInfo("Code submitted. Taking you to Knowledge Assessment...");
+            setActiveSection("mcq");
+          } else {
+            if (!autoSubmittingRef.current) {
+              onCodingComplete?.(res);
+            }
+            setShowScorecardModal(true);
+          }
+        }
         if (res.status === "Compilation Error") {
           showError(
             res.compileErrorMessage ||
@@ -715,7 +903,8 @@ export default function ModuleCodingChallenge({
         // My Courses instead of leaving them on the question.
         finishAssessment();
         navigate("/courses", { replace: true });
-      } else if (isSubmit && res.allPassed) {
+      } else if (isSubmit && res.allPassed && !hasMCQ) {
+        // When there are no MCQs, submitting accepted code completes the module
         finishAssessment();
       }
     } catch (err) {
@@ -745,28 +934,37 @@ export default function ModuleCodingChallenge({
     };
   }, [exitFullscreen]);
 
-  if (!currentProblem) {
+  if (!currentProblem && !hasMCQ) {
     return (
       <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-3">
         <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
           <AlertCircle className="w-6 h-6" />
         </div>
-        <h3 className="text-base font-bold text-slate-800">No Coding Challenges Configured</h3>
+        <h3 className="text-base font-bold text-slate-800">No Assessment Content Configured</h3>
         <p className="text-xs text-slate-500 max-w-sm mx-auto">
-          The faculty coordinator has marked this module for coding but hasn&apos;t published any problems yet.
+          The faculty coordinator hasn&apos;t published any questions for this module yet.
         </p>
       </div>
     );
   }
 
   // Filter public (non-hidden) test cases for presentation
-  const publicTestCases = (currentProblem.testCases || []).filter((tc) => !tc.isHidden);
+  const publicTestCases = currentProblem ? (currentProblem.testCases || []).filter((tc) => !tc.isHidden) : [];
 
   // Renders the problem specifications (reusable in desktop panel, mobile tab, and modal)
-  const renderProblemDetails = (darkTheme = false) => (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className={`space-y-2 border-b pb-4 ${darkTheme ? "border-slate-800" : "border-slate-100"}`}>
+  const renderProblemDetails = (darkTheme = false) => {
+    if (!currentProblem) {
+      return (
+        <div className="p-6 text-center text-xs text-slate-500">
+          No active coding challenge. Switch to Knowledge Assessment above to continue.
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-5">
+        {/* Header */}
+        <div className={`space-y-2 border-b pb-4 ${darkTheme ? "border-slate-800" : "border-slate-100"}`}>
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-bold tracking-widest text-vcet-blue uppercase">
             Challenge #{activeProblemIdx + 1} of {problems.length}
@@ -892,7 +1090,474 @@ export default function ModuleCodingChallenge({
         </div>
       )}
     </div>
-  );
+    );
+  };
+
+  // Renders the Knowledge Assessment Workspace (MCQs)
+  const renderMcqWorkspace = (inFullscreen = false) => {
+    const answeredCount = Object.keys(mcqAnswers).length;
+    const isGraded = Boolean(mcqResult);
+
+    return (
+      <div className={`flex-1 flex flex-col min-h-0 overflow-y-auto space-y-5 p-4 sm:p-6 rounded-2xl ${
+        inFullscreen ? "bg-white border border-slate-200" : "bg-white border border-slate-200"
+      }`}>
+        {/* MCQ Top Header / Status bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 border border-emerald-200 font-bold text-xs flex items-center gap-1.5">
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Knowledge Assessment</span>
+              </span>
+              <span className="text-xs font-bold text-slate-400">
+                • {mcqs.length} Question{mcqs.length > 1 ? "s" : ""}
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-800">
+              {module?.title || "Module Knowledge Check"}
+            </h3>
+            <p className="text-xs text-slate-500">
+              Select the correct option for each question. Minimum 50% required to pass.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <div className="px-3.5 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <CheckCheck className="w-3.5 h-3.5 text-vcet-blue" />
+              <span>Answered: {answeredCount} / {mcqs.length}</span>
+            </div>
+
+            {/* Top Submit Solution Button on MCQ page */}
+            <button
+              type="button"
+              disabled={isSubmittingMcq}
+              onClick={handleSubmitMcq}
+              className="px-4 py-1.5 rounded-xl text-xs font-bold bg-vcet-blue hover:bg-vcet-blue-deep text-white flex items-center gap-1.5 transition shadow-sm cursor-pointer disabled:opacity-50"
+              title="Submit the entire assessment and view final score"
+            >
+              {isSubmittingMcq ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <CheckCircle className="w-3.5 h-3.5" />
+              )}
+              <span>{isSubmittingMcq ? "Evaluating..." : isGraded ? "Update Solution" : "Submit Solution"}</span>
+            </button>
+
+            {isGraded && (
+              <button
+                type="button"
+                onClick={handleResetMcq}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border border-slate-200"
+                title="Retake knowledge assessment questions"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Retake</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Graded Summary Banner if already submitted */}
+        {isGraded && (
+          <div className={`p-4 sm:p-5 rounded-2xl border flex flex-wrap items-center justify-between gap-4 ${
+            mcqResult.passed
+              ? "bg-emerald-50/70 border-emerald-200 text-emerald-900"
+              : "bg-rose-50/70 border-rose-200 text-rose-900"
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                mcqResult.passed ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"
+              }`}>
+                {mcqResult.passed ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase tracking-wider">
+                    {mcqResult.passed ? "Assessment Passed" : "Needs Improvement"}
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-white/80 border">
+                    Score: {mcqResult.scorePercentage}%
+                  </span>
+                </div>
+                <p className="text-xs opacity-80 mt-0.5">
+                  {mcqResult.correctCount !== undefined
+                    ? `You got ${mcqResult.correctCount} of ${mcqResult.totalQuestions || mcqs.length} questions correct.`
+                    : `Achieved ${mcqResult.scorePercentage}% on this assessment.`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowScorecardModal(true)}
+                className="px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs border border-slate-300 shadow-xs cursor-pointer flex items-center gap-1.5"
+              >
+                <Award className="w-3.5 h-3.5 text-amber-500" />
+                <span>View Full Scorecard</span>
+              </button>
+              {hasCoding && (
+                <button
+                  type="button"
+                  onClick={() => setActiveSection("coding")}
+                  className="px-4 py-2 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs shadow-xs cursor-pointer flex items-center gap-1.5"
+                >
+                  <Code2 className="w-3.5 h-3.5" />
+                  <span>Go to Coding Challenge</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Questions List */}
+        <div className="space-y-5">
+          {mcqs.map((q, qIdx) => {
+            const gradedQ = mcqResult?.questions?.[qIdx];
+            const currentSelected = mcqAnswers[qIdx] ?? gradedQ?.selectedAnswer;
+
+            return (
+              <div
+                key={q._id || qIdx}
+                className="bg-slate-50/70 hover:bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-3.5 transition"
+              >
+                {/* Question Title */}
+                <div className="flex items-start gap-3">
+                  <span className="flex-shrink-0 w-7 h-7 rounded-xl bg-white border border-slate-200 text-slate-700 font-bold text-xs flex items-center justify-center shadow-2xs">
+                    {qIdx + 1}
+                  </span>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-slate-800 leading-snug">
+                      {q.question}
+                    </h4>
+                  </div>
+                  {gradedQ && (
+                    <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
+                      gradedQ.isCorrect
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : "bg-rose-50 text-rose-700 border-rose-200"
+                    }`}>
+                      {gradedQ.isCorrect ? "✓ Correct" : "✗ Incorrect"}
+                    </span>
+                  )}
+                </div>
+
+                {/* Options */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                  {(q.options || []).map((opt, optIdx) => {
+                    const optText = String(opt || "").trim();
+                    if (!optText) return null;
+                    const isSelected = currentSelected === optIdx;
+
+                    let optionStyle = "bg-white border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-100/50";
+                    let badgeStyle = "bg-slate-100 text-slate-600 border-slate-200";
+
+                    if (isGraded && gradedQ) {
+                      const isCorrectOption = optIdx === gradedQ.correctAnswer;
+                      if (isCorrectOption) {
+                        optionStyle = "bg-emerald-50 border-emerald-400 text-emerald-900 font-bold";
+                        badgeStyle = "bg-emerald-500 text-white border-emerald-600";
+                      } else if (isSelected && !gradedQ.isCorrect) {
+                        optionStyle = "bg-rose-50 border-rose-400 text-rose-900 font-bold";
+                        badgeStyle = "bg-rose-500 text-white border-rose-600";
+                      }
+                    } else if (isSelected) {
+                      optionStyle = "bg-vcet-blue text-white border-vcet-blue font-bold shadow-xs";
+                      badgeStyle = "bg-white text-vcet-blue border-white";
+                    }
+
+                    const optLetter = String.fromCharCode(65 + optIdx);
+
+                    return (
+                      <button
+                        key={optIdx}
+                        type="button"
+                        onClick={() => handleSelectAnswer(qIdx, optIdx)}
+                        className={`p-3 sm:p-3.5 rounded-xl text-xs transition flex items-center justify-between border text-left cursor-pointer ${optionStyle}`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          <span className={`w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black border shrink-0 ${badgeStyle}`}>
+                            {optLetter}
+                          </span>
+                          <span className="truncate">{optText}</span>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          isSelected ? (isGraded ? "border-current" : "border-white bg-white") : "border-slate-300"
+                        }`}>
+                          {isSelected && <div className={`w-2 h-2 rounded-full ${isSelected && !isGraded ? "bg-vcet-blue" : "bg-current"}`} />}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Explanation in Review Mode */}
+                {isGraded && gradedQ?.explanation && (
+                  <div className="p-3 rounded-xl bg-sky-50/70 border border-sky-200 text-xs text-sky-900 space-y-1">
+                    <span className="font-bold text-[11px] block uppercase tracking-wider text-sky-700">Explanation:</span>
+                    <p>{gradedQ.explanation}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Bottom Submission Toolbar */}
+        <div className="pt-4 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="text-xs text-slate-500">
+            {answeredCount < mcqs.length ? (
+              <span>⚠️ Answer all {mcqs.length} questions before submitting ({answeredCount}/{mcqs.length} answered).</span>
+            ) : (
+              <span className="text-emerald-600 font-bold">✓ All questions answered. Ready to submit!</span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {hasCoding && (
+              <button
+                type="button"
+                onClick={() => setActiveSection("coding")}
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer border border-slate-200 flex items-center gap-1.5"
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                <span>Switch to Coding</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              disabled={isSubmittingMcq}
+              onClick={handleSubmitMcq}
+              className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs transition shadow-sm cursor-pointer disabled:opacity-50 flex items-center gap-2"
+            >
+              {isSubmittingMcq ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <CheckCircle className="w-3.5 h-3.5" />
+              )}
+              <span>{isSubmittingMcq ? "Evaluating..." : isGraded ? "Update Solution" : "Submit Solution"}</span>
+            </button>
+
+            {isGraded && (
+              <button
+                type="button"
+                onClick={() => setShowScorecardModal(true)}
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition shadow-sm cursor-pointer flex items-center gap-2"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>View Total Scorecard</span>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Renders the Comprehensive Total Scorecard Modal
+  const renderScorecardModal = () => {
+    if (!showScorecardModal) return null;
+
+    const isPassed = totalScore >= 50;
+    const codingDone = codingScore !== null;
+    const mcqDone = mcqScore !== null;
+
+    return createPortal(
+      <div className="fixed inset-0 z-[99999999] bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="max-w-lg w-full bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative my-auto">
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => setShowScorecardModal(false)}
+            className="absolute top-5 right-5 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition cursor-pointer"
+            title="Close scorecard"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Header */}
+          <div className="text-center space-y-2">
+            <div className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center border shadow-xs ${
+              isPassed ? "bg-emerald-50 text-emerald-600 border-emerald-200" : "bg-amber-50 text-amber-600 border-amber-200"
+            }`}>
+              <Award className="w-7 h-7" />
+            </div>
+            <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+              Module Performance Summary
+            </span>
+            <h3 className="text-2xl font-black text-slate-900">
+              Total Score: {totalScore}%
+            </h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              {isBothCompleted
+                ? isPassed
+                  ? "🎉 Outstanding! You have completed all module requirements and passed the assessment."
+                  : "Score is below the 50% passing criteria. You can review or retake either section to improve."
+                : "You have completed one assessment section. Attend the other section to complete this module!"}
+            </p>
+          </div>
+
+          {/* Section Breakdown Cards */}
+          <div className="space-y-3">
+            {/* Coding Challenge Card */}
+            {hasCoding && (
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    codingDone ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"
+                  }`}>
+                    <Code2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800">Coding Challenge</h4>
+                    <p className="text-[11px] text-slate-500">
+                      {codingDone
+                        ? `Passed all test cases • Score: ${codingScore}%`
+                        : "Not submitted yet"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    codingDone
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {codingDone ? `${codingScore}%` : "Pending"}
+                  </span>
+                  {activeSection !== "coding" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveSection("coding");
+                        setShowScorecardModal(false);
+                      }}
+                      className="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-vcet-blue text-xs font-bold border border-slate-300 transition cursor-pointer"
+                    >
+                      {codingDone ? "Review" : "Attend"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Knowledge Assessment Card */}
+            {hasMCQ && (
+              <div className="p-4 rounded-2xl border border-slate-200 bg-slate-50/70 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                    mcqDone ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"
+                  }`}>
+                    <HelpCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800">Knowledge Assessment</h4>
+                    <p className="text-[11px] text-slate-500">
+                      {mcqDone
+                        ? `${mcqResult?.correctCount ?? "?"} of ${mcqResult?.totalQuestions || mcqs.length} correct • Score: ${mcqScore}%`
+                        : "Not submitted yet"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                    mcqDone
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                      : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {mcqDone ? `${mcqScore}%` : "Pending"}
+                  </span>
+                  {activeSection !== "mcq" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveSection("mcq");
+                        setShowScorecardModal(false);
+                      }}
+                      className="px-2.5 py-1 rounded-xl bg-white hover:bg-slate-100 text-vcet-blue text-xs font-bold border border-slate-300 transition cursor-pointer"
+                    >
+                      {mcqDone ? "Review" : "Attend"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Action Footer */}
+          <div className="pt-2 flex flex-col sm:flex-row gap-2.5">
+            {!isBothCompleted ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowScorecardModal(false);
+                    if (!codingDone && hasCoding) {
+                      setActiveSection("coding");
+                    } else if (!mcqDone && hasMCQ) {
+                      setActiveSection("mcq");
+                    }
+                  }}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs transition cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                >
+                  <span>Attend {!codingDone ? "Coding Challenge" : "Knowledge Assessment"}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowScorecardModal(false)}
+                  className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
+                >
+                  Stay Here
+                </button>
+              </>
+            ) : (
+              <>
+                {onViewCertificate && isPassed && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowScorecardModal(false);
+                      onViewCertificate();
+                    }}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <Award className="w-4 h-4" />
+                    <span>View Certificate</span>
+                  </button>
+                )}
+                {nextModule && onProceedToNextModule && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowScorecardModal(false);
+                      onProceedToNextModule();
+                    }}
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs transition cursor-pointer shadow-sm flex items-center justify-center gap-2"
+                  >
+                    <span>Proceed to Module {nextModule.moduleNumber || ""}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowScorecardModal(false)}
+                  className="py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition cursor-pointer"
+                >
+                  Review My Work
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
 
   // Renders the Code Editor Canvas & Actions
   const renderEditorWorkspace = (inFullscreen = false) => (
@@ -1003,20 +1668,6 @@ export default function ModuleCodingChallenge({
               <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
             )}
             <span>{isRunning ? "Running..." : "Run Public Cases"}</span>
-          </button>
-
-          <button
-            type="button"
-            disabled={isRunning || isSubmitting || terminated}
-            onClick={() => handleRunCode(true)}
-            className="px-4 py-1.5 rounded-xl text-xs font-bold bg-vcet-blue hover:bg-vcet-blue-deep text-white flex items-center gap-1.5 transition shadow-sm cursor-pointer disabled:opacity-50"
-          >
-            {isSubmitting ? (
-              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <CheckCircle className="w-3.5 h-3.5" />
-            )}
-            <span>{isSubmitting ? "Evaluating..." : "Submit Solution"}</span>
           </button>
         </div>
       </div>
@@ -1173,25 +1824,52 @@ export default function ModuleCodingChallenge({
         </div>
       )}
 
-      {/* Action callout to proceed to assessment test */}
-      {onProceedToTest && !inFullscreen && (
-        <div className="p-4 rounded-2xl bg-sky-50 border border-sky-200 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h4 className="text-xs font-bold text-slate-800">Finished coding practice?</h4>
-            <p className="text-[11px] text-slate-500">
-              Proceed to the knowledge assessment test to complete this module.
-            </p>
-          </div>
+      {/* Bottom Action Bar for Code Execution and Solution Submission */}
+      <div className={`border rounded-2xl p-3 sm:px-4 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0 ${
+        inFullscreen ? "bg-white border-slate-200" : "bg-white border-slate-200"
+      }`}>
+        <div className="flex items-center gap-2">
+          <Terminal className="w-4 h-4 text-vcet-blue" />
+          <span className="text-xs font-bold text-slate-700">
+            {executionResult
+              ? executionResult.allPassed
+                ? "✓ Solution Passed & Accepted"
+                : "⚠️ Test cases failed — check output above"
+              : "Run tests or submit your code when ready"}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={onProceedToTest}
-            className="px-4 py-2 rounded-xl bg-vcet-blue hover:bg-vcet-blue-deep text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-xs cursor-pointer"
+            disabled={isRunning || isSubmitting || terminated}
+            onClick={() => handleRunCode(false)}
+            className="px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 border transition cursor-pointer disabled:opacity-50 bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-300"
           >
-            <span>Take Knowledge Assessment</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            {isRunning ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin text-vcet-blue" />
+            ) : (
+              <Play className="w-3.5 h-3.5 text-emerald-500 fill-emerald-500" />
+            )}
+            <span>{isRunning ? "Running..." : "Run Public Cases"}</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={isRunning || isSubmitting || terminated}
+            onClick={() => handleRunCode(true)}
+            className="px-5 py-2 rounded-xl text-xs font-bold bg-vcet-blue hover:bg-vcet-blue-deep text-white flex items-center gap-2 transition shadow-sm cursor-pointer disabled:opacity-50"
+            title="Submit code and proceed to Knowledge Assessment"
+          >
+            {isSubmitting ? (
+              <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <CheckCircle className="w-3.5 h-3.5" />
+            )}
+            <span>{isSubmitting ? "Submitting Code..." : "Submit Code"}</span>
           </button>
         </div>
-      )}
+      </div>
     </div>
   );
 
@@ -1206,17 +1884,39 @@ export default function ModuleCodingChallenge({
             touchAction: "none",
           }}
         >
-          {/* Top Fullscreen Header */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-sm mb-3 shrink-0">
-            <div className="flex items-center gap-3">
-              <span className="p-2 rounded-xl bg-vcet-blue text-white font-bold text-xs flex items-center gap-1.5">
+          {/* Top Fullscreen Header with Assessment Section Dropdown */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-slate-200 shadow-sm mb-3 shrink-0 flex-wrap gap-2.5">
+            <div className="flex items-center gap-3 flex-wrap">
+              <span className="p-2 rounded-xl bg-vcet-blue text-white font-bold text-xs flex items-center gap-1.5 shadow-xs">
                 <Code2 className="w-4 h-4" />
                 <span>Coding Arena</span>
               </span>
-              <span className="text-sm font-bold text-slate-900 truncate max-w-xs sm:max-w-md">
-                {currentProblem?.title || module?.title}
-              </span>
-              {problems.length > 1 && (
+
+              {/* Top Section Dropdown: Coding Challenge or Knowledge Assessment */}
+              <div className="flex items-center gap-2">
+                <select
+                  value={activeSection}
+                  onChange={(e) => setActiveSection(e.target.value)}
+                  className="px-3 py-1.5 rounded-xl border-2 border-vcet-blue bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-vcet-blue cursor-pointer shadow-xs transition hover:bg-slate-50"
+                >
+                  <option value="coding">
+                    💻 Coding Challenge ({problems.length} Problem{problems.length > 1 ? "s" : ""})
+                  </option>
+                  {hasMCQ && (
+                    <option value="mcq">
+                      📝 Knowledge Assessment ({mcqs.length} MCQ{mcqs.length > 1 ? "s" : ""})
+                    </option>
+                  )}
+                </select>
+              </div>
+
+              {activeSection === "coding" && currentProblem && (
+                <span className="text-sm font-bold text-slate-700 truncate max-w-xs sm:max-w-md hidden md:inline">
+                  {currentProblem?.title}
+                </span>
+              )}
+
+              {activeSection === "coding" && problems.length > 1 && (
                 <div className="hidden sm:flex items-center gap-1">
                   {problems.map((p, idx) => (
                     <button
@@ -1237,14 +1937,34 @@ export default function ModuleCodingChallenge({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Total Score Pill / Button */}
               <button
                 type="button"
-                onClick={() => setShowQuestionModal(true)}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-slate-300"
+                onClick={() => setShowScorecardModal(true)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border shadow-xs ${
+                  isBothCompleted
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                    : (codingScore !== null || mcqScore !== null)
+                    ? "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                    : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                }`}
+                title="Click to view total assessment score and section breakdown"
               >
-                <BookOpen className="w-3.5 h-3.5 text-sky-600" />
-                <span>View Question</span>
+                <Award className="w-3.5 h-3.5 text-amber-500" />
+                <span>Total Score: {totalScore !== null ? `${totalScore}%` : "Pending"}</span>
               </button>
+
+              {activeSection === "coding" && (
+                <button
+                  type="button"
+                  onClick={() => setShowQuestionModal(true)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border border-slate-300"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-sky-600" />
+                  <span>View Question</span>
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={handleExitFullscreen}
@@ -1256,33 +1976,39 @@ export default function ModuleCodingChallenge({
             </div>
           </div>
 
-          {/* Fullscreen Body Grid */}
+          {/* Fullscreen Body Grid: Switch based on activeSection */}
           <div className="flex-1 min-h-0 flex gap-4 overflow-hidden">
-            {/* Left Panel: Question Specs (Toggleable) */}
-            {showQuestionPanel && (
-              <div className="w-[38%] bg-white border border-slate-200 rounded-2xl p-5 overflow-y-auto hidden lg:block">
-                <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-2">
-                  <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-                    <BookOpen className="w-4 h-4 text-sky-600" />
-                    <span>Problem Statement</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowQuestionPanel(false)}
-                    className="text-xs text-slate-500 hover:text-slate-900 cursor-pointer flex items-center gap-1"
-                  >
-                    <EyeOff className="w-3 h-3" />
-                    <span>Collapse</span>
-                  </button>
-                </div>
-                {renderProblemDetails(false)}
-              </div>
-            )}
+            {activeSection === "coding" ? (
+              <>
+                {/* Left Panel: Question Specs (Toggleable) */}
+                {showQuestionPanel && (
+                  <div className="w-[38%] bg-white border border-slate-200 rounded-2xl p-5 overflow-y-auto hidden lg:block">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-2">
+                      <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                        <BookOpen className="w-4 h-4 text-sky-600" />
+                        <span>Problem Statement</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowQuestionPanel(false)}
+                        className="text-xs text-slate-500 hover:text-slate-900 cursor-pointer flex items-center gap-1"
+                      >
+                        <EyeOff className="w-3 h-3" />
+                        <span>Collapse</span>
+                      </button>
+                    </div>
+                    {renderProblemDetails(false)}
+                  </div>
+                )}
 
-            {/* Right Panel: Editor Canvas */}
-            <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
-              {renderEditorWorkspace(true)}
-            </div>
+                {/* Right Panel: Editor Canvas */}
+                <div className="flex-1 flex flex-col min-h-0 overflow-y-auto">
+                  {renderEditorWorkspace(true)}
+                </div>
+              </>
+            ) : (
+              renderMcqWorkspace(true)
+            )}
           </div>
 
           {/* EXIT EXAM CONFIRMATION DIALOG */}
@@ -1409,111 +2135,176 @@ export default function ModuleCodingChallenge({
         </div>
       )}
 
-      {/* Problem Selector Bar (if module contains multiple challenges) */}
-      {problems.length > 1 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 bg-white p-2.5 rounded-2xl border border-slate-200">
-          <span className="text-xs font-bold text-slate-500 shrink-0">Challenges:</span>
-          {problems.map((p, idx) => (
+      {/* Top Section Switcher Toolbar (Embedded View) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-3 sm:px-4 shadow-xs">
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="p-2 rounded-xl bg-vcet-blue text-white font-bold text-xs flex items-center gap-1.5 shadow-xs">
+            <Code2 className="w-4 h-4" />
+            <span>Coding Arena</span>
+          </span>
+
+          {/* Section Dropdown */}
+          <div className="flex items-center gap-2">
+            <select
+              value={activeSection}
+              onChange={(e) => setActiveSection(e.target.value)}
+              className="px-3 py-1.5 rounded-xl border-2 border-vcet-blue bg-white text-xs font-bold text-slate-800 focus:ring-2 focus:ring-vcet-blue cursor-pointer shadow-xs transition hover:bg-slate-50"
+            >
+              <option value="coding">
+                💻 Coding Challenge ({problems.length} Problem{problems.length > 1 ? "s" : ""})
+              </option>
+              {hasMCQ && (
+                <option value="mcq">
+                  📝 Knowledge Assessment ({mcqs.length} MCQ{mcqs.length > 1 ? "s" : ""})
+                </option>
+              )}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {/* Total Score Pill */}
+          <button
+            type="button"
+            onClick={() => setShowScorecardModal(true)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition cursor-pointer border shadow-xs ${
+              isBothCompleted
+                ? "bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                : (codingScore !== null || mcqScore !== null)
+                ? "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100"
+                : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+            }`}
+            title="Click to view total assessment score and section breakdown"
+          >
+            <Award className="w-3.5 h-3.5 text-amber-500" />
+            <span>Total Score: {totalScore !== null ? `${totalScore}%` : "Pending"}</span>
+          </button>
+
+          {!isFullscreen && (
             <button
-              key={p._id || idx}
               type="button"
-              onClick={() => setActiveProblemIdx(idx)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
-                activeProblemIdx === idx
-                  ? "bg-vcet-blue text-white shadow-xs"
-                  : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"
+              onClick={handleToggleFullscreen}
+              className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-slate-300"
+            >
+              <Maximize2 className="w-3.5 h-3.5 text-vcet-blue" />
+              <span>Full Screen</span>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Embedded Body: Switch based on activeSection */}
+      {activeSection === "mcq" ? (
+        renderMcqWorkspace(false)
+      ) : (
+        <>
+          {/* Problem Selector Bar (if module contains multiple challenges) */}
+          {problems.length > 1 && (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 bg-white p-2.5 rounded-2xl border border-slate-200">
+              <span className="text-xs font-bold text-slate-500 shrink-0">Challenges:</span>
+              {problems.map((p, idx) => (
+                <button
+                  key={p._id || idx}
+                  type="button"
+                  onClick={() => setActiveProblemIdx(idx)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                    activeProblemIdx === idx
+                      ? "bg-vcet-blue text-white shadow-xs"
+                      : "bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200"
+                  }`}
+                >
+                  #{idx + 1} {p.title || `Problem ${idx + 1}`}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* MOBILE TAB CONTROLS (Question vs Code vs Output) */}
+          <div className="lg:hidden flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+            <button
+              type="button"
+              onClick={() => setMobileTab("question")}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                mobileTab === "question"
+                  ? "bg-white text-vcet-blue shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              #{idx + 1} {p.title || `Problem ${idx + 1}`}
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Question</span>
             </button>
-          ))}
-        </div>
-      )}
 
-      {/* MOBILE TAB CONTROLS (Question vs Code vs Output) */}
-      <div className="lg:hidden flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
-        <button
-          type="button"
-          onClick={() => setMobileTab("question")}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            mobileTab === "question"
-              ? "bg-white text-vcet-blue shadow-xs"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <BookOpen className="w-3.5 h-3.5" />
-          <span>Question</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMobileTab("editor")}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-            mobileTab === "editor"
-              ? "bg-white text-vcet-blue shadow-xs"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Code2 className="w-3.5 h-3.5" />
-          <span>Code Editor</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMobileTab("output")}
-          className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
-            mobileTab === "output"
-              ? "bg-white text-vcet-blue shadow-xs"
-              : "text-slate-600 hover:text-slate-900"
-          }`}
-        >
-          <Terminal className="w-3.5 h-3.5" />
-          <span>Output & Tests</span>
-          {executionResult && (
-            <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-2 right-3" />
-          )}
-        </button>
-      </div>
-
-      {/* MAIN WORKSPACE GRID */}
-      <div className={`grid grid-cols-1 ${showQuestionPanel ? "lg:grid-cols-12" : "lg:grid-cols-1"} gap-5 items-start`}>
-        {/* LEFT COLUMN: Problem Specification & Test Cases */}
-        <div
-          className={`${
-            showQuestionPanel ? "lg:col-span-5" : "hidden"
-          } bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs max-h-[750px] overflow-y-auto ${
-            mobileTab === "question" ? "block" : "hidden lg:block"
-          }`}
-        >
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
-            <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
-              <BookOpen className="w-4 h-4 text-vcet-blue" />
-              <span>Problem Specifications</span>
-            </span>
             <button
               type="button"
-              onClick={() => setShowQuestionPanel(false)}
-              className="hidden lg:flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-slate-700 cursor-pointer"
-              title="Hide Question Panel to expand Editor width"
+              onClick={() => setMobileTab("editor")}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                mobileTab === "editor"
+                  ? "bg-white text-vcet-blue shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
             >
-              <EyeOff className="w-3.5 h-3.5" />
-              <span>Hide Panel</span>
+              <Code2 className="w-3.5 h-3.5" />
+              <span>Code Editor</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setMobileTab("output")}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
+                mobileTab === "output"
+                  ? "bg-white text-vcet-blue shadow-xs"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              <span>Output & Tests</span>
+              {executionResult && (
+                <span className="w-2 h-2 rounded-full bg-emerald-500 absolute top-2 right-3" />
+              )}
             </button>
           </div>
-          {renderProblemDetails(false)}
-        </div>
 
-        {/* RIGHT COLUMN: Code Editor + Runner Output */}
-        <div
-          className={`${
-            showQuestionPanel ? "lg:col-span-7" : "lg:col-span-12"
-          } flex flex-col space-y-4 ${
-            mobileTab === "question" ? "hidden lg:flex" : "flex"
-          }`}
-        >
-          {renderEditorWorkspace(false)}
-        </div>
-      </div>
+          {/* MAIN WORKSPACE GRID */}
+          <div className={`grid grid-cols-1 ${showQuestionPanel ? "lg:grid-cols-12" : "lg:grid-cols-1"} gap-5 items-start`}>
+            {/* LEFT COLUMN: Problem Specification & Test Cases */}
+            <div
+              className={`${
+                showQuestionPanel ? "lg:col-span-5" : "hidden"
+              } bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs max-h-[750px] overflow-y-auto ${
+                mobileTab === "question" ? "block" : "hidden lg:block"
+              }`}
+            >
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
+                <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4 text-vcet-blue" />
+                  <span>Problem Specifications</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowQuestionPanel(false)}
+                  className="hidden lg:flex items-center gap-1 text-[11px] font-bold text-slate-400 hover:text-slate-700 cursor-pointer"
+                  title="Hide Question Panel to expand Editor width"
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span>Hide Panel</span>
+                </button>
+              </div>
+              {renderProblemDetails(false)}
+            </div>
+
+            {/* RIGHT COLUMN: Code Editor + Runner Output */}
+            <div
+              className={`${
+                showQuestionPanel ? "lg:col-span-7" : "lg:col-span-12"
+              } flex flex-col space-y-4 ${
+                mobileTab === "question" ? "hidden lg:flex" : "flex"
+              }`}
+            >
+              {renderEditorWorkspace(false)}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* QUESTION POP-UP MODAL (When student clicks "View Question" anytime) */}
       {showQuestionModal && (
@@ -1634,6 +2425,9 @@ export default function ModuleCodingChallenge({
           </div>
         </div>
       )}
+
+      {/* Assessment Performance Scorecard Modal */}
+      {renderScorecardModal()}
     </div>
   );
 }
