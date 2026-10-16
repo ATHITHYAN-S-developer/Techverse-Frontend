@@ -32,6 +32,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { useAuth } from "../../context/AuthContext";
 import { useToast } from "../../context/ToastContext";
 import { courseService } from "../../services/courseService";
 import ViolationWarningModal from "../exam/ViolationWarningModal";
@@ -56,6 +57,36 @@ const DEFAULT_TEMPLATES = {
   java: `// Java Solution\nimport java.util.*;\n\npublic class Solution {\n    public static void main(String[] args) {\n        // Scanner sc = new Scanner(System.in);\n        System.out.println("hello");\n    }\n}\n`,
   c: `// C Solution\n#include <stdio.h>\n\nint main() {\n    printf("hello\\n");\n    return 0;\n}\n`,
 };
+
+/**
+ * Anti-leak security watermark: renders student register number slanted diagonally behind the question details
+ */
+function QuestionWatermark({ regNo, darkTheme = false }) {
+  if (!regNo) return null;
+  const cleanRegNo = String(regNo).trim().toUpperCase();
+  const textColor = darkTheme ? "#94a3b8" : "#334155";
+  const opacity = darkTheme ? "0.08" : "0.095";
+
+  // Staggered repeating watermark tile
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='320' height='160'>
+    <text x='80' y='45' fill='${textColor}' fill-opacity='${opacity}' font-size='15' font-weight='800' font-family='ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace' letter-spacing='2' text-anchor='middle' transform='rotate(-25 80 45)'>${cleanRegNo}</text>
+    <text x='240' y='125' fill='${textColor}' fill-opacity='${opacity}' font-size='15' font-weight='800' font-family='ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace' letter-spacing='2' text-anchor='middle' transform='rotate(-25 240 125)'>${cleanRegNo}</text>
+  </svg>`;
+
+  const encodedSvg = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 pointer-events-none select-none z-0 overflow-hidden min-h-full"
+      style={{
+        backgroundImage: `url("${encodedSvg}")`,
+        backgroundRepeat: "repeat",
+        backgroundPosition: "0 0",
+      }}
+    />
+  );
+}
 
 /**
  * Client-side evaluation fallback if server endpoints are temporarily offline
@@ -132,7 +163,26 @@ export default function ModuleCodingChallenge({
   onProceedToNextModule = null,
 }) {
   const { showSuccess, showError, showInfo } = useToast();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const studentRegNo =
+    user?.registerNumber ||
+    user?.rollNumber ||
+    user?.regNo ||
+    user?.studentId ||
+    (user?.email ? user.email.split("@")[0].toUpperCase() : "") ||
+    "732921CSE004";
+  const studentName = user?.name || "Student";
+  const studentInitials =
+    studentName
+      .split(" ")
+      .map((n) => n[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "ST";
+
   const problems = module?.codingProblems || [];
   const mcqs = useMemo(() => module?.mcqs || [], [module]);
   const hasCoding = problems.length > 0;
@@ -962,134 +1012,139 @@ export default function ModuleCodingChallenge({
     }
 
     return (
-      <div className="space-y-5">
-        {/* Header */}
-        <div className={`space-y-2 border-b pb-4 ${darkTheme ? "border-slate-800" : "border-slate-100"}`}>
-        <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] font-bold tracking-widest text-vcet-blue uppercase">
-            Challenge #{activeProblemIdx + 1} of {problems.length}
-          </span>
-          <span
-            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
-              currentProblem.difficulty === "Easy"
-                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                : currentProblem.difficulty === "Hard"
-                ? "bg-rose-50 text-rose-700 border border-rose-200"
-                : "bg-amber-50 text-amber-700 border border-amber-200"
-            }`}
-          >
-            {currentProblem.difficulty || "Medium"}
-          </span>
-        </div>
+      <div className="relative min-h-full">
+        {/* Anti-leak Student Roll/Register Number Watermark (Slanted behind question) */}
+        <QuestionWatermark regNo={studentRegNo} darkTheme={darkTheme} />
 
-        <h2 className={`text-lg font-black leading-snug ${darkTheme ? "text-white" : "text-slate-900"}`}>
-          {currentProblem.title}
-        </h2>
-      </div>
+        <div className="relative z-10 space-y-5">
+          {/* Header */}
+          <div className={`space-y-2 border-b pb-4 ${darkTheme ? "border-slate-800" : "border-slate-100"}`}>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] font-bold tracking-widest text-vcet-blue uppercase">
+                Challenge #{activeProblemIdx + 1} of {problems.length}
+              </span>
+              <span
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
+                  currentProblem.difficulty === "Easy"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : currentProblem.difficulty === "Hard"
+                    ? "bg-rose-50 text-rose-700 border border-rose-200"
+                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                }`}
+              >
+                {currentProblem.difficulty || "Medium"}
+              </span>
+            </div>
 
-      {/* Description */}
-      <div className="space-y-2">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Problem Statement</h4>
-        <div className={`text-xs leading-relaxed whitespace-pre-wrap font-medium ${darkTheme ? "text-slate-300" : "text-slate-700"}`}>
-          {currentProblem.description}
-        </div>
-      </div>
-
-      {/* Input & Output Format */}
-      {currentProblem.inputFormat && (
-        <div className="space-y-1.5">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Input Format</h4>
-          <pre className={`p-3 rounded-xl border font-mono text-xs whitespace-pre-wrap leading-relaxed ${
-            darkTheme ? "bg-slate-800 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"
-          }`}>
-            {currentProblem.inputFormat}
-          </pre>
-        </div>
-      )}
-
-      {currentProblem.outputFormat && (
-        <div className="space-y-1.5">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Output Format</h4>
-          <pre className={`p-3 rounded-xl border font-mono text-xs whitespace-pre-wrap leading-relaxed ${
-            darkTheme ? "bg-slate-800 border-slate-700 text-slate-200" : "bg-slate-50 border-slate-200 text-slate-700"
-          }`}>
-            {currentProblem.outputFormat}
-          </pre>
-        </div>
-      )}
-
-      {/* Constraints */}
-      {currentProblem.constraints && (
-        <div className="space-y-1.5">
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Constraints</h4>
-          <div className={`p-3 rounded-xl border font-mono text-xs whitespace-pre-wrap ${
-            darkTheme ? "bg-amber-950/40 border-amber-800 text-amber-200" : "bg-amber-50/60 border-amber-200 text-amber-900"
-          }`}>
-            {currentProblem.constraints}
+            <h2 className={`text-lg font-black leading-snug ${darkTheme ? "text-white" : "text-slate-900"}`}>
+              {currentProblem.title}
+            </h2>
           </div>
-        </div>
-      )}
 
-      {/* Sample Test Cases */}
-      {publicTestCases.length > 0 && (
-        <div className={`space-y-3 pt-2 border-t ${darkTheme ? "border-slate-800" : "border-slate-100"}`}>
-          <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
-            <span>Sample Test Cases</span>
-            <span className="text-[10px] text-slate-400 font-normal">Click to copy input</span>
-          </h4>
+          {/* Description */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">Problem Statement</h4>
+            <div className={`text-xs leading-relaxed whitespace-pre-wrap font-medium ${darkTheme ? "text-slate-300" : "text-slate-700"}`}>
+              {currentProblem.description}
+            </div>
+          </div>
 
-          {publicTestCases.map((tc, idx) => (
-            <div
-              key={idx}
-              className={`p-3.5 rounded-xl border text-xs space-y-2 ${
-                darkTheme ? "bg-slate-800 border-slate-700 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
-              }`}
-            >
-              <div className={`flex items-center justify-between text-[11px] font-bold pb-1 border-b ${
-                darkTheme ? "border-slate-700 text-slate-400" : "border-slate-200 text-slate-500"
+          {/* Input & Output Format */}
+          {currentProblem.inputFormat && (
+            <div className="space-y-1.5">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Input Format</h4>
+              <pre className={`p-3 rounded-xl border font-mono text-xs whitespace-pre-wrap leading-relaxed ${
+                darkTheme ? "bg-slate-800/80 border-slate-700 text-slate-200" : "bg-slate-50/70 border-slate-200 text-slate-700 backdrop-blur-[0.5px]"
               }`}>
-                <span>Sample #{idx + 1}</span>
-                <button
-                  type="button"
-                  onClick={() => handleCopyText(tc.input, `sample_${idx}`)}
-                  className="flex items-center gap-1 text-[10px] text-vcet-blue hover:text-sky-400 font-bold transition-colors cursor-pointer"
-                >
-                  {copiedKey === `sample_${idx}` ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-500" />
-                      <span className="text-emerald-500">Copied!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>Copy Input</span>
-                    </>
-                  )}
-                </button>
-              </div>
+                {currentProblem.inputFormat}
+              </pre>
+            </div>
+          )}
 
-              <div className="font-mono">
-                <span className="text-slate-400 font-bold block text-[10px] uppercase">Input:</span>
-                <pre className={`mt-0.5 p-2 rounded-lg border overflow-x-auto whitespace-pre-wrap ${
-                  darkTheme ? "bg-slate-900 border-slate-700 text-slate-200" : "bg-white border-slate-200 text-slate-800"
-                }`}>
-                  {tc.input || "(Empty input)"}
-                </pre>
-              </div>
+          {currentProblem.outputFormat && (
+            <div className="space-y-1.5">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Output Format</h4>
+              <pre className={`p-3 rounded-xl border font-mono text-xs whitespace-pre-wrap leading-relaxed ${
+                darkTheme ? "bg-slate-800/80 border-slate-700 text-slate-200" : "bg-slate-50/70 border-slate-200 text-slate-700 backdrop-blur-[0.5px]"
+              }`}>
+                {currentProblem.outputFormat}
+              </pre>
+            </div>
+          )}
 
-              <div className="font-mono">
-                <span className="text-slate-400 font-bold block text-[10px] uppercase">Expected Output:</span>
-                <pre className={`mt-0.5 p-2 rounded-lg border overflow-x-auto whitespace-pre-wrap font-semibold ${
-                  darkTheme ? "bg-slate-900 border-slate-700 text-emerald-400" : "bg-white border-slate-200 text-emerald-700"
-                }`}>
-                  {tc.output || tc.expectedOutput || "(Empty output)"}
-                </pre>
+          {/* Constraints */}
+          {currentProblem.constraints && (
+            <div className="space-y-1.5">
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Constraints</h4>
+              <div className={`p-3 rounded-xl border font-mono text-xs whitespace-pre-wrap ${
+                darkTheme ? "bg-amber-950/40 border-amber-800 text-amber-200" : "bg-amber-50/60 border-amber-200 text-amber-900"
+              }`}>
+                {currentProblem.constraints}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Sample Test Cases */}
+          {publicTestCases.length > 0 && (
+            <div className={`space-y-3 pt-2 border-t ${darkTheme ? "border-slate-800" : "border-slate-100"}`}>
+              <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+                <span>Sample Test Cases</span>
+                <span className="text-[10px] text-slate-400 font-normal">Click to copy input</span>
+              </h4>
+
+              {publicTestCases.map((tc, idx) => (
+                <div
+                  key={idx}
+                  className={`p-3.5 rounded-xl border text-xs space-y-2 ${
+                    darkTheme ? "bg-slate-800/80 border-slate-700 text-slate-300" : "bg-slate-50/70 border-slate-200 text-slate-700"
+                  }`}
+                >
+                  <div className={`flex items-center justify-between text-[11px] font-bold pb-1 border-b ${
+                    darkTheme ? "border-slate-700 text-slate-400" : "border-slate-200 text-slate-500"
+                  }`}>
+                    <span>Sample #{idx + 1}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyText(tc.input, `sample_${idx}`)}
+                      className="flex items-center gap-1 text-[10px] text-vcet-blue hover:text-sky-400 font-bold transition-colors cursor-pointer"
+                    >
+                      {copiedKey === `sample_${idx}` ? (
+                        <>
+                          <Check className="w-3 h-3 text-emerald-500" />
+                          <span className="text-emerald-500">Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3" />
+                          <span>Copy Input</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="font-mono">
+                    <span className="text-slate-400 font-bold block text-[10px] uppercase">Input:</span>
+                    <pre className={`mt-0.5 p-2 rounded-lg border overflow-x-auto whitespace-pre-wrap ${
+                      darkTheme ? "bg-slate-900/80 border-slate-700 text-slate-200" : "bg-white/80 border-slate-200 text-slate-800"
+                    }`}>
+                      {tc.input || "(Empty input)"}
+                    </pre>
+                  </div>
+
+                  <div className="font-mono">
+                    <span className="text-slate-400 font-bold block text-[10px] uppercase">Expected Output:</span>
+                    <pre className={`mt-0.5 p-2 rounded-lg border overflow-x-auto whitespace-pre-wrap font-semibold ${
+                      darkTheme ? "bg-slate-900/80 border-slate-700 text-emerald-400" : "bg-white/80 border-slate-200 text-emerald-700"
+                    }`}>
+                      {tc.output || tc.expectedOutput || "(Empty output)"}
+                    </pre>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-    </div>
+      </div>
     );
   };
 
@@ -1892,6 +1947,26 @@ export default function ModuleCodingChallenge({
                 <span>Coding Arena</span>
               </span>
 
+              {/* Student identification badge matching assessment portal */}
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+                <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-black text-[10px] flex items-center justify-center shrink-0">
+                  {studentInitials}
+                </div>
+                <div className="leading-tight">
+                  <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                    <span>{studentName}</span>
+                    <span className="font-mono text-[10px] text-vcet-blue font-black px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200">
+                      {studentRegNo}
+                    </span>
+                  </div>
+                  {user?.email && (
+                    <div className="text-[9px] text-slate-500 font-mono truncate max-w-[170px]">
+                      {user.email}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Top Section Dropdown: Coding Challenge or Knowledge Assessment */}
               <div className="flex items-center gap-2">
                 <select
@@ -1911,7 +1986,7 @@ export default function ModuleCodingChallenge({
               </div>
 
               {activeSection === "coding" && currentProblem && (
-                <span className="text-sm font-bold text-slate-700 truncate max-w-xs sm:max-w-md hidden md:inline">
+                <span className="text-sm font-bold text-slate-700 truncate max-w-xs sm:max-w-md hidden xl:inline">
                   {currentProblem?.title}
                 </span>
               )}
@@ -1982,8 +2057,8 @@ export default function ModuleCodingChallenge({
               <>
                 {/* Left Panel: Question Specs (Toggleable) */}
                 {showQuestionPanel && (
-                  <div className="w-[38%] bg-white border border-slate-200 rounded-2xl p-5 overflow-y-auto hidden lg:block">
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-2">
+                  <div className="w-[38%] bg-white border border-slate-200 rounded-2xl p-5 overflow-y-auto hidden lg:block relative">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-200 mb-2 relative z-10">
                       <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
                         <BookOpen className="w-4 h-4 text-sky-600" />
                         <span>Problem Statement</span>
@@ -1993,7 +2068,7 @@ export default function ModuleCodingChallenge({
                         onClick={() => setShowQuestionPanel(false)}
                         className="text-xs text-slate-500 hover:text-slate-900 cursor-pointer flex items-center gap-1"
                       >
-                        <EyeOff className="w-3 h-3" />
+                        <EyeOff className="w-3.5 h-3.5" />
                         <span>Collapse</span>
                       </button>
                     </div>
@@ -2143,6 +2218,26 @@ export default function ModuleCodingChallenge({
             <span>Coding Arena</span>
           </span>
 
+          {/* Student identification badge matching assessment portal */}
+          <div className="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-slate-50 border border-slate-200 shadow-2xs">
+            <div className="w-7 h-7 rounded-full bg-slate-900 text-white font-black text-[10px] flex items-center justify-center shrink-0">
+              {studentInitials}
+            </div>
+            <div className="leading-tight">
+              <div className="text-[11px] font-bold text-slate-800 flex items-center gap-1.5 flex-wrap">
+                <span>{studentName}</span>
+                <span className="font-mono text-[10px] text-vcet-blue font-black px-1.5 py-0.5 rounded bg-blue-50 border border-blue-200">
+                  {studentRegNo}
+                </span>
+              </div>
+              {user?.email && (
+                <div className="text-[9px] text-slate-500 font-mono truncate max-w-[170px]">
+                  {user.email}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Section Dropdown */}
           <div className="flex items-center gap-2">
             <select
@@ -2270,11 +2365,11 @@ export default function ModuleCodingChallenge({
             <div
               className={`${
                 showQuestionPanel ? "lg:col-span-5" : "hidden"
-              } bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs max-h-[750px] overflow-y-auto ${
+              } bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-xs max-h-[750px] overflow-y-auto relative ${
                 mobileTab === "question" ? "block" : "hidden lg:block"
               }`}
             >
-              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-2 relative z-10">
                 <span className="text-xs font-bold text-slate-500 flex items-center gap-1.5">
                   <BookOpen className="w-4 h-4 text-vcet-blue" />
                   <span>Problem Specifications</span>
@@ -2313,20 +2408,20 @@ export default function ModuleCodingChallenge({
             <button
               type="button"
               onClick={() => setShowQuestionModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer"
+              className="absolute top-4 right-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer z-20"
               title="Close Question View"
             >
               <X className="w-5 h-5" />
             </button>
 
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+            <div className="flex items-center gap-2 pb-2 border-b border-slate-100 relative z-10">
               <BookOpen className="w-5 h-5 text-vcet-blue" />
               <h3 className="text-base font-bold text-slate-900">Problem Specifications</h3>
             </div>
 
             {renderProblemDetails(false)}
 
-            <div className="pt-3 border-t border-slate-100 flex justify-end">
+            <div className="pt-3 border-t border-slate-100 flex justify-end relative z-10">
               <button
                 type="button"
                 onClick={() => setShowQuestionModal(false)}
