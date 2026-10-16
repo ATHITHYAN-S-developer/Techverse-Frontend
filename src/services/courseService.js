@@ -281,6 +281,25 @@ export const courseService = {
     return res?.data || res;
   },
 
+  async reportModuleViolation(courseSlug, moduleId, type, details, currentViolationCount) {
+    try {
+      const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/violation`, {
+        type,
+        details,
+        currentViolationCount,
+      });
+      return res?.data || res;
+    } catch (err) {
+      console.warn("Module violation report warning:", err.message);
+      return {
+        success: true,
+        currentViolationCount,
+        maxViolations: 3,
+        shouldAutoSubmit: currentViolationCount >= 3,
+      };
+    }
+  },
+
   async runModuleCode(courseSlug, moduleId, data) {
     try {
       const res = await api.post(`/courses/${courseSlug}/modules/${moduleId}/run-code`, data);

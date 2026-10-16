@@ -26,12 +26,17 @@ import {
   CheckCheck,
   AlertTriangle,
   ExternalLink,
+  ShieldAlert,
+  ShieldX,
+  Unlock,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { courseService } from "../services/courseService";
 import { downloadCertificatePdf } from "../services/certificatePdfGenerator";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
+import { useExamMode } from "../hooks/useExamMode";
+import ViolationWarningModal from "../components/exam/ViolationWarningModal";
 import ModuleCodingChallenge from "../components/courses/ModuleCodingChallenge";
 
 /**
@@ -309,6 +314,11 @@ export default function CourseLearningPage() {
   const [redirectCountdown, setRedirectCountdown] = useState(null);
   const [testStartTime, setTestStartTime] = useState(null);
 
+  // Test Mode violation lockout (set after auto-submit on max violations)
+  const [testLock, setTestLock] = useState(null);
+  const [testLockRemaining, setTestLockRemaining] = useState(0);
+  const [moduleTestExamStarted, setModuleTestExamStarted] = useState(false);
+
   // Clear countdown timer when modal closes
   useEffect(() => {
     let timer = null;
@@ -325,6 +335,148 @@ export default function CourseLearningPage() {
     };
   }, [showCertificateModal, isCourseCompletedModal, redirectCountdown, navigate]);
 
+  // Live countdown to a Test Mode violation lockout unlock time
+  useEffect(() => {
+    if (!testLock?.unlockAt) return;
+    const tick = () => {
+      const remaining = new Date(testLock.unlockAt).getTime() - Date.now();
+      setTestLockRemaining(Math.max(0, remaining));
+      if (remaining <= 0) {
+        setTestLock(null);
+        loadModuleAndProgression();
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [testLock?.unlockAt]);
+
+  const formatLockDuration = (ms) => {
+    const totalSecs = Math.max(0, Math.floor(ms / 1000));
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    return `${hours}h ${mins}m ${secs}s`;
+  };
+
+  // Module MCQ assessment runs inside the same proctored Exam Mode as the final assessment
+  const moduleExamActive =
+    moduleTestExamStarted &&
+    activeTab === "test" &&
+    !testResult &&
+    testUnlocked &&
+    !isModuleLocked &&
+    !testLock &&
+    (currentModule?.mcqs?.length || 0) > 0;
+
+  const {
+    isFullscreen,
+    violations,
+    violationCount,
+    latestViolation,
+    showWarningModal,
+    dismissWarning,
+    enterFullscreen,
+    exitFullscreen,
+  } = useExamMode({
+    isActive: moduleExamActive,
+    maxViolations: 3,
+    onAutoSubmit: (recordedViolations = [], type = "auto_violation") => {
+      handleSubmitTest(type, recordedViolations);
+    },
+    onViolationRecorded: async (type, details, count) => {
+      try {
+        if (courseId && currentModule?._id) {
+          await courseService.reportModuleViolation(courseId, currentModule._id, type, details, count);
+        }
+      } catch (e) {
+        // Violation logging is best-effort; never block the exam on it.
+      }
+    },
+    enableAntiCopy: true,
+    enableAntiPaste: true,
+    enableFullscreen: true,
+  });
+
+  // Open the proctored module assessment. Called from real user gestures so the
+  // browser accepts the fullscreen request without prompting.
+  const activateModuleExam = useCallback(() => {
+    setTestStartTime((prev) => prev || Date.now());
+    setModuleTestExamStarted(true);
+    setActiveTab("test");
+    if (!document.fullscreenElement) {
+      enterFullscreen();
+    }
+  }, [enterFullscreen]);
+
+  // Automatically launch the proctored module assessment when the student opens the test tab
+  const prevTabRef = useRef(null);
+  const prevModuleRef = useRef(null);
+  useEffect(() => {
+    const currentModuleKey = String(currentModule?._id || "");
+    const moduleChanged = currentModuleKey !== "" && currentModuleKey !== String(prevModuleRef.current || "");
+    const enteredTestTab = activeTab === "test" && prevTabRef.current !== "test";
+
+    prevTabRef.current = activeTab;
+    prevModuleRef.current = currentModuleKey;
+
+    if (
+      (enteredTestTab || moduleChanged) &&
+      activeTab === "test" &&
+      !moduleTestExamStarted &&
+      testUnlocked &&
+      !isModuleLocked &&
+      !testResult &&
+      !testLock &&
+      (currentModule?.mcqs?.length || 0) > 0
+    ) {
+      activateModuleExam();
+    }
+  }, [
+    activeTab,
+    moduleTestExamStarted,
+    testUnlocked,
+    isModuleLocked,
+    testResult,
+    testLock,
+    currentModule,
+    activateModuleExam,
+  ]);
+
+  // Keep the exam locked to fullscreen: re-enter whenever a warning is shown outside fullscreen
+  useEffect(() => {
+    if (moduleTestExamStarted && showWarningModal && !isFullscreen) {
+      enterFullscreen();
+    }
+  }, [moduleTestExamStarted, showWarningModal, isFullscreen, enterFullscreen]);
+
+  // If fullscreen could not be entered automatically (no user gesture yet), grab it on the
+  // first interaction instead of showing a prompt.
+  useEffect(() => {
+    if (!moduleExamActive || isFullscreen) return undefined;
+
+    const handler = () => {
+      enterFullscreen();
+    };
+
+    document.addEventListener("click", handler, { once: true });
+    window.addEventListener("keydown", handler, { once: true });
+    window.addEventListener("pointerdown", handler, { once: true });
+
+    return () => {
+      document.removeEventListener("click", handler);
+      window.removeEventListener("keydown", handler);
+      window.removeEventListener("pointerdown", handler);
+    };
+  }, [moduleExamActive, isFullscreen, enterFullscreen]);
+
+  // Leave fullscreen whenever the proctored module assessment is no longer active
+  useEffect(() => {
+    if (moduleTestExamStarted && !moduleExamActive && isFullscreen) {
+      exitFullscreen();
+    }
+  }, [moduleTestExamStarted, moduleExamActive, isFullscreen, exitFullscreen]);
+
   // Fetch Course and Progression Data
   const loadModuleAndProgression = useCallback(async () => {
     try {
@@ -332,6 +484,7 @@ export default function CourseLearningPage() {
       setTestAnswers({});
       setTestResult(null);
       setTestStartTime(null);
+      setModuleTestExamStarted(false);
       setShowCertificateModal(false);
 
       const res = await courseService.getCourseBySlug(courseId);
@@ -396,6 +549,16 @@ export default function CourseLearningPage() {
           setTestUnlocked(isCourseDone || !isVidMandatory || Boolean(progRes.testUnlocked));
           setIsModuleLocked(isCourseDone ? false : !progRes.isUnlocked);
 
+          if (progRes.testLocked && progRes.testLockUnlockAt) {
+            setTestLock({
+              lockReason: progRes.testLockReason || "This test is temporarily locked due to security violations.",
+              unlockAt: progRes.testLockUnlockAt,
+              lockHours: progRes.testLockHours || 0,
+            });
+          } else {
+            setTestLock(null);
+          }
+
           if (progRes.testScore !== null && progRes.testScore !== undefined) {
             setTestResult({
               scorePercentage: progRes.testScore,
@@ -450,7 +613,7 @@ export default function CourseLearningPage() {
   };
 
   // Submit Test for Server-Side Grading
-  const handleSubmitTest = async () => {
+  const handleSubmitTest = async (submissionType = "manual", violationsList = []) => {
     const questions = currentModule?.mcqs || [];
     if (questions.length === 0) {
       showError("No test questions available for this module.");
@@ -458,7 +621,7 @@ export default function CourseLearningPage() {
     }
 
     const answeredCount = Object.keys(testAnswers).length;
-    if (answeredCount < questions.length) {
+    if (submissionType === "manual" && answeredCount < questions.length) {
       const confirmSubmit = window.confirm(
         `You have answered ${answeredCount} of ${questions.length} questions. Submit anyway?`
       );
@@ -472,9 +635,30 @@ export default function CourseLearningPage() {
       const result = await courseService.submitModuleTest(courseId, currentModule._id, {
         answers: testAnswers,
         timeSpentSeconds: timeSpent,
+        submissionType,
+        violations: violationsList,
       });
 
+      if (result?.lock?.unlockAt) {
+        setTestLock({
+          lockReason: result.lock.lockReason || "This test is temporarily locked due to security violations.",
+          unlockAt: result.lock.unlockAt,
+          lockHours: result.lock.lockHours || 0,
+        });
+      }
+
       setTestResult(result);
+
+      // Automatic submission triggered by security violations: leave the exam for the course page
+      if (submissionType === "auto_violation") {
+        showError(
+          result?.lock?.unlockAt
+            ? "Assessment auto-submitted due to security violations. This test is now temporarily locked."
+            : "Assessment auto-submitted due to security violations."
+        );
+        navigate(`/courses/${courseId}`);
+        return;
+      }
 
       if (result.passed) {
         confetti({
@@ -540,9 +724,22 @@ export default function CourseLearningPage() {
       }
     } catch (err) {
       console.error("Test submission failed:", err);
-      showError(err.message || "Failed to submit test. Please complete the video lesson first.");
+      const errData = err?.response?.data || err;
+      if (errData?.code === "TEST_LOCKED" && errData?.unlockAt) {
+        setTestLock({
+          lockReason: errData.message || "Test is temporarily locked due to security violations.",
+          unlockAt: errData.unlockAt,
+          lockHours: errData.lockHours || 0,
+        });
+      }
+      showError(errData?.message || err.message || "Failed to submit test. Please complete the video lesson first.");
+      if (submissionType === "auto_violation") {
+        navigate(`/courses/${courseId}`);
+      }
     } finally {
       setSubmittingTest(false);
+      setModuleTestExamStarted(false);
+      exitFullscreen();
     }
   };
 
@@ -595,8 +792,7 @@ export default function CourseLearningPage() {
       }
     } else if (hasMCQ && !isTestPassed) {
       showSuccess("🎉 Coding Challenge Accepted! Now complete the Knowledge Assessment Test to finish this module.");
-      setActiveTab("test");
-      if (!testStartTime) setTestStartTime(Date.now());
+      activateModuleExam();
     }
   };
 
@@ -605,7 +801,9 @@ export default function CourseLearningPage() {
     setTestAnswers({});
     setTestResult(null);
     setTestStartTime(Date.now());
+    setModuleTestExamStarted(true);
     setActiveTab("test");
+    enterFullscreen();
   };
 
   // Download PDF Certificate
@@ -786,9 +984,10 @@ export default function CourseLearningPage() {
                           showError("Please complete the tutorial video lesson to proceed.");
                           return;
                         }
-                        setActiveTab(tab.id);
-                        if (tab.id === "test" && !testStartTime) {
-                          setTestStartTime(Date.now());
+                        if (tab.id === "test") {
+                          activateModuleExam();
+                        } else {
+                          setActiveTab(tab.id);
                         }
                       }}
                       className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shrink-0 cursor-pointer ${
@@ -867,10 +1066,7 @@ export default function CourseLearningPage() {
                       )}
                       {(currentModule?.hasMCQ || currentModule?.mcqs?.length > 0) && (
                         <button
-                          onClick={() => {
-                            setActiveTab("test");
-                            if (!testStartTime) setTestStartTime(Date.now());
-                          }}
+                          onClick={activateModuleExam}
                           className="px-5 py-2.5 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center gap-2"
                         >
                           <span>Start Assessment</span>
@@ -947,10 +1143,9 @@ export default function CourseLearningPage() {
                           <select
                             value="coding"
                             onChange={(e) => {
-                              if (e.target.value === "test") {
-                                setActiveTab("test");
-                                if (!testStartTime) setTestStartTime(Date.now());
-                              }
+                            if (e.target.value === "test") {
+                              activateModuleExam();
+                            }
                             }}
                             className="px-3 py-1.5 rounded-xl border border-vcet-gray-border bg-white text-xs font-bold text-vcet-dark focus:ring-2 focus:ring-vcet-blue cursor-pointer"
                           >
@@ -968,8 +1163,7 @@ export default function CourseLearningPage() {
                       courseSlug={courseId}
                       allowedLanguages={course?.languages}
                       onProceedToTest={() => {
-                        setActiveTab("test");
-                        if (!testStartTime) setTestStartTime(Date.now());
+                        activateModuleExam();
                       }}
                       onCodingComplete={handleCodingComplete}
                       onExitArena={() => {
@@ -1016,6 +1210,53 @@ export default function CourseLearningPage() {
                       >
                         Resume Tutorial Video
                       </button>
+                    </div>
+                  );
+                }
+
+                if (testLock) {
+                  return (
+                    /* Test Mode violation lockout screen */
+                    <div className="max-w-2xl mx-auto">
+                      <div className="bg-white border border-rose-100 rounded-2xl p-8 sm:p-10 text-center space-y-6">
+                        <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
+                          <ShieldX className="w-7 h-7" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <span className="inline-block text-[11px] uppercase font-bold tracking-wider text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+                            Test Mode • Security Lockout
+                          </span>
+                          <h3 className="text-xl sm:text-2xl font-bold text-vcet-dark">
+                            Assessment Locked
+                          </h3>
+                          <p className="text-sm text-vcet-dark max-w-md mx-auto">
+                            {testLock.lockReason || "This assessment was locked after the maximum security violations were recorded."}
+                          </p>
+                        </div>
+
+                        <div className="rounded-2xl border border-vcet-gray-border bg-slate-50 p-5 space-y-1">
+                          <p className="text-[11px] uppercase font-bold tracking-wider text-vcet-dark flex items-center justify-center gap-1.5">
+                            <Unlock className="w-3.5 h-3.5" />
+                            Unlocks In
+                          </p>
+                          <p className="text-2xl sm:text-3xl font-bold text-vcet-dark font-mono">
+                            {formatLockDuration(testLockRemaining)}
+                          </p>
+                          {testLock.unlockAt && (
+                            <p className="text-xs text-vcet-dark">
+                              Available again at {new Date(testLock.unlockAt).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() => navigate(`/courses/${courseId}`)}
+                          className="px-6 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-vcet-dark font-semibold text-xs transition border border-vcet-gray-border cursor-pointer"
+                        >
+                          Back to Course
+                        </button>
+                      </div>
                     </div>
                   );
                 }
@@ -1099,23 +1340,27 @@ export default function CourseLearningPage() {
                               </div>
 
                               <div className="space-y-1.5 text-xs font-medium">
-                                {q.options?.map((opt, optIdx) => {
-                                  const isSelected = Number(q.selectedAnswer) === optIdx;
-                                  return (
-                                    <div
-                                      key={optIdx}
-                                      className={`p-2.5 rounded-xl border ${
-                                        isSelected
-                                          ? q.isCorrect
-                                            ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold"
-                                            : "bg-red-50 border-red-300 text-red-800 font-semibold"
-                                          : "bg-white border-vcet-gray-border text-vcet-dark"
-                                      }`}
-                                    >
-                                      {opt} {isSelected && (q.isCorrect ? " (Your Answer - Correct)" : " (Your Answer - Incorrect)")}
-                                    </div>
-                                  );
-                                })}
+                                {(q.options || [])
+                                  .map((opt, optIdx) => ({ opt: String(opt || "").trim(), optIdx }))
+                                  .filter((item) => item.opt.length > 0)
+                                  .map((item) => {
+                                    const { opt, optIdx } = item;
+                                    const isSelected = Number(q.selectedAnswer) === optIdx;
+                                    return (
+                                      <div
+                                        key={optIdx}
+                                        className={`p-2.5 rounded-xl border ${
+                                          isSelected
+                                            ? q.isCorrect
+                                              ? "bg-emerald-50 border-emerald-300 text-emerald-800 font-bold"
+                                              : "bg-red-50 border-red-300 text-red-800 font-semibold"
+                                            : "bg-white border-vcet-gray-border text-vcet-dark"
+                                        }`}
+                                      >
+                                        {opt} {isSelected && (q.isCorrect ? " (Your Answer - Correct)" : " (Your Answer - Incorrect)")}
+                                      </div>
+                                    );
+                                  })}
                               </div>
                             </div>
                           ))}
@@ -1128,6 +1373,28 @@ export default function CourseLearningPage() {
                 return (
                   /* Assessment Questions Form */
                   <div className="space-y-6">
+                    {/* Exam Mode Monitor */}
+                    <div className="bg-white border border-vcet-gray-border rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-vcet-blue/10 text-vcet-blue border border-vcet-blue/20">
+                          <ShieldAlert className="w-3.5 h-3.5" />
+                          Exam Mode Active
+                        </span>
+                        <span className={`text-xs font-bold ${isFullscreen ? "text-emerald-600" : "text-amber-600"}`}>
+                          {isFullscreen ? "Fullscreen locked" : "Entering fullscreen..."}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
+                          violationCount > 0
+                            ? "bg-amber-50 text-amber-700 border-amber-200"
+                            : "bg-slate-100 text-vcet-dark border-vcet-gray-border"
+                        }`}>
+                          Strikes: {violationCount} / 3
+                        </span>
+                      </div>
+                    </div>
+
                     <div className="bg-white border border-vcet-gray-border rounded-2xl p-5 flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h3 className="text-base font-bold text-vcet-dark">
@@ -1157,28 +1424,32 @@ export default function CourseLearningPage() {
 
                           {/* Options */}
                           <div className="space-y-2.5 pt-1">
-                            {q.options?.map((opt, optIdx) => {
-                              const isSelected = testAnswers[qIdx] === optIdx;
-                              return (
-                                <button
-                                  key={optIdx}
-                                  type="button"
-                                  onClick={() => handleSelectAnswer(qIdx, optIdx)}
-                                  className={`w-full text-left p-3.5 sm:p-4 rounded-xl text-xs sm:text-sm transition cursor-pointer flex items-center justify-between border ${
-                                    isSelected
-                                      ? "bg-vcet-blue text-white border-vcet-blue font-semibold"
-                                      : "bg-white hover:bg-slate-50 text-vcet-dark border-vcet-gray-border"
-                                  }`}
-                                >
-                                  <span>{opt}</span>
-                                  <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                                    isSelected ? "border-white bg-white text-vcet-blue" : "border-vcet-gray-border"
-                                  }`}>
-                                    {isSelected && <div className="w-2 h-2 rounded-full bg-vcet-blue" />}
-                                  </div>
-                                </button>
-                              );
-                            })}
+                            {(q.options || [])
+                              .map((opt, optIdx) => ({ opt: String(opt || "").trim(), optIdx }))
+                              .filter((item) => item.opt.length > 0)
+                              .map((item) => {
+                                const { opt, optIdx } = item;
+                                const isSelected = testAnswers[qIdx] === optIdx;
+                                return (
+                                  <button
+                                    key={optIdx}
+                                    type="button"
+                                    onClick={() => handleSelectAnswer(qIdx, optIdx)}
+                                    className={`w-full text-left p-3.5 sm:p-4 rounded-xl text-xs sm:text-sm transition cursor-pointer flex items-center justify-between border ${
+                                      isSelected
+                                        ? "bg-vcet-blue text-white border-vcet-blue font-semibold"
+                                        : "bg-white hover:bg-slate-50 text-vcet-dark border-vcet-gray-border"
+                                    }`}
+                                  >
+                                    <span>{opt}</span>
+                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                                      isSelected ? "border-white bg-white text-vcet-blue" : "border-vcet-gray-border"
+                                    }`}>
+                                      {isSelected && <div className="w-2 h-2 rounded-full bg-vcet-blue" />}
+                                    </div>
+                                  </button>
+                                );
+                              })}
                           </div>
                         </div>
                       ))}
@@ -1468,6 +1739,15 @@ export default function CourseLearningPage() {
             )}
           </div>
         </div>
+      )}
+
+      {/* Exam Mode Violation Warning Modal */}
+      {activeTab === "test" && !testResult && (
+        <ViolationWarningModal
+          isOpen={showWarningModal}
+          violation={latestViolation}
+          onDismiss={dismissWarning}
+        />
       )}
     </div>
   );

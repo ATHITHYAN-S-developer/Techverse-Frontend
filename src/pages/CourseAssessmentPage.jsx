@@ -17,6 +17,8 @@ import {
   FileCheck2,
   Maximize2,
   Lock,
+  Unlock,
+  ShieldX,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { courseAssessmentService } from "../services/courseAssessmentService";
@@ -44,11 +46,36 @@ export default function CourseAssessmentPage() {
   const [result, setResult] = useState(null);
   const [timeLeft, setTimeLeft] = useState(600); // in seconds
   const [timeSpent, setTimeSpent] = useState(0);
+  const [lockRemainingMs, setLockRemainingMs] = useState(0);
 
   const selectedAnswersRef = useRef(selectedAnswers);
   useEffect(() => {
     selectedAnswersRef.current = selectedAnswers;
   }, [selectedAnswers]);
+
+  // Live countdown for a violation lockout (shows time until the test unlocks).
+  const lockUnlockAt = test?.lockType === "violation" ? test?.unlockAt : null;
+  useEffect(() => {
+    if (!lockUnlockAt) return;
+    const tick = () => {
+      const remaining = new Date(lockUnlockAt).getTime() - Date.now();
+      setLockRemainingMs(Math.max(0, remaining));
+      if (remaining <= 0) {
+        window.location.reload();
+      }
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [lockUnlockAt]);
+
+  const formatLockDuration = (ms) => {
+    const totalSecs = Math.max(0, Math.floor(ms / 1000));
+    const hours = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    return `${hours}h ${mins}m ${secs}s`;
+  };
 
   // Load test details
   useEffect(() => {
@@ -214,6 +241,63 @@ export default function CourseAssessmentPage() {
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
           <p className="text-sm font-semibold text-slate-600">Loading Assessment Environment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 0a. VIOLATION LOCKOUT SCREEN (Test Mode security lock)
+  if (test?.isLocked && test.lockType === "violation") {
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4 sm:px-6">
+        <div className="bg-white rounded-3xl border border-rose-100 p-8 sm:p-10 shadow-sm text-center space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center mx-auto">
+            <ShieldX className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <span className="text-xs uppercase font-bold tracking-wider text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+              Test Mode • Security Lockout
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mt-2">
+              Assessment Locked
+            </h1>
+            <p className="text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
+              {test.lockReason || "This assessment was automatically submitted after reaching the maximum number of security violations. It is temporarily locked."}
+            </p>
+          </div>
+
+          <div className="p-5 rounded-2xl bg-slate-900 text-white space-y-2">
+            <div className="text-[11px] uppercase font-bold tracking-wider text-slate-300 flex items-center justify-center gap-1.5">
+              <Unlock className="w-3.5 h-3.5" />
+              <span>Unlocks in</span>
+            </div>
+            <div className="text-3xl sm:text-4xl font-black font-mono tabular-nums">
+              {formatLockDuration(lockRemainingMs)}
+            </div>
+            {test.unlockAt && (
+              <div className="text-[11px] text-slate-300">
+                Unlocks at{" "}
+                <strong className="text-white">
+                  {new Date(test.unlockAt).toLocaleString()}
+                </strong>
+              </div>
+            )}
+          </div>
+
+          <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs text-slate-700 font-semibold">
+            Lock duration: <strong className="text-rose-600">{test.lockHours || 0} hour(s)</strong>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <button
+              onClick={() => navigate(test.courseSlug ? `/courses/${test.courseSlug}` : `/courses/${courseId}`)}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-vcet-blue hover:bg-[#00518c] text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2"
+            >
+              <span>Back to Course</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -399,30 +483,34 @@ export default function CourseAssessmentPage() {
 
               {/* Options List */}
               <div className="space-y-3">
-                {(currentQ.options || []).map((opt, oIdx) => {
-                  const isSelected = selectedAnswers[currentQId] === oIdx;
-                  return (
-                    <button
-                      key={oIdx}
-                      type="button"
-                      onClick={() => handleSelectOption(currentQId, oIdx)}
-                      className={`w-full text-left p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-3.5 ${
-                        isSelected
-                          ? "bg-sky-50/80 border-vcet-blue-deep text-vcet-blue-deep shadow-xs"
-                          : "bg-white border-slate-200 text-slate-700 hover:bg-sky-50/40 hover:border-sky-200"
-                      }`}
-                    >
-                      <span
-                        className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
-                          isSelected ? "bg-vcet-blue-deep text-white" : "bg-slate-100 text-slate-600"
+                {(currentQ.options || [])
+                  .map((opt, oIdx) => ({ opt: String(opt || "").trim(), oIdx }))
+                  .filter((item) => item.opt.length > 0)
+                  .map((item) => {
+                    const { opt, oIdx } = item;
+                    const isSelected = selectedAnswers[currentQId] === oIdx;
+                    return (
+                      <button
+                        key={oIdx}
+                        type="button"
+                        onClick={() => handleSelectOption(currentQId, oIdx)}
+                        className={`w-full text-left p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center gap-3.5 ${
+                          isSelected
+                            ? "bg-sky-50/80 border-vcet-blue-deep text-vcet-blue-deep shadow-xs"
+                            : "bg-white border-slate-200 text-slate-700 hover:bg-sky-50/40 hover:border-sky-200"
                         }`}
                       >
-                        {String.fromCharCode(65 + oIdx)}
-                      </span>
-                      <span className="text-xs sm:text-sm font-medium flex-1">{opt}</span>
-                    </button>
-                  );
-                })}
+                        <span
+                          className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 transition-colors ${
+                            isSelected ? "bg-vcet-blue-deep text-white" : "bg-slate-100 text-slate-600"
+                          }`}
+                        >
+                          {String.fromCharCode(65 + oIdx)}
+                        </span>
+                        <span className="text-xs sm:text-sm font-medium flex-1">{opt}</span>
+                      </button>
+                    );
+                  })}
               </div>
 
               {/* Navigation Controls */}
@@ -541,6 +629,25 @@ export default function CourseAssessmentPage() {
               </p>
             </div>
 
+            {result?.lock && (
+              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start gap-3">
+                <ShieldX className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-rose-800 space-y-1">
+                  <div className="font-black">Test Mode • Assessment Locked</div>
+                  <div>{result.lock.lockReason}</div>
+                  {result.lock.unlockAt && (
+                    <div>
+                      You can retake this test after{" "}
+                      <strong className="font-black">
+                        {new Date(result.lock.unlockAt).toLocaleString()}
+                      </strong>
+                      .
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Score Metrics (White & Ice Blue Cards) */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="p-4 rounded-2xl bg-white border-2 border-sky-100 hover:border-sky-200 transition-all text-center shadow-xs">
@@ -576,8 +683,8 @@ export default function CourseAssessmentPage() {
                 {(result?.breakdown || []).map((item, idx) => {
                   const isCorrect = item.isCorrect;
                   const selectedText =
-                    item.selectedAnswer !== null && item.selectedAnswer !== undefined && item.options?.[item.selectedAnswer]
-                      ? item.options[item.selectedAnswer]
+                    item.selectedAnswer !== null && item.selectedAnswer !== undefined && item.options?.[item.selectedAnswer] && String(item.options[item.selectedAnswer] || "").trim().length > 0
+                      ? String(item.options[item.selectedAnswer]).trim()
                       : "Not Answered";
 
                   return (

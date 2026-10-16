@@ -41,6 +41,7 @@ export const courseAssessmentService = {
         violationsCount: result.violationsCount || violations.length,
         submissionType: result.submissionType || submissionType,
         breakdown: result.breakdown,
+        lock: res.data.lock || null,
       };
     }
     throw new Error("Failed to submit test attempt to MongoDB backend.");

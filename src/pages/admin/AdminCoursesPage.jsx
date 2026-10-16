@@ -28,6 +28,7 @@ import {
   Users,
   GraduationCap,
   ChevronDown,
+  FlaskConical,
 } from "lucide-react";
 import { useToast } from "../../context/ToastContext";
 import { useAuth } from "../../context/AuthContext";
@@ -157,6 +158,8 @@ export default function AdminCoursesPage() {
     targetAudience: "department", // "department" | "all"
     isDepartmentOnly: true,
     certificateEnabled: true,
+    isTestMode: false,
+    testModeLockHours: 6,
     languages: [...ALL_LANGUAGE_IDS],
   });
 
@@ -289,6 +292,8 @@ export default function AdminCoursesPage() {
       targetAudience: "department",
       isDepartmentOnly: true,
       certificateEnabled: true,
+      isTestMode: false,
+      testModeLockHours: 6,
       languages: [...ALL_LANGUAGE_IDS],
     });
     setModalOpen(true);
@@ -318,6 +323,8 @@ export default function AdminCoursesPage() {
       targetAudience: course.targetAudience || (course.isDepartmentOnly ? "department" : "all"),
       isDepartmentOnly: course.isDepartmentOnly ?? (course.targetAudience === "department"),
       certificateEnabled: course.certificateEnabled !== false, // default true if not set
+      isTestMode: course.isTestMode === true || course.testMode === true,
+      testModeLockHours: course.testModeLockHours ?? 6,
       languages:
         Array.isArray(course.languages) && course.languages.length
           ? course.languages
@@ -352,6 +359,8 @@ export default function AdminCoursesPage() {
       form.append("isDepartmentOnly", String(formData.isDepartmentOnly ?? true));
       form.append("instructor", formData.instructor || formData.assignedFacultyName || "VCET Faculty");
       form.append("certificateEnabled", String(formData.certificateEnabled ?? true));
+      form.append("isTestMode", String(formData.isTestMode ?? false));
+      form.append("testModeLockHours", String(formData.testModeLockHours ?? 6));
       if (formData.category === "Programming") {
         form.append(
           "languages",
@@ -1013,6 +1022,89 @@ export default function AdminCoursesPage() {
                     : "Available to all Velalar College of Engineering and Technology students across all departments."}
                 </p>
               </div>
+
+              {/* Test Mode Toggle */}
+              <div>
+                <label className="block text-slate-700 font-bold mb-1.5">
+                  Test Mode
+                </label>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, isTestMode: !prev.isTestMode }))
+                    }
+                    className={`w-full flex items-center justify-between gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
+                      formData.isTestMode
+                        ? "bg-amber-50 border-amber-300 text-amber-800"
+                        : "bg-slate-50 border-slate-200 text-slate-500"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div
+                        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${
+                          formData.isTestMode
+                            ? "bg-amber-100 text-amber-600"
+                            : "bg-slate-200 text-slate-400"
+                        }`}
+                      >
+                        <FlaskConical className="w-4 h-4" />
+                      </div>
+                      <div className="text-left">
+                        <div className="font-bold text-xs">
+                          {formData.isTestMode ? "Test Mode ON" : "Test Mode OFF"}
+                        </div>
+                        <div className="text-[10px] opacity-70 mt-0.5">
+                          {formData.isTestMode
+                            ? "This is a test/practice course. It is treated as a trial run."
+                            : "This is a regular course delivered to students."}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Toggle pill */}
+                    <div
+                      className={`relative w-10 h-5 rounded-full transition-all shrink-0 ${
+                        formData.isTestMode ? "bg-amber-500" : "bg-slate-300"
+                      }`}
+                    >
+                      <div
+                        className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${
+                          formData.isTestMode ? "left-5" : "left-0.5"
+                        }`}
+                      />
+                    </div>
+                   </button>
+
+                   {formData.isTestMode && (
+                     <div className="mt-3 p-3 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-2">
+                       <label className="block text-amber-900 font-bold text-xs">
+                         Test Lockout Duration (hours) *
+                       </label>
+                       <div className="relative">
+                         <input
+                           type="number"
+                           min="1"
+                           step="1"
+                           value={formData.testModeLockHours}
+                           onChange={(e) =>
+                             setFormData((prev) => ({
+                               ...prev,
+                               testModeLockHours: Math.max(1, Number(e.target.value) || 0),
+                             }))
+                           }
+                           className="w-full px-3 py-2 bg-white rounded-xl border border-amber-300 text-slate-900 focus:ring-2 focus:ring-amber-400 pr-16 font-bold"
+                         />
+                         <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-amber-600 font-bold text-[10px]">
+                           hour(s)
+                         </span>
+                       </div>
+                       <p className="text-[10px] text-amber-800/80">
+                         If a student's test is auto-submitted after 3 or more security violations, the test
+                         will be locked for {formData.testModeLockHours || 0} hour(s). The student will see the
+                         exact time when it unlocks.
+                       </p>
+                     </div>
+                   )}
+                 </div>
 
               {/* Certificate Issuance Toggle — HOD / Admin Only */}
               {canCreateCourse && (
