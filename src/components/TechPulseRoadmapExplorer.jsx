@@ -14,6 +14,8 @@ import {
   FiCompass,
   FiFolder,
   FiBookOpen,
+  FiList,
+  FiTool,
 } from "react-icons/fi";
 import {
   FaCode,
@@ -203,13 +205,13 @@ export default function TechPulseRoadmapExplorer() {
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 select-none">
       {/* 1. Breadcrumb Bar with Back Button */}
-      <div className="flex items-center justify-between flex-wrap gap-3 bg-white border border-[#C9C9C9]/80 rounded-2xl px-4 sm:px-6 py-3 mb-8 shadow-xs">
+      <div className="flex items-center justify-between flex-wrap gap-3 bg-white border border-slate-200/90 rounded-2xl px-4 sm:px-6 py-3 mb-8 shadow-xs">
         <div className="flex items-center flex-wrap gap-2 text-xs sm:text-sm font-medium">
           {currentLevel > 0 && (
             <button
               type="button"
               onClick={popNode}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#C9C9C9] text-vcet-dark hover:text-vcet-blue hover:border-vcet-blue bg-slate-50 transition-all font-semibold cursor-pointer mr-1"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:text-slate-900 hover:border-slate-300 bg-white hover:bg-slate-50 transition-all font-semibold cursor-pointer mr-1.5 shadow-2xs"
             >
               <FiArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
@@ -219,21 +221,21 @@ export default function TechPulseRoadmapExplorer() {
           <button
             type="button"
             onClick={resetToRoot}
-            className={`transition-colors font-bold ${
-              currentLevel === 0 ? "text-vcet-blue" : "text-vcet-dark hover:text-vcet-blue cursor-pointer"
+            className={`transition-colors font-semibold ${
+              currentLevel === 0 ? "text-slate-900 font-bold" : "text-slate-500 hover:text-slate-900 cursor-pointer"
             }`}
           >
-            Roadmaps
+            Home
           </button>
 
           {activeDomain && (
             <>
-              <FiChevronRight className="w-3.5 h-3.5 text-slate-400" />
+              <span className="text-slate-400 font-normal">&gt;</span>
               <button
                 type="button"
                 onClick={() => currentLevel > 1 && popNode()}
-                className={`transition-colors font-bold ${
-                  currentLevel === 1 ? "text-vcet-blue" : "text-vcet-dark hover:text-vcet-blue cursor-pointer"
+                className={`transition-colors ${
+                  currentLevel === 1 ? "text-slate-900 font-bold" : "text-slate-500 hover:text-slate-900 cursor-pointer font-medium"
                 }`}
               >
                 {activeDomain.label}
@@ -243,15 +245,15 @@ export default function TechPulseRoadmapExplorer() {
 
           {activePath && (
             <>
-              <FiChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              <span className="font-extrabold text-vcet-blue">{activePath.label}</span>
+              <span className="text-slate-400 font-normal">&gt;</span>
+              <span className="font-extrabold text-slate-900">{activePath.label}</span>
             </>
           )}
         </div>
 
         <div className="hidden sm:flex items-center gap-2 text-xs font-semibold text-slate-400">
-          <span className="w-2 h-2 rounded-full bg-vcet-blue animate-pulse" />
-          <span>TechVerse Interactive Roadmaps</span>
+          <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+          <span>Interactive Career Path</span>
         </div>
       </div>
 
@@ -475,223 +477,188 @@ export default function TechPulseRoadmapExplorer() {
 }
 
 /**
+ * Orange circular connector node matching the reference design
+ */
+function OrangeNodeDot({ className = "" }) {
+  return (
+    <div
+      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#f95716] flex items-center justify-center shadow-md ring-4 ring-orange-100 shrink-0 ${className}`}
+    >
+      <div className="w-2.5 h-2.5 rounded-full bg-white" />
+    </div>
+  );
+}
+
+/**
  * Detailed Mind Map & Multi-Step Roadmap View for a Selected Career Path
- * Built with TechVerse branding:
- * - Primary VCET Blue (#0062A8)
- * - Dark Gray (#444445)
- * - Light Gray (#C9C9C9)
- * - White (#FFFFFF)
+ * Styled to match the AiDots interactive diagram design:
+ * - SKILLS card at the top
+ * - LANGUAGES and TOOLS with orange node connector
+ * - Central Path Card with blue border & squircle icon
+ * - PROJECTS & Ancillary cards (left) connected with orange node to ROADMAP card (right)
+ * - ROADMAP card with orange border, BEGINNER (green), INTERMEDIATE (amber), ADVANCED (red)
  */
 function DetailedRoadmapView({ node, domain, onSelectSubNode }) {
   const details = node.details || {};
   const roadmapLevels = details.roadmap || null;
-  const isTechType = details.type === "tech";
+
+  const skills = details.skills || [];
+  const languages = details.languages || [];
+  const frameworks = details.frameworks || [];
+  const tools = details.tools || [];
+  const projects = details.projects || [];
+  const certifications = details.certifications || [];
+  const companies = details.companies || [];
+  const resources = details.resources || [];
+
+  // Extract roadmap steps by level
+  const beginnerSteps = Array.isArray(roadmapLevels?.beginner) ? roadmapLevels.beginner : [];
+  const intermediateSteps = Array.isArray(roadmapLevels?.intermediate) ? roadmapLevels.intermediate : [];
+  const advancedSteps = Array.isArray(roadmapLevels?.advanced) ? roadmapLevels.advanced : [];
+
+  // Calculate cumulative numbering
+  const intermediateStartIdx = beginnerSteps.length;
+  const advancedStartIdx = beginnerSteps.length + intermediateSteps.length;
 
   return (
-    <div className="space-y-8 pb-12">
-      {/* 1. Central Hero Card */}
-      <div className="bg-white border border-[#C9C9C9]/80 rounded-3xl p-6 sm:p-8 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 mb-5">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
-            style={{ backgroundColor: domain?.bgLight || "#0062A814", color: domain?.color || "#0062A8" }}
-          >
-            <DomainIcon name={node.icon} className="w-8 h-8" />
+    <div className="space-y-6 sm:space-y-8 pb-12">
+      {/* 1. TOP CARD: SKILLS */}
+      {skills.length > 0 && (
+        <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs max-w-4xl mx-auto">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+            <FiList className="w-4 h-4 text-slate-400" />
+            <span>SKILLS</span>
           </div>
-
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs font-bold uppercase tracking-wider text-vcet-blue">
-                {domain?.label} Specialization
+          <div className="flex flex-wrap gap-2 sm:gap-2.5">
+            {skills.map((skill, idx) => (
+              <span
+                key={idx}
+                className="px-3.5 py-1.5 rounded-xl bg-slate-50 text-slate-700 text-xs sm:text-sm font-semibold border border-slate-200/80 shadow-2xs hover:bg-slate-100 transition-colors"
+              >
+                {skill}
               </span>
-              {details.difficulty && (
-                <>
-                  <span className="text-slate-300">·</span>
-                  <span className="text-xs font-bold text-slate-500">{details.difficulty}</span>
-                </>
-              )}
-            </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-vcet-dark-deep tracking-tight">
-              {node.label}
-            </h1>
-          </div>
-        </div>
-
-        {/* Overview */}
-        <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal mb-4">
-          {details.overview || details.what}
-        </p>
-
-        {/* Why Choose This Path */}
-        {details.whyChoose && (
-          <div className="bg-vcet-blue/5 border border-vcet-blue/20 rounded-2xl p-4 sm:p-5 mt-4">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-vcet-blue mb-1">
-              Why Choose This Path?
-            </h4>
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">{details.whyChoose}</p>
-          </div>
-        )}
-
-
-      </div>
-
-      {/* 2. Step-by-Step Learning Milestones Roadmap */}
-      {roadmapLevels && (
-        <div className="bg-white border border-[#C9C9C9]/80 rounded-3xl p-6 sm:p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="w-10 h-10 rounded-xl bg-vcet-blue/10 text-vcet-blue flex items-center justify-center font-bold">
-              <FiCompass className="w-5 h-5" />
-            </span>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-vcet-dark-deep tracking-tight">
-                Step-by-Step Learning Roadmap
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500">
-                Progressive milestones structured from beginner foundations to advanced mastery.
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            {["beginner", "intermediate", "advanced"].map((levelKey, lIdx) => {
-              const steps = roadmapLevels[levelKey];
-              if (!steps || steps.length === 0) return null;
-
-              const levelTitle =
-                levelKey === "beginner" ? "Beginner" : levelKey === "intermediate" ? "Intermediate" : "Advanced";
-
-              const badgeColor =
-                levelKey === "beginner"
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                  : levelKey === "intermediate"
-                  ? "bg-amber-50 text-amber-800 border-amber-200"
-                  : "bg-rose-50 text-rose-800 border-rose-200";
-
-              return (
-                <div key={levelKey} className="border border-slate-200 rounded-2xl p-5 sm:p-6 bg-slate-50/50">
-                  <div className="flex items-center gap-2.5 mb-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase border ${badgeColor}`}>
-                      Phase {lIdx + 1} — {levelTitle}
-                    </span>
-                    <span className="text-xs text-slate-400 font-semibold">({steps.length} milestones)</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {steps.map((stepText, sIdx) => (
-                      <div
-                        key={sIdx}
-                        className="flex items-start gap-3 p-3.5 rounded-xl bg-white border border-slate-200/80 shadow-2xs hover:border-vcet-blue transition-colors"
-                      >
-                        <span className="shrink-0 w-6 h-6 rounded-lg bg-vcet-blue/10 text-vcet-blue font-bold font-mono text-xs flex items-center justify-center mt-0.5">
-                          {String(sIdx + 1).padStart(2, "0")}
-                        </span>
-                        <span className="text-xs sm:text-sm font-semibold text-slate-700 leading-snug">{stepText}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
+            ))}
           </div>
         </div>
       )}
 
-      {/* 3. Skills, Languages, Tools & Frameworks */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Core Skills */}
-        {details.skills && details.skills.length > 0 && (
-          <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-5 shadow-xs">
-            <h3 className="text-sm font-extrabold uppercase tracking-wider text-vcet-dark mb-3 flex items-center gap-2">
-              <FaDiagramProject className="text-vcet-blue" />
-              Core Competencies
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {details.skills.map((skill) => (
+      {/* 2. ROW: LANGUAGES & TOOLS with Center Orange Connector */}
+      {(languages.length > 0 || tools.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4 sm:gap-6 max-w-5xl mx-auto">
+          {/* Left: Languages */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs h-full flex flex-col justify-start">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+              <span className="font-mono text-xs font-bold text-slate-400">&lt;/&gt;</span>
+              <span>LANGUAGES</span>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-2.5">
+              {languages.map((lang, idx) => (
                 <span
-                  key={skill}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200/60"
+                  key={idx}
+                  className="px-3.5 py-1.5 rounded-xl bg-blue-50 text-blue-600 text-xs sm:text-sm font-semibold border border-blue-200/80 shadow-2xs hover:bg-blue-100/70 transition-colors"
                 >
-                  {skill}
+                  {lang}
                 </span>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Languages & Frameworks */}
-        {(details.languages || details.frameworks) && (
-          <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-5 shadow-xs">
-            <h3 className="text-sm font-extrabold uppercase tracking-wider text-vcet-dark mb-3 flex items-center gap-2">
-              <FaCode className="text-vcet-blue" />
-              Languages & Frameworks
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {[...(details.languages || []), ...(details.frameworks || [])].map((item) => (
-                <span
-                  key={item}
-                  className="px-2.5 py-1 rounded-lg bg-vcet-blue/10 text-vcet-blue font-bold text-xs border border-vcet-blue/20"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
+          {/* Center Connector Dot */}
+          <div className="hidden md:flex flex-col items-center justify-center">
+            <OrangeNodeDot />
           </div>
-        )}
 
-        {/* Tools & Platforms */}
-        {details.tools && details.tools.length > 0 && (
-          <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-5 shadow-xs">
-            <h3 className="text-sm font-extrabold uppercase tracking-wider text-vcet-dark mb-3 flex items-center gap-2">
-              <FaGears className="text-vcet-blue" />
-              Industry Tools
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {details.tools.map((tool) => (
+          {/* Right: Tools */}
+          <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs h-full flex flex-col justify-start">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+              <FiTool className="w-3.5 h-3.5 text-slate-400" />
+              <span>TOOLS</span>
+            </div>
+            <div className="flex flex-wrap gap-2 sm:gap-2.5">
+              {tools.map((tool, idx) => (
                 <span
-                  key={tool}
-                  className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-200/60"
+                  key={idx}
+                  className="px-3.5 py-1.5 rounded-xl bg-cyan-50 text-cyan-700 text-xs sm:text-sm font-semibold border border-cyan-200/80 shadow-2xs hover:bg-cyan-100/70 transition-colors"
                 >
                   {tool}
                 </span>
               ))}
             </div>
           </div>
-        )}
+        </div>
+      )}
+
+      {/* 3. CENTRAL PATH HERO CARD (Blue border & rounded squircle icon) */}
+      <div className="bg-white border-2 border-sky-300 rounded-3xl p-6 sm:p-10 text-center shadow-xs max-w-3xl mx-auto">
+        <div className="w-14 h-14 rounded-2xl bg-sky-50 text-sky-500 border border-sky-100 flex items-center justify-center mx-auto mb-4 shadow-2xs">
+          <DomainIcon name={node.icon} className="w-7 h-7" />
+        </div>
+
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight mb-2.5">
+          {node.label}
+        </h1>
+
+        <p className="text-sm sm:text-base text-slate-500 leading-relaxed max-w-xl mx-auto font-normal">
+          {details.overview || details.what}
+        </p>
       </div>
 
-      {/* 4. Real-World Projects & Recommended Certifications */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Projects */}
-        {details.projects && details.projects.length > 0 && (
-          <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-6 shadow-xs">
-            <h3 className="text-base font-extrabold text-vcet-dark-deep mb-4 flex items-center gap-2">
-              <FaFlask className="text-vcet-blue" />
-              Portfolio Projects to Build
-            </h3>
-            <div className="space-y-2.5">
-              {details.projects.map((proj, idx) => (
-                <div key={idx} className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/70">
-                  <FiFolder className="w-4 h-4 text-vcet-blue shrink-0" />
-                  <span className="text-xs sm:text-sm font-semibold text-slate-700">{proj}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Certifications & Companies */}
+      {/* 4. BOTTOM SECTION: Left (Projects & details) + Orange Connector + Right (ROADMAP) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1.35fr] items-start gap-6 max-w-6xl mx-auto">
+        {/* Left Column: Projects, Frameworks, Certifications, Companies, etc. */}
         <div className="space-y-6">
-          {details.certifications && details.certifications.length > 0 && (
-            <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-6 shadow-xs">
-              <h3 className="text-base font-extrabold text-vcet-dark-deep mb-3 flex items-center gap-2">
-                <FaCertificate className="text-vcet-blue" />
-                Industry Certifications
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {details.certifications.map((cert) => (
+          {/* Projects Card */}
+          {projects.length > 0 && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+                <FiFolder className="w-3.5 h-3.5 text-slate-400" />
+                <span>PROJECTS</span>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:gap-2.5">
+                {projects.map((proj, idx) => (
                   <span
-                    key={cert}
-                    className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold"
+                    key={idx}
+                    className="px-3.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 text-xs sm:text-sm font-semibold border border-emerald-200/80 shadow-2xs hover:bg-emerald-100/70 transition-colors"
+                  >
+                    {proj}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Frameworks & Libraries (if present) */}
+          {frameworks.length > 0 && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+                <FaLayerGroup className="w-3.5 h-3.5 text-slate-400" />
+                <span>FRAMEWORKS & LIBRARIES</span>
+              </div>
+              <div className="flex flex-wrap gap-2 sm:gap-2.5">
+                {frameworks.map((fw, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-xs sm:text-sm font-semibold border border-indigo-200/80 shadow-2xs hover:bg-indigo-100/70 transition-colors"
+                  >
+                    {fw}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Industry Certifications */}
+          {certifications.length > 0 && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+                <FiAward className="w-4 h-4 text-slate-400" />
+                <span>CERTIFICATIONS</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {certifications.map((cert, idx) => (
+                  <span
+                    key={idx}
+                    className="px-3 py-1.5 rounded-xl bg-amber-50 text-amber-800 border border-amber-200 text-xs font-bold shadow-2xs"
                   >
                     {cert}
                   </span>
@@ -700,16 +667,17 @@ function DetailedRoadmapView({ node, domain, onSelectSubNode }) {
             </div>
           )}
 
-          {details.companies && details.companies.length > 0 && (
-            <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-6 shadow-xs">
-              <h3 className="text-base font-extrabold text-vcet-dark-deep mb-3 flex items-center gap-2">
-                <FaBuilding className="text-vcet-blue" />
-                Top Hiring Companies
-              </h3>
+          {/* Top Hiring Companies */}
+          {companies.length > 0 && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+                <FaBuilding className="w-3.5 h-3.5 text-slate-400" />
+                <span>TOP HIRING COMPANIES</span>
+              </div>
               <div className="flex flex-wrap gap-2">
-                {details.companies.map((comp) => (
+                {companies.map((comp, idx) => (
                   <span
-                    key={comp}
+                    key={idx}
                     className="px-3 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-bold border border-slate-200"
                   >
                     {comp}
@@ -718,75 +686,177 @@ function DetailedRoadmapView({ node, domain, onSelectSubNode }) {
               </div>
             </div>
           )}
-        </div>
-      </div>
 
-      {/* 5. Learning Resources & Practice Platforms */}
-      {details.resources && details.resources.length > 0 && (
-        <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-6 shadow-xs">
-          <h3 className="text-base font-extrabold text-vcet-dark-deep mb-4 flex items-center gap-2">
-            <FaGraduationCap className="text-vcet-blue" />
-            Curated Learning Resources & Documentation
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {details.resources.map((res, idx) => (
-              <a
-                key={idx}
-                href={res.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-vcet-blue/5 hover:border-vcet-blue transition-all group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <FiBookOpen className="w-4 h-4 text-vcet-blue" />
-                  <span className="text-xs sm:text-sm font-bold text-slate-800 group-hover:text-vcet-blue transition-colors">
-                    {res.name}
-                  </span>
+          {/* Why Choose This Path */}
+          {details.whyChoose && (
+            <div className="bg-sky-50/50 border border-sky-200/80 rounded-2xl p-5 shadow-2xs">
+              <h4 className="text-xs font-extrabold uppercase tracking-wider text-sky-800 mb-1.5">
+                Why Choose This Path?
+              </h4>
+              <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">
+                {details.whyChoose}
+              </p>
+            </div>
+          )}
+
+          {/* Curated Resources */}
+          {resources.length > 0 && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3.5">
+                <FiBookOpen className="w-3.5 h-3.5 text-slate-400" />
+                <span>CURATED RESOURCES</span>
+              </div>
+              <div className="space-y-2">
+                {resources.map((res, idx) => (
+                  <a
+                    key={idx}
+                    href={res.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50/80 hover:bg-sky-50/50 hover:border-sky-300 transition-all group"
+                  >
+                    <span className="text-xs sm:text-sm font-semibold text-slate-700 group-hover:text-sky-700 transition-colors">
+                      {res.name}
+                    </span>
+                    <FiExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-sky-600" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sub-Specializations / Paths */}
+          {node.children && node.children.length > 0 && (
+            <div className="bg-white border border-slate-200/90 rounded-2xl p-5 sm:p-6 shadow-xs">
+              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                Specialize Further ({node.children.length} paths)
+              </h4>
+              <div className="flex flex-wrap gap-2">
+                {node.children.map((sub) => (
+                  <button
+                    key={sub.id}
+                    type="button"
+                    onClick={() => onSelectSubNode(sub)}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:border-sky-400 hover:bg-sky-50 text-xs font-bold text-slate-700 hover:text-sky-700 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <DomainIcon name={sub.icon} className="w-3.5 h-3.5 text-sky-600" />
+                    <span>{sub.label}</span>
+                    <FiChevronRight className="w-3 h-3 text-slate-400" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Future Scope */}
+          {details.futureScope && (
+            <div className="bg-gradient-to-r from-orange-50/70 to-white border border-orange-200/70 rounded-2xl p-5 flex items-start gap-3.5 shadow-2xs">
+              <div className="w-9 h-9 rounded-xl bg-orange-500 text-white flex items-center justify-center shrink-0">
+                <FaRocket className="w-4 h-4" />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold uppercase tracking-wider text-orange-600 mb-1">
+                  Future Industry Outlook
+                </h4>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal">
+                  {details.futureScope}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Center Connector Dot */}
+        <div className="hidden lg:flex flex-col items-center justify-center pt-8">
+          <OrangeNodeDot />
+        </div>
+
+        {/* Right Column: The Orange-Bordered ROADMAP Card */}
+        {roadmapLevels && (
+          <div className="bg-white border-2 border-orange-400 rounded-3xl p-6 sm:p-8 shadow-xs">
+            {/* Header */}
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider mb-5">
+              <FiCompass className="w-4 h-4 text-slate-400" />
+              <span>ROADMAP</span>
+            </div>
+
+            {/* BEGINNER Section */}
+            {beginnerSteps.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 text-xs font-black tracking-wider text-emerald-600 uppercase mb-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
+                  <span>BEGINNER</span>
                 </div>
-                <FiExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-vcet-blue" />
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+                <div className="space-y-1.5">
+                  {beginnerSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      <span className="px-2.5 py-0.5 rounded-full border border-emerald-500 text-emerald-600 text-xs font-bold font-mono tracking-tight shrink-0 min-w-[28px] text-center">
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 leading-snug">
+                        {step}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-      {/* 6. Sub-topics / Specializations Further Down (if any) */}
-      {node.children && node.children.length > 0 && (
-        <div className="bg-white border border-[#C9C9C9]/80 rounded-2xl p-6 shadow-xs text-center">
-          <h4 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-4">
-            Specialize Further in this Sub-Domain ({node.children.length} paths)
-          </h4>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            {node.children.map((sub) => (
-              <button
-                key={sub.id}
-                type="button"
-                onClick={() => onSelectSubNode(sub)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#C9C9C9] bg-white hover:border-vcet-blue hover:bg-vcet-blue/5 text-xs sm:text-sm font-bold text-vcet-dark hover:text-vcet-blue transition-all cursor-pointer shadow-2xs"
-              >
-                <DomainIcon name={sub.icon} className="w-4 h-4 text-vcet-blue" />
-                <span>{sub.label}</span>
-                <FiChevronRight className="w-3.5 h-3.5 text-slate-400" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+            {/* INTERMEDIATE Section */}
+            {intermediateSteps.length > 0 && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 text-xs font-black tracking-wider text-amber-500 uppercase mb-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" />
+                  <span>INTERMEDIATE</span>
+                </div>
+                <div className="space-y-1.5">
+                  {intermediateSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      <span className="px-2.5 py-0.5 rounded-full border border-amber-500 text-amber-500 text-xs font-bold font-mono tracking-tight shrink-0 min-w-[28px] text-center">
+                        {String(intermediateStartIdx + idx + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 leading-snug">
+                        {step}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-      {/* 7. Future Scope & AI Impact */}
-      {details.futureScope && (
-        <div className="bg-gradient-to-r from-vcet-blue/10 via-slate-50 to-white border border-vcet-blue/30 rounded-2xl p-5 flex items-start gap-4">
-          <div className="w-10 h-10 rounded-xl bg-vcet-blue text-white flex items-center justify-center shrink-0">
-            <FaRocket className="w-5 h-5" />
+            {/* ADVANCED Section */}
+            {advancedSteps.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 text-xs font-black tracking-wider text-rose-500 uppercase mb-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
+                  <span>ADVANCED</span>
+                </div>
+                <div className="space-y-1.5">
+                  {advancedSteps.map((step, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-3 py-2 px-3 rounded-xl hover:bg-slate-50 transition-colors"
+                    >
+                      <span className="px-2.5 py-0.5 rounded-full border border-rose-500 text-rose-500 text-xs font-bold font-mono tracking-tight shrink-0 min-w-[28px] text-center">
+                        {String(advancedStartIdx + idx + 1).padStart(2, "0")}
+                      </span>
+                      <span className="text-sm font-medium text-slate-700 leading-snug">
+                        {step}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <div>
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-vcet-blue mb-1">
-              Future Industry Outlook & AI Readiness
-            </h4>
-            <p className="text-xs sm:text-sm text-slate-700 leading-relaxed font-normal">{details.futureScope}</p>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -91,6 +91,7 @@ export default function ResourceListView({
   renderCard = null,
   toolbar = null,
   countText = null,
+  children = null,
 }) {
   const isGrid = layout === "grid";
   const scrollRef = useRef(null);
@@ -189,7 +190,15 @@ export default function ResourceListView({
   };
 
   return (
-    <div className="relative min-h-[85vh] bg-[#F8FAFC] text-vcet-dark pb-24 flex flex-col justify-between select-none">
+    <div
+      className={`relative bg-[#F8FAFC] text-vcet-dark select-none ${
+        resources.length === 0 && !children
+          ? "pb-6"
+          : isGrid
+          ? "pb-12"
+          : "min-h-[85vh] pb-24 flex flex-col justify-between"
+      }`}
+    >
       {/* =========================================================================
           1. HERO SECTION (Exact Match with Departments & Courses Pages)
           ========================================================================= */}
@@ -291,8 +300,12 @@ export default function ResourceListView({
         </>
       )}
 
+      {/* If children provided (e.g. custom view like TechPulseRoadmapExplorer), render here */}
+      {children && <div className="w-full">{children}</div>}
+
       {/* Resource Track: horizontal snap-scroll row, or responsive grid */}
-      <div
+      {resources.length > 0 && (
+        <div
         ref={scrollRef}
         {...(isGrid
           ? {}
@@ -457,31 +470,34 @@ export default function ResourceListView({
             </article>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Bottom Story-Like Dashes Progress Track (scroll layout only) */}
-      <div className={isGrid ? "hidden" : "max-w-xs mx-auto flex items-center justify-center gap-2 pt-6"}>
-        {resources.map((_, idx) => {
-          const isActive = activeIndex === idx;
-          return (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => scrollToIndex(idx)}
-              aria-label={`Go to item ${idx + 1}`}
-              className="group py-2 cursor-pointer"
-            >
-              <div
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  isActive
-                    ? "w-8 bg-vcet-blue"
-                    : "w-3.5 bg-vcet-gray/50 group-hover:bg-vcet-gray"
-                }`}
-              />
-            </button>
-          );
-        })}
-      </div>
+      {!isGrid && resources.length > 0 && (
+        <div className="max-w-xs mx-auto flex items-center justify-center gap-2 pt-6">
+          {resources.map((_, idx) => {
+            const isActive = activeIndex === idx;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => scrollToIndex(idx)}
+                aria-label={`Go to item ${idx + 1}`}
+                className="group py-2 cursor-pointer"
+              >
+                <div
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    isActive
+                      ? "w-8 bg-vcet-blue"
+                      : "w-3.5 bg-vcet-gray/50 group-hover:bg-vcet-gray"
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
