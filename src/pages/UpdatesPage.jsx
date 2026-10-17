@@ -12,6 +12,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AlertTriangle, RefreshCw, LayoutGrid, Map as MapIcon } from "lucide-react";
+import { FiArrowRight } from "react-icons/fi";
 
 import { techPulseService } from "../services/techPulseService";
 import { useToast } from "../context/ToastContext";
@@ -100,10 +101,15 @@ export default function UpdatesPage() {
   const lastTriggerRef = useRef(null);
   const chipRefs = useRef({});
 
-  // ?type= is the single source of truth for the active chip. Anything
-  // unexpected falls back to "All" rather than blanking the page.
+  // ?type= is the primary source of truth for the active chip. If ?domain= or ?path= is present,
+  // we recognize the user is directly viewing roadmaps.
   const rawType = String(searchParams.get("type") || "").toLowerCase();
-  const activeKind = FILTER_KINDS.includes(rawType) ? rawType : "all";
+  const hasRoadmapParams = Boolean(searchParams.get("domain") || searchParams.get("path"));
+  const activeKind = FILTER_KINDS.includes(rawType)
+    ? rawType
+    : hasRoadmapParams
+    ? "roadmap"
+    : "all";
   const roadmapId = searchParams.get("roadmap");
 
   useEffect(() => {
@@ -441,7 +447,7 @@ export default function UpdatesPage() {
       ) : (
         <>
           {activeKind === "all" && (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 mb-8">
               <div
                 role="button"
                 tabIndex={0}
