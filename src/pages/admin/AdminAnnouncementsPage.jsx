@@ -28,9 +28,9 @@ import { announcementService } from "../../services/announcementService";
 import { useAuth } from "../../context/AuthContext";
 import { API_BASE_URL } from "../../services/api";
 
-const AUDIENCES = ["Everyone", "Students", "Teachers", "CSE", "AI&DS", "ECE", "IT", "EEE", "MECH", "CIVIL"];
+const AUDIENCES = ["Everyone", "Students", "Teachers", "CSE", "AI&DS", "AIML", "MDE", "BME", "Cyber Security", "ECE", "IT", "EEE", "MECH", "CIVIL"];
 const CATEGORIES = ["Hackathon", "Placement", "Exam Circular", "Workshop", "College Events", "Academic Notice", "Symposium"];
-const DEPARTMENT_LIST = ["CSE", "AI&DS", "ECE", "IT", "EEE", "MECH", "CIVIL"];
+const DEPARTMENT_LIST = ["CSE", "AI&DS", "AIML", "MDE", "BME", "Cyber Security", "ECE", "IT", "EEE", "MECH", "CIVIL"];
 
 function resolvePosterUrl(item) {
   const raw = item?.imageUrl || item?.image || "";
