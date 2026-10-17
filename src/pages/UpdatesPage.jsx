@@ -19,6 +19,7 @@ import { RESOURCES } from "../data/resources";
 import ResourceListView, { LOGO_MAP } from "../components/ResourceListView";
 import TechPulseCard, { KIND_ICONS } from "../components/TechPulseCard";
 import TechPulseRoadmapModal from "../components/TechPulseRoadmapModal";
+import TechPulseRoadmapExplorer from "../components/TechPulseRoadmapExplorer";
 import { FILTER_KINDS, FILTER_LABELS } from "../utils/techPulse";
 
 const EMPTY_COUNTS = { all: 0, youtube: 0, website: 0, app: 0, roadmap: 0 };
@@ -170,13 +171,16 @@ export default function UpdatesPage() {
    * chips never display a misleading zero.
    */
   const chipCounts = useMemo(() => {
-    if (counts.all > 0) return counts;
-    const derived = { ...EMPTY_COUNTS, all: posts.length };
-    for (const post of posts) {
-      const kind = FILTER_KINDS.includes(post.kind) ? post.kind : "website";
-      derived[kind] += 1;
+    const base = counts.all > 0 ? { ...counts } : { ...EMPTY_COUNTS, all: posts.length };
+    if (counts.all === 0) {
+      for (const post of posts) {
+        const kind = FILTER_KINDS.includes(post.kind) ? post.kind : "website";
+        base[kind] += 1;
+      }
     }
-    return derived;
+    base.roadmap = 10 + (base.roadmap || 0);
+    base.all = (base.all || 0) + 10;
+    return base;
   }, [counts, posts]);
 
   const filteredPosts = useMemo(
@@ -187,7 +191,7 @@ export default function UpdatesPage() {
   // counts.all is the global published total (requirement: the header counter
   // must not shrink with the active filter). Fall back to the loaded list when
   // the counts endpoint was unavailable.
-  const totalText = `${counts.all > 0 ? counts.all : posts.length} Resources`;
+  const totalText = `${(counts.all > 0 ? counts.all : posts.length) + 10} Resources & Roadmaps`;
 
   const selectType = useCallback(
     (kind) => {
@@ -391,28 +395,83 @@ export default function UpdatesPage() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] pb-24 selection:bg-vcet-blue selection:text-white select-none">
       <ResourceListView
-        resources={loading || error ? [] : filteredPosts}
+        resources={loading || error || activeKind === "roadmap" ? [] : filteredPosts}
         pageTitle={
           activeKind === "youtube"
             ? "Tech Vision — Tech YouTube Channels & Videos"
+            : activeKind === "roadmap"
+            ? "Tech Pulse — Career & Learning Roadmaps"
             : "Tech Pulse — Apps for Tech Updates"
         }
         badgeText={
           activeKind === "youtube"
             ? "CURATED VIDEO CHANNELS & REPOSITORIES"
+            : activeKind === "roadmap"
+            ? "10 CORE TECH DOMAINS & 46 SPECIALIZATION PATHS"
             : "REAL-TIME TECH FEEDS & APPS"
         }
         ctaText="VIEW ANNOUNCEMENTS"
         ctaLink="/announcements"
         layout="grid"
-        countText={totalText}
+        countText={activeKind === "roadmap" ? "10 Core Domains · 46 Specialization Paths" : totalText}
         toolbar={chips}
         renderCard={(post) => (
           <TechPulseCard key={post.id} post={post} onOpenRoadmap={handleOpenRoadmap} />
         )}
       />
 
-      {body}
+      {activeKind === "roadmap" ? (
+        <div className="pt-2">
+          <TechPulseRoadmapExplorer />
+
+          {/* Show any custom published database roadmaps if present */}
+          {filteredPosts.length > 0 && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-10 border-t border-slate-200">
+              <h3 className="text-xl font-extrabold text-vcet-dark-deep mb-6">
+                Community & Admin Published Roadmaps
+              </h3>
+              <div className="grid w-full grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredPosts.map((post) => (
+                  <TechPulseCard key={post.id} post={post} onOpenRoadmap={handleOpenRoadmap} />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {activeKind === "all" && (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4 mb-8">
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => selectType("roadmap")}
+                onKeyDown={(e) => e.key === "Enter" && selectType("roadmap")}
+                className="group relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0062A8] via-[#0B4A8F] to-[#444445] p-6 sm:p-8 text-white shadow-md hover:shadow-xl transition-all hover:-translate-y-0.5 cursor-pointer"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
+                  <div className="max-w-2xl">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-extrabold uppercase tracking-widest backdrop-blur-sm mb-3">
+                      ⚡ Structured Tech Roadmaps
+                    </span>
+                    <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight mb-2">
+                      Explore 10 Tech Career Domains & 46 Specialization Paths
+                    </h3>
+                    <p className="text-xs sm:text-sm text-blue-100/90 leading-relaxed font-normal">
+                      Software Development, AI, Data Science, Cloud Computing, Cybersecurity, Blockchain, UI/UX Design, Game Dev, IoT, and Embedded Systems.
+                    </p>
+                  </div>
+                  <div className="self-start sm:self-auto inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-vcet-blue-deep font-extrabold text-xs uppercase tracking-wider shadow-sm group-hover:bg-blue-50 transition-colors shrink-0">
+                    <span>View Roadmaps</span>
+                    <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {body}
+        </>
+      )}
 
       <TechPulseRoadmapModal roadmap={openRoadmap} onClose={handleCloseRoadmap} />
     </div>
